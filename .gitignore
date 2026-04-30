@@ -48,3 +48,6 @@ Thumbs.db
 .claude/
 .qwen/
 skills-lock.json
+
+# Environment with secrets
+src/env.ts
