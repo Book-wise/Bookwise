@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
 import { Booking, Location, Provider } from '../../../core/models';
 import { BookingDialogComponent } from '../bookings/booking-dialog.component';
+import { NewBookingDialogComponent } from '../bookings/new-booking-dialog.component';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -32,7 +33,7 @@ interface CalendarEvent {
 @Component({
   selector: 'app-full-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, TagModule, DialogModule, BookingDialogComponent],
+  imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, TagModule, DialogModule, BookingDialogComponent, NewBookingDialogComponent],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -45,6 +46,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
+  @ViewChild(NewBookingDialogComponent) newBookingDialog!: NewBookingDialogComponent;
 
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
@@ -236,7 +238,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showEventDialog.set(false);
     // Delay para que cierre el dialog primero
     setTimeout(() => {
-      this.bookingDialog.openNew(booking);
+      this.newBookingDialog.openNew(booking);
     }, 100);
   }
 
@@ -257,7 +259,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private handleDateSelect(selectInfo: DateSelectArg): void {
     this.selectedDate = selectInfo.start;
-    this.bookingDialog.openNew();
+    this.newBookingDialog.openNew(undefined, selectInfo.start);
   }
 
   closeDialog(): void {

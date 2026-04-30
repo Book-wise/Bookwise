@@ -665,7 +665,7 @@ export class NewBookingDialogComponent implements OnInit {
     });
   }
 
-  openNew(booking?: Booking) {
+  openNew(booking?: Booking, initialDate?: Date) {
     this.resetForm();
     
     if (booking) {
@@ -685,6 +685,11 @@ export class NewBookingDialogComponent implements OnInit {
       };
       this.timeHour = startDate.getHours();
       this.timeMinute = startDate.getMinutes();
+    } else if (initialDate) {
+      // Usar la fecha seleccionada del calendario
+      this.formData.start_time = initialDate;
+      this.timeHour = initialDate.getHours();
+      this.timeMinute = Math.round(initialDate.getMinutes() / 5) * 5;
     }
     
     this.visible = true;
