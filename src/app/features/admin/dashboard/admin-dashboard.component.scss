@@ -1,0 +1,50 @@
+.dashboard {
+  padding: 1rem;
+}
+
+h1 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.welcome {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+:host ::ng-deep .stat-card {
+  text-align: center;
+}
+
+:host ::ng-deep .stat-card .p-card-body {
+  padding: 1.5rem;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+:host ::ng-deep .chart-card {
+  min-height: 300px;
+}

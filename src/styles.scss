@@ -1,1 +1,290 @@
-/* You can add global styles to this file, and also import other style files */
+/* ============================================
+   Global Styles - Kinesilk Admin
+   ============================================ */
+
+// Importar fuentes desde assets
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Fira_Code,Roboto/Roboto/Roboto-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Fira_Code,Roboto/Roboto/Roboto-Italic-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+// CSS Variables
+:root {
+  --font-family: 'Roboto', sans-serif;
+  --primary-color: #667eea;
+  --surface-ground: #f8f9fa;
+  --surface-card: #ffffff;
+  --text-color: #333333;
+  --text-color-secondary: #6b7280;
+}
+
+// Reset básico
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-color);
+  background: var(--surface-ground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// Encabezados
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family);
+  font-weight: 500;
+  margin-top: 0;
+  color: var(--text-color);
+}
+
+// Links
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Selection
+::selection {
+  background: var(--primary-color);
+  color: white;
+}
+
+// ============================================
+// DARK MODE
+// ============================================
+
+body.dark-theme {
+  --surface-ground: #1a1a2e;
+  --surface-card: #16213e;
+  --text-color: #e4e4e7;
+  --text-color-secondary: #a1a1aa;
+  
+  background: var(--surface-ground);
+  color: var(--text-color);
+  
+  // Layout - Sidebar
+  .layout {
+    background: #1a1a2e;
+  }
+  
+  .sidebar {
+    background: #16213e !important;
+    border-color: #374151 !important;
+
+    .sidebar-header {
+      border-color: #374151 !important;
+
+      .mobile-close-btn {
+        i {
+          color: #a1a1aa !important;
+        }
+        &:hover {
+          background: #1e3a5f !important;
+        }
+      }
+
+      .app-title {
+        color: #667eea !important;
+      }
+    }
+
+    .nav-item {
+      color: #a1a1aa !important;
+
+      &:hover {
+        background: #1e3a5f !important;
+        color: #e4e4e7 !important;
+      }
+
+      &.active {
+        background: rgba(102, 126, 234, 0.2) !important;
+        color: #667eea !important;
+      }
+
+      &.logout-btn:hover {
+        background: rgba(239, 68, 68, 0.1) !important;
+      }
+
+      &.dark-mode-btn:hover {
+        background: rgba(245, 158, 11, 0.1) !important;
+      }
+    }
+
+    .sidebar-footer {
+      border-color: #374151 !important;
+    }
+  }
+
+  .sidebar-toggle {
+    background: #16213e !important;
+
+    &:hover {
+      background: #1e3a5f !important;
+    }
+
+    i {
+      color: #e4e4e7 !important;
+    }
+  }
+
+  .main-content {
+    background: #1a1a2e !important;
+  }
+  
+  // Cards
+  .p-card {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  // Table
+  .p-datatable {
+    .p-datatable-header,
+    .p-datatable-thead > tr > th {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-color: #374151 !important;
+    }
+    
+    .p-datatable-tbody > tr {
+      background: var(--surface-ground) !important;
+      color: var(--text-color) !important;
+      
+      > td {
+        border-color: #374151 !important;
+      }
+      
+      &:hover {
+        background: var(--surface-card) !important;
+      }
+    }
+    
+    .p-paginator {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+      border-color: #374151 !important;
+    }
+  }
+  
+  // Inputs
+  .p-inputtext {
+    background: var(--surface-card) !important;
+    color: var(--text-color) !important;
+    border-color: #374151 !important;
+  }
+  
+  // Select
+  .p-select {
+    background: var(--surface-card) !important;
+    border-color: #374151 !important;
+    
+    .p-select-label {
+      color: var(--text-color) !important;
+    }
+  }
+  
+  // Dialog
+  .p-dialog {
+    .p-dialog-header,
+    .p-dialog-content,
+    .p-dialog-footer {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+  }
+  
+  // FullCalendar
+  .fc {
+    --fc-border-color: #374151;
+    --fc-page-bg-color: var(--surface-card);
+    --fc-neutral-bg-color: var(--surface-ground);
+    --fc-today-bg-color: rgba(102, 126, 234, 0.15);
+    
+    .fc-toolbar-title,
+    .fc-daygrid-day-number {
+      color: var(--text-color) !important;
+    }
+    
+    .fc-col-header-cell-cushion {
+      color: var(--text-color-secondary) !important;
+    }
+    
+    .fc-button-primary {
+      background: #374151 !important;
+      border-color: #374151 !important;
+    }
+    
+    .fc-button-active {
+      background: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+    }
+  }
+}
+
+// ============================================
+// Responsive Tables
+// ============================================
+
+.p-datatable {
+  width: 100%;
+  overflow-x: auto;
+  
+  .p-datatable-wrapper {
+    overflow-x: auto;
+  }
+
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  @media (max-width: 1024px) {
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      max-width: 140px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// ============================================
+// Utility Classes
+// ============================================
+
+.text-center {
+  text-align: center;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}

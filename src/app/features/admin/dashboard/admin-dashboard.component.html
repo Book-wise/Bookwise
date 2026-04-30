@@ -1,0 +1,36 @@
+<div class="dashboard">
+  <h1>Dashboard Administrador</h1>
+  <p class="welcome">Bienvenido, {{ userName }}</p>
+  
+  <div class="stats-grid">
+    <p-card header="Locations" styleClass="stat-card">
+      <div class="stat-value">{{ locations.length }}</div>
+      <div class="stat-label">Centros activos</div>
+    </p-card>
+    
+    <p-card header="Profesionales" styleClass="stat-card">
+      <div class="stat-value">{{ providers.length }}</div>
+      <div class="stat-label">Profesionales registrados</div>
+    </p-card>
+    
+    <p-card header="Citas Hoy" styleClass="stat-card">
+      <div class="stat-value">{{ todayBookings }}</div>
+      <div class="stat-label">Citas agendadas</div>
+    </p-card>
+    
+    <p-card header="Citas Pendientes" styleClass="stat-card">
+      <div class="stat-value">{{ pendingBookings }}</div>
+      <div class="stat-label">Por asignar</div>
+    </p-card>
+  </div>
+  
+  <div class="charts-row">
+    <p-card header="Citas por Location" styleClass="chart-card">
+      <p-chart type="doughnut" [data]="locationChartData" [options]="chartOptions"></p-chart>
+    </p-card>
+    
+    <p-card header="Citas por Día" styleClass="chart-card">
+      <p-chart type="line" [data]="weeklyChartData" [options]="chartOptions"></p-chart>
+    </p-card>
+  </div>
+</div>

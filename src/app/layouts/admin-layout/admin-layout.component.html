@@ -1,0 +1,52 @@
+<div class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <!-- Mobile Toggle Button (visible only on mobile) -->
+  <button class="sidebar-toggle" (click)="toggleSidebar()">
+    <i class="pi" [class.pi-bars]="!sidebarCollapsed() && !mobileMenuOpen()" [class.pi-times]="sidebarCollapsed() || mobileMenuOpen()"></i>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="sidebarCollapsed()">
+    <div class="sidebar-header">
+      <button class="mobile-close-btn" (click)="closeMenus()" *ngIf="isMobile()">
+        <i class="pi pi-times"></i>
+      </button>
+      <span class="app-title" *ngIf="!sidebarCollapsed()">Kinesilk</span>
+      <span class="app-title" *ngIf="sidebarCollapsed()">K</span>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a *ngFor="let item of menuItems" 
+         [routerLink]="item.routerLink"
+         class="nav-item"
+         [class.active]="isActive(item.routerLink!)"
+         [title]="sidebarCollapsed() ? item.label : ''">
+        <i class="pi" [ngClass]="item.icon"></i>
+        <span class="nav-label" *ngIf="!sidebarCollapsed()">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <!-- Dark Mode Toggle -->
+      <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="sidebarCollapsed() ? (darkMode() ? 'Modo Claro' : 'Modo Oscuro') : ''">
+        <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
+        <span class="nav-label" *ngIf="!sidebarCollapsed()">{{ darkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+      </button>
+      
+      <button class="nav-item logout-btn" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span class="nav-label" *ngIf="!sidebarCollapsed()">Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay" 
+       *ngIf="mobileMenuOpen()" 
+       (click)="closeMenus()">
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

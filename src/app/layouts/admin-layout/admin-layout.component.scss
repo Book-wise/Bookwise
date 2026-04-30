@@ -1,0 +1,348 @@
+// ============================================
+// Layout Container
+// ============================================
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--surface-ground, #f8f9fa);
+}
+
+// ============================================
+// Toggle Button (Mobile)
+// ============================================
+
+.sidebar-toggle {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+
+  i {
+    font-size: 1.1rem;
+    color: #333;
+  }
+
+  @media (max-width: 991px) {
+    display: flex;
+  }
+
+  // Cuando el sidebar está abierto, movemos el toggle a la izquierda del sidebar
+  .layout.mobile-menu-open & {
+    left: 230px;
+  }
+}
+
+// ============================================
+// Sidebar
+// ============================================
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1000;
+  transition: width 0.3s ease;
+
+  &.collapsed {
+    width: 64px;
+
+    .nav-label {
+      display: none;
+    }
+
+    .sidebar-header {
+      justify-content: center;
+      padding: 0.75rem 0.5rem;
+    }
+  }
+
+  @media (max-width: 991px) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    width: 220px !important;
+    height: 100vh;
+    height: 100dvh;
+    transition: transform 0.3s ease;
+
+    &.mobile-open {
+      transform: translateX(0);
+    }
+
+    .nav-label {
+      display: inline !important;
+    }
+  }
+}
+
+// ============================================
+// Sidebar Sections
+// ============================================
+
+.sidebar-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  .mobile-close-btn {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.1rem;
+      color: #6b7280;
+    }
+
+    &:hover {
+      background: #f3f4f6;
+    }
+
+    @media (max-width: 991px) {
+      display: flex;
+    }
+  }
+
+  .app-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #667eea;
+    font-family: var(--font-family, 'Roboto', sans-serif);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  overflow-y: auto;
+  overflow-y: overlay;
+}
+
+.sidebar-footer {
+  padding: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+// ============================================
+// Navigation Items
+// ============================================
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  color: #6b7280;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  font-size: 0.875rem;
+  font-family: var(--font-family, 'Roboto', sans-serif);
+  text-align: left;
+
+  i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  &.active {
+    background: #eff6ff;
+    color: #667eea;
+    font-weight: 500;
+  }
+
+  &.logout-btn {
+    color: #ef4444;
+
+    &:hover {
+      background: #fef2f2;
+    }
+  }
+
+  &.dark-mode-btn {
+    color: #f59e0b;
+
+    &:hover {
+      background: #fef3c7;
+    }
+  }
+}
+
+// ============================================
+// Mobile Overlay
+// ============================================
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+
+  @media (min-width: 992px) {
+    display: none !important;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// ============================================
+// Main Content
+// ============================================
+
+.main-content {
+  flex: 1;
+  padding: 1.25rem;
+  min-width: 0; // Prevent overflow
+  transition: margin-left 0.3s ease;
+
+  @media (max-width: 991px) {
+    margin-left: 0 !important;
+    padding: 1rem;
+    padding-top: 3.5rem;
+  }
+}
+
+// ============================================
+// Collapsed State
+// ============================================
+
+.layout.sidebar-collapsed .main-content {
+  margin-left: 64px;
+
+  @media (max-width: 991px) {
+    margin-left: 0 !important;
+  }
+}
+
+// ============================================
+// Dark Theme Adjustments
+// ============================================
+
+body.dark-theme {
+  .layout {
+    background: #1a1a2e;
+  }
+
+  .sidebar {
+    background: #16213e;
+    border-color: #374151;
+
+    .sidebar-header {
+      border-color: #374151;
+
+      .mobile-close-btn {
+        i {
+          color: #a1a1aa;
+        }
+        &:hover {
+          background: #1e3a5f;
+        }
+      }
+
+      .app-title {
+        color: #667eea;
+      }
+    }
+
+    .nav-item {
+      color: #a1a1aa;
+
+      &:hover {
+        background: #1e3a5f;
+        color: #e4e4e7;
+      }
+
+      &.active {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+      }
+
+      &.logout-btn:hover {
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      &.dark-mode-btn:hover {
+        background: rgba(245, 158, 11, 0.1);
+      }
+    }
+
+    .sidebar-footer {
+      border-color: #374151;
+    }
+  }
+
+  .sidebar-toggle {
+    background: #16213e;
+
+    &:hover {
+      background: #1e3a5f;
+    }
+
+    i {
+      color: #e4e4e7;
+    }
+  }
+
+  .main-content {
+    background: #1a1a2e;
+  }
+}

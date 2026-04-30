@@ -1,0 +1,77 @@
+<div class="full-calendar-container">
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="calendar-header">
+        <div class="filters">
+          <p-select 
+            [options]="locationOptions()" 
+            [(ngModel)]="selectedLocationId" 
+            placeholder="Todas las Locations"
+            [showClear]="true"
+            (onChange)="onFilterChange()">
+          </p-select>
+          
+          <p-select 
+            [options]="providerOptions()" 
+            [(ngModel)]="selectedProviderId" 
+            placeholder="Todos los Profesionales"
+            [showClear]="true"
+            (onChange)="onFilterChange()">
+          </p-select>
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="calendar-wrapper" #calendarContainer></div>
+  </p-card>
+</div>
+
+<!-- Dialog para mostrar detalles de la reserva -->
+<p-dialog 
+  header="Detalles de la Cita" 
+  [visible]="showEventDialog()" 
+  (visibleChange)="showEventDialog.set($event)"
+  [modal]="true" 
+  [style]="{width: '500px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <div class="event-details" *ngIf="selectedBooking() as booking">
+    <div class="detail-row">
+      <span class="label">Cliente:</span>
+      <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Servicio:</span>
+      <span class="value">{{ booking.service?.name }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Profesional:</span>
+      <span class="value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Location:</span>
+      <span class="value">{{ booking.location?.name }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Fecha:</span>
+      <span class="value">{{ booking.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Precio:</span>
+      <span class="value">\${{ booking.price | number:'1.2-2' }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Estado:</span>
+      <p-tag [value]="booking.status?.name || 'Sin estado'" 
+             [severity]="getStatusSeverity(booking.status?.name)"></p-tag>
+    </div>
+    <div class="detail-row" *ngIf="booking.notes">
+      <span class="label">Notas:</span>
+      <span class="value">{{ booking.notes }}</span>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" (onClick)="closeDialog()" styleClass="p-button-text"></p-button>
+    <p-button label="Editar" icon="pi pi-pencil"></p-button>
+  </ng-template>
+</p-dialog>

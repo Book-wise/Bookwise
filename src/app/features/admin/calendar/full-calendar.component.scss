@@ -1,0 +1,243 @@
+.full-calendar-container {
+  padding: 1rem;
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .filters {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    :host ::ng-deep .p-select {
+      min-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      width: 100%;
+      flex-direction: column;
+      
+      :host ::ng-deep .p-select {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+  }
+
+  .calendar-wrapper {
+    // FullCalendar CSS Variables
+    --fc-border-color: #e5e7eb;
+    --fc-button-bg-color: #3b82f6;
+    --fc-button-border-color: #3b82f6;
+    --fc-button-hover-bg-color: #2563eb;
+    --fc-button-hover-border-color: #2563eb;
+    --fc-button-active-bg-color: #1d4ed8;
+    --fc-button-active-border-color: #1d4ed8;
+    --fc-today-bg-color: rgba(59, 130, 246, 0.1);
+    --fc-event-border-color: transparent;
+    --fc-page-bg-color: #ffffff;
+    --fc-neutral-bg-color: #f3f4f6;
+    --fc-list-event-hover-bg-color: #f3f4f6;
+  }
+}
+
+// FullCalendar global styles - fuera de :host para mejor especificidad
+::ng-deep .fc {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+::ng-deep .fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+::ng-deep .fc .fc-button {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-transform: capitalize;
+  font-size: 0.875rem;
+}
+
+::ng-deep .fc .fc-daygrid-day-number {
+  padding: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+::ng-deep .fc .fc-col-header-cell-cushion {
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+::ng-deep .fc .fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+}
+
+::ng-deep .fc .fc-event-title {
+  font-weight: 500;
+}
+
+::ng-deep .fc .fc-day-today {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+::ng-deep .fc .fc-timegrid-slot {
+  height: 2.5rem;
+}
+
+::ng-deep .fc .fc-timegrid-slot-label-cushion {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+::ng-deep .fc .fc-day-max-events {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+// Responsive styles (≤768px)
+@media (max-width: 768px) {
+  ::ng-deep .fc {
+    // Toolbar
+    .fc-toolbar {
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      align-items: center !important;
+    }
+    
+    .fc-toolbar-title {
+      font-size: 1.1rem !important;
+    }
+    
+    .fc-toolbar-chunk {
+      display: flex !important;
+      gap: 0.25rem !important;
+    }
+    
+    // Botones
+    .fc-button {
+      padding: 0.375rem 0.625rem !important;
+      font-size: 0.75rem !important;
+    }
+    
+    // Días
+    .fc-daygrid-day-number {
+      padding: 0.25rem !important;
+      font-size: 0.75rem !important;
+    }
+    
+    // Encabezados
+    .fc-col-header-cell-cushion {
+      font-size: 0.625rem !important;
+      padding: 0.25rem !important;
+    }
+    
+    // Eventos
+    .fc-event {
+      font-size: 0.7rem !important;
+      padding: 1px 2px !important;
+    }
+    
+    // Timegrid
+    .fc-timegrid-slot {
+      height: 1.5rem !important;
+    }
+    
+    .fc-timegrid-slot-label-cushion {
+      font-size: 0.625rem !important;
+    }
+    
+    // Max events
+    .fc-day-max-events {
+      font-size: 0.75rem !important;
+    }
+  }
+  
+  // Filters responsive
+  .full-calendar-container {
+    .filters {
+      width: 100%;
+      flex-direction: column;
+      
+      :host ::ng-deep .p-select {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+  }
+}
+
+// Dark mode para FullCalendar
+body.dark-theme {
+  ::ng-deep .fc {
+    --fc-border-color: #374151;
+    --fc-page-bg-color: #16213e;
+    --fc-neutral-bg-color: #1a1a2e;
+    --fc-today-bg-color: rgba(102, 126, 234, 0.15);
+    
+    .fc-toolbar-title {
+      color: #e4e4e7 !important;
+    }
+    
+    .fc-col-header-cell-cushion {
+      color: #a1a1aa !important;
+    }
+    
+    .fc-daygrid-day-number {
+      color: #e4e4e7 !important;
+    }
+    
+    .fc-button {
+      background: #374151 !important;
+      border-color: #374151 !important;
+      
+      &:hover {
+        background: #4b5563 !important;
+      }
+    }
+    
+    .fc-button-active,
+    .fc-button-active:hover {
+      background: #667eea !important;
+      border-color: #667eea !important;
+    }
+  }
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .label {
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .value {
+      color: #1f2937;
+      font-size: 1rem;
+    }
+  }
+}

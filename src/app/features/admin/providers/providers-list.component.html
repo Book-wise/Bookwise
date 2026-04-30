@@ -1,0 +1,42 @@
+<p-card header="Profesionales">
+  <p-table [value]="providers()" [tableStyle]="{'min-width': '50rem'}" [loading]="loading()">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Teléfono</th>
+        <th>Locations</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-provider>
+      <tr>
+        <td>{{ provider.id }}</td>
+        <td>{{ provider.first_name }} {{ provider.last_name }}</td>
+        <td>{{ provider.email }}</td>
+        <td>{{ provider.phone }}</td>
+        <td>
+          <span *ngFor="let loc of provider.locations; let last = last">
+            {{ loc.name }}<span *ngIf="!last">, </span>
+          </span>
+          <span *ngIf="!provider.locations?.length" class="text-muted">Sin asignar</span>
+        </td>
+        <td>
+          <p-tag [value]="provider.active ? 'Activo' : 'Inactivo'" 
+                 [severity]="provider.active ? 'success' : 'danger'"></p-tag>
+        </td>
+        <td>
+          <p-button icon="pi pi-pencil" styleClass="p-button-text" pTooltip="Editar"></p-button>
+          <p-button icon="pi pi-calendar" styleClass="p-button-text" pTooltip="Ver Agenda"></p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center">No se encontraron profesionales</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
