@@ -259,13 +259,13 @@ export class BookingDialogComponent implements OnInit {
     value: s.id
   })));
 
-  providerOptions = computed(() => [
-    { label: 'Sin asignar', value: null },
-    ...this.providers().map(p => ({
+  providerOptions = computed(() => {
+    const opts = this.providers().map(p => ({
       label: `${p.first_name} ${p.last_name}`,
       value: p.id
-    }))
-  ]);
+    }));
+    return [{ label: 'Sin asignar', value: 0 }, ...opts];
+  });
 
   locationOptions = computed(() => this.locations().map(l => ({
     label: l.name,
@@ -332,7 +332,7 @@ export class BookingDialogComponent implements OnInit {
         id: booking.id,
         client_id: booking.client_id,
         service_id: booking.service_id,
-        provider_id: booking.provider_id || null,
+        provider_id: booking.provider_id || 0,
         location_id: booking.location_id,
         status_id: booking.status_id,
         start_time: new Date(booking.start_time),
@@ -377,7 +377,13 @@ export class BookingDialogComponent implements OnInit {
       this.formData.price = service.price;
     }
   }
-  onProviderChange() { delete this.errors['provider_id']; }
+  onProviderChange() { 
+    delete this.errors['provider_id'];
+    // 0 means "no provider assigned"
+    if (this.formData.provider_id === 0) {
+      this.formData.provider_id = undefined;
+    }
+  }
   onLocationChange() { delete this.errors['location_id']; }
   
   onStartTimeChange() {
@@ -401,7 +407,7 @@ export class BookingDialogComponent implements OnInit {
     const bookingData = {
       client_id: this.formData.client_id,
       service_id: this.formData.service_id,
-      provider_id: this.formData.provider_id,
+      provider_id: this.formData.provider_id ?? undefined,
       location_id: this.formData.location_id,
       status_id: this.formData.status_id,
       start_time: this.formatDateTime(this.formData.start_time),
