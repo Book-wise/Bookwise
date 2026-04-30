@@ -6,8 +6,10 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
+import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
 import { Booking, Location, Provider } from '../../../core/models';
+import { BookingDialogComponent } from '../bookings/booking-dialog.component';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -30,16 +32,19 @@ interface CalendarEvent {
 @Component({
   selector: 'app-full-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, TagModule, DialogModule],
+  imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, TagModule, DialogModule, BookingDialogComponent],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  providers: [MessageService]
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(ApiService);
+  private messageService = inject(MessageService);
   private calendar: Calendar | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
+  @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
 
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
@@ -216,10 +221,35 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showEventDialog.set(true);
   }
 
+  editBooking(): void {
+    const booking = this.selectedBooking();
+    if (!booking) return;
+    
+    this.showEventDialog.set(false);
+    // Delay para que cierre el dialog primero
+    setTimeout(() => {
+      this.bookingDialog.openNew(booking);
+    }, 100);
+  }
+
+  onBookingSaved(): void {
+    // Recargar bookings del mes actual
+    const date = new Date();
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    this.loadBookings(
+      firstDay.toISOString().split('T')[0],
+      lastDay.toISOString().split('T')[0]
+    );
+  }
+
+  onBookingCancelled(): void {
+    this.onBookingSaved();
+  }
+
   private handleDateSelect(selectInfo: DateSelectArg): void {
     this.selectedDate = selectInfo.start;
-    // Aquí puedes agregar lógica para crear nueva reserva
-    console.log('Fecha seleccionada:', selectInfo.start);
+    this.bookingDialog.openNew();
   }
 
   closeDialog(): void {

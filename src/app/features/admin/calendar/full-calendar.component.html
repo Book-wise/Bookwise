@@ -49,7 +49,7 @@
       <span class="value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
     </div>
     <div class="detail-row">
-      <span class="label">Location:</span>
+      <span class="label">Ubicación:</span>
       <span class="value">{{ booking.location?.name }}</span>
     </div>
     <div class="detail-row">
@@ -72,6 +72,9 @@
   </div>
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" (onClick)="closeDialog()" styleClass="p-button-text"></p-button>
-    <p-button label="Editar" icon="pi pi-pencil"></p-button>
+    <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Booking Dialog para crear/editar -->
+<app-booking-dialog #bookingDialog (onSuccess)="onBookingSaved()" (onCancel)="onBookingCancelled()"></app-booking-dialog>
