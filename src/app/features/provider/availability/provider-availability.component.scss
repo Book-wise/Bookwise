@@ -1,0 +1,83 @@
+.availability-container {
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+h2 { margin-bottom: 0.5rem; }
+.subtitle { color: #666; margin-bottom: 1.5rem; }
+
+.add-slot { margin-top: 1rem; }
+
+.mt-3 { margin-top: 1rem; }
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.preview-day {
+  text-align: center;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.day-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.day-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.slot-preview {
+  background: #22c55e;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.slot-preview.inactive {
+  background: #ccc;
+}
+
+.no-slots {
+  color: #999;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.add-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-weight: bold;
+  color: #333;
+}
+
+.field:has(p-inputSwitch) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
