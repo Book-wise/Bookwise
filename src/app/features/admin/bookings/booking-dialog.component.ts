@@ -1,9 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -45,7 +45,7 @@ interface ApiErrorResponse {
     FormsModule,
     SelectModule,
     InputTextModule,
-    InputTextareaModule,
+    TextareaModule,
     InputNumberModule,
     ButtonModule,
     DialogModule,
@@ -117,7 +117,7 @@ interface ApiErrorResponse {
         <div class="field-row">
           <div class="field">
             <p-floatlabel>
-              <input pDatePicker [(ngModel)]="formData.start_time" dateFormat="dd/mm/yy" [showTime]="true" hourFormat="24" styleClass="w-full" (onClose)="onStartTimeChange()" inputId="startTime" />
+              <p-datepicker [(ngModel)]="formData.start_time" dateFormat="dd/mm/yy" [showTime]="true" hourFormat="24" styleClass="w-full" (onClose)="onStartTimeChange()" inputId="startTime" />
               <label for="startTime">Fecha y hora</label>
             </p-floatlabel>
           </div>
@@ -150,7 +150,7 @@ interface ApiErrorResponse {
 
         <!-- Notas -->
         <div class="field">
-          <textarea pInputTextarea [(ngModel)]="formData.notes" rows="3" placeholder="Notas adicionales" class="w-full"></textarea>
+          <textarea pTextarea [(ngModel)]="formData.notes" rows="3" placeholder="Notas adicionales" class="w-full"></textarea>
         </div>
       </div>
 
@@ -379,9 +379,9 @@ export class BookingDialogComponent implements OnInit {
   }
   onProviderChange() { 
     delete this.errors['provider_id'];
-    // 0 means "no provider assigned"
+    // 0 means "no provider assigned" - convert to null
     if (this.formData.provider_id === 0) {
-      this.formData.provider_id = undefined;
+      this.formData.provider_id = null as any;
     }
   }
   onLocationChange() { delete this.errors['location_id']; }
@@ -407,14 +407,14 @@ export class BookingDialogComponent implements OnInit {
     const bookingData = {
       client_id: this.formData.client_id,
       service_id: this.formData.service_id,
-      provider_id: this.formData.provider_id ?? undefined,
+      provider_id: this.formData.provider_id || undefined,
       location_id: this.formData.location_id,
       status_id: this.formData.status_id,
       start_time: this.formatDateTime(this.formData.start_time),
       end_time: this.formatDateTime(this.formData.end_time),
       duration_minutes: this.formData.duration_minutes,
       price: this.formData.price,
-      notes: this.formData.notes
+      notes: this.formData.notes || undefined
     };
 
     const request = this.isEdit()
