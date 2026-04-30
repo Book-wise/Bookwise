@@ -137,6 +137,10 @@ export class ApiService {
     return this.http.get<Client>(`${this.baseUrl}/clients/${id}`);
   }
 
+  createClient(client: Partial<Client>): Observable<Client> {
+    return this.http.post<Client>(`${this.baseUrl}/clients`, client);
+  }
+
   getClientPacks(clientId: number): Observable<ClientPack[]> {
     return this.http.get<ClientPack[]>(`${this.baseUrl}/clients/${clientId}/packs`);
   }

@@ -46,6 +46,7 @@ export interface ServicePack {
   total_sessions: number;
   price: number;
   active: boolean;
+  duration_minutes?: number;
   created_at?: string;
   updated_at?: string;
 }
