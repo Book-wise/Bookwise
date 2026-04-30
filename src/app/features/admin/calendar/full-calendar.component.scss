@@ -105,6 +105,48 @@
   font-size: 0.75rem;
 }
 
+// Slot hover - muestra fondo rosa suave con bordes interlineados
+::ng-deep .fc .fc-timegrid-slot:hover {
+  background-color: rgba(236, 72, 153, 0.1);
+}
+
+::ng-deep .fc .fc-timegrid-slot:hover::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border: 1px dashed rgba(236, 72, 153, 0.3);
+  pointer-events: none;
+}
+
+// Slot seleccionado - highlighted
+::ng-deep .fc .fc-timegrid-slot.fc-slot-selected {
+  background-color: rgba(236, 72, 153, 0.15) !important;
+}
+
+::ng-deep .fc .fc-timegrid-slot.fc-slot-selected::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border: 2px solid rgba(236, 72, 153, 0.5);
+  pointer-events: none;
+}
+
+// Time labels en formato 24h
+::ng-deep .fc .fc-timegrid-axis-cushion {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+::ng-deep .fc .fc-timegrid-slot-label {
+  font-size: 0.75rem;
+}
+
 ::ng-deep .fc .fc-day-max-events {
   font-weight: 500;
   color: #6b7280;

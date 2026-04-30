@@ -59,7 +59,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin],
-    initialView: 'dayGridMonth',
+    initialView: 'timeGridWeek',
     locale: esLocale,
     headerToolbar: {
       left: 'prev,next today',
@@ -81,7 +81,15 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     events: [],
     eventClick: this.handleEventClick.bind(this),
     select: this.handleDateSelect.bind(this),
-    datesSet: this.handleDatesSet.bind(this)
+    datesSet: this.handleDatesSet.bind(this),
+    // Formato de hora 24h
+    slotLabelFormat: {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    },
+    // Duración de slots en minutos
+    slotDuration: '00:30:00'
   };
 
   locationOptions = computed(() => 
