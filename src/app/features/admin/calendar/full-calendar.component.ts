@@ -19,6 +19,7 @@ import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule } from 'primeng/popover';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
 import { Booking, Location, Provider } from '../../../core/models';
@@ -55,6 +56,7 @@ interface CalendarEvent {
     SelectModule,
     TagModule,
     DialogModule,
+    ProgressSpinnerModule,
     BookingDialogComponent,
     NewBookingDialogComponent,
     PopoverModule,
@@ -75,6 +77,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(NewBookingDialogComponent) newBookingDialog!: NewBookingDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
 
+  loading = signal(true);
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
   providers = signal<Provider[]>([]);
@@ -204,6 +207,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadBookings(dateFrom: string, dateTo: string): void {
+    this.loading.set(true);
     let params: any = {
       date_from: dateFrom,
       date_to: dateTo,
@@ -215,13 +219,15 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.api.getBookings(params).subscribe({
       next: (response: any) => {
-        // La API puede devolver directamente el array o un objeto con data
         const data = response.data || response;
         const bookings = Array.isArray(data) ? data : [];
         this.bookings.set(bookings);
         this.updateCalendarEvents(bookings);
+        this.loading.set(false);
       },
-      error: () => {},
+      error: () => {
+        this.loading.set(false);
+      },
     });
   }
 

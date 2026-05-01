@@ -36,6 +36,21 @@
     }
   }
 
+  .calendar-area {
+    position: relative;
+  }
+
+  .calendar-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.75);
+    z-index: 10;
+    border-radius: 8px;
+  }
+
   .calendar-wrapper {
     // FullCalendar CSS Variables
     --fc-border-color: #e5e7eb;
