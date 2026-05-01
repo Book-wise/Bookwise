@@ -6,7 +6,7 @@
     </span>
   </div>
   
-  <p-table [value]="clients()" [tableStyle]="{'min-width': '50rem'}" [paginator]="true" [rows]="10">
+  <p-table [value]="clients()" [tableStyle]="{'min-width': '50rem'}" [paginator]="true" [rows]="10" [loading]="loading()">
     <ng-template pTemplate="header">
       <tr>
         <th>ID</th>
