@@ -126,6 +126,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     },
     // Duración de slots en minutos
     slotDuration: '00:30:00',
+    contentHeight: this.getContentHeight(),
   };
 
   locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
@@ -150,10 +151,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('window:resize')
   onResize(): void {
     this.checkViewport();
-    // Forzar actualización del calendario
     if (this.calendar) {
+      this.calendar.setOption('contentHeight', this.getContentHeight());
       this.calendar.updateSize();
     }
+  }
+
+  private getContentHeight(): number {
+    // viewport minus fixed overhead: main-content padding + card header (filters) +
+    // FullCalendar toolbar + column headers row + surrounding paddings
+    return window.innerHeight - 250;
   }
 
   private checkViewport(): void {
@@ -167,7 +174,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       select: this.handleDateSelect.bind(this),
       datesSet: this.handleDatesSet.bind(this),
       dateClick: (info) => {
-        // Abre las opciones al hacer click en un día/hora
         this.selectedDate = info.date;
         this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
         this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
