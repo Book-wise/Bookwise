@@ -22,7 +22,14 @@
       </div>
     </ng-template>
 
-    <div class="calendar-wrapper" #calendarContainer></div>
+    <div class="calendar-area">
+      <div class="calendar-wrapper" #calendarContainer></div>
+      @if (loading()) {
+        <div class="calendar-loading">
+          <p-progressSpinner strokeWidth="3" animationDuration=".8s" />
+        </div>
+      }
+    </div>
   </p-card>
 </div>
 
