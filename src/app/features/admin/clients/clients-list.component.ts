@@ -9,18 +9,30 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ApiService } from '../../../core/services/api.service';
 import { Client } from '../../../core/models';
 import { debounceTime, Subject } from 'rxjs';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, ButtonModule, CardModule, TagModule, InputTextModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    CardModule,
+    TagModule,
+    InputTextModule,
+    IconFieldModule,
+    InputIconModule,
+  ],
   templateUrl: './clients-list.component.html',
-  styleUrls: ['./clients-list.component.scss']
+  styleUrls: ['./clients-list.component.scss'],
 })
 export class ClientsListComponent implements OnInit {
   private api = inject(ApiService);
   private searchSubject = new Subject<void>();
-  
+
   clients = signal<Client[]>([]);
   loading = signal<boolean>(false);
   searchTerm = signal<string>('');
@@ -44,7 +56,7 @@ export class ClientsListComponent implements OnInit {
       error: () => {
         this.clients.set([]);
         this.loading.set(false);
-      }
+      },
     });
   }
 

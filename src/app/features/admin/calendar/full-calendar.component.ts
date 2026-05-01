@@ -1,4 +1,16 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -6,14 +18,16 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
+import { PopoverModule } from 'primeng/popover';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
 import { Booking, Location, Provider } from '../../../core/models';
 import { BookingDialogComponent } from '../bookings/booking-dialog.component';
 import { NewBookingDialogComponent } from '../bookings/new-booking-dialog.component';
+import { BlockTimeDialogComponent } from '../bookings/block-time-dialog.component';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
@@ -33,11 +47,23 @@ interface CalendarEvent {
 @Component({
   selector: 'app-full-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, TagModule, DialogModule, BookingDialogComponent, NewBookingDialogComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CardModule,
+    ButtonModule,
+    SelectModule,
+    TagModule,
+    DialogModule,
+    BookingDialogComponent,
+    NewBookingDialogComponent,
+    PopoverModule,
+    BlockTimeDialogComponent,
+  ],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  providers: [MessageService]
+  providers: [MessageService],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(ApiService);
@@ -47,6 +73,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(NewBookingDialogComponent) newBookingDialog!: NewBookingDialogComponent;
+  @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
 
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
@@ -55,6 +82,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedLocationId: number | null = null;
   selectedProviderId: number | null = null;
   selectedDate: Date | null = null;
+  selectedEndDate: Date | null = null;
+
+  // Popover for slot selection
+  showSlotMenu = signal(false);
+  slotMenuPosition = { x: 0, y: 0 };
 
   // Signal para detectar viewport
   isMobile = signal(false);
@@ -62,18 +94,20 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin],
     initialView: 'timeGridWeek',
+    slotMinTime: '09:00:00',
+    slotMaxTime: '21:00:00',
     locale: esLocale,
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay',
     },
     buttonText: {
       today: 'Hoy',
       month: 'Mes',
       week: 'Semana',
       day: 'Día',
-      list: 'Lista'
+      list: 'Lista',
     },
     editable: true,
     selectable: true,
@@ -88,18 +122,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     slotLabelFormat: {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
     },
     // Duración de slots en minutos
-    slotDuration: '00:30:00'
+    slotDuration: '00:30:00',
   };
 
-  locationOptions = computed(() => 
-    this.locations().map(l => ({ label: l.name, value: l.id }))
-  );
-  
-  providerOptions = computed(() => 
-    this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id }))
+  locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
+
+  providerOptions = computed(() =>
+    this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
 
   selectedBooking = signal<Booking | null>(null);
@@ -133,7 +165,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       ...this.calendarOptions,
       eventClick: this.handleEventClick.bind(this),
       select: this.handleDateSelect.bind(this),
-      datesSet: this.handleDatesSet.bind(this)
+      datesSet: this.handleDatesSet.bind(this),
+      dateClick: (info) => {
+        // Abre las opciones al hacer click en un día/hora
+        this.selectedDate = info.date;
+        this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
+        this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
+        this.showSlotMenu.set(true);
+      },
     });
     this.calendar.render();
   }
@@ -147,14 +186,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   loadLocations(): void {
     this.api.getLocations().subscribe({
       next: (data) => this.locations.set(data),
-      error: () => {}
+      error: () => {},
     });
   }
 
   loadProviders(): void {
     this.api.getProviders().subscribe({
       next: (data) => this.providers.set(data),
-      error: () => {}
+      error: () => {},
     });
   }
 
@@ -162,7 +201,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     let params: any = {
       date_from: dateFrom,
       date_to: dateTo,
-      per_page: 500
+      per_page: 500,
     };
 
     if (this.selectedLocationId) params.location_id = this.selectedLocationId;
@@ -176,19 +215,20 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.bookings.set(bookings);
         this.updateCalendarEvents(bookings);
       },
-      error: () => {}
+      error: () => {},
     });
   }
 
   private updateCalendarEvents(bookings: Booking[]): void {
-    const events: CalendarEvent[] = bookings.map(booking => ({
+    const events: CalendarEvent[] = bookings.map((booking) => ({
       id: booking.id.toString(),
-      title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
+      title:
+        `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
       start: booking.start_time,
       end: booking.end_time,
       backgroundColor: this.getStatusColor(booking.status?.name),
       borderColor: this.getStatusColor(booking.status?.name),
-      extendedProps: { booking }
+      extendedProps: { booking },
     }));
 
     if (this.calendar) {
@@ -199,11 +239,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private getStatusColor(status?: string): string {
     const colorMap: Record<string, string> = {
-      'confirmed': '#22c55e',
-      'pending': '#f59e0b',
-      'cancelled': '#ef4444',
-      'completed': '#3b82f6',
-      'pending_confirmation': '#8b5cf6'
+      confirmed: '#22c55e',
+      pending: '#f59e0b',
+      cancelled: '#ef4444',
+      completed: '#3b82f6',
+      pending_confirmation: '#8b5cf6',
     };
     return colorMap[status?.toLowerCase() || ''] || '#6b7280';
   }
@@ -212,10 +252,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    this.loadBookings(
-      firstDay.toISOString().split('T')[0],
-      lastDay.toISOString().split('T')[0]
-    );
+    this.loadBookings(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0]);
   }
 
   private handleDatesSet(info: { start: Date; end: Date }): void {
@@ -234,7 +271,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   editBooking(): void {
     const booking = this.selectedBooking();
     if (!booking) return;
-    
+
     this.showEventDialog.set(false);
     // Delay para que cierre el dialog primero
     setTimeout(() => {
@@ -247,10 +284,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const date = new Date();
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    this.loadBookings(
-      firstDay.toISOString().split('T')[0],
-      lastDay.toISOString().split('T')[0]
-    );
+    this.loadBookings(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0]);
   }
 
   onBookingCancelled(): void {
@@ -259,7 +293,36 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private handleDateSelect(selectInfo: DateSelectArg): void {
     this.selectedDate = selectInfo.start;
-    this.newBookingDialog.openNew(undefined, selectInfo.start);
+    this.selectedEndDate = selectInfo.end;
+    // Mostrar el menú de opciones
+    if (selectInfo.jsEvent) {
+      this.slotMenuPosition = { x: selectInfo.jsEvent.clientX, y: selectInfo.jsEvent.clientY };
+      this.showSlotMenu.set(true);
+    }
+  }
+
+  // Show slot action menu
+  showSlotActions(event: MouseEvent, dateInfo?: { start: Date; end?: Date }): void {
+    if (dateInfo) {
+      this.selectedDate = dateInfo.start;
+      this.selectedEndDate = dateInfo.end || dateInfo.start;
+    }
+    this.slotMenuPosition = { x: event.clientX, y: event.clientY };
+    this.showSlotMenu.set(true);
+  }
+
+  openNewBooking(): void {
+    this.showSlotMenu.set(false);
+    const dateToUse = this.selectedDate || new Date();
+    this.newBookingDialog.openNew(undefined, dateToUse);
+  }
+
+  openBlockTime(): void {
+    this.showSlotMenu.set(false);
+    this.blockTimeDialog.open(
+      this.selectedDate || new Date(),
+      this.selectedEndDate || this.selectedDate || new Date(),
+    );
   }
 
   closeDialog(): void {
@@ -267,12 +330,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedBooking.set(null);
   }
 
-  getStatusSeverity(status?: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {
-    const statusMap: Record<string, "success" | "info" | "warn" | "danger"> = {
-      'confirmed': 'success',
-      'pending': 'warn',
-      'cancelled': 'danger',
-      'completed': 'info'
+  getStatusSeverity(
+    status?: string,
+  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    const statusMap: Record<string, 'success' | 'info' | 'warn' | 'danger'> = {
+      confirmed: 'success',
+      pending: 'warn',
+      cancelled: 'danger',
+      completed: 'info',
     };
     return statusMap[status?.toLowerCase() || ''] || 'info';
   }
