@@ -1,12 +1,24 @@
 <p-card header="Clientes">
   <div class="mb-3">
-    <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input type="text" pInputText placeholder="Buscar cliente..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event); onSearch()" />
-    </span>
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        type="text"
+        pInputText
+        placeholder="Buscar cliente..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event); onSearch()"
+      />
+    </p-iconfield>
   </div>
-  
-  <p-table [value]="clients()" [tableStyle]="{'min-width': '50rem'}" [paginator]="true" [rows]="10">
+
+  <p-table
+    [value]="clients()"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [paginator]="true"
+    [rows]="10"
+  >
     <ng-template pTemplate="header">
       <tr>
         <th>ID</th>
@@ -24,12 +36,18 @@
         <td>{{ client.email }}</td>
         <td>{{ client.phone }}</td>
         <td>
-          <p-tag [value]="client.active ? 'Activo' : 'Inactivo'" 
-                 [severity]="client.active ? 'success' : 'danger'"></p-tag>
+          <p-tag
+            [value]="client.active ? 'Activo' : 'Inactivo'"
+            [severity]="client.active ? 'success' : 'danger'"
+          ></p-tag>
         </td>
         <td>
           <p-button icon="pi pi-eye" styleClass="p-button-text" pTooltip="Ver"></p-button>
-          <p-button icon="pi pi-shopping-cart" styleClass="p-button-text" pTooltip="Ver Packs"></p-button>
+          <p-button
+            icon="pi pi-shopping-cart"
+            styleClass="p-button-text"
+            pTooltip="Ver Packs"
+          ></p-button>
         </td>
       </tr>
     </ng-template>
