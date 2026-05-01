@@ -1,4 +1,16 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -33,11 +45,21 @@ interface CalendarEvent {
 @Component({
   selector: 'app-full-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, TagModule, DialogModule, BookingDialogComponent, NewBookingDialogComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CardModule,
+    ButtonModule,
+    SelectModule,
+    TagModule,
+    DialogModule,
+    BookingDialogComponent,
+    NewBookingDialogComponent,
+  ],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  providers: [MessageService]
+  providers: [MessageService],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(ApiService);
@@ -63,17 +85,19 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin],
     initialView: 'timeGridWeek',
     locale: esLocale,
+    slotMinTime: '09:00:00',
+    slotMaxTime: '21:00:00',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
     },
     buttonText: {
       today: 'Hoy',
       month: 'Mes',
       week: 'Semana',
       day: 'Día',
-      list: 'Lista'
+      list: 'Lista',
     },
     editable: true,
     selectable: true,
@@ -88,18 +112,17 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     slotLabelFormat: {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
     },
     // Duración de slots en minutos
-    slotDuration: '00:30:00'
+    slotDuration: '00:30:00',
+    contentHeight: this.getContentHeight(),
   };
 
-  locationOptions = computed(() => 
-    this.locations().map(l => ({ label: l.name, value: l.id }))
-  );
-  
-  providerOptions = computed(() => 
-    this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id }))
+  locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
+
+  providerOptions = computed(() =>
+    this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
 
   selectedBooking = signal<Booking | null>(null);
@@ -118,10 +141,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('window:resize')
   onResize(): void {
     this.checkViewport();
-    // Forzar actualización del calendario
     if (this.calendar) {
+      this.calendar.setOption('contentHeight', this.getContentHeight());
       this.calendar.updateSize();
     }
+  }
+
+  private getContentHeight(): number {
+    // viewport minus fixed overhead: main-content padding + card header (filters) +
+    // FullCalendar toolbar + column headers row + surrounding paddings
+    return window.innerHeight - 250;
   }
 
   private checkViewport(): void {
@@ -133,7 +162,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       ...this.calendarOptions,
       eventClick: this.handleEventClick.bind(this),
       select: this.handleDateSelect.bind(this),
-      datesSet: this.handleDatesSet.bind(this)
+      datesSet: this.handleDatesSet.bind(this),
     });
     this.calendar.render();
   }
@@ -147,14 +176,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   loadLocations(): void {
     this.api.getLocations().subscribe({
       next: (data) => this.locations.set(data),
-      error: () => {}
+      error: () => {},
     });
   }
 
   loadProviders(): void {
     this.api.getProviders().subscribe({
       next: (data) => this.providers.set(data),
-      error: () => {}
+      error: () => {},
     });
   }
 
@@ -162,7 +191,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     let params: any = {
       date_from: dateFrom,
       date_to: dateTo,
-      per_page: 500
+      per_page: 500,
     };
 
     if (this.selectedLocationId) params.location_id = this.selectedLocationId;
@@ -176,19 +205,20 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.bookings.set(bookings);
         this.updateCalendarEvents(bookings);
       },
-      error: () => {}
+      error: () => {},
     });
   }
 
   private updateCalendarEvents(bookings: Booking[]): void {
-    const events: CalendarEvent[] = bookings.map(booking => ({
+    const events: CalendarEvent[] = bookings.map((booking) => ({
       id: booking.id.toString(),
-      title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
+      title:
+        `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
       start: booking.start_time,
       end: booking.end_time,
       backgroundColor: this.getStatusColor(booking.status?.name),
       borderColor: this.getStatusColor(booking.status?.name),
-      extendedProps: { booking }
+      extendedProps: { booking },
     }));
 
     if (this.calendar) {
@@ -199,11 +229,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private getStatusColor(status?: string): string {
     const colorMap: Record<string, string> = {
-      'confirmed': '#22c55e',
-      'pending': '#f59e0b',
-      'cancelled': '#ef4444',
-      'completed': '#3b82f6',
-      'pending_confirmation': '#8b5cf6'
+      confirmed: '#22c55e',
+      pending: '#f59e0b',
+      cancelled: '#ef4444',
+      completed: '#3b82f6',
+      pending_confirmation: '#8b5cf6',
     };
     return colorMap[status?.toLowerCase() || ''] || '#6b7280';
   }
@@ -212,10 +242,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    this.loadBookings(
-      firstDay.toISOString().split('T')[0],
-      lastDay.toISOString().split('T')[0]
-    );
+    this.loadBookings(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0]);
   }
 
   private handleDatesSet(info: { start: Date; end: Date }): void {
@@ -234,7 +261,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   editBooking(): void {
     const booking = this.selectedBooking();
     if (!booking) return;
-    
+
     this.showEventDialog.set(false);
     // Delay para que cierre el dialog primero
     setTimeout(() => {
@@ -247,10 +274,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const date = new Date();
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    this.loadBookings(
-      firstDay.toISOString().split('T')[0],
-      lastDay.toISOString().split('T')[0]
-    );
+    this.loadBookings(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0]);
   }
 
   onBookingCancelled(): void {
@@ -267,12 +291,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedBooking.set(null);
   }
 
-  getStatusSeverity(status?: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {
-    const statusMap: Record<string, "success" | "info" | "warn" | "danger"> = {
-      'confirmed': 'success',
-      'pending': 'warn',
-      'cancelled': 'danger',
-      'completed': 'info'
+  getStatusSeverity(
+    status?: string,
+  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    const statusMap: Record<string, 'success' | 'info' | 'warn' | 'danger'> = {
+      confirmed: 'success',
+      pending: 'warn',
+      cancelled: 'danger',
+      completed: 'info',
     };
     return statusMap[status?.toLowerCase() || ''] || 'info';
   }
