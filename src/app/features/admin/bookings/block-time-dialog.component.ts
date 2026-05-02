@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -6,15 +6,6 @@ import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageService } from 'primeng/api';
-
-interface BlockedSlot {
-  id?: number;
-  location_id: number;
-  provider_id?: number;
-  start_time: string;
-  end_time: string;
-  reason?: string;
-}
 
 @Component({
   selector: 'app-block-time-dialog',
@@ -35,31 +26,34 @@ export class BlockTimeDialogComponent {
   private messageService = inject(MessageService);
 
   visible = false;
-  saving = signal(false);
+  saving  = signal(false);
+  reason  = '';
 
-  startDate: Date = new Date();
-  endDate: Date   = new Date(new Date().getTime() + 60 * 60 * 1000);
-  reason = '';
+  startDate = signal<Date>(new Date());
+  endDate   = signal<Date>(new Date(new Date().getTime() + 60 * 60 * 1000));
+
+  // Computed strings — reactive: update automatically when signals change
+  startTimeStr = computed(() => this.fmt(this.startDate()));
+  endTimeStr   = computed(() => this.fmt(this.endDate()));
+
+  // Also expose date values as plain getters for p-datepicker [(ngModel)]
+  get startDateValue(): Date { return this.startDate(); }
+  set startDateValue(d: Date) { this.startDate.set(d); }
+
+  get endDateValue(): Date { return this.endDate(); }
+  set endDateValue(d: Date) { this.endDate.set(d); }
 
   // ── Time helpers ────────────────────────────────────────────────────────────
 
-  getStartTimeString(): string {
-    return this.toTimeString(this.startDate);
-  }
-
-  getEndTimeString(): string {
-    return this.toTimeString(this.endDate);
-  }
-
   onStartTimeChange(event: Event): void {
-    this.startDate = this.applyTime(this.startDate, event);
+    this.startDate.set(this.applyTime(this.startDate(), event));
   }
 
   onEndTimeChange(event: Event): void {
-    this.endDate = this.applyTime(this.endDate, event);
+    this.endDate.set(this.applyTime(this.endDate(), event));
   }
 
-  private toTimeString(d: Date): string {
+  private fmt(d: Date): string {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 
@@ -74,20 +68,20 @@ export class BlockTimeDialogComponent {
 
   // ── Lifecycle ───────────────────────────────────────────────────────────────
 
-  open(startTime?: Date, endTime?: Date) {
-    if (startTime) this.startDate = startTime;
-    if (endTime)   this.endDate   = endTime;
+  open(startTime?: Date, endTime?: Date): void {
+    if (startTime) this.startDate.set(startTime);
+    if (endTime)   this.endDate.set(endTime);
     this.visible = true;
   }
 
-  onClose() {
-    this.visible   = false;
-    this.startDate = new Date();
-    this.endDate   = new Date(new Date().getTime() + 60 * 60 * 1000);
-    this.reason    = '';
+  onClose(): void {
+    this.visible = false;
+    this.reason  = '';
+    this.startDate.set(new Date());
+    this.endDate.set(new Date(new Date().getTime() + 60 * 60 * 1000));
   }
 
-  block() {
+  block(): void {
     this.saving.set(true);
     // TODO: wire to API
     setTimeout(() => {

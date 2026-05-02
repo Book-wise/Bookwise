@@ -13,7 +13,7 @@
       <div class="field">
         <label>Fecha inicio</label>
         <p-datepicker
-          [(ngModel)]="startDate"
+          [(ngModel)]="startDateValue"
           dateFormat="dd/mm/yy"
           [appendTo]="'body'"
           styleClass="w-full" />
@@ -23,7 +23,7 @@
         <input
           type="time"
           class="time-input"
-          [value]="getStartTimeString()"
+          [value]="startTimeStr()"
           (change)="onStartTimeChange($event)" />
       </div>
     </div>
@@ -32,7 +32,7 @@
       <div class="field">
         <label>Fecha fin</label>
         <p-datepicker
-          [(ngModel)]="endDate"
+          [(ngModel)]="endDateValue"
           dateFormat="dd/mm/yy"
           [appendTo]="'body'"
           styleClass="w-full" />
@@ -42,7 +42,7 @@
         <input
           type="time"
           class="time-input"
-          [value]="getEndTimeString()"
+          [value]="endTimeStr()"
           (change)="onEndTimeChange($event)" />
       </div>
     </div>
