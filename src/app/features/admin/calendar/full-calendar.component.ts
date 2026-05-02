@@ -34,6 +34,15 @@ import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
 
+const STATUS_COLOR_MAP: Record<number, string> = {
+  1: '#93c5fd', // Reservado
+  2: '#fb923c', // Confirmado
+  3: '#ec4899', // Asiste
+  4: '#f9a8d4', // No asistio
+  5: '#fca5a5', // Pendiente
+  6: '#86efac', // En espera
+};
+
 interface CalendarEvent {
   id: string;
   title: string;
@@ -234,8 +243,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
           start: booking.start_time,
           end: booking.end_time,
-          backgroundColor: this.getStatusColor(booking.status?.name),
-          borderColor: this.getStatusColor(booking.status?.name),
+          backgroundColor: STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
+          borderColor: STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
           extendedProps: { booking },
         }));
         successCallback(events);

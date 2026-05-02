@@ -90,14 +90,17 @@ interface ApiErrorResponse {
       [header]="dialogTitle()"
       [(visible)]="visible"
       [modal]="true"
-      [style]="{width: '600px', maxWidth: '95vw'}"
+      [style]="{width: '720px', maxWidth: '95vw'}"
+      [contentStyle]="{'overflow': 'visible'}"
       [draggable]="false"
       [resizable]="false"
       (onHide)="onClose()">
-      
-      <!-- Header with status selector -->
-      <div class="dialog-header">
-        <div class="status-selector" *ngIf="isEdit()">
+
+      <div class="dialog-content">
+
+        <!-- Status Selector (always visible) -->
+        <div class="field">
+          <label class="field-label">Estado</label>
           <p-select
             [options]="statusOptions()"
             [(ngModel)]="formData.status_id"
@@ -118,41 +121,27 @@ interface ApiErrorResponse {
             </ng-template>
           </p-select>
         </div>
-      </div>
 
-      <!-- Date and Time Section -->
-      <div class="datetime-section">
-        <div class="date-field">
-          <p-floatlabel>
-            <p-datepicker [(ngModel)]="formData.start_time" dateFormat="dd/mm/yy" [showTime]="true" hourFormat="24" inputId="bookingDate" styleClass="w-full" />
-            <label for="bookingDate">Fecha</label>
-          </p-floatlabel>
-        </div>
-        
-        <div class="time-fields">
-          <div class="time-field">
-            <label>Hora</label>
-            <div class="time-inputs">
-              <p-inputNumber [(ngModel)]="timeHour" [min]="0" [max]="23" styleClass="w-full" (onInput)="onTimeChange()" />
-              <span class="time-separator">:</span>
-              <p-inputNumber [(ngModel)]="timeMinute" [min]="0" [max]="59" [step]="5" styleClass="w-full" (onInput)="onTimeChange()" />
-            </div>
+        <!-- Date and Time Section -->
+        <div class="datetime-section">
+          <div class="date-field">
+            <label class="field-label">Fecha y hora</label>
+            <p-datepicker [(ngModel)]="formData.start_time" dateFormat="dd/mm/yy" [showTime]="true" hourFormat="24" inputId="bookingDate" styleClass="w-full" [appendTo]="'body'" />
+          </div>
+
+          <div class="repeat-toggle">
+            <label class="field-label">&nbsp;</label>
+            <p-button
+              [label]="formData.repeat_enabled ? 'Repeticion On' : 'Repetir'"
+              [icon]="formData.repeat_enabled ? 'pi pi-check' : 'pi pi-plus'"
+              [outlined]="!formData.repeat_enabled"
+              size="small"
+              (onClick)="openRepeatDialog()">
+            </p-button>
           </div>
         </div>
 
-        <div class="repeat-toggle">
-          <p-button 
-            [label]="formData.repeat_enabled ? 'Repeticion On' : 'Repetir'" 
-            [icon]="formData.repeat_enabled ? 'pi pi-check' : 'pi pi-plus'"
-            [outlined]="!formData.repeat_enabled"
-            size="small"
-            (onClick)="openRepeatDialog()">
-          </p-button>
-        </div>
-      </div>
-
-      <!-- Client/Patient Section -->
-      <div class="client-section">
+        <!-- Client/Patient Section -->
         <div class="field">
           <label class="field-label">Paciente</label>
           <p-select
@@ -173,10 +162,8 @@ interface ApiErrorResponse {
           </p-select>
           <p-button label="+" icon="pi pi-plus" styleClass="p-button-text p-button-sm" (onClick)="showAddClient = true"></p-button>
         </div>
-      </div>
 
-      <!-- Provider Section -->
-      <div class="provider-section">
+        <!-- Provider Section -->
         <div class="field">
           <label class="field-label">Profesional</label>
           <p-select
@@ -190,10 +177,8 @@ interface ApiErrorResponse {
             </ng-template>
           </p-select>
         </div>
-      </div>
 
-      <!-- Service/Pack Section -->
-      <div class="service-section">
+        <!-- Service/Pack Section -->
         <div class="field">
           <label class="field-label">Servicios</label>
           <p-select
@@ -212,10 +197,22 @@ interface ApiErrorResponse {
             </ng-template>
           </p-select>
         </div>
-      </div>
 
-      <!-- Additional Info Accordion -->
-      <p-accordion value="0">
+        <!-- Location Section -->
+        <div class="field">
+          <label class="field-label">Sede / Ubicación</label>
+          <p-select
+            [options]="locationOptions()"
+            [(ngModel)]="formData.location_id"
+            placeholder="Seleccionar sede"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <!-- Additional Info Accordion -->
+        <p-accordion value="0">
         <p-accordion-panel value="0">
           <p-accordion-header>Información adicional</p-accordion-header>
           <p-accordion-content>
@@ -240,6 +237,8 @@ interface ApiErrorResponse {
           </p-accordion-content>
         </p-accordion-panel>
       </p-accordion>
+
+      </div><!-- end dialog-content -->
 
       <ng-template pTemplate="footer">
         <div class="dialog-footer">
@@ -325,7 +324,7 @@ interface ApiErrorResponse {
         <div class="end-option">
           <p-checkbox [(ngModel)]="repeatUntilChecked" [binary]="true" inputId="repeatUntil" />
           <label for="repeatUntil">Hasta la fecha</label>
-          <p-datepicker [(ngModel)]="formData.repeat_until" dateFormat="dd/mm/yy" [disabled]="!repeatUntilChecked" styleClass="until-input" />
+          <p-datepicker [(ngModel)]="formData.repeat_until" dateFormat="dd/mm/yy" [disabled]="!repeatUntilChecked" styleClass="until-input" [appendTo]="'body'" />
         </div>
       </div>
 
@@ -368,13 +367,10 @@ interface ApiErrorResponse {
     </p-dialog>
   `,
   styles: [`
-    .dialog-header {
-      margin-bottom: 1rem;
-    }
-
-    .status-selector {
+    .dialog-content {
       display: flex;
-      justify-content: flex-end;
+      flex-direction: column;
+      gap: 1.5rem;
     }
 
     .status-option {
@@ -391,53 +387,28 @@ interface ApiErrorResponse {
 
     .datetime-section {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
+      grid-template-columns: 1fr auto;
       gap: 1rem;
       align-items: end;
-      margin-bottom: 1rem;
-    }
-
-    .time-fields {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .time-field label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #6b7280;
-      margin-bottom: 0.25rem;
-    }
-
-    .time-inputs {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .time-separator {
-      font-weight: bold;
-      font-size: 1.25rem;
     }
 
     .repeat-toggle {
       align-self: end;
+      display: flex;
+      flex-direction: column;
     }
 
     .field {
-      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
     }
 
     .field-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
       display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #6b7280;
       margin-bottom: 0.5rem;
-    }
-
-    .client-section, .provider-section, .service-section {
-      margin-bottom: 1rem;
     }
 
     .client-option, .service-option {
@@ -529,9 +500,6 @@ interface ApiErrorResponse {
       width: 100%;
     }
 
-    :host ::ng-deep .p-accordion {
-      margin-top: 1rem;
-    }
   `],
   providers: [MessageService]
 })
@@ -597,8 +565,10 @@ export class NewBookingDialogComponent implements OnInit {
     price: s.price || 0
   })));
 
+  locationOptions = computed(() => this.locations().map(l => ({ label: l.name, value: l.id })));
+
   statusOptions = computed(() => BOOKING_STATUSES);
-  
+
   daysOfWeek = DAYS_OF_WEEK;
 
   dialogTitle = computed(() => this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva');
@@ -785,8 +755,6 @@ export class NewBookingDialogComponent implements OnInit {
     this.saving.set(true);
 
     const startDate = new Date(this.formData.start_time);
-    startDate.setHours(this.timeHour, this.timeMinute, 0, 0);
-    
     const endDate = new Date(startDate.getTime() + this.formData.duration_minutes * 60000);
 
     const bookingData: any = {
