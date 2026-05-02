@@ -263,24 +263,35 @@
     <div class="repeat-section">
       <label class="section-label">Finaliza</label>
       <div class="end-option">
-        <p-checkbox [(ngModel)]="repeatAfterChecked" [binary]="true" inputId="repeatAfter" />
-        <label for="repeatAfter">Después de</label>
-        <p-inputnumber
-          [(ngModel)]="formData.repeat_count"
-          [min]="1"
-          [disabled]="!repeatAfterChecked"
-          styleClass="count-input" />
-        <span>repeticiones</span>
+        <p-radiobutton
+          [(ngModel)]="formData.repeat_end_type"
+          name="repeatEndType"
+          value="after"
+          inputId="endAfter" />
+        <label for="endAfter">Después de</label>
+        @if (formData.repeat_end_type === 'after') {
+          <p-inputnumber
+            [(ngModel)]="formData.repeat_count"
+            [min]="1"
+            styleClass="count-input" />
+          <span>repeticiones</span>
+        }
       </div>
       <div class="end-option">
-        <p-checkbox [(ngModel)]="repeatUntilChecked" [binary]="true" inputId="repeatUntil" />
-        <label for="repeatUntil">Hasta</label>
-        <p-datepicker
-          [(ngModel)]="formData.repeat_until"
-          dateFormat="dd/mm/yy"
-          [disabled]="!repeatUntilChecked"
-          [appendTo]="'body'"
-          styleClass="until-input" />
+        <p-radiobutton
+          [(ngModel)]="formData.repeat_end_type"
+          name="repeatEndType"
+          value="until"
+          inputId="endUntil" />
+        <label for="endUntil">Fecha específica</label>
+        @if (formData.repeat_end_type === 'until') {
+          <span class="end-sublabel">Fecha de finalización</span>
+          <p-datepicker
+            [(ngModel)]="formData.repeat_until"
+            dateFormat="dd/mm/yy"
+            [appendTo]="'body'"
+            styleClass="until-input" />
+        }
       </div>
     </div>
 

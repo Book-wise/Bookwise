@@ -21,9 +21,8 @@ const DAYS = [
 ];
 
 const END_TYPE_OPTIONS = [
-  { label: 'Después de', value: 'after'  },
-  { label: 'Hasta fecha', value: 'until'  },
-  { label: 'Nunca',       value: 'never'  },
+  { label: 'Después de',      value: 'after' },
+  { label: 'Fecha específica', value: 'until' },
 ];
 
 const REPEAT_TYPE_OPTIONS = [

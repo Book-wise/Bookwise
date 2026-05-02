@@ -10,6 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../core/models';
@@ -76,6 +77,7 @@ interface ApiErrorResponse {
     DatePickerModule,
     AccordionModule,
     CheckboxModule,
+    RadioButtonModule,
     TooltipModule,
   ],
   templateUrl: './booking-form-dialog.component.html',
@@ -183,7 +185,7 @@ export class BookingFormDialogComponent implements OnInit {
       repeat_type: undefined,
       repeat_days: [],
       repeat_interval: 1,
-      repeat_end_type: 'never',
+      repeat_end_type: 'after',
       repeat_count: 1,
       repeat_until: undefined,
     };
@@ -284,14 +286,6 @@ export class BookingFormDialogComponent implements OnInit {
 
   applyRepeat() {
     this.formData.repeat_enabled = true;
-    if (this.repeatAfterChecked) {
-      this.formData.repeat_end_type = 'after';
-      this.formData.repeat_count = this.formData.repeat_count || 1;
-    } else if (this.repeatUntilChecked) {
-      this.formData.repeat_end_type = 'until';
-    } else {
-      this.formData.repeat_end_type = 'never';
-    }
     this.showRepeatDialog = false;
   }
 

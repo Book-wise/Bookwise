@@ -139,6 +139,7 @@
             }
 
             @if (repeatEndType() === 'until') {
+              <span class="end-label">Fecha de finalización</span>
               <p-datepicker
                 [(ngModel)]="repeatUntilValue"
                 dateFormat="dd/mm/yy"
