@@ -13,60 +13,11 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
-import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../core/models';
-import { ApiService } from '../../../core/services/api.service';
-
-export interface BookingFormData {
-  id?: number;
-  client_id: number;
-  service_id: number;
-  provider_id: number | null;
-  location_id: number;
-  status_id: number;
-  start_time: Date;
-  duration_minutes: number;
-  price: number;
-  notes: string;
-  internal_notes?: string;
-  repeat_enabled?: boolean;
-  repeat_type?: 'daily' | 'weekly' | 'monthly';
-  repeat_days?: number[];
-  repeat_interval?: number;
-  repeat_end_type?: 'never' | 'after' | 'until';
-  repeat_count?: number;
-  repeat_until?: Date;
-}
-
-const BOOKING_STATUSES = [
-  { label: 'Reservado',   value: 1, color: '#93c5fd', severity: 'info'      as const },
-  { label: 'Confirmado',  value: 2, color: '#fb923c', severity: 'warn'      as const },
-  { label: 'Asiste',      value: 3, color: '#ec4899', severity: 'help'      as const },
-  { label: 'No asistio',  value: 4, color: '#f9a8d4', severity: 'secondary' as const },
-  { label: 'Pendiente',   value: 5, color: '#fca5a5', severity: 'danger'    as const },
-  { label: 'En espera',   value: 6, color: '#86efac', severity: 'success'   as const },
-];
-
-const REPEAT_TYPE_OPTIONS = [
-  { label: 'Diariamente',  value: 'daily'   },
-  { label: 'Semanalmente', value: 'weekly'  },
-  { label: 'Mensualmente', value: 'monthly' },
-];
-
-const DAYS_OF_WEEK = [
-  { label: 'Lun', value: 1 },
-  { label: 'Mar', value: 2 },
-  { label: 'Mie', value: 3 },
-  { label: 'Jue', value: 4 },
-  { label: 'Vie', value: 5 },
-  { label: 'Sab', value: 6 },
-  { label: 'Dom', value: 0 },
-];
-
-interface ApiErrorResponse {
-  error: string;
-  detail: string;
-  conflicts_with?: { id: number; start_time: string; end_time: string };
-}
+import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../../core/models';
+import { ApiService } from '../../../../core/services/api.service';
+import { BookingFormData, ApiErrorResponse } from '../interfaces/booking-form-data.interface';
+import { BOOKING_STATUSES } from '../constants/booking-statuses';
+import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 
 @Component({
   selector: 'app-booking-form-dialog',

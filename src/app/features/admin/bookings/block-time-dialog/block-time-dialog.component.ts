@@ -9,27 +9,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
-
-const DAYS = [
-  { label: 'Lun', value: 1 },
-  { label: 'Mar', value: 2 },
-  { label: 'Mie', value: 3 },
-  { label: 'Jue', value: 4 },
-  { label: 'Vie', value: 5 },
-  { label: 'Sab', value: 6 },
-  { label: 'Dom', value: 0 },
-];
-
-const END_TYPE_OPTIONS = [
-  { label: 'Después de',      value: 'after' },
-  { label: 'Fecha específica', value: 'until' },
-];
-
-const REPEAT_TYPE_OPTIONS = [
-  { label: 'Diariamente',   value: 'daily'   },
-  { label: 'Semanalmente',  value: 'weekly'  },
-  { label: 'Mensualmente',  value: 'monthly' },
-];
+import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
 
 @Component({
   selector: 'app-block-time-dialog',
@@ -80,7 +60,7 @@ export class BlockTimeDialogComponent {
   repeatCount    = signal(5);
   repeatUntil    = signal<Date | null>(null);
 
-  readonly days              = DAYS;
+  readonly days              = DAYS_OF_WEEK;
   readonly endTypeOptions    = END_TYPE_OPTIONS;
   readonly repeatTypeOptions = REPEAT_TYPE_OPTIONS;
 

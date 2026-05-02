@@ -24,9 +24,10 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
 import { Booking, Location, Provider } from '../../../core/models';
-import { BookingDialogComponent } from '../bookings/booking-dialog.component';
-import { BookingFormDialogComponent } from '../bookings/booking-form-dialog.component';
-import { BlockTimeDialogComponent } from '../bookings/block-time-dialog.component';
+import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
+import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
+import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
+import { STATUS_COLOR_MAP } from '../bookings/constants/booking-statuses';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -34,14 +35,6 @@ import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
 
-const STATUS_COLOR_MAP: Record<number, string> = {
-  1: '#93c5fd', // Reservado
-  2: '#fb923c', // Confirmado
-  3: '#ec4899', // Asiste
-  4: '#f9a8d4', // No asistio
-  5: '#fca5a5', // Pendiente
-  6: '#86efac', // En espera
-};
 
 interface CalendarEvent {
   id: string;

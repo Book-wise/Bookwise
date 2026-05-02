@@ -10,8 +10,9 @@ import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService } from 'primeng/api';
-import { Booking, Client, Service, Provider, Location } from '../../../core/models';
-import { ApiService } from '../../../core/services/api.service';
+import { Booking, Client, Service, Provider, Location } from '../../../../core/models';
+import { ApiService } from '../../../../core/services/api.service';
+import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 
 export interface BookingFormData {
   id?: number;
@@ -25,16 +26,6 @@ export interface BookingFormData {
   duration_minutes: number;
   price: number;
   notes: string;
-}
-
-interface ApiErrorResponse {
-  error: string;
-  detail: string;
-  conflicts_with?: {
-    id: number;
-    start_time: string;
-    end_time: string;
-  };
 }
 
 @Component({
