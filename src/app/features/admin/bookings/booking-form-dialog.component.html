@@ -217,13 +217,14 @@
     <div class="repeat-section">
       <label class="section-label">Días de la semana</label>
       <div class="days-buttons">
-        <p-button
+        <button
           *ngFor="let day of daysOfWeek"
-          [label]="day.label"
-          [styleClass]="isDaySelected(day.value) ? 'p-button-primary' : 'p-button-outlined'"
-          size="small"
-          (onClick)="toggleDay(day.value)">
-        </p-button>
+          type="button"
+          class="day-btn"
+          [class.active]="isDaySelected(day.value)"
+          (click)="toggleDay(day.value)">
+          {{ day.label }}
+        </button>
       </div>
     </div>
 
