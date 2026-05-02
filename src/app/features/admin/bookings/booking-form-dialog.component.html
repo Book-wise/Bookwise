@@ -1,25 +1,23 @@
 <!-- Main Booking Dialog -->
 <p-dialog
-  [header]="dialogTitle()"
   [(visible)]="visible"
   [modal]="true"
   [style]="{width: '720px', maxWidth: '95vw'}"
-  [contentStyle]="{'overflow': 'visible'}"
+  [contentStyle]="{'overflow-y': 'auto', 'max-height': '65vh'}"
   [draggable]="false"
   [resizable]="false"
   (onHide)="onClose()">
 
-  <div class="dialog-content">
-
-    <!-- Status -->
-    <div class="field">
-      <label class="field-label">Estado</label>
+  <ng-template pTemplate="header">
+    <div class="dialog-header-row">
+      <span class="dialog-title">{{ dialogTitle() }}</span>
       <p-select
         [options]="statusOptions()"
         [(ngModel)]="formData.status_id"
         optionLabel="label"
         optionValue="value"
-        styleClass="w-full">
+        [appendTo]="'body'"
+        styleClass="header-status-select">
         <ng-template pTemplate="item" let-status>
           <div class="status-option">
             <span class="status-dot" [style.backgroundColor]="status.color"></span>
@@ -34,6 +32,9 @@
         </ng-template>
       </p-select>
     </div>
+  </ng-template>
+
+  <div class="dialog-content">
 
     <!-- Fecha y hora -->
     <div class="datetime-section">
