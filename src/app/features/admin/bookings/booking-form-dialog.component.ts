@@ -1,0 +1,402 @@
+import { Component, inject, OnInit, signal, computed, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SelectModule } from 'primeng/select';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { DatePickerModule } from 'primeng/datepicker';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
+import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../core/models';
+import { ApiService } from '../../../core/services/api.service';
+
+export interface BookingFormData {
+  id?: number;
+  client_id: number;
+  service_id: number;
+  provider_id: number | null;
+  location_id: number;
+  status_id: number;
+  start_time: Date;
+  duration_minutes: number;
+  price: number;
+  notes: string;
+  internal_notes?: string;
+  repeat_enabled?: boolean;
+  repeat_type?: 'daily' | 'weekly' | 'monthly';
+  repeat_days?: number[];
+  repeat_interval?: number;
+  repeat_end_type?: 'never' | 'after' | 'until';
+  repeat_count?: number;
+  repeat_until?: Date;
+}
+
+const BOOKING_STATUSES = [
+  { label: 'Reservado',   value: 1, color: '#93c5fd', severity: 'info'      as const },
+  { label: 'Confirmado',  value: 2, color: '#fb923c', severity: 'warn'      as const },
+  { label: 'Asiste',      value: 3, color: '#ec4899', severity: 'help'      as const },
+  { label: 'No asistio',  value: 4, color: '#f9a8d4', severity: 'secondary' as const },
+  { label: 'Pendiente',   value: 5, color: '#fca5a5', severity: 'danger'    as const },
+  { label: 'En espera',   value: 6, color: '#86efac', severity: 'success'   as const },
+];
+
+const DAYS_OF_WEEK = [
+  { label: 'Lun', value: 1 },
+  { label: 'Mar', value: 2 },
+  { label: 'Mie', value: 3 },
+  { label: 'Jue', value: 4 },
+  { label: 'Vie', value: 5 },
+  { label: 'Sab', value: 6 },
+  { label: 'Dom', value: 0 },
+];
+
+interface ApiErrorResponse {
+  error: string;
+  detail: string;
+  conflicts_with?: { id: number; start_time: string; end_time: string };
+}
+
+@Component({
+  selector: 'app-booking-form-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    SelectModule,
+    InputTextModule,
+    TextareaModule,
+    InputNumberModule,
+    ButtonModule,
+    DialogModule,
+    DatePickerModule,
+    AccordionModule,
+    CheckboxModule,
+    TooltipModule,
+  ],
+  templateUrl: './booking-form-dialog.component.html',
+  styleUrls: ['./booking-form-dialog.component.scss'],
+  providers: [MessageService],
+})
+export class BookingFormDialogComponent implements OnInit {
+  private apiService = inject(ApiService);
+  private messageService = inject(MessageService);
+
+  @Input() initialDate?: Date;
+  @Output() onSaved = new EventEmitter<void>();
+  @Output() onCancelled = new EventEmitter<void>();
+
+  visible = false;
+  saving = signal(false);
+  isEdit = signal(false);
+  showRepeatDialog = false;
+  showAddClient = false;
+
+  formData: BookingFormData = this.getEmptyForm();
+
+  newClient = { first_name: '', last_name: '', email: '', phone: '' };
+
+  repeatAfterChecked = false;
+  repeatUntilChecked = false;
+
+  clients   = signal<Client[]>([]);
+  services  = signal<(Service | ServicePack)[]>([]);
+  providers = signal<Provider[]>([]);
+  locations = signal<Location[]>([]);
+
+  onSuccessCallback?: () => void;
+
+  clientOptions = computed(() =>
+    this.clients().map(c => ({
+      label: `${c.first_name} ${c.last_name}`,
+      value: c.id,
+      first_name: c.first_name,
+      last_name: c.last_name,
+      email: c.email,
+    }))
+  );
+
+  providerOptions = computed(() => [
+    { label: 'Sin asignar', value: null as any },
+    ...this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
+  ]);
+
+  serviceOptions = computed(() =>
+    this.services().map((s: any) => ({
+      label: `${s.name} (${s.duration_minutes || 60} min)`,
+      value: s.id,
+      name: s.name,
+      duration_minutes: s.duration_minutes || 60,
+      price: s.price || 0,
+    }))
+  );
+
+  locationOptions = computed(() =>
+    this.locations().map(l => ({ label: l.name, value: l.id }))
+  );
+
+  statusOptions = computed(() => BOOKING_STATUSES);
+  daysOfWeek = DAYS_OF_WEEK;
+  dialogTitle = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
+
+  ngOnInit() {
+    this.loadData();
+  }
+
+  // ── Time input helpers ──────────────────────────────────────────────────────
+
+  getTimeString(): string {
+    const d = this.formData.start_time;
+    if (!d) return '09:00';
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  onTimeInputChange(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    if (!val) return;
+    const [h, m] = val.split(':').map(Number);
+    const d = new Date(this.formData.start_time || new Date());
+    d.setHours(h, m, 0, 0);
+    this.formData.start_time = d;
+  }
+
+  // ── Lifecycle ───────────────────────────────────────────────────────────────
+
+  private getEmptyForm(): BookingFormData {
+    const now = this.initialDate || new Date();
+    return {
+      client_id: 0,
+      service_id: 0,
+      provider_id: null,
+      location_id: 1,
+      status_id: 1,
+      start_time: now,
+      duration_minutes: 60,
+      price: 0,
+      notes: '',
+      internal_notes: '',
+      repeat_enabled: false,
+      repeat_type: undefined,
+      repeat_days: [],
+      repeat_interval: 1,
+      repeat_end_type: 'never',
+      repeat_count: 1,
+      repeat_until: undefined,
+    };
+  }
+
+  async loadData() {
+    this.apiService.getClients({ per_page: 100 }).subscribe({
+      next: (res) => this.clients.set((res as any).data || res),
+      error: () => this.clients.set([]),
+    });
+    this.apiService.getServices().subscribe({
+      next: (data) => this.services.set(data),
+      error: () => this.services.set([]),
+    });
+    this.apiService.getPacks().subscribe({
+      next: (data) => this.services.update(current => [...current, ...data]),
+      error: () => {},
+    });
+    this.apiService.getProviders().subscribe({
+      next: (data) => this.providers.set(data),
+      error: () => this.providers.set([]),
+    });
+    this.apiService.getLocations().subscribe({
+      next: (data) => this.locations.set(data),
+      error: () => this.locations.set([]),
+    });
+  }
+
+  openNew(booking?: Booking, initialDate?: Date) {
+    this.resetForm();
+
+    if (booking) {
+      this.isEdit.set(true);
+      const startDate = new Date(booking.start_time);
+      this.formData = {
+        id: booking.id,
+        client_id: booking.client_id,
+        service_id: booking.service_id,
+        provider_id: booking.provider_id || null,
+        location_id: booking.location_id,
+        status_id: booking.status_id,
+        start_time: startDate,
+        duration_minutes: booking.custom_duration_minutes || 60,
+        price: booking.price,
+        notes: booking.notes || '',
+      };
+    } else if (initialDate) {
+      this.formData.start_time = initialDate;
+    }
+
+    this.visible = true;
+  }
+
+  private resetForm() {
+    this.formData = this.getEmptyForm();
+    this.isEdit.set(false);
+    this.showRepeatDialog = false;
+    this.showAddClient = false;
+    this.repeatAfterChecked = false;
+    this.repeatUntilChecked = false;
+  }
+
+  onClose() {
+    this.visible = false;
+    this.resetForm();
+  }
+
+  // ── Validation ──────────────────────────────────────────────────────────────
+
+  isFormValid(): boolean {
+    return !!(this.formData.client_id && this.formData.service_id && this.formData.start_time);
+  }
+
+  hasRepeatData(): boolean {
+    return this.formData.repeat_enabled === true;
+  }
+
+  // ── Repeat dialog ───────────────────────────────────────────────────────────
+
+  isDaySelected(dayValue: number): boolean {
+    return this.formData.repeat_days?.includes(dayValue) || false;
+  }
+
+  toggleDay(dayValue: number) {
+    if (!this.formData.repeat_days) this.formData.repeat_days = [];
+    const idx = this.formData.repeat_days.indexOf(dayValue);
+    if (idx >= 0) this.formData.repeat_days.splice(idx, 1);
+    else this.formData.repeat_days.push(dayValue);
+  }
+
+  setRepeatType(type: 'daily' | 'weekly' | 'monthly') {
+    this.formData.repeat_type = type;
+  }
+
+  openRepeatDialog() {
+    this.showRepeatDialog = true;
+  }
+
+  applyRepeat() {
+    this.formData.repeat_enabled = true;
+    if (this.repeatAfterChecked) {
+      this.formData.repeat_end_type = 'after';
+      this.formData.repeat_count = this.formData.repeat_count || 1;
+    } else if (this.repeatUntilChecked) {
+      this.formData.repeat_end_type = 'until';
+    } else {
+      this.formData.repeat_end_type = 'never';
+    }
+    this.showRepeatDialog = false;
+  }
+
+  // ── Service change ──────────────────────────────────────────────────────────
+
+  onServiceChange() {
+    const service = this.services().find(s => s.id === this.formData.service_id);
+    if (service) {
+      this.formData.duration_minutes = service.duration_minutes || 60;
+      this.formData.price = service.price || 0;
+    }
+  }
+
+  onClientFilter(_event: any) {}
+
+  // ── Save ────────────────────────────────────────────────────────────────────
+
+  onSave() {
+    if (!this.isFormValid()) return;
+    this.saving.set(true);
+
+    const startDate = new Date(this.formData.start_time);
+    const endDate   = new Date(startDate.getTime() + this.formData.duration_minutes * 60000);
+
+    const bookingData: any = {
+      client_id:        this.formData.client_id,
+      service_id:       this.formData.service_id,
+      provider_id:      this.formData.provider_id || undefined,
+      location_id:      this.formData.location_id,
+      status_id:        this.formData.status_id,
+      start_time:       this.formatDateTime(startDate),
+      end_time:         this.formatDateTime(endDate),
+      duration_minutes: this.formData.duration_minutes,
+      price:            this.formData.price,
+      notes:            this.formData.notes || undefined,
+    };
+
+    if (this.formData.repeat_enabled) {
+      bookingData.repeat = {
+        enabled:  true,
+        type:     this.formData.repeat_type,
+        days:     this.formData.repeat_days,
+        interval: this.formData.repeat_interval,
+        end_type: this.formData.repeat_end_type,
+        count:    this.formData.repeat_count,
+        until:    this.formData.repeat_until ? this.formatDateTime(this.formData.repeat_until) : undefined,
+      };
+    }
+
+    const request = this.isEdit()
+      ? this.apiService.updateBooking(this.formData.id!, bookingData)
+      : this.apiService.createBooking(bookingData);
+
+    request.subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: this.isEdit() ? 'Reserva actualizada' : 'Reserva creada',
+          detail:   this.isEdit() ? 'La reserva ha sido actualizada correctamente' : 'La reserva ha sido creada correctamente',
+        });
+        this.visible = false;
+        this.saving.set(false);
+        this.onSaved.emit();
+      },
+      error: (err: any) => {
+        this.saving.set(false);
+        this.handleApiError(err);
+      },
+    });
+  }
+
+  saveClient() {
+    this.apiService.createClient({
+      first_name: this.newClient.first_name,
+      last_name:  this.newClient.last_name,
+      email:      this.newClient.email,
+      phone:      this.newClient.phone,
+    }).subscribe({
+      next: (client) => {
+        this.messageService.add({ severity: 'success', summary: 'Cliente creado', detail: 'El nuevo cliente ha sido registrado correctamente' });
+        this.showAddClient = false;
+        this.formData.client_id = client.id;
+        this.loadData();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el cliente' });
+      },
+    });
+  }
+
+  private handleApiError(err: any) {
+    const errorData = err.error as ApiErrorResponse;
+    if (err.status === 409) {
+      this.messageService.add({ severity: 'warn',  summary: 'Conflicto de horario',   detail: errorData?.detail || 'Ya existe una reserva en este horario' });
+    } else if (err.status === 422) {
+      if (errorData?.detail) this.messageService.add({ severity: 'error', summary: 'Error de validación', detail: errorData.detail });
+    } else if (err.status === 401) {
+      this.messageService.add({ severity: 'error', summary: 'No autorizado', detail: 'Tu sesión ha expirado' });
+    } else {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error al procesar la solicitud' });
+    }
+  }
+
+  private formatDateTime(date: Date | string): string {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toISOString().replace('T', ' ').substring(0, 19);
+  }
+}

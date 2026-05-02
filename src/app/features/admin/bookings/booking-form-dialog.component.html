@@ -1,0 +1,339 @@
+<!-- Main Booking Dialog -->
+<p-dialog
+  [header]="dialogTitle()"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{width: '720px', maxWidth: '95vw'}"
+  [contentStyle]="{'overflow': 'visible'}"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()">
+
+  <div class="dialog-content">
+
+    <!-- Status -->
+    <div class="field">
+      <label class="field-label">Estado</label>
+      <p-select
+        [options]="statusOptions()"
+        [(ngModel)]="formData.status_id"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full">
+        <ng-template pTemplate="item" let-status>
+          <div class="status-option">
+            <span class="status-dot" [style.backgroundColor]="status.color"></span>
+            <span>{{ status.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="selectedItem" let-status>
+          <div class="status-option">
+            <span class="status-dot" [style.backgroundColor]="status.color"></span>
+            <span>{{ status.label }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <!-- Fecha y hora -->
+    <div class="datetime-section">
+      <div class="field">
+        <label class="field-label">Fecha</label>
+        <p-datepicker
+          [(ngModel)]="formData.start_time"
+          dateFormat="dd/mm/yy"
+          [appendTo]="'body'"
+          styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label class="field-label">Hora</label>
+        <input
+          type="time"
+          class="time-input"
+          [value]="getTimeString()"
+          (change)="onTimeInputChange($event)" />
+      </div>
+      <div class="field repeat-col">
+        <label class="field-label">&nbsp;</label>
+        <p-button
+          [label]="formData.repeat_enabled ? 'Repetición activa' : 'Repetir'"
+          [icon]="formData.repeat_enabled ? 'pi pi-check' : 'pi pi-refresh'"
+          [outlined]="!formData.repeat_enabled"
+          size="small"
+          (onClick)="openRepeatDialog()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Paciente -->
+    <div class="field">
+      <label class="field-label">Paciente</label>
+      <div class="field-with-action">
+        <p-select
+          [options]="clientOptions()"
+          [(ngModel)]="formData.client_id"
+          placeholder="Buscar por nombre, apellido, email..."
+          [filter]="true"
+          filterPlaceholder="Buscar..."
+          showClear="true"
+          styleClass="w-full"
+          (onFilter)="onClientFilter($event)">
+          <ng-template pTemplate="item" let-client>
+            <div class="client-option">
+              <span class="client-name">{{ client.first_name }} {{ client.last_name }}</span>
+              <span class="client-email">{{ client.email }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+        <p-button
+          icon="pi pi-plus"
+          [text]="true"
+          size="small"
+          pTooltip="Nuevo paciente"
+          (onClick)="showAddClient = true">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Profesional -->
+    <div class="field">
+      <label class="field-label">Profesional</label>
+      <p-select
+        [options]="providerOptions()"
+        [(ngModel)]="formData.provider_id"
+        placeholder="Seleccionar profesional"
+        [showClear]="true"
+        styleClass="w-full">
+      </p-select>
+    </div>
+
+    <!-- Servicio -->
+    <div class="field">
+      <label class="field-label">Servicio</label>
+      <p-select
+        [options]="serviceOptions()"
+        [(ngModel)]="formData.service_id"
+        placeholder="Seleccionar servicio o pack"
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+        (onChange)="onServiceChange()">
+        <ng-template pTemplate="item" let-service>
+          <div class="service-option">
+            <span class="service-name">{{ service.name }}</span>
+            <span class="service-duration">{{ service.duration_minutes }} min</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    <!-- Sede -->
+    <div class="field">
+      <label class="field-label">Sede / Ubicación</label>
+      <p-select
+        [options]="locationOptions()"
+        [(ngModel)]="formData.location_id"
+        placeholder="Seleccionar sede"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full">
+      </p-select>
+    </div>
+
+    <!-- Información adicional -->
+    <p-accordion>
+      <p-accordion-panel value="0">
+        <p-accordion-header>Información adicional</p-accordion-header>
+        <p-accordion-content>
+          <div class="additional-fields">
+            <div class="field">
+              <label class="field-label">Precio</label>
+              <p-inputnumber
+                [(ngModel)]="formData.price"
+                mode="currency"
+                currency="USD"
+                locale="es-CO"
+                styleClass="w-full" />
+            </div>
+            <div class="field">
+              <label class="field-label">Notas para el paciente</label>
+              <textarea
+                pTextarea
+                [(ngModel)]="formData.notes"
+                rows="2"
+                placeholder="Visibles para el paciente"
+                class="w-full">
+              </textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">Nota interna</label>
+              <textarea
+                pTextarea
+                [(ngModel)]="formData.internal_notes"
+                rows="2"
+                placeholder="Solo visible para el equipo"
+                class="w-full">
+              </textarea>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+    </p-accordion>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onClose()">
+      </p-button>
+      <p-button
+        [label]="hasRepeatData() ? 'Guardar repetición' : 'Guardar reserva'"
+        icon="pi pi-check"
+        [loading]="saving()"
+        [disabled]="!isFormValid()"
+        (onClick)="onSave()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Repeticiones de Reserva Dialog -->
+<p-dialog
+  header="Repeticiones de reserva"
+  [(visible)]="showRepeatDialog"
+  [modal]="true"
+  [style]="{width: '480px'}"
+  [contentStyle]="{'overflow': 'visible'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="repeat-content">
+
+    <div class="repeat-section">
+      <label class="section-label">Días de la semana</label>
+      <div class="days-buttons">
+        <p-button
+          *ngFor="let day of daysOfWeek"
+          [label]="day.label"
+          [styleClass]="isDaySelected(day.value) ? 'p-button-primary' : 'p-button-outlined'"
+          size="small"
+          (onClick)="toggleDay(day.value)">
+        </p-button>
+      </div>
+    </div>
+
+    <div class="repeat-section">
+      <label class="section-label">Frecuencia</label>
+      <div class="repeat-options">
+        <p-button
+          label="Diariamente"
+          [styleClass]="formData.repeat_type === 'daily' ? 'p-button-primary' : 'p-button-outlined'"
+          size="small"
+          (onClick)="setRepeatType('daily')">
+        </p-button>
+        <p-button
+          label="Semanalmente"
+          [styleClass]="formData.repeat_type === 'weekly' ? 'p-button-primary' : 'p-button-outlined'"
+          size="small"
+          (onClick)="setRepeatType('weekly')">
+        </p-button>
+        <p-button
+          label="Mensualmente"
+          [styleClass]="formData.repeat_type === 'monthly' ? 'p-button-primary' : 'p-button-outlined'"
+          size="small"
+          (onClick)="setRepeatType('monthly')">
+        </p-button>
+      </div>
+      <div class="repeat-each" *ngIf="formData.repeat_type">
+        <label>Cada</label>
+        <p-inputnumber [(ngModel)]="formData.repeat_interval" [min]="1" styleClass="interval-input" />
+        <span class="repeat-label">
+          {{ formData.repeat_type === 'daily' ? 'días' :
+             formData.repeat_type === 'weekly' ? 'semanas' : 'meses' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="repeat-section">
+      <label class="section-label">Finaliza</label>
+      <div class="end-option">
+        <p-checkbox [(ngModel)]="repeatAfterChecked" [binary]="true" inputId="repeatAfter" />
+        <label for="repeatAfter">Después de</label>
+        <p-inputnumber
+          [(ngModel)]="formData.repeat_count"
+          [min]="1"
+          [disabled]="!repeatAfterChecked"
+          styleClass="count-input" />
+        <span>repeticiones</span>
+      </div>
+      <div class="end-option">
+        <p-checkbox [(ngModel)]="repeatUntilChecked" [binary]="true" inputId="repeatUntil" />
+        <label for="repeatUntil">Hasta</label>
+        <p-datepicker
+          [(ngModel)]="formData.repeat_until"
+          dateFormat="dd/mm/yy"
+          [disabled]="!repeatUntilChecked"
+          [appendTo]="'body'"
+          styleClass="until-input" />
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="showRepeatDialog = false">
+      </p-button>
+      <p-button label="Aplicar" icon="pi pi-check" (onClick)="applyRepeat()"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Nuevo Paciente Dialog -->
+<p-dialog
+  header="Nuevo Paciente"
+  [(visible)]="showAddClient"
+  [modal]="true"
+  [style]="{width: '440px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="add-client-form">
+    <div class="field">
+      <label class="field-label">Nombre</label>
+      <input pInputText [(ngModel)]="newClient.first_name" class="w-full" />
+    </div>
+    <div class="field">
+      <label class="field-label">Apellido</label>
+      <input pInputText [(ngModel)]="newClient.last_name" class="w-full" />
+    </div>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input pInputText [(ngModel)]="newClient.email" type="email" class="w-full" />
+    </div>
+    <div class="field">
+      <label class="field-label">Teléfono</label>
+      <input pInputText [(ngModel)]="newClient.phone" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="showAddClient = false">
+      </p-button>
+      <p-button label="Guardar paciente" icon="pi pi-check" (onClick)="saveClient()"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>

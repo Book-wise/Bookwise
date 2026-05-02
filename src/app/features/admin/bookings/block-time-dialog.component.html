@@ -1,0 +1,79 @@
+<p-dialog
+  header="Bloquear Horario"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{width: '520px'}"
+  [contentStyle]="{'overflow': 'visible'}"
+  [draggable]="false"
+  (onHide)="onClose()">
+
+  <div class="block-form">
+
+    <div class="datetime-row">
+      <div class="field">
+        <label>Fecha inicio</label>
+        <p-datepicker
+          [(ngModel)]="startDate"
+          dateFormat="dd/mm/yy"
+          [appendTo]="'body'"
+          styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>Hora inicio</label>
+        <input
+          type="time"
+          class="time-input"
+          [value]="getStartTimeString()"
+          (change)="onStartTimeChange($event)" />
+      </div>
+    </div>
+
+    <div class="datetime-row">
+      <div class="field">
+        <label>Fecha fin</label>
+        <p-datepicker
+          [(ngModel)]="endDate"
+          dateFormat="dd/mm/yy"
+          [appendTo]="'body'"
+          styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>Hora fin</label>
+        <input
+          type="time"
+          class="time-input"
+          [value]="getEndTimeString()"
+          (change)="onEndTimeChange($event)" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Motivo (opcional)</label>
+      <textarea
+        pTextArea
+        [(ngModel)]="reason"
+        rows="3"
+        placeholder="Motivo del bloqueo"
+        class="w-full">
+      </textarea>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onClose()">
+      </p-button>
+      <p-button
+        label="Bloquear horario"
+        icon="pi pi-lock"
+        [loading]="saving()"
+        (onClick)="block()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

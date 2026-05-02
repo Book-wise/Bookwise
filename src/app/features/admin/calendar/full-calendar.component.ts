@@ -25,7 +25,7 @@ import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
 import { Booking, Location, Provider } from '../../../core/models';
 import { BookingDialogComponent } from '../bookings/booking-dialog.component';
-import { NewBookingDialogComponent } from '../bookings/new-booking-dialog.component';
+import { BookingFormDialogComponent } from '../bookings/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog.component';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -68,7 +68,7 @@ interface CalendarEvent {
     DialogModule,
     ProgressSpinnerModule,
     BookingDialogComponent,
-    NewBookingDialogComponent,
+    BookingFormDialogComponent,
     PopoverModule,
     BlockTimeDialogComponent,
   ],
@@ -85,7 +85,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
-  @ViewChild(NewBookingDialogComponent) newBookingDialog!: NewBookingDialogComponent;
+  @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
 
   loading = signal(true);
