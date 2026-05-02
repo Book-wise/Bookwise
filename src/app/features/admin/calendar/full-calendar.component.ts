@@ -119,7 +119,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     selectMirror: true,
     dayMaxEvents: true,
     weekends: true,
-    events: [],
     eventClick: this.handleEventClick.bind(this),
     select: this.handleDateSelect.bind(this),
     datesSet: this.handleDatesSet.bind(this),
@@ -249,7 +248,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.calendar) {
       this.ngZone.runOutsideAngular(() => {
-        this.calendar!.setOption('events', events);
+        this.calendar!.removeAllEventSources();
+        this.calendar!.addEventSource(events);
       });
     }
   }
