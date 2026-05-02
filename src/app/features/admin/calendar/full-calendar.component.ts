@@ -119,9 +119,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     selectMirror: true,
     dayMaxEvents: true,
     weekends: true,
+    events: (fetchInfo: any, successCallback: any, failureCallback: any) => {
+      this.fetchEventsForCalendar(fetchInfo, successCallback, failureCallback);
+    },
     eventClick: this.handleEventClick.bind(this),
     select: this.handleDateSelect.bind(this),
-    datesSet: this.handleDatesSet.bind(this),
     // Formato de hora 24h
     slotLabelFormat: {
       hour: '2-digit',
@@ -177,7 +179,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         ...this.calendarOptions,
         eventClick: (info) => this.ngZone.run(() => this.handleEventClick(info)),
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
-        datesSet: (info) => this.ngZone.run(() => this.handleDatesSet(info)),
         dateClick: (info) => this.ngZone.run(() => {
           this.selectedDate = info.date;
           this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
@@ -209,49 +210,45 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  loadBookings(dateFrom: string, dateTo: string): void {
-    this.loading.set(true);
-    let params: any = {
-      date_from: dateFrom,
-      date_to: dateTo,
+  private fetchEventsForCalendar(
+    fetchInfo: { startStr: string; endStr: string },
+    successCallback: (events: CalendarEvent[]) => void,
+    failureCallback: () => void
+  ): void {
+    this.ngZone.run(() => this.loading.set(true));
+
+    const params: any = {
+      date_from: fetchInfo.startStr.split('T')[0],
+      date_to: fetchInfo.endStr.split('T')[0],
       per_page: 500,
     };
-
     if (this.selectedLocationId) params.location_id = this.selectedLocationId;
     if (this.selectedProviderId) params.provider_id = this.selectedProviderId;
 
     this.api.getBookings(params).subscribe({
       next: (response: any) => {
         const data = response.data || response;
-        const bookings = Array.isArray(data) ? data : [];
-        this.bookings.set(bookings);
-        this.updateCalendarEvents(bookings);
-        this.loading.set(false);
+        const bookings: Booking[] = Array.isArray(data) ? data : [];
+        const events: CalendarEvent[] = bookings.map((booking) => ({
+          id: booking.id.toString(),
+          title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
+          start: booking.start_time,
+          end: booking.end_time,
+          backgroundColor: this.getStatusColor(booking.status?.name),
+          borderColor: this.getStatusColor(booking.status?.name),
+          extendedProps: { booking },
+        }));
+        successCallback(events);
+        this.ngZone.run(() => {
+          this.bookings.set(bookings);
+          this.loading.set(false);
+        });
       },
       error: () => {
-        this.loading.set(false);
+        failureCallback();
+        this.ngZone.run(() => this.loading.set(false));
       },
     });
-  }
-
-  private updateCalendarEvents(bookings: Booking[]): void {
-    const events: CalendarEvent[] = bookings.map((booking) => ({
-      id: booking.id.toString(),
-      title:
-        `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
-      start: booking.start_time,
-      end: booking.end_time,
-      backgroundColor: this.getStatusColor(booking.status?.name),
-      borderColor: this.getStatusColor(booking.status?.name),
-      extendedProps: { booking },
-    }));
-
-    if (this.calendar) {
-      this.ngZone.runOutsideAngular(() => {
-        this.calendar!.removeAllEventSources();
-        this.calendar!.addEventSource(events);
-      });
-    }
   }
 
   private getStatusColor(status?: string): string {
@@ -266,16 +263,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onFilterChange(): void {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    this.loadBookings(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0]);
-  }
-
-  private handleDatesSet(info: { start: Date; end: Date }): void {
-    const start = info.start.toISOString().split('T')[0];
-    const end = info.end.toISOString().split('T')[0];
-    this.loadBookings(start, end);
+    if (this.calendar) {
+      this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
+    }
   }
 
   private handleEventClick(clickInfo: EventClickArg): void {
@@ -297,11 +287,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onBookingSaved(): void {
-    // Recargar bookings del mes actual
-    const date = new Date();
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    this.loadBookings(firstDay.toISOString().split('T')[0], lastDay.toISOString().split('T')[0]);
+    if (this.calendar) {
+      this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
+    }
   }
 
   onBookingCancelled(): void {
