@@ -233,19 +233,19 @@
       <div class="repeat-options">
         <p-button
           label="Diariamente"
-          [styleClass]="formData.repeat_type === 'daily' ? 'p-button-primary' : 'p-button-outlined'"
+          [outlined]="formData.repeat_type !== 'daily'"
           size="small"
           (onClick)="setRepeatType('daily')">
         </p-button>
         <p-button
           label="Semanalmente"
-          [styleClass]="formData.repeat_type === 'weekly' ? 'p-button-primary' : 'p-button-outlined'"
+          [outlined]="formData.repeat_type !== 'weekly'"
           size="small"
           (onClick)="setRepeatType('weekly')">
         </p-button>
         <p-button
           label="Mensualmente"
-          [styleClass]="formData.repeat_type === 'monthly' ? 'p-button-primary' : 'p-button-outlined'"
+          [outlined]="formData.repeat_type !== 'monthly'"
           size="small"
           (onClick)="setRepeatType('monthly')">
         </p-button>
