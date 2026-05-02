@@ -202,22 +202,33 @@
   }
 }
 
-.repeat-options {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.repeat-freq-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: end;
 }
 
-.repeat-each {
+.freq-select,
+.freq-interval {
+  display: flex;
+  flex-direction: column;
+}
+
+.interval-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  gap: 0.5rem;
 }
 
 .interval-input {
-  width: 70px;
+  width: 70px !important;
+}
+
+.interval-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
 .end-option {

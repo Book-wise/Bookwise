@@ -46,6 +46,12 @@ const BOOKING_STATUSES = [
   { label: 'En espera',   value: 6, color: '#86efac', severity: 'success'   as const },
 ];
 
+const REPEAT_TYPE_OPTIONS = [
+  { label: 'Diariamente',  value: 'daily'   },
+  { label: 'Semanalmente', value: 'weekly'  },
+  { label: 'Mensualmente', value: 'monthly' },
+];
+
 const DAYS_OF_WEEK = [
   { label: 'Lun', value: 1 },
   { label: 'Mar', value: 2 },
@@ -141,9 +147,10 @@ export class BookingFormDialogComponent implements OnInit {
     this.locations().map(l => ({ label: l.name, value: l.id }))
   );
 
-  statusOptions = computed(() => BOOKING_STATUSES);
-  daysOfWeek = DAYS_OF_WEEK;
-  dialogTitle = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
+  statusOptions     = computed(() => BOOKING_STATUSES);
+  daysOfWeek        = DAYS_OF_WEEK;
+  repeatTypeOptions = REPEAT_TYPE_OPTIONS;
+  dialogTitle       = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
 
   ngOnInit() {
     this.loadData();

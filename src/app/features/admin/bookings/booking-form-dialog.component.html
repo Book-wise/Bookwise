@@ -215,49 +215,50 @@
   <div class="repeat-content">
 
     <div class="repeat-section">
-      <label class="section-label">Días de la semana</label>
-      <div class="days-buttons">
-        <button
-          *ngFor="let day of daysOfWeek"
-          type="button"
-          class="day-btn"
-          [class.active]="isDaySelected(day.value)"
-          (click)="toggleDay(day.value)">
-          {{ day.label }}
-        </button>
-      </div>
-    </div>
+      <div class="repeat-freq-row">
+        <div class="freq-select">
+          <label class="section-label">Repetir</label>
+          <p-select
+            [options]="repeatTypeOptions"
+            [(ngModel)]="formData.repeat_type"
+            optionLabel="label"
+            optionValue="value"
+            [appendTo]="'body'"
+            styleClass="w-full" />
+        </div>
 
-    <div class="repeat-section">
-      <label class="section-label">Frecuencia</label>
-      <div class="repeat-options">
-        <p-button
-          label="Diariamente"
-          [outlined]="formData.repeat_type !== 'daily'"
-          size="small"
-          (onClick)="setRepeatType('daily')">
-        </p-button>
-        <p-button
-          label="Semanalmente"
-          [outlined]="formData.repeat_type !== 'weekly'"
-          size="small"
-          (onClick)="setRepeatType('weekly')">
-        </p-button>
-        <p-button
-          label="Mensualmente"
-          [outlined]="formData.repeat_type !== 'monthly'"
-          size="small"
-          (onClick)="setRepeatType('monthly')">
-        </p-button>
+        @if (formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly') {
+          <div class="freq-interval">
+            <label class="section-label">Cada</label>
+            <div class="interval-row">
+              <p-inputnumber
+                [(ngModel)]="formData.repeat_interval"
+                [min]="1"
+                [max]="99"
+                styleClass="interval-input" />
+              <span class="interval-label">
+                {{ formData.repeat_type === 'weekly' ? 'semanas' : 'meses' }}
+              </span>
+            </div>
+          </div>
+        }
       </div>
-      <div class="repeat-each" *ngIf="formData.repeat_type">
-        <label>Cada</label>
-        <p-inputnumber [(ngModel)]="formData.repeat_interval" [min]="1" styleClass="interval-input" />
-        <span class="repeat-label">
-          {{ formData.repeat_type === 'daily' ? 'días' :
-             formData.repeat_type === 'weekly' ? 'semanas' : 'meses' }}
-        </span>
-      </div>
+
+      @if (formData.repeat_type === 'daily') {
+        <div>
+          <label class="section-label">Se repite el</label>
+          <div class="days-buttons">
+            <button
+              *ngFor="let day of daysOfWeek"
+              type="button"
+              class="day-btn"
+              [class.active]="isDaySelected(day.value)"
+              (click)="toggleDay(day.value)">
+              {{ day.label }}
+            </button>
+          </div>
+        </div>
+      }
     </div>
 
     <div class="repeat-section">
