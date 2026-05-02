@@ -10,6 +10,7 @@ import {
   ViewChild,
   AfterViewInit,
   HostListener,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -70,6 +71,7 @@ interface CalendarEvent {
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(ApiService);
   private messageService = inject(MessageService);
+  private ngZone = inject(NgZone);
   private calendar: Calendar | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
@@ -171,19 +173,21 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private initCalendar(): void {
-    this.calendar = new Calendar(this.calendarContainer.nativeElement, {
-      ...this.calendarOptions,
-      eventClick: this.handleEventClick.bind(this),
-      select: this.handleDateSelect.bind(this),
-      datesSet: this.handleDatesSet.bind(this),
-      dateClick: (info) => {
-        this.selectedDate = info.date;
-        this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
-        this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
-        this.showSlotMenu.set(true);
-      },
+    this.ngZone.runOutsideAngular(() => {
+      this.calendar = new Calendar(this.calendarContainer.nativeElement, {
+        ...this.calendarOptions,
+        eventClick: (info) => this.ngZone.run(() => this.handleEventClick(info)),
+        select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
+        datesSet: (info) => this.ngZone.run(() => this.handleDatesSet(info)),
+        dateClick: (info) => this.ngZone.run(() => {
+          this.selectedDate = info.date;
+          this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
+          this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
+          this.showSlotMenu.set(true);
+        }),
+      });
+      this.calendar.render();
     });
-    this.calendar.render();
   }
 
   ngOnDestroy(): void {
@@ -244,8 +248,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     }));
 
     if (this.calendar) {
-      this.calendar.removeAllEvents();
-      this.calendar.addEventSource(events);
+      this.ngZone.runOutsideAngular(() => {
+        this.calendar!.setOption('events', events);
+      });
     }
   }
 
