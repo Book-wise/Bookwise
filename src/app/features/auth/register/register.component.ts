@@ -8,10 +8,10 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { LoginCredentials } from '../../../core/models';
+import { RegisterData } from '../../../core/models';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-register',
   standalone: true,
   imports: [
     CommonModule,
@@ -22,34 +22,53 @@ import { LoginCredentials } from '../../../core/models';
     ButtonModule,
     MessageModule,
   ],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.scss'],
 })
-export class LoginComponent {
+export class RegisterComponent {
   private api  = inject(ApiService);
   private auth = inject(AuthService);
 
   loading = signal(false);
   error   = signal<string | null>(null);
 
-  credentials: LoginCredentials = { email: '', password: '' };
+  formData: RegisterData = {
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    password_confirmation: '',
+  };
 
-  onLogin(): void {
-    if (!this.credentials.email || !this.credentials.password) return;
+  isFormValid(): boolean {
+    return !!(
+      this.formData.name &&
+      this.formData.email &&
+      this.formData.phone &&
+      this.formData.password &&
+      this.formData.password_confirmation &&
+      this.formData.password === this.formData.password_confirmation
+    );
+  }
+
+  onRegister(): void {
+    if (!this.isFormValid()) return;
 
     this.loading.set(true);
     this.error.set(null);
 
-    this.api.login(this.credentials).subscribe({
+    this.api.register(this.formData).subscribe({
       next: ({ token, user }) => {
         this.auth.login(token, user);
         this.loading.set(false);
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(
-          err.error?.message ?? 'Credenciales incorrectas. Intentá de nuevo.'
-        );
+        const apiErrors = err.error?.errors as Record<string, string[]> | undefined;
+        const msg = apiErrors
+          ? Object.values(apiErrors).flat().join(' ')
+          : (err.error?.message ?? 'Error al crear la cuenta. Intentá de nuevo.');
+        this.error.set(msg);
       },
     });
   }

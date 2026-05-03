@@ -1,0 +1,57 @@
+<div class="auth-container">
+  <div class="auth-card">
+
+    <div class="auth-brand">
+      <h1 class="brand-name">Kinesilk</h1>
+      <p class="brand-subtitle">Sistema de gestión de agenda</p>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input
+          pInputText
+          id="email"
+          name="email"
+          type="email"
+          placeholder="tu@email.com"
+          [(ngModel)]="credentials.email"
+          required
+          class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <p-password
+          inputId="password"
+          name="password"
+          placeholder="••••••••"
+          [(ngModel)]="credentials.password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          required />
+      </div>
+
+      @if (error()) {
+        <p-message severity="error" [text]="error()!" styleClass="w-full" />
+      }
+
+      <p-button
+        type="submit"
+        label="Iniciar sesión"
+        icon="pi pi-sign-in"
+        styleClass="w-full"
+        [loading]="loading()"
+        [disabled]="!credentials.email || !credentials.password" />
+
+    </form>
+
+    <div class="auth-footer">
+      <span>¿No tenés cuenta?</span>
+      <a routerLink="/register">Registrarse</a>
+    </div>
+
+  </div>
+</div>
