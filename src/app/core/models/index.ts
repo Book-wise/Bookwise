@@ -16,9 +16,10 @@ export interface Provider {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone?: string | null;
   active: boolean;
   locations?: Location[];
+  services?: Service[];
   created_at?: string;
   updated_at?: string;
 }
@@ -28,7 +29,10 @@ export interface Service {
   name: string;
   description?: string;
   duration_minutes: number;
-  price: number;
+  slot_interval_minutes?: number;
+  min_duration_minutes?: number;
+  max_duration_minutes?: number;
+  price: string | number;
   active: boolean;
   slot_config?: {
     interval_minutes: number;
@@ -44,7 +48,7 @@ export interface ServicePack {
   service?: Service;
   name: string;
   total_sessions: number;
-  price: number;
+  price: string | number;
   active: boolean;
   duration_minutes?: number;
   created_at?: string;
@@ -56,7 +60,9 @@ export interface Client {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone?: string | null;
+  gender?: string | null;
+  wc_customer_id?: number | null;
   active: boolean;
   custom_attributes?: Record<string, any>;
   created_at?: string;
@@ -81,7 +87,7 @@ export interface ClientPack {
 export interface BookingStatus {
   id: number;
   name: string;
-  color?: string;          // populated from STATUS_COLOR_MAP on the frontend
+  color?: string;          // returned by API; fallback to STATUS_COLOR_MAP
   is_cancellation: boolean;
 }
 
@@ -100,24 +106,30 @@ export interface Payment {
 
 export interface Booking {
   id: number;
-  client_id: number;
-  client?: Client;
-  service_id: number;
-  service?: Service;
-  provider_id: number;
-  provider?: Provider;
-  location_id: number;
-  location?: Location;
+  // IDs (used when sending to API)
+  client_id?: number;
+  service_id?: number;
+  provider_id?: number;
+  location_id?: number;
   status_id: number;
+  // Nested objects (returned by API)
+  client?: Client;
+  service?: Service;
+  provider?: Provider;
+  location?: Location;
   status?: BookingStatus;
+  // Timing
   start_time: string;
   end_time: string;
-  custom_duration_minutes?: number;
-  price: number;
+  effective_duration_minutes?: number;
+  custom_duration_minutes?: number | null;
+  // Financials
+  price: string | number;
   payment_status?: PaymentStatus;
   payment?: Payment;
-  notes?: string;
-  wc_order_id?: number;
+  // Meta
+  notes?: string | null;
+  wc_order_id?: number | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -143,7 +155,6 @@ export interface AvailableSlot {
   duration_minutes: number;
 }
 
-// Tipos para disponibilidad de profesionales
 export interface ProviderAvailability {
   id: number;
   provider_id: number;
@@ -154,7 +165,7 @@ export interface ProviderAvailability {
   is_active: boolean;
 }
 
-// Tipos para roles de usuario
+// Auth
 export type UserRole = 'admin' | 'provider';
 
 export interface User {
@@ -186,7 +197,7 @@ export interface RegisterData {
   role?: UserRole;
 }
 
-// Tipos para paginación
+// Paginación
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
