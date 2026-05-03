@@ -20,14 +20,14 @@ import {
 } from '../models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
   // Endpoints públicos (sin autenticación)
-  
+
   getLocations(): Observable<Location[]> {
     return this.http.get<Location[]>(`${this.baseUrl}/locations`);
   }
@@ -59,17 +59,21 @@ export class ApiService {
     date?: string;
   }): Observable<AvailableSlot[]> {
     let httpParams = new HttpParams();
-    if (params.location_id) httpParams = httpParams.set('location_id', params.location_id.toString());
-    if (params.provider_id) httpParams = httpParams.set('provider_id', params.provider_id.toString());
+    if (params.location_id)
+      httpParams = httpParams.set('location_id', params.location_id.toString());
+    if (params.provider_id)
+      httpParams = httpParams.set('provider_id', params.provider_id.toString());
     if (params.service_id) httpParams = httpParams.set('service_id', params.service_id.toString());
     if (params.date) httpParams = httpParams.set('date', params.date);
 
-    return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, { params: httpParams });
+    return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, {
+      params: httpParams,
+    });
   }
 
   // Auth
   login(credentials: LoginCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, credentials);
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, credentials);
   }
 
   register(data: RegisterData): Observable<AuthResponse> {
@@ -81,7 +85,8 @@ export class ApiService {
   // Providers
   getProviders(params?: { location_id?: number }): Observable<Provider[]> {
     let httpParams = new HttpParams();
-    if (params?.location_id) httpParams = httpParams.set('location_id', params.location_id.toString());
+    if (params?.location_id)
+      httpParams = httpParams.set('location_id', params.location_id.toString());
     return this.http.get<Provider[]>(`${this.baseUrl}/providers`, { params: httpParams });
   }
 
@@ -108,7 +113,9 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<Booking>>(`${this.baseUrl}/bookings`, { params: httpParams });
+    return this.http.get<PaginatedResponse<Booking>>(`${this.baseUrl}/bookings`, {
+      params: httpParams,
+    });
   }
 
   getBooking(id: number): Observable<Booking> {
@@ -142,7 +149,9 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<Client>>(`${this.baseUrl}/clients`, { params: httpParams });
+    return this.http.get<PaginatedResponse<Client>>(`${this.baseUrl}/clients`, {
+      params: httpParams,
+    });
   }
 
   getClient(id: number): Observable<Client> {
@@ -193,10 +202,14 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<ClientPack>>(`${this.baseUrl}/client-packs`, { params: httpParams });
+    return this.http.get<PaginatedResponse<ClientPack>>(`${this.baseUrl}/client-packs`, {
+      params: httpParams,
+    });
   }
 
   useClientPack(clientPackId: number, bookingId: number): Observable<ClientPack> {
-    return this.http.patch<ClientPack>(`${this.baseUrl}/client-packs/${clientPackId}/use`, { booking_id: bookingId });
+    return this.http.patch<ClientPack>(`${this.baseUrl}/client-packs/${clientPackId}/use`, {
+      booking_id: bookingId,
+    });
   }
 }
