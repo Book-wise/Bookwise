@@ -85,6 +85,19 @@ export interface BookingStatus {
   is_cancellation: boolean;
 }
 
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
+
+export interface Payment {
+  id?: number;
+  booking_id?: number;
+  total_amount: number;
+  paid_amount: number;
+  remaining_amount: number;
+  status: PaymentStatus;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Booking {
   id: number;
   client_id: number;
@@ -101,6 +114,8 @@ export interface Booking {
   end_time: string;
   custom_duration_minutes?: number;
   price: number;
+  payment_status?: PaymentStatus;
+  payment?: Payment;
   notes?: string;
   wc_order_id?: number;
   created_at?: string;
