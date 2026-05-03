@@ -321,15 +321,15 @@ export class BookingDialogComponent implements OnInit {
       this.isEdit.set(true);
       this.formData = {
         id: booking.id,
-        client_id: booking.client_id,
-        service_id: booking.service_id,
-        provider_id: booking.provider_id || 0,
-        location_id: booking.location_id,
+        client_id: booking.client_id ?? booking.client?.id ?? 0,
+        service_id: booking.service_id ?? booking.service?.id ?? 0,
+        provider_id: booking.provider_id ?? booking.provider?.id ?? 0,
+        location_id: booking.location_id ?? booking.location?.id ?? 0,
         status_id: booking.status_id,
         start_time: new Date(booking.start_time),
         end_time: new Date(booking.end_time),
         duration_minutes: booking.custom_duration_minutes || 60,
-        price: booking.price,
+        price: Number(booking.price) || 0,
         notes: booking.notes || ''
       };
     } else {
@@ -365,7 +365,7 @@ export class BookingDialogComponent implements OnInit {
     const service = this.services().find(s => s.id === this.formData.service_id);
     if (service) {
       this.formData.duration_minutes = service.duration_minutes;
-      this.formData.price = service.price;
+      this.formData.price = Number(service.price) || 0;
     }
   }
   onProviderChange() { 
