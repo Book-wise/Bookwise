@@ -236,8 +236,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
           start: booking.start_time,
           end: booking.end_time,
-          backgroundColor: STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
-          borderColor: STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
+          backgroundColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
+          borderColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
           extendedProps: { booking },
         }));
         successCallback(events);

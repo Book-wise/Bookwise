@@ -81,6 +81,7 @@ export interface ClientPack {
 export interface BookingStatus {
   id: number;
   name: string;
+  color?: string;          // populated from STATUS_COLOR_MAP on the frontend
   is_cancellation: boolean;
 }
 
