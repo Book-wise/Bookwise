@@ -13,7 +13,10 @@ import {
   Sale,
   AvailableSlot,
   PaginatedResponse,
-  ApiError
+  ApiError,
+  AuthResponse,
+  LoginCredentials,
+  RegisterData,
 } from '../models';
 
 @Injectable({
@@ -62,6 +65,15 @@ export class ApiService {
     if (params.date) httpParams = httpParams.set('date', params.date);
 
     return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, { params: httpParams });
+  }
+
+  // Auth
+  login(credentials: LoginCredentials): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, credentials);
+  }
+
+  register(data: RegisterData): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, data);
   }
 
   // Endpoints autenticados

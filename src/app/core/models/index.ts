@@ -146,9 +146,29 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  phone?: string;
   role: UserRole;
-  provider_id?: number; // Si es provider, tiene ID de provider
-  location_ids?: number[]; // Si es admin, puede ver varias locations
+  provider_id?: number | null;
+  location_ids?: number[];
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  phone: string;
+  role?: UserRole;
 }
 
 // Tipos para paginación
