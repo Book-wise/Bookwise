@@ -91,6 +91,13 @@ export interface BookingStatus {
   is_cancellation: boolean;
 }
 
+export interface PackSession {
+  session_number: number;
+  total_sessions: number;
+  client_pack_id: number;
+  status: string;
+}
+
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 
 export interface Payment {
@@ -125,8 +132,9 @@ export interface Booking {
   custom_duration_minutes?: number | null;
   // Financials
   price: string | number;
-  payment_status?: PaymentStatus;
-  payment?: Payment;
+  payment_status?: PaymentStatus | null;
+  payment?: Payment | Record<string, never>;   // {} when no payment
+  pack_session?: PackSession | null;
   // Meta
   notes?: string | null;
   wc_order_id?: number | null;
