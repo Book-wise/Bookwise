@@ -85,7 +85,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = signal(true);
   hoveredBooking = signal<Booking | null>(null);
   private tooltipHideTimer?: ReturnType<typeof setTimeout>;
-  private hoverGen = 0; // generation counter — cancels stale show calls
+  private activeHoverEventId: string | null = null;
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
   providers = signal<Provider[]>([]);
@@ -190,25 +190,29 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           clearTimeout(this.tooltipHideTimer);
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
-          // Increment generation — any pending show from a previous event is now stale
-          const gen = ++this.hoverGen;
+          const eventId = info.event.id;
+          this.activeHoverEventId = eventId;
+          // Update data immediately, then show after Angular updates the view
           this.ngZone.run(() => this.hoveredBooking.set(booking));
-          // rAF ensures Angular has updated the template before showing
           requestAnimationFrame(() => {
-            if (gen === this.hoverGen) {
+            // Only show if no other event has taken over since this rAF was scheduled
+            if (this.activeHoverEventId === eventId) {
               this.ngZone.run(() => this.eventTooltip?.show(info.jsEvent, info.el));
             }
           });
         },
-        eventMouseLeave: () => {
-          // Bump generation so any in-flight rAF for this event is cancelled
-          ++this.hoverGen;
+        eventMouseLeave: (info) => {
+          const leftEventId = info.event.id;
           clearTimeout(this.tooltipHideTimer);
           this.tooltipHideTimer = setTimeout(() => {
-            this.ngZone.run(() => {
-              this.eventTooltip?.hide();
-              this.hoveredBooking.set(null);
-            });
+            // Only hide if we haven't entered a different event since the leave fired
+            if (this.activeHoverEventId === leftEventId) {
+              this.ngZone.run(() => {
+                this.eventTooltip?.hide();
+                this.hoveredBooking.set(null);
+                this.activeHoverEventId = null;
+              });
+            }
           }, 150);
         },
         dateClick: (info) => this.ngZone.run(() => {
