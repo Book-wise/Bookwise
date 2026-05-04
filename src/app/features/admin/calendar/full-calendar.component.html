@@ -69,6 +69,13 @@
         <span>{{ hoveredBooking()!.service?.name }}</span>
       </div>
 
+      @if (hoveredBooking()!.pack_session) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-calendar"></i>
+          <span>Sesión {{ hoveredBooking()!.pack_session!.session_number }} de {{ hoveredBooking()!.pack_session!.total_sessions }}</span>
+        </div>
+      }
+
       <div class="ev-tooltip__row">
         <i class="pi pi-clock"></i>
         <span>{{ formatTooltipTime(hoveredBooking()!.start_time) }} – {{ formatTooltipTime(hoveredBooking()!.end_time) }}</span>
