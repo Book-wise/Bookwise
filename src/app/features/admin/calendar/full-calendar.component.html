@@ -53,6 +53,53 @@
   </p-card>
 </div>
 
+<!-- Event hover tooltip -->
+<p-overlayPanel #eventTooltip styleClass="event-tooltip-panel" [dismissable]="false">
+  @if (hoveredBooking()) {
+    <div class="ev-tooltip">
+
+      <div class="ev-tooltip__name">
+        {{ hoveredBooking()!.client?.first_name }} {{ hoveredBooking()!.client?.last_name }}
+      </div>
+
+      <div class="ev-tooltip__divider"></div>
+
+      <div class="ev-tooltip__row">
+        <i class="pi pi-tag"></i>
+        <span>{{ hoveredBooking()!.service?.name }}</span>
+      </div>
+
+      <div class="ev-tooltip__row">
+        <i class="pi pi-clock"></i>
+        <span>{{ formatTooltipTime(hoveredBooking()!.start_time) }} – {{ formatTooltipTime(hoveredBooking()!.end_time) }}</span>
+      </div>
+
+      @if (hoveredBooking()!.payment_status !== 'unpaid' && hoveredBooking()!.payment_status) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-dollar"></i>
+          <span>{{ hoveredBooking()!.payment_status === 'paid' ? 'Pago asociado' : 'Pago parcial' }}</span>
+        </div>
+      }
+
+      @if (hoveredBooking()!.client?.phone) {
+        <div class="ev-tooltip__divider"></div>
+        <div class="ev-tooltip__row">
+          <i class="pi pi-mobile"></i>
+          <span>{{ hoveredBooking()!.client!.phone }}</span>
+        </div>
+      }
+
+      @if (hoveredBooking()!.client?.email) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-envelope"></i>
+          <span>{{ hoveredBooking()!.client!.email }}</span>
+        </div>
+      }
+
+    </div>
+  }
+</p-overlayPanel>
+
 <!-- Dialog para mostrar detalles de la reserva -->
 <p-dialog
   header="Detalles de la Cita"
