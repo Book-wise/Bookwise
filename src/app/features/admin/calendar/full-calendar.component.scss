@@ -104,8 +104,49 @@
 ::ng-deep .fc .fc-event {
   cursor: pointer;
   border-radius: 4px;
-  padding: 2px 4px;
+  padding: 0;
   font-size: 0.85rem;
+  overflow: hidden;
+}
+
+// ── Payment indicator inside event ───────────────────────────────────────────
+
+::ng-deep .fc .ev-inner {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 2px 4px 2px 0;
+}
+
+::ng-deep .fc .ev-pay-badge {
+  width: 8%;
+  min-width: 10px;
+  max-width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: white;
+  align-self: stretch;
+  border-radius: 0;
+  margin-right: 3px;
+
+  &--paid    { background: #16a34a; }
+  &--partial { background: #65a30d; }
+}
+
+::ng-deep .fc .ev-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  align-self: center;
 }
 
 ::ng-deep .fc .fc-event-title {
