@@ -181,6 +181,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         ...this.calendarOptions,
         eventClick: (info) => this.ngZone.run(() => this.handleEventClick(info)),
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
+        eventContent: (info) => this.buildEventContent(info),
         dateClick: (info) => this.ngZone.run(() => {
           this.selectedDate = info.date;
           this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
@@ -251,6 +252,21 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ngZone.run(() => this.loading.set(false));
       },
     });
+  }
+
+  private buildEventContent(info: any): { html: string } {
+    const booking: Booking | undefined = info.event.extendedProps['booking'];
+    const payment = booking?.payment_status;
+    const title = info.event.title.replace(/[&<>"']/g, (c: string) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c
+    );
+
+    const badge =
+      payment === 'paid'    ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>' :
+      payment === 'partial' ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>' :
+      '';
+
+    return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
   }
 
   private getStatusColor(status?: string): string {
