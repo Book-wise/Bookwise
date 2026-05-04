@@ -84,8 +84,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   loading = signal(true);
   hoveredBooking = signal<Booking | null>(null);
-  private tooltipHideTimer?: ReturnType<typeof setTimeout>;
-  private activeHoverEventId: string | null = null;
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
   providers = signal<Provider[]>([]);
@@ -187,33 +185,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
         eventContent: (info) => this.buildEventContent(info),
         eventMouseEnter: (info) => {
-          clearTimeout(this.tooltipHideTimer);
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
-          const eventId = info.event.id;
-          this.activeHoverEventId = eventId;
-          // Update data immediately, then show after Angular updates the view
-          this.ngZone.run(() => this.hoveredBooking.set(booking));
-          requestAnimationFrame(() => {
-            // Only show if no other event has taken over since this rAF was scheduled
-            if (this.activeHoverEventId === eventId) {
-              this.ngZone.run(() => this.eventTooltip?.show(info.jsEvent, info.el));
-            }
+          this.ngZone.run(() => {
+            this.hoveredBooking.set(booking);
+            this.eventTooltip?.show(info.jsEvent, info.el);
           });
         },
-        eventMouseLeave: (info) => {
-          const leftEventId = info.event.id;
-          clearTimeout(this.tooltipHideTimer);
-          this.tooltipHideTimer = setTimeout(() => {
-            // Only hide if we haven't entered a different event since the leave fired
-            if (this.activeHoverEventId === leftEventId) {
-              this.ngZone.run(() => {
-                this.eventTooltip?.hide();
-                this.hoveredBooking.set(null);
-                this.activeHoverEventId = null;
-              });
-            }
-          }, 150);
+        eventMouseLeave: () => {
+          this.ngZone.run(() => {
+            this.eventTooltip?.hide();
+            this.hoveredBooking.set(null);
+          });
         },
         dateClick: (info) => this.ngZone.run(() => {
           this.selectedDate = info.date;
