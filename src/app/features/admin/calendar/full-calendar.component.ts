@@ -20,6 +20,8 @@ import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule } from 'primeng/popover';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { OverlayPanel } from 'primeng/overlaypanel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
@@ -60,6 +62,7 @@ interface CalendarEvent {
     TagModule,
     DialogModule,
     ProgressSpinnerModule,
+    OverlayPanelModule,
     BookingDialogComponent,
     BookingFormDialogComponent,
     PopoverModule,
@@ -77,11 +80,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private calendar: Calendar | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
+  @ViewChild('eventTooltip') eventTooltip!: OverlayPanel;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
 
   loading = signal(true);
+  hoveredBooking = signal<Booking | null>(null);
+  private tooltipHideTimer?: ReturnType<typeof setTimeout>;
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
   providers = signal<Provider[]>([]);
@@ -182,6 +188,23 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         eventClick: (info) => this.ngZone.run(() => this.handleEventClick(info)),
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
         eventContent: (info) => this.buildEventContent(info),
+        eventMouseEnter: (info) => {
+          clearTimeout(this.tooltipHideTimer);
+          const booking = info.event.extendedProps['booking'] as Booking | undefined;
+          if (!booking) return;
+          this.ngZone.run(() => {
+            this.hoveredBooking.set(booking);
+            setTimeout(() => this.eventTooltip?.show(info.jsEvent, info.el), 0);
+          });
+        },
+        eventMouseLeave: () => {
+          this.tooltipHideTimer = setTimeout(() => {
+            this.ngZone.run(() => {
+              this.eventTooltip?.hide();
+              this.hoveredBooking.set(null);
+            });
+          }, 120);
+        },
         dateClick: (info) => this.ngZone.run(() => {
           this.selectedDate = info.date;
           this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
@@ -252,6 +275,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ngZone.run(() => this.loading.set(false));
       },
     });
+  }
+
+  formatTooltipTime(iso: string): string {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 
   private buildEventContent(info: any): { html: string } {
