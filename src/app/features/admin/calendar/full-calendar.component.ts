@@ -85,6 +85,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = signal(true);
   hoveredBooking = signal<Booking | null>(null);
   private tooltipHideTimer?: ReturnType<typeof setTimeout>;
+  private hoverGen = 0; // generation counter — cancels stale show calls
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
   providers = signal<Provider[]>([]);
@@ -189,18 +190,26 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           clearTimeout(this.tooltipHideTimer);
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
-          this.ngZone.run(() => {
-            this.hoveredBooking.set(booking);
-            setTimeout(() => this.eventTooltip?.show(info.jsEvent, info.el), 0);
+          // Increment generation — any pending show from a previous event is now stale
+          const gen = ++this.hoverGen;
+          this.ngZone.run(() => this.hoveredBooking.set(booking));
+          // rAF ensures Angular has updated the template before showing
+          requestAnimationFrame(() => {
+            if (gen === this.hoverGen) {
+              this.ngZone.run(() => this.eventTooltip?.show(info.jsEvent, info.el));
+            }
           });
         },
         eventMouseLeave: () => {
+          // Bump generation so any in-flight rAF for this event is cancelled
+          ++this.hoverGen;
+          clearTimeout(this.tooltipHideTimer);
           this.tooltipHideTimer = setTimeout(() => {
             this.ngZone.run(() => {
               this.eventTooltip?.hide();
               this.hoveredBooking.set(null);
             });
-          }, 120);
+          }, 150);
         },
         dateClick: (info) => this.ngZone.run(() => {
           this.selectedDate = info.date;
