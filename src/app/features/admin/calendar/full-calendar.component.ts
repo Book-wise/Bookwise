@@ -19,9 +19,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { PopoverModule } from 'primeng/popover';
-import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { OverlayPanel } from 'primeng/overlaypanel';
+import { PopoverModule, Popover } from 'primeng/popover';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
@@ -62,7 +60,6 @@ interface CalendarEvent {
     TagModule,
     DialogModule,
     ProgressSpinnerModule,
-    OverlayPanelModule,
     BookingDialogComponent,
     BookingFormDialogComponent,
     PopoverModule,
@@ -80,7 +77,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private calendar: Calendar | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
-  @ViewChild('eventTooltip') eventTooltip!: OverlayPanel;
+  @ViewChild('eventTooltip') eventTooltip!: Popover;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
