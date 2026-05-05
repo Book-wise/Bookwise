@@ -68,7 +68,6 @@ interface CalendarEvent {
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  providers: [MessageService],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(ApiService);

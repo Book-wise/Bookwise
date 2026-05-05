@@ -211,7 +211,7 @@ export interface BookingFormData {
       flex: 1;
     }
   `],
-  providers: [MessageService]
+
 })
 export class BookingDialogComponent implements OnInit {
   private api = inject(ApiService);
