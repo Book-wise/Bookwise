@@ -37,6 +37,7 @@
     "@fullcalendar/timegrid": "^6.1.20",
     "@primeng/themes": "^21.0.4",
     "chart.js": "^4.5.1",
+    "intl-tel-input": "^28.0.4",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.6",
     "rxjs": "~7.8.0",

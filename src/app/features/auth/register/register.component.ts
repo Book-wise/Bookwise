@@ -29,11 +29,11 @@ import { PhoneInputComponent } from '../../../shared/components/phone-input/phon
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
-  private api  = inject(ApiService);
+  private api = inject(ApiService);
   private auth = inject(AuthService);
 
   loading = signal(false);
-  error   = signal<string | null>(null);
+  error = signal<string | null>(null);
 
   // intl-tel-input emits the full E.164 phone string directly
 
@@ -58,7 +58,7 @@ export class RegisterComponent {
 
   onRegister(form?: NgForm): void {
     if (form) {
-      form.markAllAsTouched();
+      form.form.markAllAsTouched();
       if (form.invalid) return;
     }
     if (!this.isFormValid()) return;

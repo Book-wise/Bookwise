@@ -1,4 +1,13 @@
-import { Component, inject, OnInit, signal, computed, Input, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  computed,
+  Input,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -65,26 +74,26 @@ export class BookingFormDialogComponent implements OnInit {
   repeatAfterChecked = false;
   repeatUntilChecked = false;
 
-  clients   = signal<Client[]>([]);
-  services  = signal<(Service | ServicePack)[]>([]);
+  clients = signal<Client[]>([]);
+  services = signal<(Service | ServicePack)[]>([]);
   providers = signal<Provider[]>([]);
   locations = signal<Location[]>([]);
 
   onSuccessCallback?: () => void;
 
   clientOptions = computed(() =>
-    this.clients().map(c => ({
+    this.clients().map((c) => ({
       label: `${c.first_name} ${c.last_name}`,
       value: c.id,
       first_name: c.first_name,
       last_name: c.last_name,
       email: c.email,
-    }))
+    })),
   );
 
   providerOptions = computed(() => [
     { label: 'Sin asignar', value: null as any },
-    ...this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
+    ...this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   ]);
 
   serviceOptions = computed(() =>
@@ -94,17 +103,15 @@ export class BookingFormDialogComponent implements OnInit {
       name: s.name,
       duration_minutes: s.duration_minutes || 60,
       price: s.price || 0,
-    }))
+    })),
   );
 
-  locationOptions = computed(() =>
-    this.locations().map(l => ({ label: l.name, value: l.id }))
-  );
+  locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
 
-  statusOptions     = computed(() => BOOKING_STATUSES);
-  daysOfWeek        = DAYS_OF_WEEK;
+  statusOptions = computed(() => BOOKING_STATUSES);
+  daysOfWeek = DAYS_OF_WEEK;
   repeatTypeOptions = REPEAT_TYPE_OPTIONS;
-  dialogTitle       = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
+  dialogTitle = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
 
   ngOnInit() {
     this.loadData();
@@ -162,7 +169,7 @@ export class BookingFormDialogComponent implements OnInit {
       error: () => this.services.set([]),
     });
     this.apiService.getPacks().subscribe({
-      next: (data) => this.services.update(current => [...current, ...data]),
+      next: (data) => this.services.update((current) => [...current, ...data]),
       error: () => {},
     });
     this.apiService.getProviders().subscribe({
@@ -253,7 +260,7 @@ export class BookingFormDialogComponent implements OnInit {
   // ── Service change ──────────────────────────────────────────────────────────
 
   onServiceChange() {
-    const service = this.services().find(s => s.id === this.formData.service_id);
+    const service = this.services().find((s) => s.id === this.formData.service_id);
     if (service) {
       this.formData.duration_minutes = service.duration_minutes || 60;
       this.formData.price = Number(service.price) || 0;
@@ -269,30 +276,32 @@ export class BookingFormDialogComponent implements OnInit {
     this.saving.set(true);
 
     const startDate = new Date(this.formData.start_time);
-    const endDate   = new Date(startDate.getTime() + this.formData.duration_minutes * 60000);
+    const endDate = new Date(startDate.getTime() + this.formData.duration_minutes * 60000);
 
     const bookingData: any = {
-      client_id:        this.formData.client_id,
-      service_id:       this.formData.service_id,
-      provider_id:      this.formData.provider_id || undefined,
-      location_id:      this.formData.location_id,
-      status_id:        this.formData.status_id,
-      start_time:       this.formatDateTime(startDate),
-      end_time:         this.formatDateTime(endDate),
+      client_id: this.formData.client_id,
+      service_id: this.formData.service_id,
+      provider_id: this.formData.provider_id || undefined,
+      location_id: this.formData.location_id,
+      status_id: this.formData.status_id,
+      start_time: this.formatDateTime(startDate),
+      end_time: this.formatDateTime(endDate),
       duration_minutes: this.formData.duration_minutes,
-      price:            this.formData.price,
-      notes:            this.formData.notes || undefined,
+      price: this.formData.price,
+      notes: this.formData.notes || undefined,
     };
 
     if (this.formData.repeat_enabled) {
       bookingData.repeat = {
-        enabled:  true,
-        type:     this.formData.repeat_type,
-        days:     this.formData.repeat_days,
+        enabled: true,
+        type: this.formData.repeat_type,
+        days: this.formData.repeat_days,
         interval: this.formData.repeat_interval,
         end_type: this.formData.repeat_end_type,
-        count:    this.formData.repeat_count,
-        until:    this.formData.repeat_until ? this.formatDateTime(this.formData.repeat_until) : undefined,
+        count: this.formData.repeat_count,
+        until: this.formData.repeat_until
+          ? this.formatDateTime(this.formData.repeat_until)
+          : undefined,
       };
     }
 
@@ -305,7 +314,9 @@ export class BookingFormDialogComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: this.isEdit() ? 'Reserva actualizada' : 'Reserva creada',
-          detail:   this.isEdit() ? 'La reserva ha sido actualizada correctamente' : 'La reserva ha sido creada correctamente',
+          detail: this.isEdit()
+            ? 'La reserva ha sido actualizada correctamente'
+            : 'La reserva ha sido creada correctamente',
         });
         this.visible = false;
         this.saving.set(false);
@@ -320,37 +331,64 @@ export class BookingFormDialogComponent implements OnInit {
 
   saveClient(form?: NgForm) {
     if (form) {
-      form.markAllAsTouched();
+      form.form.markAllAsTouched();
       if (form.invalid) return;
     }
-    this.apiService.createClient({
-      first_name: this.newClient.first_name,
-      last_name:  this.newClient.last_name,
-      email:      this.newClient.email,
-      phone:      this.newClient.phone || undefined,
-    }).subscribe({
-      next: (client) => {
-        this.messageService.add({ severity: 'success', summary: 'Cliente creado', detail: 'El nuevo cliente ha sido registrado correctamente' });
-        this.showAddClient = false;
-        this.formData.client_id = client.id;
-        this.loadData();
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el cliente' });
-      },
-    });
+    this.apiService
+      .createClient({
+        first_name: this.newClient.first_name,
+        last_name: this.newClient.last_name,
+        email: this.newClient.email,
+        phone: this.newClient.phone || undefined,
+      })
+      .subscribe({
+        next: (client) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Cliente creado',
+            detail: 'El nuevo cliente ha sido registrado correctamente',
+          });
+          this.showAddClient = false;
+          this.formData.client_id = client.id;
+          this.loadData();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo crear el cliente',
+          });
+        },
+      });
   }
 
   private handleApiError(err: any) {
     const errorData = err.error as ApiErrorResponse;
     if (err.status === 409) {
-      this.messageService.add({ severity: 'warn',  summary: 'Conflicto de horario',   detail: errorData?.detail || 'Ya existe una reserva en este horario' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Conflicto de horario',
+        detail: errorData?.detail || 'Ya existe una reserva en este horario',
+      });
     } else if (err.status === 422) {
-      if (errorData?.detail) this.messageService.add({ severity: 'error', summary: 'Error de validación', detail: errorData.detail });
+      if (errorData?.detail)
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de validación',
+          detail: errorData.detail,
+        });
     } else if (err.status === 401) {
-      this.messageService.add({ severity: 'error', summary: 'No autorizado', detail: 'Tu sesión ha expirado' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'No autorizado',
+        detail: 'Tu sesión ha expirado',
+      });
     } else {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error al procesar la solicitud' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Ha ocurrido un error al procesar la solicitud',
+      });
     }
   }
 
