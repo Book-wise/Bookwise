@@ -11,6 +11,7 @@ export const BOOKING_STATUSES = [
   { label: 'No asistio', value: 4, color: '#f9a8d4', severity: 'secondary' as const },
   { label: 'Pendiente',  value: 5, color: '#fca5a5', severity: 'danger'    as const },
   { label: 'En espera',  value: 6, color: '#86efac', severity: 'success'   as const },
+  { label: 'Cancelado',  value: 7, color: '#ef4444', severity: 'danger'    as const },
 ];
 
 export const STATUS_COLOR_MAP: Record<number, string> = {
@@ -20,4 +21,5 @@ export const STATUS_COLOR_MAP: Record<number, string> = {
   4: '#f9a8d4', // No asistio
   5: '#fca5a5', // Pendiente
   6: '#86efac', // En espera
+  7: '#ef4444', // Cancelado
 };

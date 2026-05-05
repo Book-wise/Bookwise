@@ -81,10 +81,16 @@
         <span>{{ formatTooltipTime(hoveredBooking()!.start_time) }} – {{ formatTooltipTime(hoveredBooking()!.end_time) }}</span>
       </div>
 
-      @if (hoveredBooking()!.payment_status !== 'unpaid' && hoveredBooking()!.payment_status) {
+      @if (hoveredBooking()!.payment_status) {
         <div class="ev-tooltip__row">
           <i class="pi pi-dollar"></i>
-          <span>{{ hoveredBooking()!.payment_status === 'paid' ? 'Pago asociado' : 'Pago parcial' }}</span>
+          @if (hoveredBooking()!.payment_status === 'paid') {
+            <span>Pago asociado</span>
+          } @else if (hoveredBooking()!.payment_status === 'partial') {
+            <span>Pago parcial</span>
+          } @else {
+            <span>No pagado</span>
+          }
         </div>
       }
 
