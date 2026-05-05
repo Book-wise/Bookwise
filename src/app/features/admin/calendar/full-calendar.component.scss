@@ -103,6 +103,7 @@
 
 ::ng-deep .fc .fc-event {
   cursor: pointer;
+  color: #000 !important;
   border-radius: 4px;
   padding: 0;
   font-size: 0.85rem;
@@ -423,13 +424,13 @@ body.dark-theme {
 
   &__icon {
     font-size: 0.65rem;
-    color: #6b7280;
+    color: #000;
     flex-shrink: 0;
   }
 
   &__label {
     font-size: 0.75rem;
-    color: #4b5563;
+    color: #000;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;

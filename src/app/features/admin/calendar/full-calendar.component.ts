@@ -291,10 +291,17 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 
+  private fmt(iso: string): string {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
   private buildEventContent(info: any): { html: string } {
     if (info.event.extendedProps['isBlocked']) {
       const reason = info.event.title || 'Bloqueado';
-      return { html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason}</span></div>` };
+      const start  = this.fmt(info.event.startStr);
+      const end    = this.fmt(info.event.endStr);
+      return { html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason} · ${start}–${end}</span></div>` };
     }
     const booking: Booking | undefined = info.event.extendedProps['booking'];
     const payment = booking?.payment_status;
