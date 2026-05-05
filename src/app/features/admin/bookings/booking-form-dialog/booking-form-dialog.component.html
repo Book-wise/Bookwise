@@ -321,7 +321,7 @@
   [draggable]="false"
   [resizable]="false">
 
-  <form class="add-client-form" #addClientForm="ngForm" (ngSubmit)="saveClient()">
+  <form class="add-client-form" #addClientForm="ngForm" (ngSubmit)="saveClient(addClientForm)">
 
     <div class="field">
       <label class="field-label">Nombre</label>
@@ -399,8 +399,7 @@
       <p-button
         label="Guardar paciente"
         icon="pi pi-check"
-        [disabled]="addClientForm.invalid"
-        (onClick)="saveClient()">
+        (onClick)="saveClient(addClientForm)">
       </p-button>
     </div>
   </ng-template>
