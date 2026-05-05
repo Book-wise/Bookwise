@@ -376,33 +376,13 @@
 
     <div class="field">
       <label class="field-label">Teléfono</label>
-      <div class="phone-group">
-        <p-select
-          name="clientCountry"
-          [options]="countryCodes"
-          [(ngModel)]="newClient.phone_country_code"
-          optionValue="code"
-          [appendTo]="'body'"
-          styleClass="country-select">
-          <ng-template pTemplate="selectedItem" let-c>
-            <span>{{ c.flag }} {{ c.code }}</span>
-          </ng-template>
-          <ng-template pTemplate="item" let-c>
-            <span class="country-option">{{ c.flag }} {{ c.name }} <em>{{ c.code }}</em></span>
-          </ng-template>
-        </p-select>
-        <input
-          pInputText
-          name="clientPhone"
-          type="tel"
-          [(ngModel)]="newClient.phone"
-          pattern="[0-9]{6,15}"
-          #clientPhone="ngModel"
-          class="w-full"
-          placeholder="912345678" />
-      </div>
-      @if (clientPhone.invalid && clientPhone.touched) {
-        <span class="field-error">Solo números, entre 6 y 15 dígitos</span>
+      <app-phone-input
+        name="clientPhone"
+        [(ngModel)]="newClient.phone"
+        #clientPhone="ngModel"
+        placeholder="Teléfono" />
+      @if (clientPhone.invalid && clientPhone.touched && clientPhone.errors?.['invalidPhone']) {
+        <span class="field-error">El número de teléfono no es válido para este país</span>
       }
     </div>
 

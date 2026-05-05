@@ -47,33 +47,18 @@
 
       <div class="field">
         <label>Teléfono</label>
-        <div class="phone-group">
-          <p-select
-            name="countryCode"
-            [options]="countryCodes"
-            [(ngModel)]="phoneCountryCode"
-            optionValue="code"
-            styleClass="country-select">
-            <ng-template pTemplate="selectedItem" let-c>
-              <span>{{ c.flag }} {{ c.code }}</span>
-            </ng-template>
-            <ng-template pTemplate="item" let-c>
-              <span class="country-option">{{ c.flag }} {{ c.name }} <em>{{ c.code }}</em></span>
-            </ng-template>
-          </p-select>
-          <input
-            pInputText
-            name="phone"
-            type="tel"
-            placeholder="912345678"
-            [(ngModel)]="phoneNumber"
-            required
-            pattern="[0-9]{6,15}"
-            #phone="ngModel"
-            class="w-full" />
-        </div>
+        <app-phone-input
+          name="phone"
+          [(ngModel)]="formData.phone"
+          required
+          #phone="ngModel"
+          placeholder="Teléfono" />
         @if (phone.invalid && phone.touched) {
-          <span class="field-error">Solo números, entre 6 y 15 dígitos</span>
+          @if (phone.errors?.['required']) {
+            <span class="field-error">El teléfono es obligatorio</span>
+          } @else if (phone.errors?.['invalidPhone']) {
+            <span class="field-error">El número no es válido para este país</span>
+          }
         }
       </div>
 

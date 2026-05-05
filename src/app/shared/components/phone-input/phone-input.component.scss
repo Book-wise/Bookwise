@@ -1,0 +1,81 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Make the iti wrapper fill its host
+::ng-deep .iti {
+  width: 100%;
+}
+
+.iti-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #374151;
+  background: white;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+}
+
+// Flag dropdown button
+::ng-deep .iti__selected-dial-code {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+::ng-deep .iti__flag-container {
+  border-right: 1px solid #d1d5db;
+}
+
+::ng-deep .iti__selected-flag {
+  background: transparent;
+  padding: 0 8px;
+  border-radius: 6px 0 0 6px;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+::ng-deep .iti__dropdown-content {
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+}
+
+::ng-deep .iti__search-input {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+::ng-deep .iti__country {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+
+  &:hover, &.iti__highlight {
+    background: #eff6ff;
+  }
+}
+
+::ng-deep .iti__country-name {
+  color: #374151;
+}
+
+::ng-deep .iti__dial-code {
+  color: #9ca3af;
+}
