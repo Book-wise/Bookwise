@@ -6,9 +6,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { SelectModule } from 'primeng/select';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { RegisterData } from '../../../core/models';
+import { COUNTRY_CODES } from '../../../shared/constants/country-codes';
 
 @Component({
   selector: 'app-register',
@@ -21,6 +23,7 @@ import { RegisterData } from '../../../core/models';
     PasswordModule,
     ButtonModule,
     MessageModule,
+    SelectModule,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
@@ -31,6 +34,12 @@ export class RegisterComponent {
 
   loading = signal(false);
   error   = signal<string | null>(null);
+
+  readonly countryCodes = COUNTRY_CODES;
+
+  // Phone split: country code + number (combined on submit)
+  phoneCountryCode = '+56';
+  phoneNumber = '';
 
   formData: RegisterData = {
     name: '',
@@ -44,7 +53,7 @@ export class RegisterComponent {
     return !!(
       this.formData.name &&
       this.formData.email &&
-      this.formData.phone &&
+      this.phoneNumber &&
       this.formData.password &&
       this.formData.password_confirmation &&
       this.formData.password === this.formData.password_confirmation
@@ -56,6 +65,8 @@ export class RegisterComponent {
 
     this.loading.set(true);
     this.error.set(null);
+
+    this.formData.phone = `${this.phoneCountryCode}${this.phoneNumber}`;
 
     this.api.register(this.formData).subscribe({
       next: ({ token, user }) => {
