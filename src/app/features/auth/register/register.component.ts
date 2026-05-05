@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -55,7 +56,11 @@ export class RegisterComponent {
     );
   }
 
-  onRegister(): void {
+  onRegister(form?: NgForm): void {
+    if (form) {
+      form.markAllAsTouched();
+      if (form.invalid) return;
+    }
     if (!this.isFormValid()) return;
 
     this.loading.set(true);

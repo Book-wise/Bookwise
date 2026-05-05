@@ -6,7 +6,7 @@
       <p class="brand-subtitle">Crear cuenta</p>
     </div>
 
-    <form class="auth-form" (ngSubmit)="onRegister()" #registerForm="ngForm">
+    <form class="auth-form" (ngSubmit)="onRegister(registerForm)" #registerForm="ngForm">
 
       <div class="field">
         <label for="name">Nombre completo</label>

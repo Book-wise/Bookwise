@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, computed, Input, Output, EventEmitter } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
@@ -317,7 +318,11 @@ export class BookingFormDialogComponent implements OnInit {
     });
   }
 
-  saveClient() {
+  saveClient(form?: NgForm) {
+    if (form) {
+      form.markAllAsTouched();
+      if (form.invalid) return;
+    }
     this.apiService.createClient({
       first_name: this.newClient.first_name,
       last_name:  this.newClient.last_name,
