@@ -255,7 +255,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
         const bookingEvents: CalendarEvent[] = bookings.map((booking) => ({
           id: booking.id.toString(),
-          title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
+          title: `${booking.client?.first_name || ''} ${booking.client?.last_name || ''} · ${booking.service?.name || 'Servicio'}`.trim(),
           start: booking.start_time,
           end: booking.end_time,
           backgroundColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
