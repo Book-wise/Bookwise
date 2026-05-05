@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -27,10 +27,11 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constant
   ],
   templateUrl: './block-time-dialog.component.html',
   styleUrls: ['./block-time-dialog.component.scss'],
-  providers: [MessageService],
 })
 export class BlockTimeDialogComponent {
   private messageService = inject(MessageService);
+
+  @Output() onBlocked = new EventEmitter<void>();
 
   visible = false;
   saving  = signal(false);
@@ -146,15 +147,19 @@ export class BlockTimeDialogComponent {
 
   block(): void {
     this.saving.set(true);
-    // TODO: wire to API (include repeat data when repeatEnabled())
+    // TODO: replace setTimeout with real API call when backend is ready
+    // this.api.createBlockedSlot({ start_time, end_time, reason, repeat... }).subscribe(...)
     setTimeout(() => {
       this.messageService.add({
         severity: 'success',
         summary: 'Horario bloqueado',
-        detail:  'El horario ha sido bloqueado correctamente',
+        detail: this.repeatEnabled()
+          ? 'Las repeticiones se registraron en la agenda.'
+          : 'El bloqueo quedó registrado en la agenda.',
       });
       this.saving.set(false);
       this.visible = false;
+      this.onBlocked.emit();
     }, 500);
   }
 }

@@ -168,8 +168,8 @@
   (onSuccess)="onBookingSaved()"
   (onCancel)="onBookingCancelled()"
 ></app-booking-dialog>
-<app-booking-form-dialog #newBookingDialog></app-booking-form-dialog>
-<app-block-time-dialog #blockTimeDialog></app-block-time-dialog>
+<app-booking-form-dialog #newBookingDialog (onSaved)="onBookingSaved()"></app-booking-form-dialog>
+<app-block-time-dialog #blockTimeDialog (onBlocked)="onBookingSaved()"></app-block-time-dialog>
 
 <!-- Slot Action Menu Overlay -->
 <div class="slot-overlay" *ngIf="showSlotMenu()" (click)="showSlotMenu.set(false)">

@@ -51,7 +51,6 @@ import { PhoneInputComponent } from '../../../../shared/components/phone-input/p
   ],
   templateUrl: './booking-form-dialog.component.html',
   styleUrls: ['./booking-form-dialog.component.scss'],
-  providers: [MessageService],
 })
 export class BookingFormDialogComponent implements OnInit {
   private apiService = inject(ApiService);
@@ -313,10 +312,8 @@ export class BookingFormDialogComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: this.isEdit() ? 'Reserva actualizada' : 'Reserva creada',
-          detail: this.isEdit()
-            ? 'La reserva ha sido actualizada correctamente'
-            : 'La reserva ha sido creada correctamente',
+          summary: this.isEdit() ? '¡Reserva actualizada!' : '¡Reserva creada!',
+          detail:   this.isEdit() ? 'Los cambios se guardaron correctamente.' : 'La reserva quedó registrada en la agenda.',
         });
         this.visible = false;
         this.saving.set(false);
@@ -365,30 +362,13 @@ export class BookingFormDialogComponent implements OnInit {
   private handleApiError(err: any) {
     const errorData = err.error as ApiErrorResponse;
     if (err.status === 409) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Conflicto de horario',
-        detail: errorData?.detail || 'Ya existe una reserva en este horario',
-      });
+      this.messageService.add({ severity: 'warn', summary: 'Horario ocupado', detail: 'Ya hay una reserva en ese horario. Elegí otro para continuar.' });
     } else if (err.status === 422) {
-      if (errorData?.detail)
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de validación',
-          detail: errorData.detail,
-        });
+      this.messageService.add({ severity: 'error', summary: 'Datos incompletos', detail: errorData?.detail || 'Revisá los campos e intentá de nuevo.' });
     } else if (err.status === 401) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'No autorizado',
-        detail: 'Tu sesión ha expirado',
-      });
+      this.messageService.add({ severity: 'warn', summary: 'Sesión expirada', detail: 'Iniciá sesión de nuevo para continuar.' });
     } else {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Ha ocurrido un error al procesar la solicitud',
-      });
+      this.messageService.add({ severity: 'error', summary: 'Algo salió mal', detail: 'No pudimos guardar la reserva. Intentá de nuevo en un momento.' });
     }
   }
 
