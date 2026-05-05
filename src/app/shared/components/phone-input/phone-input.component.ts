@@ -53,7 +53,7 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
       initialCountry: this.initialCountry,
       preferredCountries: this.preferredCountries,
       separateDialCode: true,
-      loadUtilsOnInit: 'assets/intl-tel-input/utils.js',
+      loadUtilsOnInit: '/assets/intl-tel-input/utils.js',
     } as any);
 
     // Apply pending value written before view was ready
