@@ -6,11 +6,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { SelectModule } from 'primeng/select';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { RegisterData } from '../../../core/models';
-import { COUNTRY_CODES } from '../../../shared/constants/country-codes';
+import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'app-register',
@@ -23,7 +22,7 @@ import { COUNTRY_CODES } from '../../../shared/constants/country-codes';
     PasswordModule,
     ButtonModule,
     MessageModule,
-    SelectModule,
+    PhoneInputComponent,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
@@ -35,11 +34,7 @@ export class RegisterComponent {
   loading = signal(false);
   error   = signal<string | null>(null);
 
-  readonly countryCodes = COUNTRY_CODES;
-
-  // Phone split: country code + number (combined on submit)
-  phoneCountryCode = '+56';
-  phoneNumber = '';
+  // intl-tel-input emits the full E.164 phone string directly
 
   formData: RegisterData = {
     name: '',
@@ -53,7 +48,7 @@ export class RegisterComponent {
     return !!(
       this.formData.name &&
       this.formData.email &&
-      this.phoneNumber &&
+      this.formData.phone &&
       this.formData.password &&
       this.formData.password_confirmation &&
       this.formData.password === this.formData.password_confirmation
@@ -65,8 +60,6 @@ export class RegisterComponent {
 
     this.loading.set(true);
     this.error.set(null);
-
-    this.formData.phone = `${this.phoneCountryCode}${this.phoneNumber}`;
 
     this.api.register(this.formData).subscribe({
       next: ({ token, user }) => {

@@ -18,7 +18,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { BookingFormData, ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
-import { COUNTRY_CODES } from '../../../../shared/constants/country-codes';
+import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'app-booking-form-dialog',
@@ -37,6 +37,7 @@ import { COUNTRY_CODES } from '../../../../shared/constants/country-codes';
     CheckboxModule,
     RadioButtonModule,
     TooltipModule,
+    PhoneInputComponent,
   ],
   templateUrl: './booking-form-dialog.component.html',
   styleUrls: ['./booking-form-dialog.component.scss'],
@@ -58,8 +59,7 @@ export class BookingFormDialogComponent implements OnInit {
 
   formData: BookingFormData = this.getEmptyForm();
 
-  newClient = { first_name: '', last_name: '', email: '', phone_country_code: '+56', phone: '' };
-  readonly countryCodes = COUNTRY_CODES;
+  newClient = { first_name: '', last_name: '', email: '', phone: '' };
 
   repeatAfterChecked = false;
   repeatUntilChecked = false;
@@ -322,9 +322,7 @@ export class BookingFormDialogComponent implements OnInit {
       first_name: this.newClient.first_name,
       last_name:  this.newClient.last_name,
       email:      this.newClient.email,
-      phone:      this.newClient.phone
-        ? `${this.newClient.phone_country_code}${this.newClient.phone}`
-        : undefined,
+      phone:      this.newClient.phone || undefined,
     }).subscribe({
       next: (client) => {
         this.messageService.add({ severity: 'success', summary: 'Cliente creado', detail: 'El nuevo cliente ha sido registrado correctamente' });
