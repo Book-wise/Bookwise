@@ -12,64 +12,100 @@
         <label for="name">Nombre completo</label>
         <input
           pInputText
-          id="name"
-          name="name"
+          id="name" name="name"
           type="text"
           placeholder="Juan Pérez"
           [(ngModel)]="formData.name"
           required
+          #name="ngModel"
           class="w-full" />
+        @if (name.invalid && name.touched) {
+          <span class="field-error">El nombre es obligatorio</span>
+        }
       </div>
 
       <div class="field">
         <label for="email">Email</label>
         <input
           pInputText
-          id="email"
-          name="email"
+          id="email" name="email"
           type="email"
           placeholder="tu@email.com"
           [(ngModel)]="formData.email"
           required
+          email
+          #emailField="ngModel"
           class="w-full" />
+        @if (emailField.invalid && emailField.touched) {
+          @if (emailField.errors?.['required']) {
+            <span class="field-error">El email es obligatorio</span>
+          } @else if (emailField.errors?.['email']) {
+            <span class="field-error">El email no es válido</span>
+          }
+        }
       </div>
 
       <div class="field">
-        <label for="phone">Teléfono</label>
-        <input
-          pInputText
-          id="phone"
-          name="phone"
-          type="tel"
-          placeholder="+56 9 1234 5678"
-          [(ngModel)]="formData.phone"
-          required
-          class="w-full" />
+        <label>Teléfono</label>
+        <div class="phone-group">
+          <p-select
+            name="countryCode"
+            [options]="countryCodes"
+            [(ngModel)]="phoneCountryCode"
+            optionValue="code"
+            styleClass="country-select">
+            <ng-template pTemplate="selectedItem" let-c>
+              <span>{{ c.flag }} {{ c.code }}</span>
+            </ng-template>
+            <ng-template pTemplate="item" let-c>
+              <span class="country-option">{{ c.flag }} {{ c.name }} <em>{{ c.code }}</em></span>
+            </ng-template>
+          </p-select>
+          <input
+            pInputText
+            name="phone"
+            type="tel"
+            placeholder="912345678"
+            [(ngModel)]="phoneNumber"
+            required
+            pattern="[0-9]{6,15}"
+            #phone="ngModel"
+            class="w-full" />
+        </div>
+        @if (phone.invalid && phone.touched) {
+          <span class="field-error">Solo números, entre 6 y 15 dígitos</span>
+        }
       </div>
 
       <div class="field">
         <label for="password">Contraseña</label>
         <p-password
-          inputId="password"
-          name="password"
+          inputId="password" name="password"
           placeholder="Mínimo 8 caracteres"
           [(ngModel)]="formData.password"
           [toggleMask]="true"
-          styleClass="w-full"
-          required />
+          required
+          #password="ngModel"
+          styleClass="w-full" />
+        @if (password.invalid && password.touched) {
+          <span class="field-error">La contraseña es obligatoria</span>
+        }
       </div>
 
       <div class="field">
         <label for="passwordConfirm">Confirmar contraseña</label>
         <p-password
-          inputId="passwordConfirm"
-          name="passwordConfirm"
+          inputId="passwordConfirm" name="passwordConfirm"
           placeholder="Repetí tu contraseña"
           [(ngModel)]="formData.password_confirmation"
           [feedback]="false"
           [toggleMask]="true"
-          styleClass="w-full"
-          required />
+          required
+          #passwordConfirm="ngModel"
+          styleClass="w-full" />
+        @if (passwordConfirm.touched && formData.password_confirmation && formData.password !== formData.password_confirmation) {
+          <span class="field-error">Las contraseñas no coinciden</span>
+        }
       </div>
 
       @if (error()) {
@@ -82,7 +118,7 @@
         icon="pi pi-user-plus"
         styleClass="w-full"
         [loading]="loading()"
-        [disabled]="!isFormValid()" />
+        [disabled]="registerForm.invalid || formData.password !== formData.password_confirmation" />
 
     </form>
 

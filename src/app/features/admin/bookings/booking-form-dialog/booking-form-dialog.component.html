@@ -317,28 +317,96 @@
   header="Nuevo Paciente"
   [(visible)]="showAddClient"
   [modal]="true"
-  [style]="{width: '440px'}"
+  [style]="{width: '460px'}"
   [draggable]="false"
   [resizable]="false">
 
-  <div class="add-client-form">
+  <form class="add-client-form" #addClientForm="ngForm" (ngSubmit)="saveClient()">
+
     <div class="field">
       <label class="field-label">Nombre</label>
-      <input pInputText [(ngModel)]="newClient.first_name" class="w-full" />
+      <input
+        pInputText
+        name="firstName"
+        [(ngModel)]="newClient.first_name"
+        required
+        #firstName="ngModel"
+        class="w-full"
+        placeholder="Juan" />
+      @if (firstName.invalid && firstName.touched) {
+        <span class="field-error">El nombre es obligatorio</span>
+      }
     </div>
+
     <div class="field">
       <label class="field-label">Apellido</label>
-      <input pInputText [(ngModel)]="newClient.last_name" class="w-full" />
+      <input
+        pInputText
+        name="lastName"
+        [(ngModel)]="newClient.last_name"
+        required
+        #lastName="ngModel"
+        class="w-full"
+        placeholder="Pérez" />
+      @if (lastName.invalid && lastName.touched) {
+        <span class="field-error">El apellido es obligatorio</span>
+      }
     </div>
+
     <div class="field">
       <label class="field-label">Email</label>
-      <input pInputText [(ngModel)]="newClient.email" type="email" class="w-full" />
+      <input
+        pInputText
+        name="clientEmail"
+        type="email"
+        [(ngModel)]="newClient.email"
+        required
+        email
+        #clientEmail="ngModel"
+        class="w-full"
+        placeholder="juan@email.com" />
+      @if (clientEmail.invalid && clientEmail.touched) {
+        @if (clientEmail.errors?.['required']) {
+          <span class="field-error">El email es obligatorio</span>
+        } @else if (clientEmail.errors?.['email']) {
+          <span class="field-error">El email no es válido</span>
+        }
+      }
     </div>
+
     <div class="field">
       <label class="field-label">Teléfono</label>
-      <input pInputText [(ngModel)]="newClient.phone" class="w-full" />
+      <div class="phone-group">
+        <p-select
+          name="clientCountry"
+          [options]="countryCodes"
+          [(ngModel)]="newClient.phone_country_code"
+          optionValue="code"
+          [appendTo]="'body'"
+          styleClass="country-select">
+          <ng-template pTemplate="selectedItem" let-c>
+            <span>{{ c.flag }} {{ c.code }}</span>
+          </ng-template>
+          <ng-template pTemplate="item" let-c>
+            <span class="country-option">{{ c.flag }} {{ c.name }} <em>{{ c.code }}</em></span>
+          </ng-template>
+        </p-select>
+        <input
+          pInputText
+          name="clientPhone"
+          type="tel"
+          [(ngModel)]="newClient.phone"
+          pattern="[0-9]{6,15}"
+          #clientPhone="ngModel"
+          class="w-full"
+          placeholder="912345678" />
+      </div>
+      @if (clientPhone.invalid && clientPhone.touched) {
+        <span class="field-error">Solo números, entre 6 y 15 dígitos</span>
+      }
     </div>
-  </div>
+
+  </form>
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
@@ -348,7 +416,12 @@
         [outlined]="true"
         (onClick)="showAddClient = false">
       </p-button>
-      <p-button label="Guardar paciente" icon="pi pi-check" (onClick)="saveClient()"></p-button>
+      <p-button
+        label="Guardar paciente"
+        icon="pi pi-check"
+        [disabled]="addClientForm.invalid"
+        (onClick)="saveClient()">
+      </p-button>
     </div>
   </ng-template>
 </p-dialog>
