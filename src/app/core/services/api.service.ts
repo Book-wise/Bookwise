@@ -10,6 +10,7 @@ import {
   Client,
   ClientPack,
   Booking,
+  BlockedSlot,
   Sale,
   AvailableSlot,
   PaginatedResponse,
@@ -69,6 +70,29 @@ export class ApiService {
     return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, {
       params: httpParams,
     });
+  }
+
+  // Blocked slots
+  getBlockedSlots(params: { date_from: string; date_to: string; location_id?: number; provider_id?: number }): Observable<{ data: BlockedSlot[] }> {
+    let httpParams = new HttpParams();
+    Object.entries(params).forEach(([k, v]) => { if (v != null) httpParams = httpParams.set(k, String(v)); });
+    return this.http.get<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, { params: httpParams });
+  }
+
+  createBlockedSlot(body: {
+    start_time: string; end_time: string;
+    reason?: string; provider_id?: number | null; location_id?: number | null;
+    repeat?: { type: string; interval: number; days?: number[]; end_type: string; count?: number; until?: string };
+  }): Observable<{ data: BlockedSlot[] }> {
+    return this.http.post<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, body);
+  }
+
+  deleteBlockedSlot(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/blocked-slots/${id}`);
+  }
+
+  deleteBlockedSlotGroup(groupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/blocked-slots/group/${groupId}`);
   }
 
   // Auth

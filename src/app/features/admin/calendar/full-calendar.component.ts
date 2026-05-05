@@ -23,11 +23,12 @@ import { PopoverModule, Popover } from 'primeng/popover';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
-import { Booking, Location, Provider } from '../../../core/models';
+import { Booking, BlockedSlot, Location, Provider } from '../../../core/models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { STATUS_COLOR_MAP } from '../bookings/constants/booking-statuses';
+import { forkJoin } from 'rxjs';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -184,6 +185,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
         eventContent: (info) => this.buildEventContent(info),
         eventMouseEnter: (info) => {
+          if (info.event.extendedProps['isBlocked']) return;
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
           this.ngZone.run(() => {
@@ -235,19 +237,23 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   ): void {
     this.ngZone.run(() => this.loading.set(true));
 
-    const params: any = {
-      date_from: fetchInfo.startStr.split('T')[0],
-      date_to: fetchInfo.endStr.split('T')[0],
-      per_page: 500,
-    };
-    if (this.selectedLocationId) params.location_id = this.selectedLocationId;
-    if (this.selectedProviderId) params.provider_id = this.selectedProviderId;
+    const dateFrom = fetchInfo.startStr.split('T')[0];
+    const dateTo   = fetchInfo.endStr.split('T')[0];
 
-    this.api.getBookings(params).subscribe({
-      next: (response: any) => {
-        const data = response.data || response;
+    const bookingParams: any = { date_from: dateFrom, date_to: dateTo, per_page: 500 };
+    const slotParams: any    = { date_from: dateFrom, date_to: dateTo };
+    if (this.selectedLocationId) { bookingParams.location_id = this.selectedLocationId; slotParams.location_id = this.selectedLocationId; }
+    if (this.selectedProviderId) { bookingParams.provider_id = this.selectedProviderId; slotParams.provider_id = this.selectedProviderId; }
+
+    forkJoin({
+      bookingsRes:      this.api.getBookings(bookingParams),
+      blockedSlotsRes:  this.api.getBlockedSlots(slotParams),
+    }).subscribe({
+      next: ({ bookingsRes, blockedSlotsRes }) => {
+        const data     = (bookingsRes as any).data || bookingsRes;
         const bookings: Booking[] = Array.isArray(data) ? data : [];
-        const events: CalendarEvent[] = bookings.map((booking) => ({
+
+        const bookingEvents: CalendarEvent[] = bookings.map((booking) => ({
           id: booking.id.toString(),
           title: `${booking.service?.name || 'Servicio'} - ${booking.client?.first_name || ''} ${booking.client?.last_name || ''}`.trim(),
           start: booking.start_time,
@@ -256,7 +262,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           borderColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
           extendedProps: { booking },
         }));
-        successCallback(events);
+
+        const blockedSlots: BlockedSlot[] = blockedSlotsRes?.data ?? [];
+        const blockedEvents: CalendarEvent[] = blockedSlots.map((slot) => ({
+          id: `blocked-${slot.id}`,
+          title: slot.reason || 'Bloqueado',
+          start: slot.start_time,
+          end: slot.end_time,
+          classNames: ['fc-blocked-slot'],
+          extendedProps: { isBlocked: true, blockedSlot: slot },
+        } as any));
+
+        successCallback([...bookingEvents, ...blockedEvents]);
         this.ngZone.run(() => {
           this.bookings.set(bookings);
           this.loading.set(false);
@@ -275,6 +292,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private buildEventContent(info: any): { html: string } {
+    if (info.event.extendedProps['isBlocked']) {
+      const reason = info.event.title || 'Bloqueado';
+      return { html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason}</span></div>` };
+    }
     const booking: Booking | undefined = info.event.extendedProps['booking'];
     const payment = booking?.payment_status;
     const title = info.event.title.replace(/[&<>"']/g, (c: string) =>
@@ -307,8 +328,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handleEventClick(clickInfo: EventClickArg): void {
-    const event = clickInfo.event;
-    const booking = event.extendedProps['booking'] as Booking;
+    if (clickInfo.event.extendedProps['isBlocked']) return; // ignore blocked slot clicks
+    const booking = clickInfo.event.extendedProps['booking'] as Booking;
     this.selectedBooking.set(booking);
     this.showEventDialog.set(true);
   }
@@ -365,6 +386,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.blockTimeDialog.open(
       this.selectedDate || new Date(),
       this.selectedEndDate || this.selectedDate || new Date(),
+      this.selectedLocationId,
+      this.selectedProviderId,
     );
   }
 
