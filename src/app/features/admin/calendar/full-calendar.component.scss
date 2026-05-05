@@ -395,6 +395,48 @@ body.dark-theme {
   }
 }
 
+// ── Blocked slot events ───────────────────────────────────────────────────────
+
+::ng-deep .fc-blocked-slot {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(107, 114, 128, 0.12) 0px,
+    rgba(107, 114, 128, 0.12) 3px,
+    rgba(243, 244, 246, 0.85) 3px,
+    rgba(243, 244, 246, 0.85) 11px
+  ) !important;
+  border-color: #9ca3af !important;
+  border-left: 3px solid #6b7280 !important;
+  cursor: default !important;
+
+  .fc-event-main {
+    padding: 2px 4px;
+  }
+}
+
+.ev-blocked {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  overflow: hidden;
+
+  &__icon {
+    font-size: 0.65rem;
+    color: #6b7280;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: #4b5563;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .slot-overlay {
   position: fixed;
   top: 0;

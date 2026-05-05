@@ -98,6 +98,16 @@ export interface PackSession {
   status: string;
 }
 
+export interface BlockedSlot {
+  id: number;
+  start_time: string;
+  end_time: string;
+  reason?: string | null;
+  provider_id?: number | null;
+  location_id?: number | null;
+  repeat_group_id?: string | null;
+}
+
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 
 export interface Payment {

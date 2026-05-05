@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal, Output, EventEmitter } from '@angular/core';
+import { ApiService } from '../../../../core/services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -30,12 +31,15 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constant
 })
 export class BlockTimeDialogComponent {
   private messageService = inject(MessageService);
+  private api            = inject(ApiService);
 
   @Output() onBlocked = new EventEmitter<void>();
 
-  visible = false;
-  saving  = signal(false);
-  reason  = '';
+  visible    = false;
+  saving     = signal(false);
+  reason     = '';
+  locationId: number | null = null;
+  providerId: number | null = null;
 
   // ── Date / time ─────────────────────────────────────────────────────────────
 
@@ -125,9 +129,11 @@ export class BlockTimeDialogComponent {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
-  open(startTime?: Date, endTime?: Date): void {
+  open(startTime?: Date, endTime?: Date, locationId?: number | null, providerId?: number | null): void {
     if (startTime) this.startDate.set(startTime);
     if (endTime)   this.endDate.set(endTime);
+    this.locationId = locationId ?? null;
+    this.providerId = providerId ?? null;
     this.visible = true;
   }
 
@@ -147,19 +153,51 @@ export class BlockTimeDialogComponent {
 
   block(): void {
     this.saving.set(true);
-    // TODO: replace setTimeout with real API call when backend is ready
-    // this.api.createBlockedSlot({ start_time, end_time, reason, repeat... }).subscribe(...)
-    setTimeout(() => {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Horario bloqueado',
-        detail: this.repeatEnabled()
-          ? 'Las repeticiones se registraron en la agenda.'
-          : 'El bloqueo quedó registrado en la agenda.',
-      });
-      this.saving.set(false);
-      this.visible = false;
-      this.onBlocked.emit();
-    }, 500);
+
+    const fmt = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19);
+
+    const body: any = {
+      start_time:  fmt(this.startDate()),
+      end_time:    fmt(this.endDate()),
+      reason:      this.reason || undefined,
+      location_id: this.locationId ?? undefined,
+      provider_id: this.providerId ?? undefined,
+    };
+
+    if (this.repeatEnabled()) {
+      body.repeat = {
+        type:     this.repeatType(),
+        interval: this.repeatInterval(),
+        days:     this.repeatType() === 'weekly' ? this.repeatDays() : undefined,
+        end_type: this.repeatEndType(),
+        count:    this.repeatEndType() === 'after' ? this.repeatCount() : undefined,
+        until:    this.repeatEndType() === 'until' && this.repeatUntil()
+                    ? fmt(this.repeatUntil()!)
+                    : undefined,
+      };
+    }
+
+    this.api.createBlockedSlot(body).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Horario bloqueado',
+          detail: this.repeatEnabled()
+            ? 'Las repeticiones se registraron en la agenda.'
+            : 'El bloqueo quedó registrado en la agenda.',
+        });
+        this.saving.set(false);
+        this.visible = false;
+        this.onBlocked.emit();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo bloquear',
+          detail: 'Revisá los datos e intentá de nuevo.',
+        });
+        this.saving.set(false);
+      },
+    });
   }
 }
