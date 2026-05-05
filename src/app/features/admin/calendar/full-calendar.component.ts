@@ -260,6 +260,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           end: booking.end_time,
           backgroundColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
           borderColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
+          textColor: '#000',
           extendedProps: { booking },
         }));
 
