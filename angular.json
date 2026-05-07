@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "e-commerce": {
+    "bookwise": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -67,10 +67,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "e-commerce:build:production"
+              "buildTarget": "bookwise:build:production"
             },
             "development": {
-              "buildTarget": "e-commerce:build:development"
+              "buildTarget": "bookwise:build:development"
             }
           },
           "defaultConfiguration": "development"
