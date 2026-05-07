@@ -1,0 +1,18 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-right: 2rem;
+  color: #333;
+}
+
+.content {
+  flex: 1;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}

@@ -1,0 +1,162 @@
+<p-dialog
+  [header]="isEdit() ? 'Editar Reserva' : 'Nueva Reserva'"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+>
+  <div class="form-grid">
+    <!-- Cliente -->
+    <div class="field">
+      <p-select
+        [options]="clientOptions()"
+        [(ngModel)]="formData.client_id"
+        placeholder="Seleccionar cliente"
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+        (onChange)="onClientChange()"
+      >
+      </p-select>
+      <small *ngIf="errors['client_id']" class="p-error">{{ errors['client_id'] }}</small>
+    </div>
+
+    <!-- Servicio -->
+    <div class="field">
+      <p-select
+        [options]="serviceOptions()"
+        [(ngModel)]="formData.service_id"
+        placeholder="Seleccionar servicio"
+        styleClass="w-full"
+        (onChange)="onServiceChange()"
+      >
+      </p-select>
+      <small *ngIf="errors['service_id']" class="p-error">{{ errors['service_id'] }}</small>
+    </div>
+
+    <!-- Ubicación -->
+    <div class="field">
+      <p-select
+        [options]="locationOptions()"
+        [(ngModel)]="formData.location_id"
+        placeholder="Seleccionar ubicación"
+        styleClass="w-full"
+        (onChange)="onLocationChange()"
+      >
+      </p-select>
+      <small *ngIf="errors['location_id']" class="p-error">{{ errors['location_id'] }}</small>
+    </div>
+
+    <!-- Profesional (nullable) -->
+    <div class="field">
+      <p-select
+        [options]="providerOptions()"
+        [(ngModel)]="formData.provider_id"
+        placeholder="Seleccionar profesional (opcional)"
+        [showClear]="true"
+        styleClass="w-full"
+        (onChange)="onProviderChange()"
+      >
+      </p-select>
+    </div>
+
+    <!-- Fecha y Hora -->
+    <div class="field-row">
+      <div class="field">
+        <p-floatlabel>
+          <p-datepicker
+            [(ngModel)]="formData.start_time"
+            dateFormat="dd/mm/yy"
+            [showTime]="true"
+            hourFormat="24"
+            styleClass="w-full"
+            (onClose)="onStartTimeChange()"
+            inputId="startTime"
+          />
+          <label for="startTime">Fecha y hora</label>
+        </p-floatlabel>
+      </div>
+
+      <div class="field">
+        <p-floatlabel>
+          <input
+            pInputNumber
+            [(ngModel)]="formData.duration_minutes"
+            [min]="15"
+            [max]="240"
+            styleClass="w-full"
+            (onInput)="onDurationChange()"
+            inputId="duration"
+          />
+          <label for="duration">Duración (min)</label>
+        </p-floatlabel>
+      </div>
+    </div>
+
+    <!-- Estado -->
+    <div class="field" *ngIf="isEdit()">
+      <p-select
+        [options]="statusOptions()"
+        [(ngModel)]="formData.status_id"
+        placeholder="Estado"
+        styleClass="w-full"
+      >
+      </p-select>
+    </div>
+
+    <!-- Precio -->
+    <div class="field">
+      <p-floatlabel>
+        <input
+          pInputNumber
+          [(ngModel)]="formData.price"
+          mode="currency"
+          currency="USD"
+          locale="es-CO"
+          styleClass="w-full"
+          inputId="price"
+        />
+        <label for="price">Precio</label>
+      </p-floatlabel>
+    </div>
+
+    <!-- Notas -->
+    <div class="field">
+      <textarea
+        pTextarea
+        [(ngModel)]="formData.notes"
+        rows="3"
+        placeholder="Notas adicionales"
+        class="w-full"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        *ngIf="isEdit() && canCancel()"
+        label="Cancelar Reserva"
+        icon="pi pi-times"
+        styleClass="p-button-danger p-button-outlined"
+        (onClick)="onCancel()"
+      >
+      </p-button>
+
+      <div class="spacer"></div>
+
+      <p-button label="Cerrar" styleClass="p-button-text" (onClick)="onClose()"> </p-button>
+
+      <p-button
+        [label]="isEdit() ? 'Actualizar' : 'Crear'"
+        icon="pi pi-check"
+        [loading]="saving()"
+        [disabled]="!isFormValid()"
+        (onClick)="onSave()"
+      >
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

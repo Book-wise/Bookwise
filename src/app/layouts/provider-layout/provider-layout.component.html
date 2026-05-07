@@ -1,0 +1,15 @@
+<div class="layout">
+  <p-menubar [model]="menuItems">
+    <ng-template pTemplate="start">
+      <span class="app-title">Kinesilk - Profesional</span>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button icon="pi pi-sign-out" label="Salir" styleClass="p-button-text" (onClick)="logout()">
+      </p-button>
+    </ng-template>
+  </p-menubar>
+
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
