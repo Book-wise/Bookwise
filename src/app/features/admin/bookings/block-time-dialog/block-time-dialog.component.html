@@ -9,6 +9,47 @@
 
   <div class="block-form">
 
+    <!-- Alcance del bloqueo -->
+    <div class="scope-section">
+      <label class="scope-label">Aplicar bloqueo a:</label>
+      <div class="scope-options">
+        @for (opt of scopeOptions; track opt.value) {
+          <div class="scope-option">
+            <p-radioButton
+              [value]="opt.value"
+              [(ngModel)]="scopeValue"
+              [inputId]="'scope-' + opt.value"
+              (onClick)="onScopeChange()" />
+            <label [for]="'scope-' + opt.value">{{ opt.label }}</label>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (scope() === 'location') {
+      <div class="field">
+        <label>Seleccionar ubicación</label>
+        <p-select
+          [options]="locationOptions()"
+          [(ngModel)]="locationId"
+          placeholder="Elige una ubicación"
+          [appendTo]="'body'"
+          styleClass="w-full" />
+      </div>
+    }
+
+    @if (scope() === 'provider') {
+      <div class="field">
+        <label>Seleccionar profesional</label>
+        <p-select
+          [options]="providerOptions()"
+          [(ngModel)]="providerId"
+          placeholder="Elige un profesional"
+          [appendTo]="'body'"
+          styleClass="w-full" />
+      </div>
+    }
+
     <!-- Fecha y hora inicio -->
     <div class="datetime-row">
       <div class="field">

@@ -3,24 +3,31 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
+import { SelectModule } from 'primeng/select';
 import { MenuItem } from 'primeng/api';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService, ThemeName } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, ToastModule],
+  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
 export class AdminLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private themeService = inject(ThemeService);
 
   sidebarCollapsed = signal(false);
   mobileMenuOpen = signal(false);
   isMobile = signal(false);
   darkMode = signal<boolean>(this.getInitialDarkMode());
+  
+  themeOptions = this.themeService.themeOptions;
+  currentTheme = signal<ThemeName>(this.themeService.currentTheme);
 
   menuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/admin', command: () => this.closeMenus() },
@@ -73,6 +80,11 @@ export class AdminLayoutComponent {
 
   toggleDarkMode(): void {
     this.darkMode.update(v => !v);
+  }
+
+  onThemeChange(themeName: ThemeName): void {
+    this.themeService.setTheme(themeName);
+    this.currentTheme.set(themeName);
   }
 
   closeMenus(): void {

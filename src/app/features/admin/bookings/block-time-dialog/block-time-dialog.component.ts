@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, Output, EventEmitter } from '@angular/core';
+import { Component, computed, inject, signal, Output, EventEmitter, OnInit } from '@angular/core';
 import { ApiService } from '../../../../core/services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,8 +9,10 @@ import { TextareaModule } from 'primeng/textarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageService } from 'primeng/api';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
+import { Location, Provider, CreateBlockedSlot } from '../../../../core/models';
 
 @Component({
   selector: 'app-block-time-dialog',
@@ -25,11 +27,12 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constant
     CheckboxModule,
     SelectModule,
     InputNumberModule,
+    RadioButtonModule,
   ],
   templateUrl: './block-time-dialog.component.html',
   styleUrls: ['./block-time-dialog.component.scss'],
 })
-export class BlockTimeDialogComponent {
+export class BlockTimeDialogComponent implements OnInit {
   private messageService = inject(MessageService);
   private api            = inject(ApiService);
 
@@ -38,6 +41,12 @@ export class BlockTimeDialogComponent {
   visible    = false;
   saving     = signal(false);
   reason     = '';
+
+  // ── Scope (all/location/provider) ────────────────────────────────────────
+  scope = signal<'all' | 'location' | 'provider'>('all');
+  locations = signal<Location[]>([]);
+  providers = signal<Provider[]>([]);
+  
   locationId: number | null = null;
   providerId: number | null = null;
 
@@ -68,6 +77,44 @@ export class BlockTimeDialogComponent {
   readonly days              = DAYS_OF_WEEK;
   readonly endTypeOptions    = END_TYPE_OPTIONS;
   readonly repeatTypeOptions = REPEAT_TYPE_OPTIONS;
+  readonly scopeOptions = [
+    { label: 'Todas las ubicaciones', value: 'all' },
+    { label: 'Ubicación específica', value: 'location' },
+    { label: 'Profesional específico', value: 'provider' },
+  ];
+
+  locationOptions = computed(() => this.locations().map(l => ({ label: l.name, value: l.id })));
+  providerOptions = computed(() => this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })));
+
+  // Lifecycle
+  ngOnInit(): void {
+    this.loadLocations();
+    this.loadProviders();
+  }
+
+  private loadLocations(): void {
+    this.api.getLocations().subscribe({
+      next: (data) => this.locations.set(data),
+    });
+  }
+
+  private loadProviders(): void {
+    this.api.getProviders().subscribe({
+      next: (data) => this.providers.set(data),
+    });
+  }
+
+  onScopeChange(): void {
+    // Clear selections when scope changes
+    if (this.scope() === 'all') {
+      this.locationId = null;
+      this.providerId = null;
+    } else if (this.scope() === 'location') {
+      this.providerId = null;
+    } else if (this.scope() === 'provider') {
+      this.locationId = null;
+    }
+  }
 
   // ngModel getters/setters for signals
   get repeatEnabledValue(): boolean { return this.repeatEnabled(); }
@@ -85,13 +132,17 @@ export class BlockTimeDialogComponent {
   get repeatCountValue(): number { return this.repeatCount(); }
   set repeatCountValue(v: number) { this.repeatCount.set(v); }
 
-  get repeatUntilValue(): Date | null { return this.repeatUntil(); }
+get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   set repeatUntilValue(v: Date | null) { this.repeatUntil.set(v); }
 
   intervalLabel = computed(() => {
     const map: Record<string, string> = { daily: 'día(s)', weekly: 'semana(s)', monthly: 'mes(es)' };
     return map[this.repeatType()] ?? 'semana(s)';
   });
+
+  // Scope getters for ngModel
+  get scopeValue(): string { return this.scope(); }
+  set scopeValue(v: string) { this.scope.set(v as 'all' | 'location' | 'provider'); }
 
   isDaySelected(v: number): boolean {
     return this.repeatDays().includes(v);
@@ -140,6 +191,9 @@ export class BlockTimeDialogComponent {
   onClose(): void {
     this.visible = false;
     this.reason  = '';
+    this.scope.set('all');
+    this.locationId = null;
+    this.providerId = null;
     this.startDate.set(new Date());
     this.endDate.set(new Date(new Date().getTime() + 60 * 60 * 1000));
     this.repeatEnabled.set(false);
@@ -151,28 +205,41 @@ export class BlockTimeDialogComponent {
     this.repeatUntil.set(null);
   }
 
-  block(): void {
+block(): void {
     this.saving.set(true);
 
     const fmt = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19);
 
-    const body: any = {
-      start_time:  fmt(this.startDate()),
-      end_time:    fmt(this.endDate()),
-      reason:      this.reason || undefined,
-      location_id: this.locationId ?? undefined,
-      provider_id: this.providerId ?? undefined,
+    let location_id: number | undefined;
+    let provider_id: number | undefined;
+    let scope: 'all' | undefined = 'all';
+
+    if (this.scope() === 'location') {
+      location_id = this.locationId ?? undefined;
+      scope = undefined;
+    } else if (this.scope() === 'provider') {
+      provider_id = this.providerId ?? undefined;
+      scope = undefined;
+    }
+
+    const body: CreateBlockedSlot = {
+      start_time: fmt(this.startDate()),
+      end_time: fmt(this.endDate()),
+      reason: this.reason || undefined,
+      location_id,
+      provider_id,
+      scope,
     };
 
     if (this.repeatEnabled()) {
       body.repeat = {
-        type:     this.repeatType(),
+        type: this.repeatType(),
         interval: this.repeatInterval(),
-        days:     this.repeatType() === 'weekly' ? this.repeatDays() : undefined,
+        days: this.repeatType() === 'weekly' ? this.repeatDays() : undefined,
         end_type: this.repeatEndType(),
-        count:    this.repeatEndType() === 'after' ? this.repeatCount() : undefined,
-        until:    this.repeatEndType() === 'until' && this.repeatUntil()
-                    ? fmt(this.repeatUntil()!)
+        count: this.repeatEndType() === 'after' ? this.repeatCount() : undefined,
+        until: this.repeatEndType() === 'until' && this.repeatUntil()
+          ? fmt(this.repeatUntil()!)
                     : undefined,
       };
     }

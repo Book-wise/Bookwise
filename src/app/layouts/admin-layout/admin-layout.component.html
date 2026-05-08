@@ -28,6 +28,20 @@
     </nav>
 
     <div class="sidebar-footer">
+      <!-- Theme Selector -->
+      <div class="theme-selector" *ngIf="!sidebarCollapsed()">
+        <p-select
+          [options]="themeOptions"
+          [(ngModel)]="currentTheme"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Tema"
+          (onChange)="onThemeChange($event.value)"
+          [appendTo]="'body'"
+          styleClass="theme-select"
+        />
+      </div>
+      
       <!-- Dark Mode Toggle -->
       <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="sidebarCollapsed() ? (darkMode() ? 'Modo Claro' : 'Modo Oscuro') : ''">
         <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>

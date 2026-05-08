@@ -1,5 +1,11 @@
 // Modelos del sistema de agenda
 
+// Re-export requests
+export * from './requests/blocked-slots';
+
+// Re-export responses
+export * from './responses/bookings';
+
 export interface Location {
   id: number;
   name: string;
@@ -99,15 +105,7 @@ export interface PackSession {
   status: string;
 }
 
-export interface BlockedSlot {
-  id: number;
-  start_time: string;
-  end_time: string;
-  reason?: string | null;
-  provider_id?: number | null;
-  location_id?: number | null;
-  repeat_group_id?: string | null;
-}
+export * from './requests/blocked-slots';
 
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 

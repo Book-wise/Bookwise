@@ -4,6 +4,39 @@
   gap: 1.5rem;
 }
 
+// Scope section
+.scope-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.scope-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.scope-options {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.scope-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.9375rem;
+    color: #374151;
+    cursor: pointer;
+  }
+}
+
 .datetime-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
