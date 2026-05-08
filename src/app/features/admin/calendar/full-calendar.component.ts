@@ -27,7 +27,7 @@ import { Booking, BlockedSlot, Location, Provider } from '../../../core/models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
-import { STATUS_COLOR_MAP } from '../bookings/constants/booking-statuses';
+import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { forkJoin } from 'rxjs';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -345,15 +345,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
   }
 
-  private getStatusColor(status?: string): string {
-    const colorMap: Record<string, string> = {
-      confirmed: '#22c55e',
-      pending: '#f59e0b',
-      cancelled: '#ef4444',
-      completed: '#3b82f6',
-      pending_confirmation: '#8b5cf6',
-    };
-    return colorMap[status?.toLowerCase() || ''] || '#6b7280';
+  getStatusColor(statusName?: string): string {
+    // Usar BOOKING_STATUSES para obtener el color
+    const status = BOOKING_STATUSES.find(
+      (s) => s.label.toLowerCase() === statusName?.toLowerCase()
+    );
+    return status?.color || '#6b7280';
   }
 
   onFilterChange(): void {
@@ -432,14 +429,24 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getStatusSeverity(
-    status?: string,
-  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    const statusMap: Record<string, 'success' | 'info' | 'warn' | 'danger'> = {
-      confirmed: 'success',
-      pending: 'warn',
-      cancelled: 'danger',
-      completed: 'info',
-    };
-    return statusMap[status?.toLowerCase() || ''] || 'info';
+    statusName?: string,
+    statusId?: number,
+  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
+    // Primero buscar por status_id (más confiable)
+    if (statusId) {
+      const status = BOOKING_STATUSES.find((s) => s.value === statusId);
+      if (status) {
+        // Mapear 'help' a 'warn' ya que PrimeNG no soporta 'help'
+        return status.severity === 'help' ? 'warn' : status.severity;
+      }
+    }
+    // Fallback por nombre
+    const status = BOOKING_STATUSES.find(
+      (s) => s.label.toLowerCase() === statusName?.toLowerCase()
+    );
+    if (status) {
+      return status.severity === 'help' ? 'warn' : status.severity;
+    }
+    return 'info';
   }
 }
