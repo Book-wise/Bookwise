@@ -61,6 +61,7 @@ export interface Client {
   last_name: string;
   email: string;
   phone?: string | null;
+  rut?: string | null;
   gender?: string | null;
   wc_customer_id?: number | null;
   active: boolean;

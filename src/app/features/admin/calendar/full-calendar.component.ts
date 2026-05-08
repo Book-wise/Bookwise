@@ -83,6 +83,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
 
   loading = signal(true);
+  providersLoading = signal(false);
   hoveredBooking = signal<Booking | null>(null);
   bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
@@ -90,6 +91,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   selectedLocationId: number | null = null;
   selectedProviderId: number | null = null;
+  // Track previous location to detect changes
+  private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
   selectedEndDate: Date | null = null;
 
@@ -151,7 +154,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
-    this.loadProviders();
+    // Providers now loaded after location selection
   }
 
   ngAfterViewInit(): void {
@@ -218,16 +221,40 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   loadLocations(): void {
     this.api.getLocations().subscribe({
-      next: (data) => this.locations.set(data),
+      next: (data) => {
+        this.locations.set(data);
+        // Auto-select first location if only one exists
+        if (data.length === 1 && !this.selectedLocationId) {
+          this.selectedLocationId = data[0].id;
+          this.onLocationChange();
+        }
+      },
       error: () => {},
     });
   }
 
-  loadProviders(): void {
-    this.api.getProviders().subscribe({
-      next: (data) => this.providers.set(data),
-      error: () => {},
+  loadProviders(locationId?: number | null): void {
+    this.providersLoading.set(true);
+    const params = locationId ? { location_id: locationId } : undefined;
+    this.api.getProviders(params).subscribe({
+      next: (data) => {
+        this.providers.set(data);
+        this.providersLoading.set(false);
+      },
+      error: () => this.providersLoading.set(false),
     });
+  }
+
+  onLocationChange(): void {
+    // Only reload providers if location actually changed
+    if (this.previousLocationId !== this.selectedLocationId) {
+      this.previousLocationId = this.selectedLocationId;
+      // Clear provider selection when location changes
+      this.selectedProviderId = null;
+      this.loadProviders(this.selectedLocationId);
+    }
+    // Always refresh calendar when location changes
+    this.onFilterChange();
   }
 
   private fetchEventsForCalendar(

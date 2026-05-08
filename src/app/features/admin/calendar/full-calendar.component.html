@@ -8,7 +8,7 @@
             [(ngModel)]="selectedLocationId"
             placeholder="Todas las Locations"
             [showClear]="true"
-            (onChange)="onFilterChange()"
+            (onChange)="onLocationChange()"
           >
           </p-select>
 
@@ -17,6 +17,7 @@
             [(ngModel)]="selectedProviderId"
             placeholder="Todos los Profesionales"
             [showClear]="true"
+            [loading]="providersLoading()"
             (onChange)="onFilterChange()"
           >
           </p-select>
@@ -109,6 +110,20 @@
         </div>
       }
 
+      @if (hoveredBooking()!.client?.rut) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-id-card"></i>
+          <span>{{ hoveredBooking()!.client!.rut }}</span>
+        </div>
+      }
+
+      @if (hoveredBooking()!.notes) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-comment"></i>
+          <span>{{ hoveredBooking()!.notes }}</span>
+        </div>
+      }
+
     </div>
   }
 </p-popover>
@@ -128,6 +143,12 @@
       <span class="label">Cliente:</span>
       <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
     </div>
+    @if (booking.client?.rut) {
+      <div class="detail-row">
+        <span class="label">RUT:</span>
+        <span class="value">{{ booking.client!.rut }}</span>
+      </div>
+    }
     <div class="detail-row">
       <span class="label">Servicio:</span>
       <span class="value">{{ booking.service?.name }}</span>
@@ -148,7 +169,7 @@
     </div>
     <div class="detail-row">
       <span class="label">Precio:</span>
-      <span class="value">\${{ booking.price | number: '1.2-2' }}</span>
+      <span class="value">${{ booking.price | number: '1.0-0' }}</span>
     </div>
     <div class="detail-row">
       <span class="label">Estado:</span>
