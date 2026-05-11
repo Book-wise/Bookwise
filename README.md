@@ -13,6 +13,10 @@
 
 ---
 
+## 🇬🇧 English
+
+---
+
 ## What is this
 
 Frontend for **Bookwise**, a scheduling and booking management system. It allows admins and providers to view, create and manage bookings. Clients can create their own bookings with a user profile. Consumes the Laravel API at `http://127.0.0.1:9999/api/v1` directly — does not go through WooCommerce.
@@ -175,6 +179,8 @@ Requires the Laravel API running at `http://127.0.0.1:9999`.
 ---
 
 <!-- markdownlint-disable MD024 -->
+
+## 🇪🇸 Español
 
 ---
 
