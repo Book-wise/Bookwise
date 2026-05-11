@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 
@@ -14,18 +14,32 @@ export interface ToastConfig {
 @Injectable({ providedIn: 'root' })
 export class HttpErrorService {
   private messageService = inject(MessageService);
+  private zone           = inject(NgZone);
   private offlineActive  = false;
+
+  constructor() {
+    // Proactive: muestra el toast ni bien el browser detecta que perdió red,
+    // sin esperar a que falle un request.
+    window.addEventListener('offline', () => {
+      this.zone.run(() => this.showOfflineToast());
+    });
+  }
 
   /**
    * Muestra el toast correcto según el error.
-   * Para status 0 (offline): toast sticky que se auto-cierra al recuperar conexión.
+   * Corre dentro de NgZone para garantizar que el change detection actualice el DOM.
    */
   handle(err: HttpErrorResponse, action?: string): void {
-    if (err.status === 0) {
-      this.showOfflineToast();
-    } else {
-      this.messageService.add(this.toToastConfig(err, action));
-    }
+    // status 0 = error de red; también chequeamos navigator.onLine como fallback
+    const isOffline = err.status === 0 || !navigator.onLine;
+
+    this.zone.run(() => {
+      if (isOffline) {
+        this.showOfflineToast();
+      } else {
+        this.messageService.add(this.toToastConfig(err, action));
+      }
+    });
   }
 
   /** Utilidad: devuelve la config del toast sin side effects. */
@@ -48,11 +62,13 @@ export class HttpErrorService {
       key:      'offline',
       severity: 'error',
       summary:  'Sin conexión',
-      detail:   'No hay conexión con el servidor. El toast se cerrará automáticamente al reconectar.',
+      detail:   'No hay conexión con el servidor. Se cerrará automáticamente al reconectar.',
       sticky:   true,
     });
 
-    window.addEventListener('online', () => this.onReconnect(), { once: true });
+    window.addEventListener('online', () => {
+      this.zone.run(() => this.onReconnect());
+    }, { once: true });
   }
 
   private onReconnect(): void {
@@ -69,8 +85,8 @@ export class HttpErrorService {
   // ── Lógica interna ──────────────────────────────────────────────────────────
 
   private severity(status: number): 'error' | 'warn' | 'info' {
-    if (status >= 500)                        return 'error';
-    if ([409, 429].includes(status))          return 'warn';
+    if (status >= 500)                              return 'error';
+    if ([409, 429].includes(status))               return 'warn';
     if ([400, 402, 403, 404, 422].includes(status)) return 'warn';
     return 'error';
   }
@@ -103,7 +119,7 @@ export class HttpErrorService {
         if (msgs) return msgs;
       }
       if (body.message && body.message !== 'Server Error') return body.message;
-      if (body.detail)  return body.detail;
+      if (body.detail) return body.detail;
     }
     return this.defaultDetail(err.status);
   }
