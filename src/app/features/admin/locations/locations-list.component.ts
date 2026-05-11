@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { Location } from '../../../core/models';
 
 @Component({
@@ -16,6 +17,7 @@ import { Location } from '../../../core/models';
 })
 export class LocationsListComponent implements OnInit {
   private api = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   
   locations = signal<Location[]>([]);
   loading = signal(true);
@@ -31,9 +33,10 @@ export class LocationsListComponent implements OnInit {
         this.locations.set(data);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.locations.set([]);
         this.loading.set(false);
+        this.httpError.handle(err, 'cargar locations');
       }
     });
   }

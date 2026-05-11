@@ -25,7 +25,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
-import { BookingFormData, ApiErrorResponse } from '../interfaces/booking-form-data.interface';
+import { HttpErrorService } from '../../../../core/services/http-error.service';
+import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input.component';
@@ -53,7 +54,8 @@ import { PhoneInputComponent } from '../../../../shared/components/phone-input/p
   styleUrls: ['./booking-form-dialog.component.scss'],
 })
 export class BookingFormDialogComponent implements OnInit {
-  private apiService = inject(ApiService);
+  private apiService    = inject(ApiService);
+  private httpError     = inject(HttpErrorService);
   private messageService = inject(MessageService);
 
   @Input() initialDate?: Date;
@@ -169,7 +171,7 @@ export class BookingFormDialogComponent implements OnInit {
     });
     this.apiService.getPacks().subscribe({
       next: (data) => this.services.update((current) => [...current, ...data]),
-      error: () => {},
+      error: (err) => this.httpError.handle(err, 'cargar packs'),
     });
     this.apiService.getProviders().subscribe({
       next: (data) => this.providers.set(data),
@@ -349,27 +351,14 @@ export class BookingFormDialogComponent implements OnInit {
           this.formData.client_id = client.id;
           this.loadData();
         },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear el cliente',
-          });
+        error: (err) => {
+          this.httpError.handle(err, 'crear cliente');
         },
       });
   }
 
-  private handleApiError(err: any) {
-    const errorData = err.error as ApiErrorResponse;
-    if (err.status === 409) {
-      this.messageService.add({ severity: 'warn', summary: 'Horario ocupado', detail: 'Ya hay una reserva en ese horario. Elegí otro para continuar.' });
-    } else if (err.status === 422) {
-      this.messageService.add({ severity: 'error', summary: 'Datos incompletos', detail: errorData?.detail || 'Revisá los campos e intentá de nuevo.' });
-    } else if (err.status === 401) {
-      this.messageService.add({ severity: 'warn', summary: 'Sesión expirada', detail: 'Iniciá sesión de nuevo para continuar.' });
-    } else {
-      this.messageService.add({ severity: 'error', summary: 'Algo salió mal', detail: 'No pudimos guardar la reserva. Intentá de nuevo en un momento.' });
-    }
+  private handleApiError(err: any): void {
+    this.httpError.handle(err, 'guardar reserva');
   }
 
   private formatDateTime(date: Date | string): string {

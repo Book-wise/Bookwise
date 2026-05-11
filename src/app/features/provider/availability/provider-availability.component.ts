@@ -13,6 +13,7 @@ import {
   ProviderAvailabilitySlot,
 } from '../../../core/services/availability.service';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Location } from '../../../core/models';
 
@@ -43,9 +44,10 @@ const DAYS_OF_WEEK = [
   styleUrls: ['./provider-availability.component.scss'],
 })
 export class ProviderAvailabilityComponent implements OnInit {
-  private toast = inject(ToastService);
+  private toast     = inject(ToastService);
+  private httpError = inject(HttpErrorService);
   private availabilityService = inject(AvailabilityService);
-  private api = inject(ApiService);
+  private api  = inject(ApiService);
   private auth = inject(AuthService);
 
   locations = signal<Location[]>([]);
@@ -72,7 +74,7 @@ export class ProviderAvailabilityComponent implements OnInit {
   loadLocations(): void {
     this.api.getLocations().subscribe({
       next: (data) => this.locations.set(data),
-      error: () => {},
+      error: (err) => { this.locations.set([]); this.httpError.handle(err, 'cargar locations'); },
     });
   }
 
@@ -87,7 +89,7 @@ loadAvailability(): void {
         const data = (response as any).data || response;
         this.availabilitySlots.set(data);
       },
-      error: () => {}
+      error: (err) => this.httpError.handle(err, 'cargar disponibilidad'),
     });
   }
 
@@ -153,8 +155,8 @@ saveAvailability(): void {
         this.toast.success('Guardado', 'Tu disponibilidad ha sido actualizada');
         this.saving.set(false);
       },
-      error: () => {
-        this.toast.error('Error', 'No se pudo guardar la disponibilidad');
+      error: (err) => {
+        this.httpError.handle(err, 'guardar disponibilidad');
         this.saving.set(false);
       }
     });
