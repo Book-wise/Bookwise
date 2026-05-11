@@ -29,6 +29,11 @@
                 "input": "public"
               },
               {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              },
+              {
                 "glob": "utils.js",
                 "input": "node_modules/intl-tel-input/dist/js",
                 "output": "assets/intl-tel-input"

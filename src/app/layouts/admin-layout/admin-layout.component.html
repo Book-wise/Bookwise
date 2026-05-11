@@ -12,8 +12,14 @@
       <button class="mobile-close-btn" (click)="closeMenus()" *ngIf="isMobile()">
         <i class="pi pi-times"></i>
       </button>
-      <span class="app-title" *ngIf="!sidebarCollapsed()">Kinesilk</span>
-      <span class="app-title" *ngIf="sidebarCollapsed()">K</span>
+      <div class="logo-wrapper" *ngIf="!sidebarCollapsed()">
+        <img src="assets/images/LOGO.png" alt="Bookwise" class="sidebar-logo" />
+      </div>
+      <img
+        *ngIf="sidebarCollapsed()"
+        src="assets/images/icono.svg"
+        alt="BW"
+        class="sidebar-logo-icon" />
     </div>
     
     <nav class="sidebar-nav">

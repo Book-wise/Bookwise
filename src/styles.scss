@@ -1,7 +1,8 @@
 /* ============================================
-   Global Styles - Kinesilk Admin
+   Global Styles - Bookwise Admin
    ============================================ */
 
+@use 'styles/tokens';
 @import 'intl-tel-input/dist/css/intlTelInput.css';
 
 // Importar fuentes desde assets
@@ -21,15 +22,7 @@
   font-display: swap;
 }
 
-// CSS Variables
-:root {
-  --font-family: 'Roboto', sans-serif;
-  --primary-color: #667eea;
-  --surface-ground: #f8f9fa;
-  --surface-card: #ffffff;
-  --text-color: #333333;
-  --text-color-secondary: #6b7280;
-}
+// Tokens are imported above — :root lives in _tokens.scss
 
 // Reset básico
 *,
@@ -81,81 +74,16 @@ a {
 // ============================================
 
 body.dark-theme {
-  --surface-ground: #1a1a2e;
-  --surface-card: #16213e;
-  --text-color: #e4e4e7;
-  --text-color-secondary: #a1a1aa;
-  
+  --surface-ground: #0f172a;
+  --surface-card:   #1e293b;
+  --text-color:           #e4e4e7;
+  --text-color-secondary: #94a3b8;
+
   background: var(--surface-ground);
   color: var(--text-color);
-  
-  // Layout - Sidebar
-  .layout {
-    background: #1a1a2e;
-  }
-  
-  .sidebar {
-    background: #16213e !important;
-    border-color: #374151 !important;
-
-    .sidebar-header {
-      border-color: #374151 !important;
-
-      .mobile-close-btn {
-        i {
-          color: #a1a1aa !important;
-        }
-        &:hover {
-          background: #1e3a5f !important;
-        }
-      }
-
-      .app-title {
-        color: #667eea !important;
-      }
-    }
-
-    .nav-item {
-      color: #a1a1aa !important;
-
-      &:hover {
-        background: #1e3a5f !important;
-        color: #e4e4e7 !important;
-      }
-
-      &.active {
-        background: rgba(102, 126, 234, 0.2) !important;
-        color: #667eea !important;
-      }
-
-      &.logout-btn:hover {
-        background: rgba(239, 68, 68, 0.1) !important;
-      }
-
-      &.dark-mode-btn:hover {
-        background: rgba(245, 158, 11, 0.1) !important;
-      }
-    }
-
-    .sidebar-footer {
-      border-color: #374151 !important;
-    }
-  }
-
-  .sidebar-toggle {
-    background: #16213e !important;
-
-    &:hover {
-      background: #1e3a5f !important;
-    }
-
-    i {
-      color: #e4e4e7 !important;
-    }
-  }
 
   .main-content {
-    background: #1a1a2e !important;
+    background: var(--surface-ground) !important;
   }
   
   // Cards
@@ -226,7 +154,7 @@ body.dark-theme {
     --fc-border-color: #374151;
     --fc-page-bg-color: var(--surface-card);
     --fc-neutral-bg-color: var(--surface-ground);
-    --fc-today-bg-color: rgba(102, 126, 234, 0.15);
+    --fc-today-bg-color: rgba(4, 106, 244, 0.12);
     
     .fc-toolbar-title,
     .fc-daygrid-day-number {
