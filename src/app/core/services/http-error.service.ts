@@ -67,12 +67,14 @@ export class HttpErrorService {
     if (this.offlineActive) return;
     this.offlineActive = true;
 
+    // Sin key — usa el toast por defecto que siempre está suscrito.
+    // sticky + life largo como doble garantía de persistencia.
     this.messageService.add({
-      key:      'offline',
       severity: 'error',
       summary:  'Sin conexión',
       detail:   'No hay conexión con el servidor. Se cerrará automáticamente al reconectar.',
       sticky:   true,
+      life:     86_400_000,
     });
 
     window.addEventListener('online', () => {
@@ -81,9 +83,10 @@ export class HttpErrorService {
   }
 
   private onReconnect(): void {
-    if (!this.offlineActive) return; // idempotente: el interval y el event pueden llamarlo
+    if (!this.offlineActive) return;
     this.offlineActive = false;
-    this.messageService.clear('offline');
+    // clear() sin key limpia todos los mensajes activos (incluyendo el sticky offline)
+    this.messageService.clear();
     this.messageService.add({
       severity: 'success',
       summary:  'Conexión restaurada',
