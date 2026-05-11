@@ -18,11 +18,20 @@ export class HttpErrorService {
   private offlineActive  = false;
 
   constructor() {
-    // Proactive: muestra el toast ni bien el browser detecta que perdió red,
-    // sin esperar a que falle un request.
+    // Real network loss: el OS dispara este evento de forma inmediata.
     window.addEventListener('offline', () => {
       this.zone.run(() => this.showOfflineToast());
     });
+
+    // DevTools offline: NO dispara el evento anterior, pero sí actualiza
+    // navigator.onLine. Poll cada 3s como fallback.
+    setInterval(() => {
+      if (!navigator.onLine && !this.offlineActive) {
+        this.zone.run(() => this.showOfflineToast());
+      } else if (navigator.onLine && this.offlineActive) {
+        this.zone.run(() => this.onReconnect());
+      }
+    }, 3000);
   }
 
   /**
@@ -72,6 +81,7 @@ export class HttpErrorService {
   }
 
   private onReconnect(): void {
+    if (!this.offlineActive) return; // idempotente: el interval y el event pueden llamarlo
     this.offlineActive = false;
     this.messageService.clear('offline');
     this.messageService.add({
