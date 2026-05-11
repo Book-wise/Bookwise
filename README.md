@@ -11,7 +11,15 @@
 </div>
 <!-- markdownlint-enable MD033 -->
 
+<!-- markdownlint-disable MD033 -->
+<div align="center">
+  <a href="#english">🇬🇧 English</a> · <a href="#español">🇪🇸 Español</a>
+</div>
+<!-- markdownlint-enable MD033 -->
+
 ---
+
+<!-- markdownlint-disable MD033 --><a id="english"></a><!-- markdownlint-enable MD033 -->
 
 ## 🇬🇧 English
 
@@ -179,6 +187,7 @@ Requires the Laravel API running at `http://127.0.0.1:9999`.
 ---
 
 <!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD033 --><a id="español"></a><!-- markdownlint-enable MD033 -->
 
 ## 🇪🇸 Español
 
