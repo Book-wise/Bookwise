@@ -7,8 +7,9 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Booking, Location } from '../../../core/models';
+import { Booking } from '../../../core/models';
 
 interface CalendarDay {
   date: Date;
@@ -26,6 +27,7 @@ interface CalendarDay {
 })
 export class ProviderCalendarComponent implements OnInit {
   private api = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   private auth = inject(AuthService);
   
   currentDate = signal(new Date());
@@ -110,7 +112,7 @@ export class ProviderCalendarComponent implements OnInit {
           this.selectDate(this.selectedDay()!);
         }
       },
-      error: () => {}
+      error: (err) => this.httpError.handle(err, 'cargar agenda')
     });
   }
 

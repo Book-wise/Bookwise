@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { ServicePack } from '../../../core/models';
 
 @Component({
@@ -16,6 +17,7 @@ import { ServicePack } from '../../../core/models';
 })
 export class PacksListComponent implements OnInit {
   private api = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   
   packs = signal<ServicePack[]>([]);
   loading = signal(true);
@@ -32,9 +34,10 @@ export class PacksListComponent implements OnInit {
         this.packs.set(Array.isArray(data) ? data : []);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.packs.set([]);
         this.loading.set(false);
+        this.httpError.handle(err, 'cargar packs');
       }
     });
   }

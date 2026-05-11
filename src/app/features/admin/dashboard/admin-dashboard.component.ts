@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Location, Provider, Booking } from '../../../core/models';
+import { Location, Provider } from '../../../core/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,6 +16,7 @@ import { Location, Provider, Booking } from '../../../core/models';
 })
 export class AdminDashboardComponent implements OnInit {
   private api = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   private auth = inject(AuthService);
   
   locations: Location[] = [];
@@ -36,14 +38,14 @@ export class AdminDashboardComponent implements OnInit {
   loadData(): void {
     this.api.getLocations().subscribe({
       next: (data) => this.locations = data,
-      error: () => this.locations = []
+      error: (err) => { this.locations = []; this.httpError.handle(err, 'cargar locations'); }
     });
-    
+
     this.api.getProviders().subscribe({
       next: (data) => this.providers = data,
-      error: () => this.providers = []
+      error: (err) => { this.providers = []; this.httpError.handle(err, 'cargar providers'); }
     });
-    
+
     this.api.getBookings({ per_page: 100 }).subscribe({
       next: (response) => {
         const bookings = response.data;
@@ -51,7 +53,7 @@ export class AdminDashboardComponent implements OnInit {
         this.todayBookings = bookings.filter(b => b.start_time.startsWith(today)).length;
         this.pendingBookings = bookings.filter(b => b.status?.name === 'pending').length;
       },
-      error: () => {}
+      error: (err) => this.httpError.handle(err, 'cargar reservas'),
     });
   }
 

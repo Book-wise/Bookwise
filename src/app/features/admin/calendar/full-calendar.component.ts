@@ -24,6 +24,7 @@ import { PopoverModule, Popover } from 'primeng/popover';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { Booking, BlockedSlot, Location, Provider } from '../../../core/models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
@@ -73,7 +74,8 @@ interface CalendarEvent {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api = inject(ApiService);
+  private api        = inject(ApiService);
+  private httpError  = inject(HttpErrorService);
   private messageService = inject(MessageService);
   private ngZone = inject(NgZone);
   private calendar: Calendar | null = null;
@@ -135,6 +137,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     selectMirror: true,
     dayMaxEvents: true,
     weekends: true,
+    longPressDelay: 300,
+    eventLongPressDelay: 300,
+    selectLongPressDelay: 300,
     events: (fetchInfo: any, successCallback: any, failureCallback: any) => {
       this.fetchEventsForCalendar(fetchInfo, successCallback, failureCallback);
     },
@@ -217,6 +222,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
           this.showSlotMenu.set(true);
         }),
+        eventDrop: (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
+        eventResize: (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
       });
       this.calendar.render();
     });
@@ -238,7 +245,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.onLocationChange();
         }
       },
-      error: () => {},
+      error: (err) => { this.locations.set([]); this.httpError.handle(err, 'cargar locations'); },
     });
   }
 
@@ -364,6 +371,72 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       (s) => s.label.toLowerCase() === statusName?.toLowerCase()
     );
     return status?.color || '#6b7280';
+  }
+
+  private handleEventMove(info: any, newStart: string, newEnd: string): void {
+    const isBlocked = info.event.extendedProps['isBlocked'];
+    const oldStart  = (info.oldEvent?.startStr ?? info.prevEvent?.startStr ?? '') as string;
+
+    // Guard: endStr puede ser null en eventos sin duración explícita
+    const safeEnd = newEnd || newStart;
+
+    const revert = () => {
+      try { info.revert(); } catch { /* vista ya cambió, ignorar */ }
+    };
+
+    if (isBlocked) {
+      const slot = info.event.extendedProps['blockedSlot'] as BlockedSlot | undefined;
+      if (!slot) { revert(); return; }
+
+      this.api.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
+        next: () => this.messageService.add({
+          severity: 'info',
+          summary: 'Bloqueo movido',
+          detail: `${slot.reason || 'Bloqueo'} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
+          life: 5000,
+        }),
+        error: (err) => {
+          revert();
+          this.httpError.handle(err, 'mover bloqueo');
+        },
+      });
+
+    } else {
+      const booking = info.event.extendedProps['booking'] as Booking | undefined;
+      if (!booking) { revert(); return; }
+
+      const clientName   = `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim() || 'Cliente';
+      const serviceName  = booking.pack_session
+        ? `Pack · sesión ${booking.pack_session.session_number}/${booking.pack_session.total_sessions}`
+        : (booking.service?.name ?? 'Servicio');
+      const providerName = booking.provider
+        ? `${booking.provider.first_name} ${booking.provider.last_name}`.trim()
+        : null;
+      const locationName = booking.location?.name ?? null;
+      const meta         = [providerName, locationName].filter(Boolean).join(' · ');
+
+      this.api.updateBooking(booking.id, { start_time: newStart, end_time: safeEnd }).subscribe({
+        next: () => this.messageService.add({
+          severity: 'success',
+          summary: clientName,
+          detail: `${serviceName} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}${meta ? ' · ' + meta : ''}`,
+          life: 5000,
+        }),
+        error: (err) => {
+          revert();
+          this.httpError.handle(err, clientName);
+        },
+      });
+    }
+  }
+
+  private fmtDT(iso: string): string {
+    if (!iso) return '—';
+    const d    = new Date(iso);
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const hh   = String(d.getHours()).padStart(2, '0');
+    const mm   = String(d.getMinutes()).padStart(2, '0');
+    return `${days[d.getDay()]} ${hh}:${mm}`;
   }
 
   onFilterChange(): void {

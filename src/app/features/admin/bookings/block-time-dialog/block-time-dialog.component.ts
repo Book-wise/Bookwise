@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal, Output, EventEmitter, OnInit } from '@angular/core';
 import { ApiService } from '../../../../core/services/api.service';
+import { HttpErrorService } from '../../../../core/services/http-error.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -34,7 +35,8 @@ import { Location, Provider, CreateBlockedSlot } from '../../../../core/models';
 })
 export class BlockTimeDialogComponent implements OnInit {
   private messageService = inject(MessageService);
-  private api            = inject(ApiService);
+  private api       = inject(ApiService);
+  private httpError = inject(HttpErrorService);
 
   @Output() onBlocked = new EventEmitter<void>();
 
@@ -257,12 +259,8 @@ block(): void {
         this.visible = false;
         this.onBlocked.emit();
       },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'No se pudo bloquear',
-          detail: 'Revisá los datos e intentá de nuevo.',
-        });
+      error: (err) => {
+        this.httpError.handle(err, 'bloquear horario');
         this.saving.set(false);
       },
     });

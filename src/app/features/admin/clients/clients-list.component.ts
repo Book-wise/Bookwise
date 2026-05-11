@@ -7,6 +7,7 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
 import { ApiService } from '../../../core/services/api.service';
+import { HttpErrorService } from '../../../core/services/http-error.service';
 import { Client } from '../../../core/models';
 import { debounceTime, Subject } from 'rxjs';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -31,6 +32,7 @@ import { InputIconModule } from 'primeng/inputicon';
 })
 export class ClientsListComponent implements OnInit {
   private api = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   private searchSubject = new Subject<void>();
 
   clients = signal<Client[]>([]);
@@ -53,9 +55,10 @@ export class ClientsListComponent implements OnInit {
         this.clients.set(Array.isArray(data) ? data : []);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.clients.set([]);
         this.loading.set(false);
+        this.httpError.handle(err, 'cargar clientes');
       },
     });
   }

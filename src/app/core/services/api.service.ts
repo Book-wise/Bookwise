@@ -87,6 +87,10 @@ export class ApiService {
     return this.http.post<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, body);
   }
 
+  updateBlockedSlot(id: number, body: { start_time: string; end_time: string }): Observable<BlockedSlot> {
+    return this.http.patch<BlockedSlot>(`${this.baseUrl}/blocked-slots/${id}`, body);
+  }
+
   deleteBlockedSlot(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/blocked-slots/${id}`);
   }

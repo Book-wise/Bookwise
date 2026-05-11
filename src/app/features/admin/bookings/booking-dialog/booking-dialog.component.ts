@@ -12,6 +12,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService } from 'primeng/api';
 import { Booking, Client, Service, Provider, Location } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
+import { HttpErrorService } from '../../../../core/services/http-error.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 
 export interface BookingFormData {
@@ -47,7 +48,8 @@ export interface BookingFormData {
   styleUrl: './booking-dialog.component.scss',
 })
 export class BookingDialogComponent implements OnInit {
-  private api = inject(ApiService);
+  private api       = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
 
   visible = false;
@@ -300,51 +302,20 @@ export class BookingDialogComponent implements OnInit {
     });
   }
 
-  private handleApiError(err: any) {
-    const errorData = err.error as ApiErrorResponse;
+  private handleApiError(err: any): void {
+    this.httpError.handle(err);
 
+    // 409: segunda toast con el detalle de la reserva que genera el conflicto
     if (err.status === 409) {
-      // Overlap conflict
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Conflicto de horario',
-        detail: errorData?.detail || 'Ya existe una reserva en este horario',
-      });
-
-      if (errorData?.conflicts_with) {
+      const conflicts = (err.error as ApiErrorResponse)?.conflicts_with;
+      if (conflicts) {
         this.messageService.add({
           severity: 'info',
-          summary: 'Reserva Conflictiva',
-          detail: `ID: ${errorData.conflicts_with.id} - ${this.formatDateTime(errorData.conflicts_with.start_time)} a ${this.formatDateTime(errorData.conflicts_with.end_time)}`,
+          summary: 'Reserva conflictiva',
+          detail: `ID ${conflicts.id} · ${this.formatDateTime(conflicts.start_time)} → ${this.formatDateTime(conflicts.end_time)}`,
+          life: 9000,
         });
       }
-    } else if (err.status === 422) {
-      // Validation errors
-      if (errorData?.detail) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de validación',
-          detail: errorData.detail,
-        });
-      }
-    } else if (err.status === 401) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'No autorizado',
-        detail: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
-      });
-    } else if (err.status === 403) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Acceso denegado',
-        detail: 'No tienes permisos para realizar esta acción.',
-      });
-    } else {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Ha ocurrido un error al procesar la solicitud.',
-      });
     }
   }
 
