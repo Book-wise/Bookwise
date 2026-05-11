@@ -51,3 +51,6 @@ skills-lock.json
 
 # Environment with secrets
 src/env.ts
+
+# Claude Code instructions
+CLAUDE.md
