@@ -30,11 +30,11 @@
             placeholder="Todos los estados"
             [showClear]="true"
             display="chip"
-            (onChange)="onStatusFilterChange()"
+            (onChange)="onFilterChange()"
           >
             <ng-template #item let-opt>
-              <div class="status-filter-option">
-                <span class="status-filter-dot" [style.background]="opt.color"></span>
+              <div class="bw-status-filter-option">
+                <span class="bw-status-filter-dot" [style.background]="opt.color"></span>
                 <span>{{ opt.label }}</span>
               </div>
             </ng-template>

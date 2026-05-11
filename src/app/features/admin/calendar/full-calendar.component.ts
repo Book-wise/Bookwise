@@ -51,7 +51,7 @@ interface CalendarEvent {
 }
 
 @Component({
-  selector: 'app-full-calendar',
+  selector: 'bw-full-calendar',
   standalone: true,
   imports: [
     CommonModule,
@@ -370,10 +370,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.calendar) {
       this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
     }
-  }
-
-  onStatusFilterChange(): void {
-    this.onFilterChange();
   }
 
   private handleEventClick(clickInfo: EventClickArg): void {

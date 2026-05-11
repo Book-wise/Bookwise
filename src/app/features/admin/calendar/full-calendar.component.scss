@@ -71,13 +71,13 @@
 }
 
 // Status filter option — rendered inside PrimeNG overlay (outside component scope)
-::ng-deep .status-filter-option {
+::ng-deep .bw-status-filter-option {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-::ng-deep .status-filter-dot {
+::ng-deep .bw-status-filter-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;

@@ -48,7 +48,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(175deg, var(--bw-900) 0%, var(--bw-600) 100%);
+  background: linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
   border-right: none;
   position: relative;
   height: 100%;
@@ -308,14 +308,6 @@
   @media (max-width: 991px) {
     padding: 1rem;
     padding-top: 3.5rem;
-  }
-}
-
-// ── Collapsed state offset ────────────────────────────────────────────────────
-
-.layout.sidebar-collapsed .main-content {
-  @media (max-width: 991px) {
-    margin-left: 0 !important;
   }
 }
 
