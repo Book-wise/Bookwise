@@ -11,7 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { LoginCredentials } from '../../../core/models';
 
 @Component({
-  selector: 'app-login',
+  selector: 'bw-login',
   standalone: true,
   imports: [
     CommonModule,

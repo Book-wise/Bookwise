@@ -1,0 +1,49 @@
+// ============================================
+// Bookwise Design Tokens
+// Single source of truth — import everywhere
+// ============================================
+
+:root {
+  // ── Brand palette (from logo SVG) ─────────────
+  --bw-900: #012663;   // darkest navy
+  --bw-800: #042661;
+  --bw-700: #0a2862;
+  --bw-600: #083d96;
+  --bw-500: #0b3d95;   // primary mid-blue
+  --bw-400: #0e3b8b;
+  --bw-300: #046af4;   // vibrant / CTA
+  --bw-200: #60a7f0;   // light accent
+  --bw-100: #dbeafe;   // very light tint
+  --bw-50:  #f0f6ff;   // surface tint
+
+  // ── Semantic aliases ──────────────────────────
+  --color-primary:       var(--bw-500);
+  --color-primary-dark:  var(--bw-900);
+  --color-primary-cta:   var(--bw-300);
+  --color-accent:        var(--bw-200);
+
+  // ── PrimeNG compat ────────────────────────────
+  --primary-color: var(--bw-300);
+
+  // ── Sidebar (always dark — theme-invariant) ───
+  --sidebar-bg-from:      var(--bw-900);
+  --sidebar-bg-to:        var(--bw-600);
+  --sidebar-text:         rgba(255, 255, 255, 0.68);
+  --sidebar-text-hover:   #ffffff;
+  --sidebar-text-active:  #ffffff;
+  --sidebar-hover-bg:     rgba(255, 255, 255, 0.08);
+  --sidebar-active-bg:    rgba(255, 255, 255, 0.14);
+  --sidebar-active-border: var(--bw-300);
+  --sidebar-divider:      rgba(255, 255, 255, 0.1);
+
+  // ── Surfaces (light mode) ─────────────────────
+  --surface-ground: #f0f5ff;
+  --surface-card:   #ffffff;
+
+  // ── Text ──────────────────────────────────────
+  --text-color:           #1a2744;
+  --text-color-secondary: #6b7280;
+
+  // ── Typography ────────────────────────────────
+  --font-family: 'Roboto', sans-serif;
+}

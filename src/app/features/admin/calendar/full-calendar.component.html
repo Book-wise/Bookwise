@@ -21,6 +21,24 @@
             (onChange)="onFilterChange()"
           >
           </p-select>
+
+          <p-multiselect
+            [options]="statusFilterOptions"
+            [(ngModel)]="selectedStatusIds"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los estados"
+            [showClear]="true"
+            display="chip"
+            (onChange)="onFilterChange()"
+          >
+            <ng-template #item let-opt>
+              <div class="bw-status-filter-option">
+                <span class="bw-status-filter-dot" [style.background]="opt.color"></span>
+                <span>{{ opt.label }}</span>
+              </div>
+            </ng-template>
+          </p-multiselect>
         </div>
 
         <div class="calendar-actions">

@@ -1,38 +1,132 @@
-.auth-container {
+.auth-wrapper {
   display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem;
 }
 
-.auth-card {
-  background: white;
-  border-radius: 16px;
-  padding: 2.5rem;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-}
+// ── Brand panel (left) ──────────────────────────────────────────────────────
 
-.auth-brand {
-  text-align: center;
-  margin-bottom: 2rem;
+.brand-panel {
+  flex: 1;
+  background: linear-gradient(160deg, var(--bw-900) 0%, var(--bw-500) 55%, var(--bw-300) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
 
-  .brand-name {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #667eea;
-    margin: 0 0 0.25rem;
+  &::before {
+    content: '';
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    top: -140px;
+    right: -140px;
+    pointer-events: none;
   }
 
-  .brand-subtitle {
+  &::after {
+    content: '';
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    bottom: -80px;
+    left: -80px;
+    pointer-events: none;
+  }
+}
+
+.brand-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-logo-wrapper {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  display: inline-flex;
+}
+
+.brand-logo {
+  width: 240px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-tagline {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1rem;
+    color: #60a7f0;
+    width: 1.25rem;
+  }
+}
+
+// ── Form panel (right) ──────────────────────────────────────────────────────
+
+.form-panel {
+  width: 460px;
+  min-width: 460px;
+  background: #f8fafd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2.5rem;
+}
+
+.form-content {
+  width: 100%;
+  max-width: 360px;
+}
+
+.form-header {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--bw-900);
+    margin: 0 0 0.375rem;
+    letter-spacing: -0.01em;
+  }
+
+  p {
     color: #6b7280;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     margin: 0;
   }
 }
+
+// ── Form ────────────────────────────────────────────────────────────────────
 
 .auth-form {
   display: flex;
@@ -56,10 +150,25 @@
   width: 100%;
 }
 
-::ng-deep .p-password {
-  width: 100%;
-  input { width: 100%; }
+::ng-deep {
+  .p-password {
+    width: 100%;
+    input {
+      width: 100%;
+    }
+  }
+
+  .submit-btn .p-button {
+    background: linear-gradient(90deg, var(--bw-500), var(--bw-300));
+    border: none;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(90deg, var(--bw-900), var(--bw-500));
+    }
+  }
 }
+
+// ── Footer ──────────────────────────────────────────────────────────────────
 
 .auth-footer {
   display: flex;
@@ -71,9 +180,38 @@
   color: #6b7280;
 
   a {
-    color: #667eea;
+    color: #046af4;
     font-weight: 500;
     text-decoration: none;
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ── Mobile ──────────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .auth-wrapper {
+    flex-direction: column;
+  }
+
+  .brand-panel {
+    flex: none;
+    padding: 2.5rem 2rem;
+  }
+
+  .brand-logo {
+    width: 180px;
+  }
+
+  .brand-features {
+    display: none;
+  }
+
+  .form-panel {
+    width: 100%;
+    min-width: unset;
+    padding: 2rem 1.5rem;
   }
 }

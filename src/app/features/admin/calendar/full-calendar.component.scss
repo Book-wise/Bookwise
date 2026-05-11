@@ -21,7 +21,8 @@
     flex-wrap: wrap;
     justify-content: center;
 
-    :host ::ng-deep .p-select {
+    :host ::ng-deep .p-select,
+    :host ::ng-deep .p-multiselect {
       min-width: 200px;
     }
 
@@ -29,7 +30,8 @@
       width: 100%;
       flex-direction: column;
 
-      :host ::ng-deep .p-select {
+      :host ::ng-deep .p-select,
+      :host ::ng-deep .p-multiselect {
         width: 100%;
         min-width: unset;
       }
@@ -52,7 +54,6 @@
   }
 
   .calendar-wrapper {
-    // FullCalendar CSS Variables
     --fc-event-text-color: #000;
     --fc-border-color: #e5e7eb;
     --fc-button-bg-color: #3b82f6;
@@ -67,6 +68,20 @@
     --fc-neutral-bg-color: #f3f4f6;
     --fc-list-event-hover-bg-color: #f3f4f6;
   }
+}
+
+// Status filter option — rendered inside PrimeNG overlay (outside component scope)
+::ng-deep .bw-status-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+::ng-deep .bw-status-filter-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 // FullCalendar global styles - fuera de :host para mejor especificidad
@@ -273,18 +288,6 @@
     }
   }
 
-  // Filters responsive
-  .full-calendar-container {
-    .filters {
-      width: 100%;
-      flex-direction: column;
-
-      :host ::ng-deep .p-select {
-        width: 100%;
-        min-width: unset;
-      }
-    }
-  }
 }
 
 // Dark mode para FullCalendar

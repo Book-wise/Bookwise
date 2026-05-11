@@ -1,57 +1,83 @@
-<div class="auth-container">
-  <div class="auth-card">
+<div class="auth-wrapper">
 
-    <div class="auth-brand">
-      <h1 class="brand-name">Kinesilk</h1>
-      <p class="brand-subtitle">Sistema de gestión de agenda</p>
-    </div>
-
-    <form class="auth-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
-
-      <div class="field">
-        <label for="email">Email</label>
-        <input
-          pInputText
-          id="email"
-          name="email"
-          type="email"
-          placeholder="tu@email.com"
-          [(ngModel)]="credentials.email"
-          required
-          class="w-full" />
+  <div class="brand-panel">
+    <div class="brand-content">
+      <div class="brand-logo-wrapper">
+        <img src="assets/images/LOGO.png" alt="Bookwise" class="brand-logo" />
       </div>
-
-      <div class="field">
-        <label for="password">Contraseña</label>
-        <p-password
-          inputId="password"
-          name="password"
-          placeholder="••••••••"
-          [(ngModel)]="credentials.password"
-          [feedback]="false"
-          [toggleMask]="true"
-          styleClass="w-full"
-          required />
+      <p class="brand-tagline">Gestión de agenda y reservas</p>
+      <div class="brand-features">
+        <div class="feature-item">
+          <i class="pi pi-calendar"></i>
+          <span>Calendario inteligente</span>
+        </div>
+        <div class="feature-item">
+          <i class="pi pi-users"></i>
+          <span>Gestión de clientes</span>
+        </div>
+        <div class="feature-item">
+          <i class="pi pi-check-circle"></i>
+          <span>Reservas en tiempo real</span>
+        </div>
       </div>
-
-      @if (error()) {
-        <p-message severity="error" [text]="error()!" styleClass="w-full" />
-      }
-
-      <p-button
-        type="submit"
-        label="Iniciar sesión"
-        icon="pi pi-sign-in"
-        styleClass="w-full"
-        [loading]="loading()"
-        [disabled]="!credentials.email || !credentials.password" />
-
-    </form>
-
-    <div class="auth-footer">
-      <span>¿No tenés cuenta?</span>
-      <a routerLink="/register">Registrarse</a>
     </div>
-
   </div>
+
+  <div class="form-panel">
+    <div class="form-content">
+
+      <div class="form-header">
+        <h2>Bienvenido</h2>
+        <p>Ingresá a tu cuenta para continuar</p>
+      </div>
+
+      <form class="auth-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            pInputText
+            id="email"
+            name="email"
+            type="email"
+            placeholder="tu@email.com"
+            [(ngModel)]="credentials.email"
+            required
+            class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <p-password
+            inputId="password"
+            name="password"
+            placeholder="••••••••"
+            [(ngModel)]="credentials.password"
+            [feedback]="false"
+            [toggleMask]="true"
+            required />
+        </div>
+
+        @if (error()) {
+          <p-message severity="error" class="w-full">{{ error() }}</p-message>
+        }
+
+        <p-button
+          type="submit"
+          label="Iniciar sesión"
+          icon="pi pi-sign-in"
+          class="w-full submit-btn"
+          [loading]="loading()"
+          [disabled]="!credentials.email || !credentials.password" />
+
+      </form>
+
+      <div class="auth-footer">
+        <span>¿No tenés cuenta?</span>
+        <a routerLink="/register">Registrarse</a>
+      </div>
+
+    </div>
+  </div>
+
 </div>

@@ -9,57 +9,69 @@
   <!-- Sidebar -->
   <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="sidebarCollapsed()">
     <div class="sidebar-header">
-      <button class="mobile-close-btn" (click)="closeMenus()" *ngIf="isMobile()">
-        <i class="pi pi-times"></i>
-      </button>
-      <span class="app-title" *ngIf="!sidebarCollapsed()">Kinesilk</span>
-      <span class="app-title" *ngIf="sidebarCollapsed()">K</span>
+      @if (isMobile()) {
+        <button class="mobile-close-btn" (click)="closeMenus()">
+          <i class="pi pi-times"></i>
+        </button>
+      }
+      @if (!sidebarCollapsed()) {
+        <div class="logo-wrapper">
+          <img src="assets/images/LOGO.png" alt="Bookwise" class="sidebar-logo" />
+        </div>
+      } @else {
+        <img src="assets/images/icono.svg" alt="BW" class="sidebar-logo-icon" />
+      }
     </div>
-    
+
     <nav class="sidebar-nav">
-      <a *ngFor="let item of menuItems" 
-         [routerLink]="item.routerLink"
-         class="nav-item"
-         [class.active]="isActive(item.routerLink!)"
-         [title]="sidebarCollapsed() ? item.label : ''">
-        <i class="pi" [ngClass]="item.icon"></i>
-        <span class="nav-label" *ngIf="!sidebarCollapsed()">{{ item.label }}</span>
-      </a>
+      @for (item of menuItems; track item.routerLink) {
+        <a [routerLink]="item.routerLink"
+           class="nav-item"
+           [class.active]="isActive(item.routerLink!)"
+           [title]="sidebarCollapsed() ? item.label : ''">
+          <i class="pi" [ngClass]="item.icon"></i>
+          @if (!sidebarCollapsed()) {
+            <span class="nav-label">{{ item.label }}</span>
+          }
+        </a>
+      }
     </nav>
 
     <div class="sidebar-footer">
-      <!-- Theme Selector -->
-      <div class="theme-selector" *ngIf="!sidebarCollapsed()">
-        <p-select
-          [options]="themeOptions"
-          [(ngModel)]="currentTheme"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Tema"
-          (onChange)="onThemeChange($event.value)"
-          [appendTo]="'body'"
-          styleClass="theme-select"
-        />
-      </div>
-      
-      <!-- Dark Mode Toggle -->
+      @if (!sidebarCollapsed()) {
+        <div class="theme-selector">
+          <p-select
+            [options]="themeOptions"
+            [(ngModel)]="currentTheme"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tema"
+            (onChange)="onThemeChange($event.value)"
+            [appendTo]="'body'"
+            class="theme-select"
+          />
+        </div>
+      }
+
       <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="sidebarCollapsed() ? (darkMode() ? 'Modo Claro' : 'Modo Oscuro') : ''">
         <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
-        <span class="nav-label" *ngIf="!sidebarCollapsed()">{{ darkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+        @if (!sidebarCollapsed()) {
+          <span class="nav-label">{{ darkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+        }
       </button>
-      
+
       <button class="nav-item logout-btn" (click)="logout()">
         <i class="pi pi-sign-out"></i>
-        <span class="nav-label" *ngIf="!sidebarCollapsed()">Salir</span>
+        @if (!sidebarCollapsed()) {
+          <span class="nav-label">Salir</span>
+        }
       </button>
     </div>
   </aside>
 
-  <!-- Mobile Overlay -->
-  <div class="mobile-overlay" 
-       *ngIf="mobileMenuOpen()" 
-       (click)="closeMenus()">
-  </div>
+  @if (mobileMenuOpen()) {
+    <div class="mobile-overlay" (click)="closeMenus()"></div>
+  }
 
   <!-- Main Content -->
   <main class="main-content">

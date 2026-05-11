@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
@@ -50,7 +51,7 @@ interface CalendarEvent {
 }
 
 @Component({
-  selector: 'app-full-calendar',
+  selector: 'bw-full-calendar',
   standalone: true,
   imports: [
     CommonModule,
@@ -58,6 +59,7 @@ interface CalendarEvent {
     CardModule,
     ButtonModule,
     SelectModule,
+    MultiSelectModule,
     TagModule,
     DialogModule,
     ProgressSpinnerModule,
@@ -91,6 +93,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   selectedLocationId: number | null = null;
   selectedProviderId: number | null = null;
+  selectedStatusIds: number[] = [];
+
+  readonly statusFilterOptions = BOOKING_STATUSES.map(s => ({
+    label: s.label,
+    value: s.value,
+    color: s.color,
+  }));
   // Track previous location to detect changes
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
@@ -280,7 +289,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         const data     = (bookingsRes as any).data || bookingsRes;
         const bookings: Booking[] = Array.isArray(data) ? data : [];
 
-        const bookingEvents: CalendarEvent[] = bookings.map((booking) => ({
+        const visibleBookings = this.selectedStatusIds.length > 0
+          ? bookings.filter(b => this.selectedStatusIds.includes(b.status_id))
+          : bookings;
+
+        const bookingEvents: CalendarEvent[] = visibleBookings.map((booking) => ({
           id: booking.id.toString(),
           title: `${booking.client?.first_name || ''} ${booking.client?.last_name || ''} · ${booking.service?.name || 'Servicio'}`.trim(),
           start: booking.start_time,

@@ -10,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ThemeService, ThemeName } from '../../core/services/theme.service';
 
 @Component({
-  selector: 'app-admin-layout',
+  selector: 'bw-admin-layout',
   standalone: true,
   imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule],
   templateUrl: './admin-layout.component.html',
