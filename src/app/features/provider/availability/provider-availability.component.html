@@ -42,7 +42,7 @@
             <p-toggleswitch [(ngModel)]="slot.is_active"></p-toggleswitch>
           </td>
           <td>
-            <p-button icon="pi pi-trash" styleClass="p-button-text p-button-danger" (onClick)="removeSlot(slot)"></p-button>
+            <p-button icon="pi pi-trash" class="p-button-text p-button-danger" (onClick)="removeSlot(slot)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -53,7 +53,7 @@
     </div>
   </p-card>
   
-  <p-card header="Vista Previa" styleClass="mt-3">
+  <p-card header="Vista Previa" class="mt-3">
     <div class="preview-grid">
       <div *ngFor="let day of DAYS_OF_WEEK" class="preview-day">
         <div class="day-name">{{ day.label }}</div>
@@ -95,7 +95,7 @@
     </div>
   </div>
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" styleClass="p-button-text" (onClick)="showAddDialog = false"></p-button>
+    <p-button label="Cancelar" class="p-button-text" (onClick)="showAddDialog = false"></p-button>
     <p-button label="Agregar" (onClick)="addSlot()"></p-button>
   </ng-template>
 </p-dialog>

@@ -47,7 +47,7 @@
 
       <div class="field">
         <label>Teléfono</label>
-        <app-phone-input
+        <bw-phone-input
           name="phone"
           [(ngModel)]="formData.phone"
           required
@@ -71,7 +71,7 @@
           [toggleMask]="true"
           required
           #password="ngModel"
-          styleClass="w-full" />
+          class="w-full" />
         @if (password.invalid && password.touched) {
           <span class="field-error">La contraseña es obligatoria</span>
         }
@@ -87,21 +87,21 @@
           [toggleMask]="true"
           required
           #passwordConfirm="ngModel"
-          styleClass="w-full" />
+          class="w-full" />
         @if (passwordConfirm.touched && formData.password_confirmation && formData.password !== formData.password_confirmation) {
           <span class="field-error">Las contraseñas no coinciden</span>
         }
       </div>
 
       @if (error()) {
-        <p-message severity="error" [text]="error()!" styleClass="w-full" />
+        <p-message severity="error" class="w-full">{{ error() }}</p-message>
       }
 
       <p-button
         type="submit"
         label="Crear cuenta"
         icon="pi pi-user-plus"
-        styleClass="w-full"
+        class="w-full"
         [loading]="loading()"
         [disabled]="registerForm.invalid || formData.password !== formData.password_confirmation" />
 

@@ -12,7 +12,7 @@ export interface ToastMessage {
 }
 
 @Component({
-  selector: 'app-toast-modal',
+  selector: 'bw-toast-modal',
   standalone: true,
   imports: [CommonModule, DialogModule, ButtonModule],
   template: `

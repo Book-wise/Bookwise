@@ -13,7 +13,7 @@ import { RegisterData } from '../../../core/models';
 import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
 
 @Component({
-  selector: 'app-register',
+  selector: 'bw-register',
   standalone: true,
   imports: [
     CommonModule,

@@ -16,7 +16,7 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constant
 import { Location, Provider, CreateBlockedSlot } from '../../../../core/models';
 
 @Component({
-  selector: 'app-block-time-dialog',
+  selector: 'bw-block-time-dialog',
   standalone: true,
   imports: [
     CommonModule,

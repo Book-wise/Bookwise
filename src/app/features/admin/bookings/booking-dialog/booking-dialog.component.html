@@ -16,7 +16,7 @@
         placeholder="Seleccionar cliente"
         [filter]="true"
         filterPlaceholder="Buscar..."
-        styleClass="w-full"
+        class="w-full"
         (onChange)="onClientChange()"
       >
       </p-select>
@@ -29,7 +29,7 @@
         [options]="serviceOptions()"
         [(ngModel)]="formData.service_id"
         placeholder="Seleccionar servicio"
-        styleClass="w-full"
+        class="w-full"
         (onChange)="onServiceChange()"
       >
       </p-select>
@@ -42,7 +42,7 @@
         [options]="locationOptions()"
         [(ngModel)]="formData.location_id"
         placeholder="Seleccionar ubicación"
-        styleClass="w-full"
+        class="w-full"
         (onChange)="onLocationChange()"
       >
       </p-select>
@@ -56,7 +56,7 @@
         [(ngModel)]="formData.provider_id"
         placeholder="Seleccionar profesional (opcional)"
         [showClear]="true"
-        styleClass="w-full"
+        class="w-full"
         (onChange)="onProviderChange()"
       >
       </p-select>
@@ -71,7 +71,7 @@
             dateFormat="dd/mm/yy"
             [showTime]="true"
             hourFormat="24"
-            styleClass="w-full"
+            class="w-full"
             (onClose)="onStartTimeChange()"
             inputId="startTime"
           />
@@ -86,7 +86,7 @@
             [(ngModel)]="formData.duration_minutes"
             [min]="15"
             [max]="240"
-            styleClass="w-full"
+            class="w-full"
             (onInput)="onDurationChange()"
             inputId="duration"
           />
@@ -101,7 +101,7 @@
         [options]="statusOptions()"
         [(ngModel)]="formData.status_id"
         placeholder="Estado"
-        styleClass="w-full"
+        class="w-full"
       >
       </p-select>
     </div>
@@ -115,7 +115,7 @@
           mode="currency"
           currency="CLP"
           locale="es-CL"
-          styleClass="w-full"
+          class="w-full"
           inputId="price"
         />
         <label for="price">Precio</label>
@@ -140,14 +140,14 @@
         *ngIf="isEdit() && canCancel()"
         label="Cancelar Reserva"
         icon="pi pi-times"
-        styleClass="p-button-danger p-button-outlined"
+        class="p-button-danger p-button-outlined"
         (onClick)="onCancel()"
       >
       </p-button>
 
       <div class="spacer"></div>
 
-      <p-button label="Cerrar" styleClass="p-button-text" (onClick)="onClose()"> </p-button>
+      <p-button label="Cerrar" class="p-button-text" (onClick)="onClose()"> </p-button>
 
       <p-button
         [label]="isEdit() ? 'Actualizar' : 'Crear'"

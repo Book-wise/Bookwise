@@ -7,7 +7,7 @@ import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
-  selector: 'app-provider-layout',
+  selector: 'bw-provider-layout',
   standalone: true,
   imports: [CommonModule, RouterModule, MenubarModule, ButtonModule],
   templateUrl: './provider-layout.component.html',

@@ -18,18 +18,20 @@
         <td>{{ provider.email }}</td>
         <td>{{ provider.phone }}</td>
         <td>
-          <span *ngFor="let loc of provider.locations; let last = last">
-            {{ loc.name }}<span *ngIf="!last">, </span>
-          </span>
-          <span *ngIf="!provider.locations?.length" class="text-muted">Sin asignar</span>
+          @for (loc of provider.locations; track loc.id; let last = $last) {
+            {{ loc.name }}@if (!last) { , }
+          }
+          @if (!provider.locations?.length) {
+            <span class="text-muted">Sin asignar</span>
+          }
         </td>
         <td>
           <p-tag [value]="provider.active ? 'Activo' : 'Inactivo'" 
                  [severity]="provider.active ? 'success' : 'danger'"></p-tag>
         </td>
         <td>
-          <p-button icon="pi pi-pencil" styleClass="p-button-text" pTooltip="Editar"></p-button>
-          <p-button icon="pi pi-calendar" styleClass="p-button-text" pTooltip="Ver Agenda"></p-button>
+          <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar"></p-button>
+          <p-button icon="pi pi-calendar" class="p-button-text" pTooltip="Ver Agenda"></p-button>
         </td>
       </tr>
     </ng-template>

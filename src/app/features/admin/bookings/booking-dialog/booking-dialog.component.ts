@@ -30,7 +30,7 @@ export interface BookingFormData {
 }
 
 @Component({
-  selector: 'app-booking-dialog',
+  selector: 'bw-booking-dialog',
   standalone: true,
   imports: [
     CommonModule,

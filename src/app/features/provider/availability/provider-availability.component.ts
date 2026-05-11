@@ -28,7 +28,7 @@ const DAYS_OF_WEEK = [
 ];
 
 @Component({
-  selector: 'app-provider-availability',
+  selector: 'bw-provider-availability',
   standalone: true,
   imports: [
     CommonModule,

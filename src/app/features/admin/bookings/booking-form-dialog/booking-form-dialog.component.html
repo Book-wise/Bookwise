@@ -17,7 +17,7 @@
         optionLabel="label"
         optionValue="value"
         [appendTo]="'body'"
-        styleClass="header-status-select">
+        class="header-status-select">
         <ng-template pTemplate="item" let-status>
           <div class="status-option">
             <span class="status-dot" [style.backgroundColor]="status.color"></span>
@@ -44,7 +44,7 @@
           [(ngModel)]="formData.start_time"
           dateFormat="dd/mm/yy"
           [appendTo]="'body'"
-          styleClass="w-full" />
+          class="w-full" />
       </div>
       <div class="field">
         <label class="field-label">Hora</label>
@@ -77,7 +77,7 @@
           [filter]="true"
           filterPlaceholder="Buscar..."
           showClear="true"
-          styleClass="w-full"
+          class="w-full"
           (onFilter)="onClientFilter($event)">
           <ng-template pTemplate="item" let-client>
             <div class="client-option">
@@ -105,7 +105,7 @@
         [(ngModel)]="formData.provider_id"
         placeholder="Seleccionar profesional"
         [showClear]="true"
-        styleClass="w-full">
+        class="w-full">
       </p-select>
     </div>
 
@@ -118,7 +118,7 @@
         placeholder="Seleccionar servicio o pack"
         [filter]="true"
         filterPlaceholder="Buscar..."
-        styleClass="w-full"
+        class="w-full"
         (onChange)="onServiceChange()">
         <ng-template pTemplate="item" let-service>
           <div class="service-option">
@@ -138,7 +138,7 @@
         placeholder="Seleccionar sede"
         optionLabel="label"
         optionValue="value"
-        styleClass="w-full">
+        class="w-full">
       </p-select>
     </div>
 
@@ -155,7 +155,7 @@
                 mode="currency"
                 currency="USD"
                 locale="es-CO"
-                styleClass="w-full" />
+                class="w-full" />
             </div>
             <div class="field">
               <label class="field-label">Notas para el paciente</label>
@@ -225,7 +225,7 @@
             optionLabel="label"
             optionValue="value"
             [appendTo]="'body'"
-            styleClass="w-full" />
+            class="w-full" />
         </div>
 
         @if (formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly') {
@@ -236,7 +236,7 @@
                 [(ngModel)]="formData.repeat_interval"
                 [min]="1"
                 [max]="99"
-                styleClass="interval-input" />
+                class="interval-input" />
               <span class="interval-label">
                 {{ formData.repeat_type === 'weekly' ? 'semanas' : 'meses' }}
               </span>
@@ -275,7 +275,7 @@
           <p-inputnumber
             [(ngModel)]="formData.repeat_count"
             [min]="1"
-            styleClass="count-input" />
+            class="count-input" />
           <span>repeticiones</span>
         }
       </div>
@@ -292,7 +292,7 @@
             [(ngModel)]="formData.repeat_until"
             dateFormat="dd/mm/yy"
             [appendTo]="'body'"
-            styleClass="until-input" />
+            class="until-input" />
         }
       </div>
     </div>
@@ -376,7 +376,7 @@
 
     <div class="field">
       <label class="field-label">Teléfono</label>
-      <app-phone-input
+      <bw-phone-input
         name="clientPhone"
         [(ngModel)]="newClient.phone"
         #clientPhone="ngModel"

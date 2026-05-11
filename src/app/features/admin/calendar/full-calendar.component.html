@@ -73,7 +73,7 @@
 </div>
 
 <!-- Event hover tooltip -->
-<p-popover #eventTooltip styleClass="event-tooltip-panel" [dismissable]="false">
+<p-popover #eventTooltip class="event-tooltip-panel" [dismissable]="false">
   @if (hoveredBooking()) {
     <div class="ev-tooltip">
 
@@ -202,19 +202,19 @@
     </div>
   </div>
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" (onClick)="closeDialog()" styleClass="p-button-text"></p-button>
+    <p-button label="Cerrar" (onClick)="closeDialog()" class="p-button-text"></p-button>
     <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()"></p-button>
   </ng-template>
 </p-dialog>
 
 <!-- Booking Dialog para crear/editar -->
-<app-booking-dialog
+<bw-booking-dialog
   #bookingDialog
   (onSuccess)="onBookingSaved()"
   (onCancel)="onBookingCancelled()"
-></app-booking-dialog>
-<app-booking-form-dialog #newBookingDialog (onSaved)="onBookingSaved()"></app-booking-form-dialog>
-<app-block-time-dialog #blockTimeDialog (onBlocked)="onBookingSaved()"></app-block-time-dialog>
+></bw-booking-dialog>
+<bw-booking-form-dialog #newBookingDialog (onSaved)="onBookingSaved()"></bw-booking-form-dialog>
+<bw-block-time-dialog #blockTimeDialog (onBlocked)="onBookingSaved()"></bw-block-time-dialog>
 
 <!-- Slot Action Menu Overlay -->
 <div class="slot-overlay" *ngIf="showSlotMenu()" (click)="showSlotMenu.set(false)">

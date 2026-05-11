@@ -1,4 +1,4 @@
-import { inject, Injectable, NgZone } from '@angular/core';
+import { DestroyRef, inject, Injectable, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 
@@ -15,23 +15,25 @@ export interface ToastConfig {
 export class HttpErrorService {
   private messageService = inject(MessageService);
   private zone           = inject(NgZone);
+  private destroyRef     = inject(DestroyRef);
   private offlineActive  = false;
 
   constructor() {
-    // Real network loss: el OS dispara este evento de forma inmediata.
-    window.addEventListener('offline', () => {
-      this.zone.run(() => this.showOfflineToast());
-    });
+    const offlineHandler = () => this.zone.run(() => this.showOfflineToast());
+    window.addEventListener('offline', offlineHandler);
 
-    // DevTools offline: NO dispara el evento anterior, pero sí actualiza
-    // navigator.onLine. Poll cada 3s como fallback.
-    setInterval(() => {
+    const intervalId = setInterval(() => {
       if (!navigator.onLine && !this.offlineActive) {
         this.zone.run(() => this.showOfflineToast());
       } else if (navigator.onLine && this.offlineActive) {
         this.zone.run(() => this.onReconnect());
       }
     }, 3000);
+
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('offline', offlineHandler);
+      clearInterval(intervalId);
+    });
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -9,8 +9,9 @@ import { HttpErrorService } from '../../../core/services/http-error.service';
 import { Provider } from '../../../core/models';
 
 @Component({
-  selector: 'app-providers-list',
+  selector: 'bw-providers-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss']

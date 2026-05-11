@@ -34,7 +34,7 @@
           [(ngModel)]="locationId"
           placeholder="Elige una ubicación"
           [appendTo]="'body'"
-          styleClass="w-full" />
+          class="w-full" />
       </div>
     }
 
@@ -46,7 +46,7 @@
           [(ngModel)]="providerId"
           placeholder="Elige un profesional"
           [appendTo]="'body'"
-          styleClass="w-full" />
+          class="w-full" />
       </div>
     }
 
@@ -58,7 +58,7 @@
           [(ngModel)]="startDateValue"
           dateFormat="dd/mm/yy"
           [appendTo]="'body'"
-          styleClass="w-full" />
+          class="w-full" />
       </div>
       <div class="field">
         <label>Hora inicio</label>
@@ -78,7 +78,7 @@
           [(ngModel)]="endDateValue"
           dateFormat="dd/mm/yy"
           [appendTo]="'body'"
-          styleClass="w-full" />
+          class="w-full" />
       </div>
       <div class="field">
         <label>Hora fin</label>
@@ -124,7 +124,7 @@
               optionLabel="label"
               optionValue="value"
               [appendTo]="'body'"
-              styleClass="w-full" />
+              class="w-full" />
           </div>
           <div class="freq-interval">
             <label class="repeat-label">Cada</label>
@@ -133,7 +133,7 @@
                 [(ngModel)]="repeatIntervalValue"
                 [min]="1"
                 [max]="99"
-                styleClass="interval-input" />
+                class="interval-input" />
               <span class="interval-label">{{ intervalLabel() }}</span>
             </div>
           </div>
@@ -167,7 +167,7 @@
               optionLabel="label"
               optionValue="value"
               [appendTo]="'body'"
-              styleClass="end-select" />
+              class="end-select" />
 
             @if (repeatEndType() === 'after') {
               <p-inputnumber
@@ -175,7 +175,7 @@
                 [min]="1"
                 [max]="999"
                 placeholder="Ej. 5"
-                styleClass="count-input" />
+                class="count-input" />
               <span class="end-label">repeticiones</span>
             }
 
@@ -185,7 +185,7 @@
                 [(ngModel)]="repeatUntilValue"
                 dateFormat="dd/mm/yy"
                 [appendTo]="'body'"
-                styleClass="until-input" />
+                class="until-input" />
             }
           </div>
           @if (repeatEndType() === 'after') {

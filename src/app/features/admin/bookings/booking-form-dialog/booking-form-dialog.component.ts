@@ -30,9 +30,10 @@ import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input.component';
+import { forkJoin } from 'rxjs';
 
 @Component({
-  selector: 'app-booking-form-dialog',
+  selector: 'bw-booking-form-dialog',
   standalone: true,
   imports: [
     CommonModule,
@@ -62,9 +63,10 @@ export class BookingFormDialogComponent implements OnInit {
   @Output() onSaved = new EventEmitter<void>();
   @Output() onCancelled = new EventEmitter<void>();
 
-  visible = false;
-  saving = signal(false);
-  isEdit = signal(false);
+  visible     = false;
+  saving      = signal(false);
+  loadingData = signal(false);
+  isEdit      = signal(false);
   showRepeatDialog = false;
   showAddClient = false;
 
@@ -160,26 +162,26 @@ export class BookingFormDialogComponent implements OnInit {
     };
   }
 
-  async loadData() {
-    this.apiService.getClients({ per_page: 100 }).subscribe({
-      next: (res) => this.clients.set((res as any).data || res),
-      error: () => this.clients.set([]),
-    });
-    this.apiService.getServices().subscribe({
-      next: (data) => this.services.set(data),
-      error: () => this.services.set([]),
-    });
-    this.apiService.getPacks().subscribe({
-      next: (data) => this.services.update((current) => [...current, ...data]),
-      error: (err) => this.httpError.handle(err, 'cargar packs'),
-    });
-    this.apiService.getProviders().subscribe({
-      next: (data) => this.providers.set(data),
-      error: () => this.providers.set([]),
-    });
-    this.apiService.getLocations().subscribe({
-      next: (data) => this.locations.set(data),
-      error: () => this.locations.set([]),
+  loadData(): void {
+    this.loadingData.set(true);
+    forkJoin({
+      clients:   this.apiService.getClients({ per_page: 100 }),
+      services:  this.apiService.getServices(),
+      packs:     this.apiService.getPacks(),
+      providers: this.apiService.getProviders(),
+      locations: this.apiService.getLocations(),
+    }).subscribe({
+      next: ({ clients, services, packs, providers, locations }) => {
+        this.clients.set((clients as any).data ?? clients);
+        this.services.set([...services, ...packs]);
+        this.providers.set(providers);
+        this.locations.set(locations);
+        this.loadingData.set(false);
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'cargar datos del formulario');
+        this.loadingData.set(false);
+      },
     });
   }
 

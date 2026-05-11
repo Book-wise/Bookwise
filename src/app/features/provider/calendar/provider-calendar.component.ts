@@ -19,7 +19,7 @@ interface CalendarDay {
 }
 
 @Component({
-  selector: 'app-provider-calendar',
+  selector: 'bw-provider-calendar',
   standalone: true,
   imports: [CommonModule, FormsModule, CardModule, ButtonModule, SelectModule, DatePickerModule, TableModule],
   templateUrl: './provider-calendar.component.html',

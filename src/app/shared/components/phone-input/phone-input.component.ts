@@ -18,7 +18,7 @@ import {
 import intlTelInput from 'intl-tel-input';
 
 @Component({
-  selector: 'app-phone-input',
+  selector: 'bw-phone-input',
   standalone: true,
   template: `<input #phoneInput type="tel" class="iti-input" [placeholder]="placeholder" />`,
   styleUrls: ['./phone-input.component.scss'],
