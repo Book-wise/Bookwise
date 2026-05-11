@@ -1,59 +1,173 @@
-# ECommerce
+# Bookwise
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4.
+<!-- markdownlint-disable MD033 -->
+<div align="center">
+  <img src="src/assets/images/Bookwise logo.png" alt="Bookwise" width="420" />
 
-## Development server
+  ![Angular](https://img.shields.io/badge/Angular-21+-DD0031?logo=angular&logoColor=white)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
+  ![PrimeNG](https://img.shields.io/badge/PrimeNG-21+-6366F1)
+  ![FullCalendar](https://img.shields.io/badge/FullCalendar-6.x-4A90D9)
+</div>
+<!-- markdownlint-enable MD033 -->
 
-To start a local development server, run:
+---
+
+## Qué es esto
+
+Frontend de **Bookwise**, sistema de gestión de agenda y reservas. Permite a admins y providers ver, crear y gestionar reservas. Los clientes pueden crear sus propias reservas con perfil de usuario. Consume la API Laravel en `http://127.0.0.1:9999/api/v1` directamente — no pasa por WooCommerce.
+
+---
+
+## Por qué Angular
+
+La decisión no fue por popularidad — fue por lo que el dominio requería.
+
+**Tipado fuerte sobre un modelo complejo.** El dominio de reservas tiene muchas entidades relacionadas (`Booking`, `Client`, `Provider`, `Service`, `Location`, `Status`, `Pack`). TypeScript + la inferencia de Angular hace que un error en el modelo se detecte en compilación, no en producción.
+
+**Signals (Angular 17+) en lugar de un store externo.** El estado de esta app no justifica NgRx ni Zustand. Cada componente maneja su propia reactividad con `signal()` y `computed()`. El `AuthService` expone `isAuthenticated`, `userRole`, `isAdmin` como signals que cualquier componente puede leer sin subscripciones ni boilerplate.
+
+**Standalone components.** No hay `NgModule`. Cada componente declara sus propias dependencias en el array `imports`, lo que hace la superficie de cada feature completamente explícita y tree-shakeable.
+
+**PrimeNG.** Componentes complejos ya resueltos: `p-calendar`, `p-multiselect`, `p-dialog`, `p-datatable`. El tiempo que tomaría construirlos desde cero no agrega valor al negocio.
+
+**FullCalendar tiene soporte oficial para Angular.** Es la librería de calendario más completa disponible y el wrapper Angular funciona bien con el sistema de eventos y el DOM virtual.
+
+---
+
+## Cómo se maneja el estado
+
+Sin store global. El estado vive donde tiene sentido:
+
+```text
+AuthService            → isAuthenticated, userRole, currentUser (signals, persiste en localStorage)
+FullCalendarComponent  → bookings, loading, selectedBooking, hoveredBooking (signals locales)
+ClientsListComponent   → clientes, searchQuery (signals locales con debounce)
+```
+
+**Flujo de datos:**
+
+```text
+API (HTTP) → service → component signal → template (push automático)
+```
+
+No hay subjects, no hay BehaviorSubject, no hay store. Cuando un componente necesita datos de otro, o sube por Input/Output o se comunica vía un servicio compartido. La regla: si el estado cruza más de un nivel de componente, va a un service; si es local al componente, es un `signal()`.
+
+**Reactividad en el calendario:**
+
+FullCalendar maneja su propio ciclo de render fuera de la zona de Angular. Todo lo que interactúa con el DOM del calendario corre en `ngZone.runOutsideAngular()`, y las actualizaciones de estado vuelven a la zona con `ngZone.run()`. Esto evita change detection innecesario en el resto de la app.
+
+---
+
+## Estructura de módulos
+
+```text
+src/app/
+├── core/                        ← Servicios singleton, interceptors, guards
+│   ├── guards/role.guard.ts     ← Factory guard: protege /admin y /provider por rol
+│   ├── interceptors/            ← AuthInterceptor: inyecta Bearer token, maneja 401
+│   ├── models/index.ts          ← Todos los tipos del dominio en un solo lugar
+│   └── services/
+│       ├── api.service.ts       ← Único punto de contacto con la API Laravel
+│       ├── auth.service.ts      ← Estado de sesión con signals
+│       └── theme.service.ts     ← PrimeNG presets: Aura/Lara/Nora + dark mode
+│
+├── features/                    ← Una carpeta por feature, no por tipo
+│   ├── auth/                    ← login, register
+│   ├── admin/
+│   │   ├── bookings/
+│   │   │   ├── booking-dialog/       ← Detalle/edición de reserva
+│   │   │   ├── booking-form-dialog/  ← Creación de reserva
+│   │   │   ├── block-time-dialog/    ← Bloqueo de horarios
+│   │   │   └── constants/
+│   │   │       └── booking-statuses.ts  ← Fuente única de estados y colores
+│   │   ├── calendar/            ← FullCalendar con filtros location/provider/estado
+│   │   ├── clients/
+│   │   ├── dashboard/
+│   │   ├── locations/
+│   │   ├── packs/
+│   │   └── providers/
+│   └── provider/
+│       ├── calendar/            ← Calendario mensual propio del provider
+│       └── availability/        ← CRUD de disponibilidad semanal
+│
+├── layouts/                     ← Shells de rutas con sidebar/nav
+│   ├── admin-layout/            ← Sidebar con gradiente de marca, toggle, dark mode
+│   └── provider-layout/         ← Menubar simplificada para providers
+│
+└── shared/
+    └── components/
+        ├── phone-input/
+        └── toast-modal/
+```
+
+**Por qué feature-based y no type-based.** Una carpeta `components/` global con 40 archivos no le dice nada a nadie. `features/admin/calendar/` dice exactamente qué es, quién lo usa y dónde vive todo lo relacionado.
+
+**`core/models/index.ts` como barrel.** Todos los tipos del dominio (`Booking`, `Client`, `Provider`, `Location`, `BookingStatus`, `BlockedSlot`, `Pack`, `Service`) en un solo archivo. Un import, no diez.
+
+---
+
+## Design system
+
+```text
+src/styles/
+└── _tokens.scss     ← Fuente única de colores de marca
+```
+
+La paleta viene del logo SVG de Bookwise. Ningún componente hardcodea un color de marca — todo usa variables CSS:
+
+```scss
+--bw-900: #012663   /* navy oscuro */
+--bw-500: #0b3d95   /* azul primario */
+--bw-300: #046af4   /* azul vibrante / CTA */
+--bw-200: #60a7f0   /* acento claro */
+
+/* Aliases semánticos */
+--color-primary:      var(--bw-500)
+--color-primary-cta:  var(--bw-300)
+--sidebar-bg-from:    var(--bw-900)
+--sidebar-bg-to:      var(--bw-600)
+```
+
+El sidebar es **tema-invariante** — siempre oscuro con gradiente de marca independientemente del dark mode. Solo cambian las superficies del contenido principal.
+
+**Convención de prefijos:** todos los selectores de componentes usan `bw-` (`bw-admin-layout`, `bw-full-calendar`, `bw-login`) y las clases CSS globales llevan el mismo prefijo para evitar colisiones con librerías de terceros.
+
+---
+
+## Rutas
+
+```text
+/login
+/register
+/admin                       → bw-admin-layout (guard: solo admin)
+  /admin/calendar            → bw-full-calendar
+  /admin/clients             → ClientsListComponent
+  /admin/packs               → PacksListComponent
+  /admin/locations           → LocationsListComponent
+  /admin/providers           → ProvidersListComponent
+/provider                    → ProviderLayoutComponent (guard: solo provider)
+  /provider/                 → ProviderCalendarComponent
+  /provider/availability     → ProviderAvailabilityComponent
+```
+
+La protección de rutas usa un `roleGuard` como factory function. No hay un guard monolítico — el guard recibe el rol requerido como argumento en la definición de ruta.
+
+---
+
+## API
+
+Base: `http://127.0.0.1:9999/api/v1` (Laravel)
+
+Todos los requests pasan por `ApiService`. El `AuthInterceptor` inyecta el `Bearer token` automáticamente en cada request y redirige al login si recibe un 401.
+
+---
+
+## Correr el proyecto
 
 ```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Requiere la API Laravel corriendo en `http://127.0.0.1:9999`.
