@@ -15,7 +15,7 @@ import {
   NG_VALUE_ACCESSOR,
   NG_VALIDATORS,
 } from '@angular/forms';
-import intlTelInput from 'intl-tel-input';
+import intlTelInput, { type Iso2 } from 'intl-tel-input';
 
 @Component({
   selector: 'bw-phone-input',
@@ -38,8 +38,8 @@ import intlTelInput from 'intl-tel-input';
 export class PhoneInputComponent implements ControlValueAccessor, Validator, AfterViewInit, OnDestroy {
   @ViewChild('phoneInput') phoneInputRef!: ElementRef<HTMLInputElement>;
   @Input() placeholder = 'Teléfono';
-  @Input() initialCountry = 'cl';
-  @Input() preferredCountries: string[] = ['cl', 'ar', 'pe', 'co', 'mx'];
+  @Input() initialCountry: Iso2 = 'cl';
+  @Input() countryOrder: Iso2[] = ['cl', 'ar', 'pe', 'co', 'mx'];
 
   private iti?: ReturnType<typeof intlTelInput>;
   private onChange?: (val: string) => void;
@@ -51,12 +51,11 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
 
     this.iti = intlTelInput(el, {
       initialCountry: this.initialCountry,
-      preferredCountries: this.preferredCountries,
+      countryOrder: this.countryOrder,
       separateDialCode: true,
-      loadUtilsOnInit: '/assets/intl-tel-input/utils.js',
-    } as any);
+      loadUtils: () => import('intl-tel-input/utils'),
+    });
 
-    // Apply pending value written before view was ready
     if (this.pendingValue) {
       this.iti.setNumber(this.pendingValue);
       this.pendingValue = undefined;
@@ -72,9 +71,12 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
   }
 
   private emitChange(): void {
-    if (!(intlTelInput as any).utils) return;
-    const value = this.iti?.getNumber() ?? '';
-    this.onChange?.(value);
+    try {
+      const value = this.iti?.getNumber() ?? '';
+      this.onChange?.(value);
+    } catch {
+      // utils not yet loaded
+    }
   }
 
   // ── ControlValueAccessor ────────────────────────────────────────────────────
@@ -104,9 +106,13 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
   // ── Validator ───────────────────────────────────────────────────────────────
 
   validate(_control: AbstractControl): ValidationErrors | null {
-    if (!this.iti || !(intlTelInput as any).utils) return null;
-    const number = this.iti.getNumber();
-    if (!number) return null; // empty field — let `required` handle that
-    return this.iti.isValidNumber() ? null : { invalidPhone: true };
+    if (!this.iti) return null;
+    try {
+      const number = this.iti.getNumber();
+      if (!number) return null;
+      return this.iti.isValidNumber() ? null : { invalidPhone: true };
+    } catch {
+      return null;
+    }
   }
 }

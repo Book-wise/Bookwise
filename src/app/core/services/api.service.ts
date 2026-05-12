@@ -45,8 +45,8 @@ export class ApiService {
     return this.http.get<Service>(`${this.baseUrl}/services/${id}`);
   }
 
-  getPacks(): Observable<ServicePack[]> {
-    return this.http.get<ServicePack[]>(`${this.baseUrl}/packs`);
+  getPacks(): Observable<PaginatedResponse<ServicePack>> {
+    return this.http.get<PaginatedResponse<ServicePack>>(`${this.baseUrl}/packs`);
   }
 
   getPack(id: number): Observable<ServicePack> {
