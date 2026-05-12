@@ -529,7 +529,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handleEventClick(clickInfo: EventClickArg): void {
-    if (clickInfo.event.extendedProps['isBlocked']) return; // ignore blocked slot clicks
+    if (clickInfo.event.id === this.SLOT_PREVIEW_ID) return;
+    if (clickInfo.event.extendedProps['isBlocked']) {
+      const slot = clickInfo.event.extendedProps['blockedSlot'];
+      if (slot) this.blockTimeDialog.openForEdit(slot);
+      return;
+    }
     const booking = clickInfo.event.extendedProps['booking'] as Booking;
     this.selectedBooking.set(booking);
     this.showEventDialog.set(true);
@@ -580,7 +585,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showSlotMenu.set(false);
     this.removeSlotPreview();
     const dateToUse = this.selectedDate || new Date();
-    this.newBookingDialog.openNew(undefined, dateToUse);
+    this.newBookingDialog.openNew(undefined, dateToUse, this.selectedLocationId);
   }
 
   openBlockTime(): void {

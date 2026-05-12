@@ -34,6 +34,7 @@
     </div>
   </ng-template>
 
+  <div class="dialog-panels" [class.show-service-panel]="showServicePanel">
   <div class="dialog-content">
 
     <!-- Fecha y hora -->
@@ -120,6 +121,11 @@
         filterPlaceholder="Buscar..."
         class="w-full"
         (onChange)="onServiceChange()">
+        <ng-template pTemplate="header">
+          <button class="service-create-btn" type="button" (click)="openServicePanel()">
+            <i class="pi pi-plus"></i> Crear un nuevo servicio
+          </button>
+        </ng-template>
         <ng-template pTemplate="item" let-service>
           <div class="service-option">
             <span class="service-name">{{ service.name }}</span>
@@ -182,7 +188,34 @@
       </p-accordion-panel>
     </p-accordion>
 
+  </div><!-- end dialog-content -->
+
+  <!-- Panel de creación de servicio -->
+  <div class="service-creation-panel">
+    <h3 class="service-panel-title">Crear un nuevo servicio</h3>
+
+    <div class="field">
+      <label class="field-label">Nombre del servicio <span class="required-mark">*</span></label>
+      <input pInputText [(ngModel)]="newService.name" placeholder="Nombre de la categoría" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label class="field-label">Precio <span class="required-mark">*</span></label>
+      <p-inputnumber [(ngModel)]="newService.price" mode="currency" currency="USD" locale="es-CO" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label class="field-label">Duración (min) <span class="required-mark">*</span></label>
+      <input pInputText type="number" [(ngModel)]="newService.duration_minutes" placeholder="Ej. 5, 10, 45, 200" class="w-full" />
+    </div>
+
+    <div class="service-panel-actions">
+      <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closeServicePanel()" />
+      <p-button label="Guardar servicio" icon="pi pi-check" [loading]="savingService()" (onClick)="saveNewService()" />
+    </div>
   </div>
+
+  </div><!-- end dialog-panels -->
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">

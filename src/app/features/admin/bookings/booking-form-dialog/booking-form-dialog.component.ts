@@ -8,6 +8,7 @@ import {
   Input,
   Output,
   EventEmitter,
+  ViewChild,
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -71,12 +72,15 @@ export class BookingFormDialogComponent implements OnInit {
   saving      = signal(false);
   loadingData = signal(false);
   isEdit      = signal(false);
-  showRepeatDialog = false;
-  showAddClient = false;
+  showRepeatDialog  = false;
+  showAddClient     = false;
+  showServicePanel  = false;
+  savingService     = signal(false);
 
   formData: BookingFormData = this.getEmptyForm();
 
-  newClient = { first_name: '', last_name: '', email: '', phone: '' };
+  newClient  = { first_name: '', last_name: '', email: '', phone: '' };
+  newService = { name: '', price: 0, duration_minutes: 60 };
 
   repeatAfterChecked = false;
   repeatUntilChecked = false;
@@ -187,7 +191,7 @@ export class BookingFormDialogComponent implements OnInit {
     });
   }
 
-  openNew(booking?: Booking, initialDate?: Date) {
+  openNew(booking?: Booking, initialDate?: Date, locationId?: number | null) {
     this.resetForm();
     this.loadFormData();
 
@@ -206,8 +210,9 @@ export class BookingFormDialogComponent implements OnInit {
         price: Number(booking.price) || 0,
         notes: booking.notes || '',
       };
-    } else if (initialDate) {
-      this.formData.start_time = initialDate;
+    } else {
+      if (initialDate) this.formData.start_time = initialDate;
+      if (locationId)  this.formData.location_id = locationId;
     }
 
     this.visible = true;
@@ -279,6 +284,10 @@ export class BookingFormDialogComponent implements OnInit {
   // ── Save ────────────────────────────────────────────────────────────────────
 
   onSave() {
+    if (!this.formData.client_id) {
+      this.messageService.add({ severity: 'warn', summary: 'Paciente requerido', detail: 'Seleccioná o agregá un paciente antes de guardar.', life: 4000 });
+      return;
+    }
     if (!this.isFormValid()) return;
     this.saving.set(true);
 
@@ -371,5 +380,34 @@ export class BookingFormDialogComponent implements OnInit {
   private formatDateTime(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toISOString().replace('T', ' ').substring(0, 19);
+  }
+
+  // ── Service creation panel ───────────────────────────────────────────────────
+
+  openServicePanel(): void {
+    this.newService = { name: '', price: 0, duration_minutes: 60 };
+    this.showServicePanel = true;
+  }
+
+  closeServicePanel(): void {
+    this.showServicePanel = false;
+  }
+
+  saveNewService(): void {
+    if (!this.newService.name || !this.newService.duration_minutes) return;
+    this.savingService.set(true);
+    this.apiService.createService(this.newService).subscribe({
+      next: (service) => {
+        this.messageService.add({ severity: 'success', summary: 'Servicio creado', detail: service.name, life: 3000 });
+        this.dataCache.invalidateCacheEntries(CACHE_KEYS.SERVICES);
+        this.savingService.set(false);
+        this.showServicePanel = false;
+        this.loadFormData();
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'crear servicio');
+        this.savingService.set(false);
+      },
+    });
   }
 }

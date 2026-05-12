@@ -1,11 +1,19 @@
 <p-dialog
-  header="Bloquear Horario"
   [(visible)]="visible"
   [modal]="true"
   [style]="{width: '540px'}"
   [contentStyle]="{'overflow-y': 'auto', 'max-height': '70vh'}"
   [draggable]="false"
   (onHide)="onClose()">
+
+  <ng-template pTemplate="header">
+    <div class="block-dialog-header">
+      <span class="block-dialog-title">{{ editMode ? 'Bloqueo de horas' : 'Bloquear Horario' }}</span>
+      @if (editMode) {
+        <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" (onClick)="deleteBlock()" />
+      }
+    </div>
+  </ng-template>
 
   <div class="block-form">
 
@@ -200,18 +208,16 @@
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
-      <p-button
-        label="Cancelar"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="onClose()">
-      </p-button>
-      <p-button
-        [label]="repeatEnabled() ? 'Bloquear y repetir' : 'Bloquear horario'"
-        icon="pi pi-lock"
-        [loading]="saving()"
-        (onClick)="block()">
-      </p-button>
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="onClose()" />
+      @if (editMode) {
+        <p-button label="Guardar bloqueo" icon="pi pi-check" [loading]="saving()" (onClick)="updateBlock()" />
+      } @else {
+        <p-button
+          [label]="repeatEnabled() ? 'Bloquear y repetir' : 'Bloquear horario'"
+          icon="pi pi-lock"
+          [loading]="saving()"
+          (onClick)="block()" />
+      }
     </div>
   </ng-template>
 </p-dialog>

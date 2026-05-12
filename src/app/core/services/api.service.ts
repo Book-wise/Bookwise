@@ -45,6 +45,10 @@ export class ApiService {
     return this.http.get<Service>(`${this.baseUrl}/services/${id}`);
   }
 
+  createService(payload: { name: string; price: number; duration_minutes: number }): Observable<Service> {
+    return this.http.post<Service>(`${this.baseUrl}/services`, payload);
+  }
+
   getPacks(): Observable<PaginatedResponse<ServicePack>> {
     return this.http.get<PaginatedResponse<ServicePack>>(`${this.baseUrl}/packs`);
   }
@@ -87,7 +91,7 @@ export class ApiService {
     return this.http.post<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, body);
   }
 
-  updateBlockedSlot(id: number, body: { start_time: string; end_time: string }): Observable<BlockedSlot> {
+  updateBlockedSlot(id: number, body: { start_time: string; end_time: string; reason?: string; provider_id?: number | null }): Observable<BlockedSlot> {
     return this.http.patch<BlockedSlot>(`${this.baseUrl}/blocked-slots/${id}`, body);
   }
 
