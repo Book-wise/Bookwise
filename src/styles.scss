@@ -208,6 +208,17 @@ body.dark-theme {
 }
 
 // ============================================
+// Form Control Height Normalization
+// ============================================
+
+.p-button:not(.p-button-icon-only),
+.p-select,
+.p-multiselect,
+input.p-inputtext {
+  height: var(--bw-control-height) !important;
+}
+
+// ============================================
 // Utility Classes
 // ============================================
 

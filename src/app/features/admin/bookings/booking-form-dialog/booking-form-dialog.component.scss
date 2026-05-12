@@ -22,6 +22,24 @@
   max-width: 210px !important;
 }
 
+@media (max-width: 375px) {
+  .dialog-header-row {
+    justify-content: flex-start;
+    gap: 0.625rem;
+    padding-right: 2.5rem;
+  }
+
+  .dialog-title {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  ::ng-deep .header-status-select {
+    min-width: 0 !important;
+    max-width: 130px !important;
+  }
+}
+
 // ── Header bottom shadow + footer top spacing ────────────────────────────────
 
 ::ng-deep .p-dialog-header {

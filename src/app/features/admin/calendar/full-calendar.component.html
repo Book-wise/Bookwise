@@ -217,7 +217,7 @@
 <bw-block-time-dialog #blockTimeDialog (onBlocked)="onBookingSaved()"></bw-block-time-dialog>
 
 <!-- Slot Action Menu Overlay -->
-<div class="slot-overlay" *ngIf="showSlotMenu()" (click)="showSlotMenu.set(false)">
+<div class="slot-overlay" *ngIf="showSlotMenu()" (click)="dismissSlotMenu()">
   <div
     class="slot-menu"
     [style.left.px]="slotMenuPosition.x"

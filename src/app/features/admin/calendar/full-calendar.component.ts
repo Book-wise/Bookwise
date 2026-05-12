@@ -79,6 +79,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private messageService = inject(MessageService);
   private ngZone = inject(NgZone);
   private calendar: Calendar | null = null;
+  private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild('eventTooltip') eventTooltip!: Popover;
@@ -110,6 +111,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Popover for slot selection
   showSlotMenu = signal(false);
   slotMenuPosition = { x: 0, y: 0 };
+  private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
 
   // Signal para detectar viewport
   isMobile = signal(false);
@@ -123,7 +125,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay',
+      right: 'bwNewBooking bwBlockTime dayGridMonth,timeGridWeek,timeGridDay',
     },
     buttonText: {
       today: 'Hoy',
@@ -132,6 +134,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       day: 'Día',
       list: 'Lista',
     },
+    nowIndicator: true,
     editable: true,
     selectable: true,
     selectMirror: true,
@@ -217,30 +220,89 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           });
         },
         dateClick: (info) => this.ngZone.run(() => {
-          this.selectedDate = info.date;
-          this.selectedEndDate = new Date(info.date.getTime() + 30 * 60 * 1000);
-          this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
-          this.showSlotMenu.set(true);
+          this.removeSlotPreview();
+
+          const start = info.date;
+          const previewMs = this.getPreviewDuration();
+          const end = new Date(start.getTime() + previewMs);
+
+          this.selectedDate = start;
+          this.selectedEndDate = end;
+
+          const isTimeGrid = (this.calendar?.view.type ?? '').startsWith('timeGrid');
+          if (!isTimeGrid) {
+            this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
+            this.showSlotMenu.set(true);
+            return;
+          }
+
+          this.ngZone.runOutsideAngular(() => {
+            this.calendar!.addEvent({
+              id: this.SLOT_PREVIEW_ID,
+              start,
+              end,
+              classNames: ['bw-slot-preview'],
+              editable: false,
+            });
+
+            requestAnimationFrame(() => {
+              this.ngZone.run(() => {
+                const el = this.calendarContainer.nativeElement
+                  .querySelector('.bw-slot-preview');
+                if (el) {
+                  const rect = el.getBoundingClientRect();
+                  this.slotMenuPosition = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top,
+                  };
+                } else {
+                  this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
+                }
+                this.showSlotMenu.set(true);
+              });
+            });
+          });
         }),
-        eventDrop: (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
+        eventDrop:   (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
         eventResize: (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
+        customButtons: {
+          bwNewBooking: {
+            text: 'Reserva',
+            click: () => this.ngZone.run(() => this.openNewBooking()),
+          },
+          bwBlockTime: {
+            text: 'Bloquear',
+            click: () => this.ngZone.run(() => this.openBlockTime()),
+          },
+        },
       });
       this.calendar.render();
+      this.startNowLabel();
     });
   }
 
   ngOnDestroy(): void {
-    if (this.calendar) {
-      this.calendar.destroy();
-    }
+    if (this.nowLabelInterval) clearInterval(this.nowLabelInterval);
+    if (this.calendar) this.calendar.destroy();
+  }
+
+  private startNowLabel(): void {
+    this.updateNowLabel();
+    this.nowLabelInterval = setInterval(() => this.updateNowLabel(), 60_000);
+  }
+
+  private updateNowLabel(): void {
+    const now = new Date();
+    const label = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const arrow = this.calendarContainer?.nativeElement?.querySelector('.fc-timegrid-now-indicator-arrow');
+    arrow?.setAttribute('data-now', label);
   }
 
   loadLocations(): void {
     this.api.getLocations().subscribe({
       next: (data) => {
         this.locations.set(data);
-        // Auto-select first location if only one exists
-        if (data.length === 1 && !this.selectedLocationId) {
+        if (data.length > 0) {
           this.selectedLocationId = data[0].id;
           this.onLocationChange();
         }
@@ -344,7 +406,28 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
 
+  private getPreviewDuration(): number {
+    const raw = (this.calendarOptions.slotDuration as string) ?? '00:30:00';
+    const [h, m] = raw.split(':').map(Number);
+    const slotMs = (h * 60 + m) * 60 * 1000;
+    return slotMs * 2; // 2 slots ≈ 1 hora visual
+  }
+
+  private removeSlotPreview(): void {
+    this.ngZone.runOutsideAngular(() => {
+      this.calendar?.getEventById(this.SLOT_PREVIEW_ID)?.remove();
+    });
+  }
+
+  dismissSlotMenu(): void {
+    this.showSlotMenu.set(false);
+    this.removeSlotPreview();
+  }
+
   private buildEventContent(info: any): { html: string } {
+    if (info.event.id === this.SLOT_PREVIEW_ID) {
+      return { html: '<div class="bw-slot-preview-inner"></div>' };
+    }
     if (info.event.extendedProps['isBlocked']) {
       const reason = info.event.title || 'Bloqueado';
       const start  = this.fmt(info.event.startStr);
@@ -495,12 +578,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   openNewBooking(): void {
     this.showSlotMenu.set(false);
+    this.removeSlotPreview();
     const dateToUse = this.selectedDate || new Date();
     this.newBookingDialog.openNew(undefined, dateToUse);
   }
 
   openBlockTime(): void {
     this.showSlotMenu.set(false);
+    this.removeSlotPreview();
     this.blockTimeDialog.open(
       this.selectedDate || new Date(),
       this.selectedEndDate || this.selectedDate || new Date(),

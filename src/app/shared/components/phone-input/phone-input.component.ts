@@ -72,6 +72,7 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
   }
 
   private emitChange(): void {
+    if (!(intlTelInput as any).utils) return;
     const value = this.iti?.getNumber() ?? '';
     this.onChange?.(value);
   }
@@ -103,7 +104,7 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
   // ── Validator ───────────────────────────────────────────────────────────────
 
   validate(_control: AbstractControl): ValidationErrors | null {
-    if (!this.iti) return null;
+    if (!this.iti || !(intlTelInput as any).utils) return null;
     const number = this.iti.getNumber();
     if (!number) return null; // empty field — let `required` handle that
     return this.iti.isValidNumber() ? null : { invalidPhone: true };

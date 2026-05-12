@@ -1,6 +1,15 @@
 .full-calendar-container {
   padding: 1rem;
 
+  @media (max-width: 768px) {
+    padding: 0;
+
+    ::ng-deep .p-card {
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
   .calendar-header {
     display: flex;
     align-items: center;
@@ -12,6 +21,23 @@
     .calendar-actions {
       display: flex;
       gap: 0.5rem;
+    }
+
+    @media (max-width: 425px) {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 0.75rem;
+
+      .calendar-actions {
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+    }
+
+    @media (max-width: 374px) {
+      padding: 0.5rem;
     }
   }
 
@@ -35,6 +61,11 @@
         width: 100%;
         min-width: unset;
       }
+    }
+
+    @media (max-width: 425px) {
+      width: auto;
+      flex: 1;
     }
   }
 
@@ -153,8 +184,12 @@
   border-radius: 0;
   margin-right: 3px;
 
-  &--paid    { background: #16a34a; }
-  &--partial { background: #65a30d; }
+  &--paid {
+    background: #16a34a;
+  }
+  &--partial {
+    background: #65a30d;
+  }
 }
 
 ::ng-deep .fc .ev-title {
@@ -230,6 +265,95 @@
   color: #6b7280;
 }
 
+// Custom toolbar buttons — ocultos en desktop, visibles solo en ≤425px
+::ng-deep .fc-bwNewBooking-button,
+::ng-deep .fc-bwBlockTime-button {
+  display: none !important;
+}
+
+@media (max-width: 425px) {
+  // touch-action: manipulation elimina el delay de doble-tap en iOS/Android
+  ::ng-deep .fc-bwNewBooking-button,
+  ::ng-deep .fc-bwBlockTime-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none !important;
+    transition:
+      background 0.2s,
+      box-shadow 0.2s;
+  }
+
+  ::ng-deep .fc-bwNewBooking-button {
+    background: var(--p-button-primary-background) !important;
+    border-color: var(--p-button-primary-border-color) !important;
+    color: var(--p-button-primary-color) !important;
+    gap: 0.3rem;
+
+    &::before {
+      font-family: 'primeicons';
+      content: '\e90d';
+      font-size: 0.75rem;
+    }
+    &:hover {
+      background: var(--p-button-primary-hover-background) !important;
+    }
+  }
+
+  ::ng-deep .fc-bwBlockTime-button {
+    background: var(--p-button-secondary-background) !important;
+    border-color: var(--p-button-secondary-border-color) !important;
+    color: var(--p-button-secondary-color) !important;
+    gap: 0.3rem;
+
+    &::before {
+      font-family: 'primeicons';
+      content: '\e95f';
+      font-size: 0.75rem;
+    }
+    &:hover {
+      background: var(--p-button-secondary-hover-background) !important;
+    }
+  }
+
+  .full-calendar-container .calendar-header .calendar-actions {
+    display: none;
+  }
+}
+
+@media (max-width: 374px) {
+  ::ng-deep .fc-bwNewBooking-button,
+  ::ng-deep .fc-bwBlockTime-button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+    margin: 0.125rem 0.25rem !important;
+  }
+
+  ::ng-deep .fc {
+    .fc-toolbar-title {
+      font-size: 0.875rem !important;
+    }
+
+    .fc-button {
+      padding: 0.25rem 0.375rem !important;
+      font-size: 0.6875rem !important;
+    }
+
+    .fc-toolbar-chunk {
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+    }
+  }
+}
+
 // Responsive styles (≤768px)
 @media (max-width: 768px) {
   ::ng-deep .fc {
@@ -287,7 +411,6 @@
       font-size: 0.75rem !important;
     }
   }
-
 }
 
 // Dark mode para FullCalendar
@@ -442,6 +565,50 @@ body.dark-theme {
   }
 }
 
+// ── Now indicator ────────────────────────────────────────────────────────────
+
+::ng-deep .fc .fc-timegrid-now-indicator-line {
+  border-color: #ef4444;
+  border-width: 2px;
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: #ef4444;
+  border-bottom-color: #ef4444;
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-arrow[data-now]::after {
+  content: attr(data-now);
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #ef4444;
+  background: var(--fc-page-bg-color, #ffffff);
+  padding: 1px 2px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+// ── Slot preview event (bloque temporal al clickear un slot) ─────────────────
+
+::ng-deep .fc .fc-event.bw-slot-preview {
+  background: rgba(4, 106, 244, 0.1) !important;
+  border: 2px dashed rgba(4, 106, 244, 0.5) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+
+::ng-deep .fc .fc-event.bw-slot-preview .bw-slot-preview-inner {
+  height: 100%;
+}
+
 .slot-overlay {
   position: fixed;
   top: 0;
@@ -462,6 +629,7 @@ body.dark-theme {
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%) translateY(-100%) translateY(-8px);
 
   .slot-menu-item {
     justify-content: flex-start;

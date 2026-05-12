@@ -309,6 +309,10 @@
     padding: 1rem;
     padding-top: 3.5rem;
   }
+
+  @media (max-width: 768px) {
+    padding: 3.5rem 0 0;
+  }
 }
 
 // ── Dark theme (sidebar is theme-invariant — only surfaces change) ────────────

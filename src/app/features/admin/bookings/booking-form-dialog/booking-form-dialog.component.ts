@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   inject,
   OnInit,
@@ -58,6 +59,7 @@ export class BookingFormDialogComponent implements OnInit {
   private apiService    = inject(ApiService);
   private httpError     = inject(HttpErrorService);
   private messageService = inject(MessageService);
+  private cdr           = inject(ChangeDetectorRef);
 
   @Input() initialDate?: Date;
   @Output() onSaved = new EventEmitter<void>();
@@ -208,6 +210,7 @@ export class BookingFormDialogComponent implements OnInit {
     }
 
     this.visible = true;
+    this.cdr.detectChanges();
   }
 
   private resetForm() {
