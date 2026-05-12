@@ -27,6 +27,7 @@ import { MessageService } from 'primeng/api';
 import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
+import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
@@ -60,6 +61,7 @@ export class BookingFormDialogComponent implements OnInit {
   private httpError     = inject(HttpErrorService);
   private messageService = inject(MessageService);
   private cdr           = inject(ChangeDetectorRef);
+  private dataCache     = inject(DataCacheService);
 
   @Input() initialDate?: Date;
   @Output() onSaved = new EventEmitter<void>();
@@ -118,9 +120,7 @@ export class BookingFormDialogComponent implements OnInit {
   repeatTypeOptions = REPEAT_TYPE_OPTIONS;
   dialogTitle = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
 
-  ngOnInit() {
-    this.loadData();
-  }
+  ngOnInit() { /* datos cargados al abrir, no al montar */ }
 
   // ── Time input helpers ──────────────────────────────────────────────────────
 
@@ -164,18 +164,18 @@ export class BookingFormDialogComponent implements OnInit {
     };
   }
 
-  loadData(): void {
+  loadFormData(): void {
     this.loadingData.set(true);
     forkJoin({
-      clients:   this.apiService.getClients({ per_page: 100 }),
-      services:  this.apiService.getServices(),
-      packs:     this.apiService.getPacks(),
-      providers: this.apiService.getProviders(),
-      locations: this.apiService.getLocations(),
+      clients:   this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.apiService.getClients({ per_page: 100 }), CACHE_TTL.CLIENTS),
+      services:  this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.apiService.getServices(),                 CACHE_TTL.SERVICES),
+      packs:     this.dataCache.getOrFetchResource(CACHE_KEYS.PACKS,     () => this.apiService.getPacks(),                    CACHE_TTL.PACKS),
+      providers: this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.apiService.getProviders(),                CACHE_TTL.PROVIDERS),
+      locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.apiService.getLocations(),                CACHE_TTL.LOCATIONS),
     }).subscribe({
       next: ({ clients, services, packs, providers, locations }) => {
-        this.clients.set(clients.data);
-        this.services.set([...services, ...packs.data]);
+        this.clients.set(clients);
+        this.services.set([...services, ...(packs.data ?? [])]);
         this.providers.set(providers);
         this.locations.set(locations);
         this.loadingData.set(false);
@@ -189,6 +189,7 @@ export class BookingFormDialogComponent implements OnInit {
 
   openNew(booking?: Booking, initialDate?: Date) {
     this.resetForm();
+    this.loadFormData();
 
     if (booking) {
       this.isEdit.set(true);
@@ -354,7 +355,8 @@ export class BookingFormDialogComponent implements OnInit {
           });
           this.showAddClient = false;
           this.formData.client_id = client.id;
-          this.loadData();
+          this.dataCache.invalidateCacheEntries(CACHE_KEYS.CLIENTS);
+          this.loadFormData();
         },
         error: (err) => {
           this.httpError.handle(err, 'crear cliente');

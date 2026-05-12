@@ -13,6 +13,7 @@ import { MessageService } from 'primeng/api';
 import { Booking, Client, Service, Provider, Location } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
+import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 
 export interface BookingFormData {
@@ -48,8 +49,9 @@ export interface BookingFormData {
   styleUrl: './booking-dialog.component.scss',
 })
 export class BookingDialogComponent implements OnInit {
-  private api       = inject(ApiService);
-  private httpError = inject(HttpErrorService);
+  private api        = inject(ApiService);
+  private httpError  = inject(HttpErrorService);
+  private dataCache  = inject(DataCacheService);
   private messageService = inject(MessageService);
 
   visible = false;
@@ -111,9 +113,7 @@ export class BookingDialogComponent implements OnInit {
     })),
   );
 
-  ngOnInit() {
-    this.loadData();
-  }
+  ngOnInit() { /* datos cargados al abrir, no al montar */ }
 
   private getEmptyForm(): BookingFormData {
     return {
@@ -130,35 +130,21 @@ export class BookingDialogComponent implements OnInit {
     };
   }
 
-  async loadData() {
-    // Load clients
-    this.api.getClients({ per_page: 500 }).subscribe({
-      next: (res) => this.clients.set((res as any).data || res),
-      error: () => this.clients.set([]),
-    });
-
-    // Load services
-    this.api.getServices().subscribe({
-      next: (data) => this.services.set(data),
-      error: () => this.services.set([]),
-    });
-
-    // Load providers
-    this.api.getProviders().subscribe({
-      next: (data) => this.providers.set(data),
-      error: () => this.providers.set([]),
-    });
-
-    // Load locations
-    this.api.getLocations().subscribe({
-      next: (data) => this.locations.set(data),
-      error: () => this.locations.set([]),
-    });
+  loadFormData(): void {
+    this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.api.getClients({ per_page: 500 }), CACHE_TTL.CLIENTS)
+      .subscribe({ next: d => this.clients.set(d),   error: () => this.clients.set([]) });
+    this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.api.getServices(),                 CACHE_TTL.SERVICES)
+      .subscribe({ next: d => this.services.set(d),  error: () => this.services.set([]) });
+    this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(),                CACHE_TTL.PROVIDERS)
+      .subscribe({ next: d => this.providers.set(d), error: () => this.providers.set([]) });
+    this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(),                CACHE_TTL.LOCATIONS)
+      .subscribe({ next: d => this.locations.set(d), error: () => this.locations.set([]) });
   }
 
   openNew(booking?: Booking) {
     this.errors = {};
     this.isEdit.set(false);
+    this.loadFormData();
 
     if (booking) {
       this.isEdit.set(true);

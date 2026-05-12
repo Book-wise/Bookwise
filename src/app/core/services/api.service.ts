@@ -168,7 +168,7 @@ export class ApiService {
     search?: string;
     page?: number;
     per_page?: number;
-  }): Observable<PaginatedResponse<Client>> {
+  }): Observable<Client[]> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -177,7 +177,7 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<Client>>(`${this.baseUrl}/clients`, {
+    return this.http.get<Client[]>(`${this.baseUrl}/clients`, {
       params: httpParams,
     });
   }

@@ -9,7 +9,13 @@ import { Location, Provider } from '../../../core/models';
 
 interface ChartDataset { data: number[]; backgroundColor?: string | string[]; borderColor?: string; fill?: boolean; tension?: number; label?: string }
 interface DashboardChartData { labels: string[]; datasets: ChartDataset[] }
-interface DashboardChartOptions { plugins?: { legend?: { position?: string } } }
+interface DashboardChartOptions {
+  plugins?:             { legend?: { position?: string } };
+  maintainAspectRatio?: boolean;
+  aspectRatio?:         number;
+  scales?:              Record<string, unknown>;
+  cutout?:              string;
+}
 
 @Component({
   selector: 'bw-admin-dashboard',
@@ -31,9 +37,22 @@ export class AdminDashboardComponent implements OnInit {
 
   readonly userName = computed(() => this.auth.user()?.name ?? 'Usuario');
 
-  locationChartData  = signal<DashboardChartData | null>(null);
-  weeklyChartData    = signal<DashboardChartData | null>(null);
-  chartOptions       = signal<DashboardChartOptions>({ plugins: { legend: { position: 'bottom' } } });
+  locationChartData = signal<DashboardChartData | null>(null);
+  weeklyChartData   = signal<DashboardChartData | null>(null);
+
+  doughnutOptions = signal<DashboardChartOptions>({
+    cutout: '60%',
+    plugins: { legend: { position: 'bottom' } },
+  });
+
+  lineOptions = signal<DashboardChartOptions>({
+    aspectRatio: 1.6,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true },
+    },
+  });
 
   ngOnInit(): void {
     this.loadData();
@@ -53,7 +72,7 @@ export class AdminDashboardComponent implements OnInit {
 
     this.api.getBookings({ per_page: 100 }).subscribe({
       next: (response) => {
-        const bookings = response.data;
+        const bookings = response.data ?? [];
         const today = new Date().toISOString().split('T')[0];
         this.todayBookings.set(bookings.filter(b => b.start_time.startsWith(today)).length);
         this.pendingBookings.set(bookings.filter(b => b.status?.name === 'pending').length);

@@ -1,5 +1,8 @@
 .dashboard {
   padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 h1 {
@@ -41,10 +44,39 @@ h1 {
 
 .charts-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
   gap: 1.5rem;
 }
 
-:host ::ng-deep .chart-card {
-  min-height: 300px;
+.bw-chart-circular,
+.bw-chart-linear {
+  width: 100%;
+}
+
+.bw-chart-linear {
+  height: 280px;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 0.75rem;
+  }
+
+  .stats-grid {
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .charts-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .bw-chart-linear {
+    height: 200px;
+  }
 }

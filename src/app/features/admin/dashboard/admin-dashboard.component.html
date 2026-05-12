@@ -25,12 +25,12 @@
   </div>
 
   <div class="charts-row">
-    <p-card header="Citas por Location" class="chart-card">
-      <p-chart type="doughnut" [data]="locationChartData()" [options]="chartOptions()"></p-chart>
+    <p-card header="Citas por Location">
+      <p-chart type="doughnut" [data]="locationChartData()" [options]="doughnutOptions()" class="bw-chart-circular"></p-chart>
     </p-card>
 
-    <p-card header="Citas por Día" class="chart-card">
-      <p-chart type="line" [data]="weeklyChartData()" [options]="chartOptions()"></p-chart>
+    <p-card header="Citas por Día">
+      <p-chart type="line" [data]="weeklyChartData()" [options]="lineOptions()" class="bw-chart-linear"></p-chart>
     </p-card>
   </div>
 </div>

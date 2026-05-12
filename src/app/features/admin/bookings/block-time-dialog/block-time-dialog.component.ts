@@ -14,6 +14,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageService } from 'primeng/api';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
 import { Location, Provider, CreateBlockedSlot } from '../../../../core/models';
+import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
 
 @Component({
   selector: 'bw-block-time-dialog',
@@ -35,7 +36,8 @@ import { Location, Provider, CreateBlockedSlot } from '../../../../core/models';
 })
 export class BlockTimeDialogComponent implements OnInit {
   private messageService = inject(MessageService);
-  private api       = inject(ApiService);
+  private api        = inject(ApiService);
+  private dataCache  = inject(DataCacheService);
   private httpError = inject(HttpErrorService);
 
   @Output() onBlocked = new EventEmitter<void>();
@@ -89,21 +91,13 @@ export class BlockTimeDialogComponent implements OnInit {
   providerOptions = computed(() => this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })));
 
   // Lifecycle
-  ngOnInit(): void {
-    this.loadLocations();
-    this.loadProviders();
-  }
+  ngOnInit(): void { /* datos cargados al abrir, no al montar */ }
 
-  private loadLocations(): void {
-    this.api.getLocations().subscribe({
-      next: (data) => this.locations.set(data),
-    });
-  }
-
-  private loadProviders(): void {
-    this.api.getProviders().subscribe({
-      next: (data) => this.providers.set(data),
-    });
+  private loadFormData(): void {
+    this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(), CACHE_TTL.LOCATIONS)
+      .subscribe({ next: d => this.locations.set(d) });
+    this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(), CACHE_TTL.PROVIDERS)
+      .subscribe({ next: d => this.providers.set(d) });
   }
 
   onScopeChange(): void {
@@ -183,6 +177,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
   open(startTime?: Date, endTime?: Date, locationId?: number | null, providerId?: number | null): void {
+    this.loadFormData();
     if (startTime) this.startDate.set(startTime);
     if (endTime)   this.endDate.set(endTime);
     this.locationId = locationId ?? null;

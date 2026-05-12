@@ -31,7 +31,7 @@ export class PacksListComponent implements OnInit {
     this.loading.set(true);
     this.api.getPacks().subscribe({
       next: (response) => {
-        this.packs.set(response.data);
+        this.packs.set(response.data ?? []);
         this.loading.set(false);
       },
       error: (err) => {
