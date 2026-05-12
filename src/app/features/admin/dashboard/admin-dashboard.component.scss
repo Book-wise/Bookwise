@@ -50,7 +50,7 @@ h1 {
 
 .bw-chart-circular,
 .bw-chart-linear {
-  // width: 100%;
+  width: 100%;
 }
 
 .bw-chart-linear {
@@ -78,27 +78,5 @@ h1 {
 
   .bw-chart-linear {
     height: 200px;
-  }
-}
-
-@media (max-width: 425px) {
-  .bw-chart-circular {
-    max-width: 300px;
-    margin: 0 auto;
-    display: block;
-  }
-
-  .bw-chart-linear {
-    height: 180px;
-  }
-}
-
-@media (max-width: 374px) {
-  .bw-chart-circular {
-    max-width: 240px;
-  }
-
-  .bw-chart-linear {
-    height: 150px;
   }
 }
