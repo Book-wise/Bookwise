@@ -133,7 +133,7 @@ export class BookingDialogComponent implements OnInit {
   async loadData() {
     // Load clients
     this.api.getClients({ per_page: 500 }).subscribe({
-      next: (res) => this.clients.set((res as any).data || res),
+      next: (clients) => this.clients.set(clients),
       error: () => this.clients.set([]),
     });
 

@@ -53,6 +53,8 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
       initialCountry: this.initialCountry,
       countryOrder: this.countryOrder,
       separateDialCode: true,
+      showFlags: true,
+      useFullscreenPopup: false,
       loadUtils: () => import('intl-tel-input/utils'),
     });
 

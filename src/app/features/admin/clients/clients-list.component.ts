@@ -50,10 +50,8 @@ export class ClientsListComponent implements OnInit {
   loadClients(): void {
     this.loading.set(true);
     this.api.getClients({ search: this.searchTerm() || undefined }).subscribe({
-      next: (response: any) => {
-        // La API devuelve directamente el array o un objeto con data
-        const data = response.data || response;
-        this.clients.set(Array.isArray(data) ? data : []);
+      next: (clients) => {
+        this.clients.set(clients);
         this.loading.set(false);
       },
       error: (err) => {

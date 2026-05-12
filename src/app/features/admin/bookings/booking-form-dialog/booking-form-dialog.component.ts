@@ -174,7 +174,7 @@ export class BookingFormDialogComponent implements OnInit {
       locations: this.apiService.getLocations(),
     }).subscribe({
       next: ({ clients, services, packs, providers, locations }) => {
-        this.clients.set(clients.data ?? []);
+        this.clients.set(clients);
         this.services.set([...services, ...(packs.data ?? [])]);
         this.providers.set(providers);
         this.locations.set(locations);
