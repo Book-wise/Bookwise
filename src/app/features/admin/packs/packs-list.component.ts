@@ -30,9 +30,8 @@ export class PacksListComponent implements OnInit {
   loadPacks(): void {
     this.loading.set(true);
     this.api.getPacks().subscribe({
-      next: (response: any) => {
-        const data = response.data || response;
-        this.packs.set(Array.isArray(data) ? data : []);
+      next: (response) => {
+        this.packs.set(response.data);
         this.loading.set(false);
       },
       error: (err) => {
