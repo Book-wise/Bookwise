@@ -55,6 +55,7 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
       separateDialCode: true,
       showFlags: true,
       useFullscreenPopup: false,
+      i18n: { searchPlaceholder: '', searchEmptyState: 'Sin resultados' },
       loadUtils: () => import('intl-tel-input/utils'),
     });
 
