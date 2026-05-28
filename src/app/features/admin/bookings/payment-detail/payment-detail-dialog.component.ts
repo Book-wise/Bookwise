@@ -4,14 +4,16 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TabsModule } from 'primeng/tabs';
+import { SkeletonModule } from 'primeng/skeleton';
 import { Booking } from '../../../../core/models';
+import { PaymentTabComponent } from './payment-tab.component';
 
 export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';
 
 @Component({
   selector: 'bw-payment-detail-dialog',
   standalone: true,
-  imports: [CommonModule, DialogModule, ButtonModule, TagModule, TabsModule],
+  imports: [CommonModule, DialogModule, ButtonModule, TagModule, TabsModule, SkeletonModule, PaymentTabComponent],
   templateUrl: './payment-detail-dialog.component.html',
   styleUrl: './payment-detail-dialog.component.scss',
 })

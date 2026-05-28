@@ -1,0 +1,35 @@
+@if (loading()) {
+  <!-- Skeleton mientras carga -->
+  <div class="payment-skeleton">
+    <p-skeleton height="1.5rem" width="60%" />
+    <p-skeleton height="1.5rem" />
+    <p-skeleton height="1.5rem" />
+    <p-skeleton height="1.5rem" width="75%" />
+  </div>
+} @else if (payment()) {
+  <div class="payment-rows">
+    <div class="payment-row">
+      <span class="payment-label">Estado del pago</span>
+      <p-tag [value]="statusLabel" [severity]="statusSeverity" />
+    </div>
+    <div class="payment-row">
+      <span class="payment-label">Total</span>
+      <span class="payment-value">${{ payment()!.total | number:'1.0-0' }}</span>
+    </div>
+    <div class="payment-row">
+      <span class="payment-label">Pagado</span>
+      <span class="payment-value paid">${{ payment()!.paid_amount | number:'1.0-0' }}</span>
+    </div>
+    @if (payment()!.remaining_amount > 0) {
+      <div class="payment-row">
+        <span class="payment-label">Saldo pendiente</span>
+        <span class="payment-value remaining">${{ payment()!.remaining_amount | number:'1.0-0' }}</span>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="payment-empty">
+    <i class="pi pi-wallet payment-empty__icon"></i>
+    <p class="payment-empty__text">No hay pagos registrados para esta cita.</p>
+  </div>
+}

@@ -87,32 +87,20 @@
           </div>
         </p-tabpanel>
 
-        <!-- ── Pago ─────────────────────────────────────────────── -->
+        <!-- ── Pago — carga diferida al activar el tab ──────────── -->
         <p-tabpanel value="pago">
           <div class="tab-content">
-            @if (payment) {
-              <div class="info-row">
-                <span class="info-label">Estado del pago</span>
-                <p-tag [value]="paymentStatusLabel" [severity]="paymentStatusSeverity" />
+            @defer (when activeTab() === 'pago') {
+              <bw-payment-tab [booking]="booking" />
+            } @loading (minimum 200ms) {
+              <div class="tab-skeleton">
+                <p-skeleton height="1.5rem" width="60%" />
+                <p-skeleton height="1.5rem" />
+                <p-skeleton height="1.5rem" />
               </div>
-              <div class="info-row">
-                <span class="info-label">Total</span>
-                <span class="info-value">${{ payment.total | number:'1.0-0' }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Pagado</span>
-                <span class="info-value paid">${{ payment.paid_amount | number:'1.0-0' }}</span>
-              </div>
-              @if (payment.remaining_amount > 0) {
-                <div class="info-row">
-                  <span class="info-label">Saldo pendiente</span>
-                  <span class="info-value remaining">${{ payment.remaining_amount | number:'1.0-0' }}</span>
-                </div>
-              }
-            } @else {
-              <div class="empty-state">
-                <i class="pi pi-wallet empty-state__icon"></i>
-                <p class="empty-state__text">No hay pagos registrados para esta cita.</p>
+            } @placeholder {
+              <div class="tab-skeleton">
+                <p-skeleton height="1.5rem" width="40%" />
               </div>
             }
           </div>
