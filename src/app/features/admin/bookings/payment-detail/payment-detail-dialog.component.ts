@@ -1,24 +1,28 @@
 import { Component, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { DividerModule } from 'primeng/divider';
+import { TabsModule } from 'primeng/tabs';
 import { Booking } from '../../../../core/models';
+
+export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';
 
 @Component({
   selector: 'bw-payment-detail-dialog',
   standalone: true,
-  imports: [CommonModule, DialogModule, ButtonModule, TagModule, DividerModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, DialogModule, ButtonModule, TagModule, TabsModule],
   templateUrl: './payment-detail-dialog.component.html',
   styleUrl: './payment-detail-dialog.component.scss',
 })
 export class PaymentDetailDialogComponent {
   visible = false;
   booking = signal<Booking | null>(null);
+  activeTab = signal<BookingTab>('pago');
 
-  open(booking: Booking): void {
+  open(booking: Booking, tab: BookingTab = 'pago'): void {
     this.booking.set(booking);
+    this.activeTab.set(tab);
     this.visible = true;
   }
 
@@ -28,22 +32,31 @@ export class PaymentDetailDialogComponent {
   }
 
   get payment() {
-    const b = this.booking();
-    const p = b?.payment as any;
+    const p = this.booking()?.payment as any;
     return p && typeof p === 'object' && 'total' in p ? p : null;
   }
 
-  get statusSeverity(): 'success' | 'warn' | 'danger' {
-    const status = this.booking()?.payment_status;
-    if (status === 'paid')    return 'success';
-    if (status === 'partial') return 'warn';
+  get paymentStatusSeverity(): 'success' | 'warn' | 'danger' {
+    const s = this.booking()?.payment_status;
+    if (s === 'paid')    return 'success';
+    if (s === 'partial') return 'warn';
     return 'danger';
   }
 
-  get statusLabel(): string {
-    const status = this.booking()?.payment_status;
-    if (status === 'paid')    return 'Pagado';
-    if (status === 'partial') return 'Pago parcial';
+  get paymentStatusLabel(): string {
+    const s = this.booking()?.payment_status;
+    if (s === 'paid')    return 'Pagado';
+    if (s === 'partial') return 'Pago parcial';
     return 'No pagado';
+  }
+
+  get statusSeverity(): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | undefined {
+    const name = this.booking()?.status?.name?.toLowerCase();
+    if (!name) return undefined;
+    if (name.includes('confirm'))  return 'success';
+    if (name.includes('cancel'))   return 'danger';
+    if (name.includes('pendiente') || name.includes('espera')) return 'warn';
+    if (name.includes('asiste') || name.includes('completa')) return 'info';
+    return 'secondary';
   }
 }

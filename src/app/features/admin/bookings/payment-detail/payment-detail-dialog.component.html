@@ -1,61 +1,195 @@
 <p-dialog
-  header="Detalle del pago"
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '420px' }"
+  [style]="{ width: '600px', maxWidth: '95vw' }"
   [draggable]="false"
   [resizable]="false"
   (onHide)="close()"
 >
-  @if (booking()) {
-    <div class="payment-detail">
-
-      <!-- Booking summary -->
-      <div class="payment-booking-summary">
-        <span class="booking-client">
-          {{ booking()!.client?.first_name }} {{ booking()!.client?.last_name }}
+  <ng-template pTemplate="header">
+    @if (booking()) {
+      <div class="booking-dialog-header">
+        <span class="booking-dialog-title">
+          Reserva de {{ booking()!.client?.first_name }} {{ booking()!.client?.last_name }}
         </span>
-        <span class="booking-service">{{ booking()!.service?.name }}</span>
-        <span class="booking-date">{{ booking()!.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
+        <p-tag
+          [value]="booking()!.service?.name || ''"
+          severity="secondary"
+          class="booking-service-tag"
+        />
       </div>
+    }
+  </ng-template>
 
-      <p-divider />
+  @if (booking(); as booking) {
+    <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
+      <p-tablist>
+        <p-tab value="reserva">Reserva</p-tab>
+        <p-tab value="pago">Pago</p-tab>
+        <p-tab value="recordatorios">Recordatorios</p-tab>
+        <p-tab value="paciente">Paciente</p-tab>
+        <p-tab value="ficha">Ficha médica</p-tab>
+        <p-tab value="historial">Historial</p-tab>
+      </p-tablist>
 
-      @if (payment) {
-        <!-- Payment data -->
-        <div class="payment-row">
-          <span class="payment-label">Total</span>
-          <span class="payment-value payment-total">
-            ${{ payment.total | number:'1.0-0' }}
-          </span>
-        </div>
-        <div class="payment-row">
-          <span class="payment-label">Pagado</span>
-          <span class="payment-value payment-paid">
-            ${{ payment.paid_amount | number:'1.0-0' }}
-          </span>
-        </div>
-        @if (payment.remaining_amount > 0) {
-          <div class="payment-row">
-            <span class="payment-label">Saldo pendiente</span>
-            <span class="payment-value payment-remaining">
-              ${{ payment.remaining_amount | number:'1.0-0' }}
-            </span>
+      <p-tabpanels>
+
+        <!-- ── Reserva ───────────────────────────────────────────── -->
+        <p-tabpanel value="reserva">
+          <div class="tab-content">
+            <div class="info-row">
+              <span class="info-label">Servicio</span>
+              <span class="info-value">{{ booking.service?.name }}</span>
+            </div>
+            @if (booking.pack_session) {
+              <div class="info-row">
+                <span class="info-label">Sesión</span>
+                <span class="info-value">
+                  {{ booking.pack_session.session_number }} / {{ booking.pack_session.total_sessions }}
+                </span>
+              </div>
+            }
+            <div class="info-row">
+              <span class="info-label">Profesional</span>
+              <span class="info-value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Ubicación</span>
+              <span class="info-value">{{ booking.location?.name }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Fecha</span>
+              <span class="info-value">{{ booking.start_time | date:'EEEE d MMM yyyy, HH:mm':'':'es' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Estado</span>
+              <p-tag
+                [value]="booking.status?.name || 'Sin estado'"
+                [severity]="statusSeverity"
+              />
+            </div>
+            <div class="info-row">
+              <span class="info-label">Precio</span>
+              <span class="info-value">${{ booking.price | number:'1.0-0' }}</span>
+            </div>
+            @if (booking.notes) {
+              <div class="info-row info-row--block">
+                <span class="info-label">Notas para el paciente</span>
+                <span class="info-value">{{ booking.notes }}</span>
+              </div>
+            }
+            @if (booking.internal_notes) {
+              <div class="info-row info-row--block">
+                <span class="info-label">Comentario interno</span>
+                <span class="info-value">{{ booking.internal_notes }}</span>
+              </div>
+            }
           </div>
-        }
-        <div class="payment-row payment-status-row">
-          <span class="payment-label">Estado del pago</span>
-          <p-tag [value]="statusLabel" [severity]="statusSeverity" />
-        </div>
-      } @else {
-        <!-- No payment recorded -->
-        <div class="payment-empty">
-          <i class="pi pi-wallet payment-empty__icon"></i>
-          <p class="payment-empty__text">No hay pagos registrados para esta cita.</p>
-        </div>
-      }
+        </p-tabpanel>
 
-    </div>
+        <!-- ── Pago ─────────────────────────────────────────────── -->
+        <p-tabpanel value="pago">
+          <div class="tab-content">
+            @if (payment) {
+              <div class="info-row">
+                <span class="info-label">Estado del pago</span>
+                <p-tag [value]="paymentStatusLabel" [severity]="paymentStatusSeverity" />
+              </div>
+              <div class="info-row">
+                <span class="info-label">Total</span>
+                <span class="info-value">${{ payment.total | number:'1.0-0' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Pagado</span>
+                <span class="info-value paid">${{ payment.paid_amount | number:'1.0-0' }}</span>
+              </div>
+              @if (payment.remaining_amount > 0) {
+                <div class="info-row">
+                  <span class="info-label">Saldo pendiente</span>
+                  <span class="info-value remaining">${{ payment.remaining_amount | number:'1.0-0' }}</span>
+                </div>
+              }
+            } @else {
+              <div class="empty-state">
+                <i class="pi pi-wallet empty-state__icon"></i>
+                <p class="empty-state__text">No hay pagos registrados para esta cita.</p>
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- ── Recordatorios ─────────────────────────────────────── -->
+        <p-tabpanel value="recordatorios">
+          <div class="tab-content">
+            <div class="empty-state">
+              <i class="pi pi-bell empty-state__icon"></i>
+              <p class="empty-state__text">Sin recordatorios configurados.</p>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- ── Paciente ──────────────────────────────────────────── -->
+        <p-tabpanel value="paciente">
+          <div class="tab-content">
+            @if (booking.client) {
+              <div class="info-row">
+                <span class="info-label">Nombre</span>
+                <span class="info-value">{{ booking.client.first_name }} {{ booking.client.last_name }}</span>
+              </div>
+              @if (booking.client.rut) {
+                <div class="info-row">
+                  <span class="info-label">RUT</span>
+                  <span class="info-value">{{ booking.client.rut }}</span>
+                </div>
+              }
+              @if (booking.client.email) {
+                <div class="info-row">
+                  <span class="info-label">Email</span>
+                  <span class="info-value">{{ booking.client.email }}</span>
+                </div>
+              }
+              @if (booking.client.phone) {
+                <div class="info-row">
+                  <span class="info-label">Teléfono</span>
+                  <div class="info-inline">
+                    <span class="info-value">{{ booking.client.phone }}</span>
+                    <a
+                      [href]="'https://wa.me/' + booking.client.phone.replace('+', '').replace(' ', '')"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="whatsapp-link"
+                    >
+                      <p-button icon="pi pi-whatsapp" label="WhatsApp" severity="success" [outlined]="true" size="small" />
+                    </a>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- ── Ficha médica ──────────────────────────────────────── -->
+        <p-tabpanel value="ficha">
+          <div class="tab-content">
+            <div class="empty-state">
+              <i class="pi pi-file-edit empty-state__icon"></i>
+              <p class="empty-state__text">Ficha médica próximamente.</p>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- ── Historial ─────────────────────────────────────────── -->
+        <p-tabpanel value="historial">
+          <div class="tab-content">
+            <div class="empty-state">
+              <i class="pi pi-history empty-state__icon"></i>
+              <p class="empty-state__text">Historial de reservas próximamente.</p>
+            </div>
+          </div>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
   }
 
   <ng-template pTemplate="footer">
