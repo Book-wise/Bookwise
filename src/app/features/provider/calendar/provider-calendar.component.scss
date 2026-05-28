@@ -1,100 +1,501 @@
-.calendar-container { padding: 1rem; }
+.full-calendar-container {
+  padding: 1rem;
 
-.calendar-header {
+  @media (max-width: 768px) {
+    padding: 0;
+
+    ::ng-deep .p-card {
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .calendar-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 425px) {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 0.75rem;
+
+      .calendar-actions {
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+    }
+
+    @media (max-width: 374px) {
+      padding: 0.5rem;
+    }
+  }
+
+  .filters {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    :host ::ng-deep .p-multiselect {
+      min-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      width: 100%;
+      flex-direction: column;
+
+      :host ::ng-deep .p-multiselect {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+
+    @media (max-width: 425px) {
+      width: auto;
+      flex: 1;
+    }
+  }
+
+  .calendar-area {
+    position: relative;
+  }
+
+  .calendar-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.75);
+    z-index: 10;
+    border-radius: 8px;
+  }
+
+  .calendar-wrapper {
+    --fc-event-text-color: #000;
+    --fc-border-color: #e5e7eb;
+    --fc-button-bg-color: #3b82f6;
+    --fc-button-border-color: #3b82f6;
+    --fc-button-hover-bg-color: #2563eb;
+    --fc-button-hover-border-color: #2563eb;
+    --fc-button-active-bg-color: #1d4ed8;
+    --fc-button-active-border-color: #1d4ed8;
+    --fc-today-bg-color: rgba(59, 130, 246, 0.1);
+    --fc-event-border-color: transparent;
+    --fc-page-bg-color: #ffffff;
+    --fc-neutral-bg-color: #f3f4f6;
+    --fc-list-event-hover-bg-color: #f3f4f6;
+  }
+}
+
+::ng-deep .bw-status-filter-option {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 1rem;
+  gap: 0.5rem;
 }
 
-.calendar-header h2 {
-  margin: 0 1rem;
-  min-width: 200px;
-  text-align: center;
+::ng-deep .bw-status-filter-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.ml-3 { margin-left: 1rem; }
-.mt-3 { margin-top: 1rem; }
+::ng-deep .fc {
+  font-family: 'Roboto', sans-serif !important;
+}
 
-.calendar-grid {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+::ng-deep .fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+::ng-deep .fc .fc-button {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-transform: capitalize;
+  font-size: 0.875rem;
+}
+
+::ng-deep .fc .fc-daygrid-day-number {
+  padding: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+::ng-deep .fc .fc-col-header-cell-cushion {
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+::ng-deep .fc .fc-event {
+  cursor: pointer;
+  color: #000 !important;
+  border-radius: 4px;
+  padding: 0;
+  font-size: 0.85rem;
   overflow: hidden;
 }
 
-.weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
+::ng-deep .fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview) {
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
 }
 
-.weekday {
-  padding: 0.75rem;
-  text-align: center;
-  font-weight: bold;
-  color: #666;
+::ng-deep .fc .ev-inner {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 2px 4px 2px 0;
 }
 
-.days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.day {
-  min-height: 100px;
-  padding: 0.5rem;
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.day:nth-child(7n) { border-right: none; }
-.day:hover { background: #f8f9fa; }
-
-.day.other-month {
-  background: #fafafa;
-  color: #ccc;
-}
-
-.day.today {
-  background: #e8f4ff;
-}
-
-.day.today .day-number {
-  background: #3b82f6;
-  color: white;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
+::ng-deep .fc .ev-pay-badge {
+  width: 10%;
+  min-width: 10px;
+  max-width: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: white;
+  align-self: stretch;
+  border-radius: 0;
+  margin-right: 3px;
+
+  &--paid    { background: #16a34a; }
+  &--partial { background: #65a30d; }
 }
 
-.day-number {
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-}
-
-.day-bookings {
-  font-size: 0.75rem;
-}
-
-.booking-chip {
-  background: #e8f4ff;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
+::ng-deep .fc .ev-title {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  align-self: center;
 }
 
-.more-bookings {
-  color: #3b82f6;
+::ng-deep .fc .fc-event-title {
+  font-weight: 500;
+}
+
+::ng-deep .fc .fc-day-today {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+::ng-deep .fc .fc-timegrid-slot {
+  height: 1.25rem;
+}
+
+::ng-deep .fc .fc-timegrid-slot-label-cushion {
+  color: #6b7280;
   font-size: 0.75rem;
 }
 
-.text-center { text-align: center; }
+::ng-deep .fc .fc-timegrid-slot:hover {
+  background-color: rgba(236, 72, 153, 0.1);
+}
+
+::ng-deep .fc .fc-timegrid-slot:hover::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  border: 1px dashed rgba(236, 72, 153, 0.3);
+  pointer-events: none;
+}
+
+::ng-deep .fc .fc-timegrid-axis-cushion {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+::ng-deep .fc .fc-timegrid-slot-label {
+  font-size: 0.75rem;
+}
+
+::ng-deep .fc .fc-day-max-events {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+::ng-deep .fc-bwNewBooking-button,
+::ng-deep .fc-bwBlockTime-button {
+  display: none !important;
+}
+
+@media (max-width: 425px) {
+  ::ng-deep .fc-bwNewBooking-button,
+  ::ng-deep .fc-bwBlockTime-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none !important;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  ::ng-deep .fc-bwNewBooking-button {
+    background: var(--p-button-primary-background) !important;
+    border-color: var(--p-button-primary-border-color) !important;
+    color: var(--p-button-primary-color) !important;
+    gap: 0.3rem;
+
+    &::before {
+      font-family: 'primeicons';
+      content: '\e90d';
+      font-size: 0.75rem;
+    }
+    &:hover { background: var(--p-button-primary-hover-background) !important; }
+  }
+
+  ::ng-deep .fc-bwBlockTime-button {
+    background: var(--p-button-secondary-background) !important;
+    border-color: var(--p-button-secondary-border-color) !important;
+    color: var(--p-button-secondary-color) !important;
+    gap: 0.3rem;
+
+    &::before {
+      font-family: 'primeicons';
+      content: '\e95f';
+      font-size: 0.75rem;
+    }
+    &:hover { background: var(--p-button-secondary-hover-background) !important; }
+  }
+
+  .full-calendar-container .calendar-header .calendar-actions {
+    display: none;
+  }
+}
+
+@media (max-width: 374px) {
+  ::ng-deep .fc-bwNewBooking-button,
+  ::ng-deep .fc-bwBlockTime-button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+    margin: 0.125rem 0.25rem !important;
+  }
+
+  ::ng-deep .fc {
+    .fc-toolbar-title { font-size: 0.875rem !important; }
+    .fc-button { padding: 0.25rem 0.375rem !important; font-size: 0.6875rem !important; }
+    .fc-toolbar-chunk { flex-wrap: wrap !important; justify-content: center !important; }
+  }
+}
+
+@media (max-width: 768px) {
+  ::ng-deep .fc {
+    .fc-toolbar { flex-direction: column !important; gap: 0.5rem !important; align-items: center !important; }
+    .fc-toolbar-title { font-size: 1.1rem !important; }
+    .fc-toolbar-chunk { display: flex !important; gap: 0.25rem !important; }
+    .fc-button { padding: 0.375rem 0.625rem !important; font-size: 0.75rem !important; }
+    .fc-daygrid-day-number { padding: 0.25rem !important; font-size: 0.75rem !important; }
+    .fc-col-header-cell-cushion { font-size: 0.625rem !important; padding: 0.25rem !important; }
+    .fc-event { font-size: 0.7rem !important; padding: 1px 2px !important; }
+    .fc-timegrid-slot { height: 1.5rem !important; }
+    .fc-timegrid-slot-label-cushion { font-size: 0.625rem !important; }
+    .fc-day-max-events { font-size: 0.75rem !important; }
+  }
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .label {
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .value {
+      color: #1f2937;
+      font-size: 1rem;
+    }
+  }
+}
+
+::ng-deep .event-tooltip-panel {
+  .p-overlaypanel-content {
+    padding: 0.75rem 1rem;
+  }
+}
+
+.ev-tooltip {
+  min-width: 200px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: #111827;
+  }
+
+  &__divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0.25rem 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: #374151;
+
+    i {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      flex-shrink: 0;
+      width: 14px;
+      text-align: center;
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+::ng-deep .fc-blocked-slot {
+  background: repeating-linear-gradient(
+    -45deg,
+    #9ca3af 0px, #9ca3af 3px,
+    #ffffff 3px, #ffffff 11px
+  ) !important;
+  border-color: #9ca3af !important;
+  border-left: 3px solid #6b7280 !important;
+  cursor: pointer !important;
+
+  .fc-event-main {
+    padding: 2px 4px;
+  }
+}
+
+.ev-blocked {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  overflow: hidden;
+
+  &__icon {
+    font-size: 0.65rem;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: #000;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-line {
+  border-color: #ef4444;
+  border-width: 2px;
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: #ef4444;
+  border-bottom-color: #ef4444;
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-arrow[data-now]::after {
+  content: attr(data-now);
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #ef4444;
+  background: var(--fc-page-bg-color, #ffffff);
+  padding: 1px 2px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+::ng-deep .fc .fc-event.bw-slot-preview {
+  background: rgba(4, 106, 244, 0.1) !important;
+  border: 2px dashed rgba(4, 106, 244, 0.5) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+
+::ng-deep .fc .fc-event.bw-slot-preview .bw-slot-preview-inner {
+  height: 100%;
+}
+
+.slot-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999;
+}
+
+.slot-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  min-width: 180px;
+  position: fixed;
+  z-index: 1000;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%) translateY(-100%) translateY(-8px);
+
+  .slot-menu-item {
+    justify-content: flex-start;
+    width: 100%;
+    text-align: left;
+  }
+}
