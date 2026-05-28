@@ -95,6 +95,7 @@ export class BookingFormDialogComponent implements OnInit {
 
   onSuccessCallback?: () => void;
   selectedServiceKey = '';
+  private _pendingServiceId = 0;
 
   clientOptions = computed(() =>
     this.clients().map((c) => ({
@@ -196,6 +197,10 @@ export class BookingFormDialogComponent implements OnInit {
         ]);
         this.providers.set(providers);
         this.locations.set(locations);
+        if (this._pendingServiceId) {
+          this.selectedServiceKey = this.resolveServiceKey(this._pendingServiceId);
+          this._pendingServiceId = 0;
+        }
         this.loadingData.set(false);
       },
       error: (err) => {
@@ -225,7 +230,7 @@ export class BookingFormDialogComponent implements OnInit {
         price: Number(booking.price) || 0,
         notes: booking.notes || '',
       };
-      this.selectedServiceKey = serviceId ? `svc_${serviceId}` : '';
+      this._pendingServiceId = serviceId;
     } else {
       if (initialDate) this.formData.start_time = initialDate;
       if (locationId)  this.formData.location_id = locationId;
@@ -239,6 +244,7 @@ export class BookingFormDialogComponent implements OnInit {
   private resetForm() {
     this.formData = this.getEmptyForm();
     this.selectedServiceKey = '';
+    this._pendingServiceId = 0;
     this.isEdit.set(false);
     this.showRepeatDialog = false;
     this.showAddClient = false;
@@ -288,6 +294,13 @@ export class BookingFormDialogComponent implements OnInit {
   }
 
   // ── Service change ──────────────────────────────────────────────────────────
+
+  private resolveServiceKey(serviceId: number): string {
+    if (!serviceId) return '';
+    const opts = this.serviceOptions();
+    if (opts.find(o => o.value === `pack_${serviceId}`)) return `pack_${serviceId}`;
+    return `svc_${serviceId}`;
+  }
 
   onServiceChange() {
     const option = this.serviceOptions().find(o => o.value === this.selectedServiceKey);

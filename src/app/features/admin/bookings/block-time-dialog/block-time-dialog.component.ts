@@ -215,6 +215,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       this.providerId = this.lockedProviderId;
     } else {
       this.providerId = slot.provider_id ?? null;
+      this.locationId = slot.provider_id ? null : (slot.location_id ?? null);
       this.scope.set(slot.provider_id ? 'provider' : 'location');
     }
     this.startDate.set(new Date(slot.start_time));
@@ -289,10 +290,12 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
               ? this.lang.t('toast.block_created_repeat.detail')
               : this.lang.t('toast.block_created.detail'),
           });
+          this.saving.set(false);
+          this.visible = false;
+          this.onBlocked.emit();
+        } else {
+          this.saving.set(false);
         }
-        this.saving.set(false);
-        this.visible = false;
-        this.onBlocked.emit();
       },
       error: (err) => {
         this.httpError.handle(err, 'bloquear horario');
