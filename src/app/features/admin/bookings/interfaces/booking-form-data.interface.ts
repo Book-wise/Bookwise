@@ -2,6 +2,7 @@ export interface BookingFormData {
   id?: number;
   client_id: number;
   service_id: number;
+  service_pack_id?: number | null;
   provider_id: number | null;
   location_id: number;
   status_id: number;

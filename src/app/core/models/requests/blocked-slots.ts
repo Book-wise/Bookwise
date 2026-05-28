@@ -24,7 +24,9 @@ export interface CreateBlockedSlotRepeat {
 export interface CreateBooking {
   start_time: string;
   end_time: string;
-  service_id: number;
+  // Exactly one of these must be present (mutually exclusive)
+  service_id?: number;
+  service_pack_id?: number;
   provider_id: number;
   client_id: number;
   location_id: number;

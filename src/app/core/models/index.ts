@@ -102,6 +102,7 @@ export interface PackSession {
   session_number: number;
   total_sessions: number;
   client_pack_id: number;
+  service_pack_id: number;
   status: string;
 }
 

@@ -162,6 +162,7 @@ export class BookingFormDialogComponent implements OnInit {
     return {
       client_id: 0,
       service_id: 0,
+      service_pack_id: null,
       provider_id: null,
       location_id: 1,
       status_id: 1,
@@ -216,21 +217,25 @@ export class BookingFormDialogComponent implements OnInit {
 
     if (booking) {
       this.isEdit.set(true);
-      const startDate = new Date(booking.start_time);
-      const serviceId = booking.service_id ?? booking.service?.id ?? 0;
+      const startDate   = new Date(booking.start_time);
+      const packId      = booking.pack_session?.service_pack_id ?? null;
+      const serviceId   = packId ? 0 : (booking.service_id ?? booking.service?.id ?? 0);
       this.formData = {
         id: booking.id,
-        client_id: booking.client_id ?? booking.client?.id ?? 0,
-        service_id: serviceId,
-        provider_id: this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
-        location_id: booking.location_id ?? booking.location?.id ?? 0,
-        status_id: booking.status_id,
-        start_time: startDate,
+        client_id:      booking.client_id ?? booking.client?.id ?? 0,
+        service_id:     serviceId,
+        service_pack_id: packId,
+        provider_id:    this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
+        location_id:    booking.location_id ?? booking.location?.id ?? 0,
+        status_id:      booking.status_id,
+        start_time:     startDate,
         duration_minutes: booking.custom_duration_minutes || 60,
-        price: Number(booking.price) || 0,
-        notes: booking.notes || '',
+        price:          Number(booking.price) || 0,
+        notes:          booking.notes || '',
       };
-      this._pendingServiceId = serviceId;
+      // Use pack_session.service_pack_id when available (authoritative);
+      // fall back to heuristic for old API responses without it.
+      this._pendingServiceId = packId ?? serviceId;
     } else {
       if (initialDate) this.formData.start_time = initialDate;
       if (locationId)  this.formData.location_id = locationId;
@@ -305,9 +310,11 @@ export class BookingFormDialogComponent implements OnInit {
   onServiceChange() {
     const option = this.serviceOptions().find(o => o.value === this.selectedServiceKey);
     if (option) {
-      this.formData.service_id = option._id;
+      const isPack = this.selectedServiceKey.startsWith('pack_');
+      this.formData.service_id      = isPack ? 0 : option._id;
+      this.formData.service_pack_id = isPack ? option._id : null;
       this.formData.duration_minutes = option.duration_minutes;
-      this.formData.price = option.price;
+      this.formData.price            = option.price;
     }
   }
 
@@ -328,7 +335,9 @@ export class BookingFormDialogComponent implements OnInit {
 
     const bookingData: any = {
       client_id: this.formData.client_id,
-      service_id: this.formData.service_id,
+      ...(this.formData.service_pack_id
+        ? { service_pack_id: this.formData.service_pack_id }
+        : { service_id: this.formData.service_id }),
       provider_id: this.formData.provider_id || undefined,
       location_id: this.formData.location_id,
       status_id: this.formData.status_id,
