@@ -15,6 +15,7 @@ import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
+import { LanguageService } from '../../../../core/services/language.service';
 
 export interface BookingFormData {
   id?: number;
@@ -53,6 +54,7 @@ export class BookingDialogComponent implements OnInit {
   private httpError  = inject(HttpErrorService);
   private dataCache  = inject(DataCacheService);
   private messageService = inject(MessageService);
+  readonly lang      = inject(LanguageService);
 
   visible = false;
   saving = signal(false);
@@ -63,12 +65,12 @@ export class BookingDialogComponent implements OnInit {
   services = signal<Service[]>([]);
   providers = signal<Provider[]>([]);
   locations = signal<Location[]>([]);
-  statuses = signal<{ label: string; value: number }[]>([
-    { label: 'Pendiente', value: 1 },
-    { label: 'Confirmado', value: 2 },
-    { label: 'Completado', value: 3 },
-    { label: 'Cancelado', value: 4 },
-  ]);
+  private readonly BD_STATUS_KEYS = [
+    { key: 'bd.status.1', value: 1 },
+    { key: 'bd.status.2', value: 2 },
+    { key: 'bd.status.3', value: 3 },
+    { key: 'bd.status.4', value: 4 },
+  ];
 
   formData: BookingFormData = this.getEmptyForm();
   errors: Record<string, string> = {};
@@ -107,10 +109,7 @@ export class BookingDialogComponent implements OnInit {
   );
 
   statusOptions = computed(() =>
-    this.statuses().map((s) => ({
-      label: s.label,
-      value: s.value,
-    })),
+    this.BD_STATUS_KEYS.map(s => ({ label: this.lang.t(s.key), value: s.value }))
   );
 
   ngOnInit() { /* datos cargados al abrir, no al montar */ }
@@ -249,10 +248,8 @@ export class BookingDialogComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: this.isEdit() ? 'Reserva actualizada' : 'Reserva creada',
-          detail: this.isEdit()
-            ? 'La reserva ha sido actualizada correctamente'
-            : 'La reserva ha sido creada correctamente',
+          summary: this.lang.t(this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary'),
+          detail:  this.lang.t(this.isEdit() ? 'toast.booking_updated.detail'  : 'toast.booking_created.detail'),
         });
         this.visible = false;
         this.saving.set(false);
@@ -274,8 +271,8 @@ export class BookingDialogComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: 'Reserva cancelada',
-          detail: 'La reserva ha sido cancelada correctamente',
+          summary: this.lang.t('toast.booking_cancelled.summary'),
+          detail:  this.lang.t('toast.booking_cancelled.detail'),
         });
         this.visible = false;
         this.saving.set(false);
@@ -297,7 +294,7 @@ export class BookingDialogComponent implements OnInit {
       if (conflicts) {
         this.messageService.add({
           severity: 'info',
-          summary: 'Reserva conflictiva',
+          summary: this.lang.t('toast.booking_conflict.summary'),
           detail: `ID ${conflicts.id} · ${this.formatDateTime(conflicts.start_time)} → ${this.formatDateTime(conflicts.end_time)}`,
           life: 9000,
         });

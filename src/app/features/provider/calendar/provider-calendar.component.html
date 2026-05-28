@@ -1,70 +1,209 @@
-<div class="calendar-container">
+<div class="full-calendar-container">
   <p-card>
     <ng-template pTemplate="header">
       <div class="calendar-header">
-        <p-button icon="pi pi-chevron-left" class="p-button-text" (onClick)="previousMonth()"></p-button>
-        <h2>{{ monthYear() | date:'MMMM yyyy':'es' | titlecase }}</h2>
-        <p-button icon="pi pi-chevron-right" class="p-button-text" (onClick)="nextMonth()"></p-button>
-        <p-button label="Hoy" class="p-button-outlined ml-3" (onClick)="goToToday()"></p-button>
+        <div class="filters">
+          <p-multiselect
+            [options]="statusFilterOptions()"
+            [(ngModel)]="selectedStatusIds"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los estados"
+            [showClear]="true"
+            display="chip"
+            (onChange)="onFilterChange()"
+          >
+            <ng-template #item let-opt>
+              <div class="bw-status-filter-option">
+                <span class="bw-status-filter-dot" [style.background]="opt.color"></span>
+                <span>{{ opt.label }}</span>
+              </div>
+            </ng-template>
+          </p-multiselect>
+        </div>
+
+        <div class="calendar-actions">
+          <p-button
+            label="Nueva Reserva"
+            icon="pi pi-plus"
+            size="small"
+            (onClick)="openNewBooking()"
+          ></p-button>
+          <p-button
+            label="Bloquear Horario"
+            icon="pi pi-lock"
+            size="small"
+            severity="secondary"
+            (onClick)="openBlockTime()"
+          ></p-button>
+        </div>
       </div>
     </ng-template>
 
-    <div class="calendar-grid">
-      <div class="weekdays">
-        @for (day of weekDays; track day) {
-          <div class="weekday">{{ day }}</div>
-        }
-      </div>
-      <div class="days">
-        @for (day of calendarDays(); track day.date) {
-          <div class="day"
-               [class.other-month]="!day.isCurrentMonth"
-               [class.today]="day.isToday"
-               (click)="selectDate(day)">
-            <span class="day-number">{{ day.date | date:'d' }}</span>
-            <div class="day-bookings">
-              @for (booking of day.bookings.slice(0, 2); track booking.id) {
-                <div class="booking-chip">
-                  {{ booking.start_time | date:'HH:mm' }} - {{ booking.service?.name }}
-                </div>
-              }
-              @if (day.bookings.length > 2) {
-                <div class="more-bookings">+{{ day.bookings.length - 2 }} más</div>
-              }
-            </div>
-          </div>
-        }
-      </div>
+    <div class="calendar-area">
+      <div class="calendar-wrapper" #calendarContainer></div>
+      @if (loading()) {
+        <div class="calendar-loading">
+          <p-progressSpinner strokeWidth="3" animationDuration=".8s" />
+        </div>
+      }
     </div>
   </p-card>
-
-  @if (selectedDay()) {
-    <p-card header="Citas del {{ selectedDay()?.date | date:'dd MMMM':'es' }}" class="mt-3">
-      <p-table [value]="selectedDay()?.bookings || []" [tableStyle]="{'min-width': '40rem'}">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Hora</th>
-            <th>Cliente</th>
-            <th>Servicio</th>
-            <th>Estado</th>
-            <th>Precio</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-booking>
-          <tr>
-            <td>{{ booking.start_time | date:'HH:mm' }} - {{ booking.end_time | date:'HH:mm' }}</td>
-            <td>{{ booking.client?.first_name }} {{ booking.client?.last_name }}</td>
-            <td>{{ booking.service?.name }}</td>
-            <td>{{ booking.status?.name }}</td>
-            <td>${{ booking.price | number:'1.2-2' }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="5" class="text-center">No hay citas para este día</td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </p-card>
-  }
 </div>
+
+<!-- Event hover tooltip -->
+<p-popover #eventTooltip class="event-tooltip-panel" [dismissable]="false">
+  @if (hoveredBooking()) {
+    <div class="ev-tooltip">
+      <div class="ev-tooltip__name">
+        {{ hoveredBooking()!.client?.first_name }} {{ hoveredBooking()!.client?.last_name }}
+      </div>
+      <div class="ev-tooltip__divider"></div>
+      <div class="ev-tooltip__row">
+        <i class="pi pi-tag"></i>
+        <span>{{ hoveredBooking()!.service?.name }}</span>
+      </div>
+      @if (hoveredBooking()!.pack_session) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-calendar"></i>
+          <span>Sesión {{ hoveredBooking()!.pack_session!.session_number }} de {{ hoveredBooking()!.pack_session!.total_sessions }}</span>
+        </div>
+      }
+      <div class="ev-tooltip__row">
+        <i class="pi pi-clock"></i>
+        <span>{{ formatTooltipTime(hoveredBooking()!.start_time) }} – {{ formatTooltipTime(hoveredBooking()!.end_time) }}</span>
+      </div>
+      @if (hoveredBooking()!.payment_status) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-dollar"></i>
+          @if (hoveredBooking()!.payment_status === 'paid') {
+            <span>Pago asociado</span>
+          } @else if (hoveredBooking()!.payment_status === 'partial') {
+            <span>Pago parcial</span>
+          } @else {
+            <span>No pagado</span>
+          }
+        </div>
+      }
+      @if (hoveredBooking()!.client?.phone) {
+        <div class="ev-tooltip__divider"></div>
+        <div class="ev-tooltip__row">
+          <i class="pi pi-mobile"></i>
+          <span>{{ hoveredBooking()!.client!.phone }}</span>
+        </div>
+      }
+      @if (hoveredBooking()!.client?.email) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-envelope"></i>
+          <span>{{ hoveredBooking()!.client!.email }}</span>
+        </div>
+      }
+      @if (hoveredBooking()!.notes) {
+        <div class="ev-tooltip__row">
+          <i class="pi pi-comment"></i>
+          <span>{{ hoveredBooking()!.notes }}</span>
+        </div>
+      }
+    </div>
+  }
+</p-popover>
+
+<!-- Dialog detalle de reserva -->
+<p-dialog
+  header="Detalles de la Cita"
+  [visible]="showEventDialog()"
+  (visibleChange)="showEventDialog.set($event)"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (selectedBooking(); as booking) {
+    <div class="event-details">
+      <div class="detail-row">
+        <span class="label">Cliente:</span>
+        <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
+      </div>
+      @if (booking.client?.rut) {
+        <div class="detail-row">
+          <span class="label">RUT:</span>
+          <span class="value">{{ booking.client!.rut }}</span>
+        </div>
+      }
+      <div class="detail-row">
+        <span class="label">Servicio:</span>
+        <span class="value">{{ booking.service?.name }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Ubicación:</span>
+        <span class="value">{{ booking.location?.name }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Fecha:</span>
+        <span class="value">{{ booking.start_time | date: 'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Precio:</span>
+        <span class="value">${{ booking.price | number: '1.0-0' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Estado:</span>
+        <p-tag
+          [value]="booking.status?.name || 'Sin estado'"
+          [severity]="getStatusSeverity(booking.status?.name)"
+        ></p-tag>
+      </div>
+      @if (booking.notes) {
+        <div class="detail-row">
+          <span class="label">Notas:</span>
+          <span class="value">{{ booking.notes }}</span>
+        </div>
+      }
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" (onClick)="closeDialog()" class="p-button-text"></p-button>
+    <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialogs de acción -->
+<bw-booking-form-dialog
+  #newBookingDialog
+  [lockedProviderId]="lockedProviderId"
+  (onSaved)="onBookingSaved()"
+></bw-booking-form-dialog>
+
+<bw-block-time-dialog
+  #blockTimeDialog
+  [lockedProviderId]="lockedProviderId"
+  (onBlocked)="onBookingSaved()"
+></bw-block-time-dialog>
+
+<!-- Slot Action Menu Overlay -->
+@if (showSlotMenu()) {
+<div class="slot-overlay" (click)="dismissSlotMenu()">
+  <div
+    class="slot-menu"
+    [style.left.px]="slotMenuPosition.x"
+    [style.top.px]="slotMenuPosition.y"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      pButton
+      class="slot-menu-item"
+      icon="pi pi-plus"
+      [label]="lang.t('slot.new_booking')"
+      (click)="openNewBooking()"
+    ></button>
+    <button
+      pButton
+      class="slot-menu-item"
+      icon="pi pi-lock"
+      [label]="lang.t('slot.block_time')"
+      severity="secondary"
+      (click)="openBlockTime()"
+    ></button>
+  </div>
+</div>
+}

@@ -1,3 +1,16 @@
+.block-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.block-dialog-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
 .block-form {
   display: flex;
   flex-direction: column;

@@ -8,6 +8,7 @@ import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService, ThemeName } from '../../core/services/theme.service';
+import { LanguageService, Language } from '../../core/services/language.service';
 
 @Component({
   selector: 'bw-admin-layout',
@@ -20,6 +21,7 @@ export class AdminLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private themeService = inject(ThemeService);
+  readonly langService = inject(LanguageService);
 
   sidebarCollapsed = signal(false);
   mobileMenuOpen = signal(false);
@@ -30,12 +32,12 @@ export class AdminLayoutComponent {
   currentTheme = signal<ThemeName>(this.themeService.currentTheme);
 
   menuItems: MenuItem[] = [
-    { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/admin', command: () => this.closeMenus() },
-    { label: 'Locations', icon: 'pi pi-building', routerLink: '/admin/locations', command: () => this.closeMenus() },
-    { label: 'Profesionales', icon: 'pi pi-users', routerLink: '/admin/providers', command: () => this.closeMenus() },
-    { label: 'Agenda', icon: 'pi pi-calendar', routerLink: '/admin/calendar', command: () => this.closeMenus() },
-    { label: 'Clientes', icon: 'pi pi-user', routerLink: '/admin/clients', command: () => this.closeMenus() },
-    { label: 'Packs', icon: 'pi pi-box', routerLink: '/admin/packs', command: () => this.closeMenus() },
+    { label: 'nav.dashboard', icon: 'pi pi-home',     routerLink: '/admin',           command: () => this.closeMenus() },
+    { label: 'nav.locations', icon: 'pi pi-building',  routerLink: '/admin/locations', command: () => this.closeMenus() },
+    { label: 'nav.providers', icon: 'pi pi-users',     routerLink: '/admin/providers', command: () => this.closeMenus() },
+    { label: 'nav.calendar',  icon: 'pi pi-calendar',  routerLink: '/admin/calendar',  command: () => this.closeMenus() },
+    { label: 'nav.clients',   icon: 'pi pi-user',      routerLink: '/admin/clients',   command: () => this.closeMenus() },
+    { label: 'nav.packs',     icon: 'pi pi-box',       routerLink: '/admin/packs',     command: () => this.closeMenus() },
   ];
 
   constructor() {
@@ -85,6 +87,10 @@ export class AdminLayoutComponent {
   onThemeChange(themeName: ThemeName): void {
     this.themeService.setTheme(themeName);
     this.currentTheme.set(themeName);
+  }
+
+  onLangChange(lang: Language): void {
+    this.langService.setLang(lang);
   }
 
   closeMenus(): void {

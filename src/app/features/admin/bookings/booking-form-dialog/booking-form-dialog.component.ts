@@ -8,6 +8,7 @@ import {
   Input,
   Output,
   EventEmitter,
+  ViewChild,
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -28,6 +29,7 @@ import { Booking, Client, Service, ServicePack, Location, Provider } from '../..
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
@@ -62,8 +64,10 @@ export class BookingFormDialogComponent implements OnInit {
   private messageService = inject(MessageService);
   private cdr           = inject(ChangeDetectorRef);
   private dataCache     = inject(DataCacheService);
+  readonly lang         = inject(LanguageService);
 
   @Input() initialDate?: Date;
+  @Input() lockedProviderId: number | null = null;
   @Output() onSaved = new EventEmitter<void>();
   @Output() onCancelled = new EventEmitter<void>();
 
@@ -71,12 +75,15 @@ export class BookingFormDialogComponent implements OnInit {
   saving      = signal(false);
   loadingData = signal(false);
   isEdit      = signal(false);
-  showRepeatDialog = false;
-  showAddClient = false;
+  showRepeatDialog  = false;
+  showAddClient     = false;
+  showServicePanel  = false;
+  savingService     = signal(false);
 
   formData: BookingFormData = this.getEmptyForm();
 
-  newClient = { first_name: '', last_name: '', email: '', phone: '' };
+  newClient  = { first_name: '', last_name: '', email: '', phone: '' };
+  newService = { name: '', price: 0, duration_minutes: 60 };
 
   repeatAfterChecked = false;
   repeatUntilChecked = false;
@@ -87,6 +94,8 @@ export class BookingFormDialogComponent implements OnInit {
   locations = signal<Location[]>([]);
 
   onSuccessCallback?: () => void;
+  selectedServiceKey = '';
+  private _pendingServiceId = 0;
 
   clientOptions = computed(() =>
     this.clients().map((c) => ({
@@ -99,26 +108,33 @@ export class BookingFormDialogComponent implements OnInit {
   );
 
   providerOptions = computed(() => [
-    { label: 'Sin asignar', value: null as any },
+    { label: this.lang.t('misc.unassigned'), value: null as any },
     ...this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   ]);
 
   serviceOptions = computed(() =>
     this.services().map((s: any) => ({
       label: `${s.name} (${s.duration_minutes || 60} min)`,
-      value: s.id,
+      value: s._isPack ? `pack_${s.id}` : `svc_${s.id}`,
       name: s.name,
       duration_minutes: s.duration_minutes || 60,
       price: s.price || 0,
+      _id: s.id as number,
     })),
   );
 
   locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
 
-  statusOptions = computed(() => BOOKING_STATUSES);
-  daysOfWeek = DAYS_OF_WEEK;
-  repeatTypeOptions = REPEAT_TYPE_OPTIONS;
-  dialogTitle = computed(() => (this.isEdit() ? 'Editar Reserva' : 'Nueva Reserva'));
+  statusOptions = computed(() =>
+    BOOKING_STATUSES.map(s => ({ ...s, label: this.lang.t(s.labelKey) }))
+  );
+  daysOfWeek = computed(() =>
+    DAYS_OF_WEEK.map(d => ({ label: this.lang.t(d.labelKey), value: d.value }))
+  );
+  repeatTypeOptions = computed(() =>
+    REPEAT_TYPE_OPTIONS.map(o => ({ label: this.lang.t(o.labelKey), value: o.value }))
+  );
+  dialogTitle = computed(() => this.lang.t(this.isEdit() ? 'booking_form.title.edit' : 'booking_form.title.create'));
 
   ngOnInit() { /* datos cargados al abrir, no al montar */ }
 
@@ -175,9 +191,16 @@ export class BookingFormDialogComponent implements OnInit {
     }).subscribe({
       next: ({ clients, services, packs, providers, locations }) => {
         this.clients.set(clients);
-        this.services.set([...services, ...(packs.data ?? [])]);
+        this.services.set([
+          ...services,
+          ...(packs.data ?? []).map(p => ({ ...p, _isPack: true })),
+        ]);
         this.providers.set(providers);
         this.locations.set(locations);
+        if (this._pendingServiceId) {
+          this.selectedServiceKey = this.resolveServiceKey(this._pendingServiceId);
+          this._pendingServiceId = 0;
+        }
         this.loadingData.set(false);
       },
       error: (err) => {
@@ -187,18 +210,19 @@ export class BookingFormDialogComponent implements OnInit {
     });
   }
 
-  openNew(booking?: Booking, initialDate?: Date) {
+  openNew(booking?: Booking, initialDate?: Date, locationId?: number | null) {
     this.resetForm();
     this.loadFormData();
 
     if (booking) {
       this.isEdit.set(true);
       const startDate = new Date(booking.start_time);
+      const serviceId = booking.service_id ?? booking.service?.id ?? 0;
       this.formData = {
         id: booking.id,
         client_id: booking.client_id ?? booking.client?.id ?? 0,
-        service_id: booking.service_id ?? booking.service?.id ?? 0,
-        provider_id: booking.provider_id ?? booking.provider?.id ?? null,
+        service_id: serviceId,
+        provider_id: this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
         location_id: booking.location_id ?? booking.location?.id ?? 0,
         status_id: booking.status_id,
         start_time: startDate,
@@ -206,8 +230,11 @@ export class BookingFormDialogComponent implements OnInit {
         price: Number(booking.price) || 0,
         notes: booking.notes || '',
       };
-    } else if (initialDate) {
-      this.formData.start_time = initialDate;
+      this._pendingServiceId = serviceId;
+    } else {
+      if (initialDate) this.formData.start_time = initialDate;
+      if (locationId)  this.formData.location_id = locationId;
+      if (this.lockedProviderId) this.formData.provider_id = this.lockedProviderId;
     }
 
     this.visible = true;
@@ -216,6 +243,8 @@ export class BookingFormDialogComponent implements OnInit {
 
   private resetForm() {
     this.formData = this.getEmptyForm();
+    this.selectedServiceKey = '';
+    this._pendingServiceId = 0;
     this.isEdit.set(false);
     this.showRepeatDialog = false;
     this.showAddClient = false;
@@ -231,7 +260,7 @@ export class BookingFormDialogComponent implements OnInit {
   // ── Validation ──────────────────────────────────────────────────────────────
 
   isFormValid(): boolean {
-    return !!(this.formData.client_id && this.formData.service_id && this.formData.start_time);
+    return !!(this.formData.client_id && this.selectedServiceKey && this.formData.start_time);
   }
 
   hasRepeatData(): boolean {
@@ -266,11 +295,19 @@ export class BookingFormDialogComponent implements OnInit {
 
   // ── Service change ──────────────────────────────────────────────────────────
 
+  private resolveServiceKey(serviceId: number): string {
+    if (!serviceId) return '';
+    const opts = this.serviceOptions();
+    if (opts.find(o => o.value === `pack_${serviceId}`)) return `pack_${serviceId}`;
+    return `svc_${serviceId}`;
+  }
+
   onServiceChange() {
-    const service = this.services().find((s) => s.id === this.formData.service_id);
-    if (service) {
-      this.formData.duration_minutes = service.duration_minutes || 60;
-      this.formData.price = Number(service.price) || 0;
+    const option = this.serviceOptions().find(o => o.value === this.selectedServiceKey);
+    if (option) {
+      this.formData.service_id = option._id;
+      this.formData.duration_minutes = option.duration_minutes;
+      this.formData.price = option.price;
     }
   }
 
@@ -279,6 +316,10 @@ export class BookingFormDialogComponent implements OnInit {
   // ── Save ────────────────────────────────────────────────────────────────────
 
   onSave() {
+    if (!this.formData.client_id) {
+      this.messageService.add({ severity: 'warn', summary: this.lang.t('toast.patient_required.summary'), detail: this.lang.t('toast.patient_required.detail'), life: 4000 });
+      return;
+    }
     if (!this.isFormValid()) return;
     this.saving.set(true);
 
@@ -320,8 +361,8 @@ export class BookingFormDialogComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: this.isEdit() ? '¡Reserva actualizada!' : '¡Reserva creada!',
-          detail:   this.isEdit() ? 'Los cambios se guardaron correctamente.' : 'La reserva quedó registrada en la agenda.',
+          summary: this.lang.t(this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary'),
+          detail:  this.lang.t(this.isEdit() ? 'toast.booking_updated.detail'  : 'toast.booking_created.detail'),
         });
         this.visible = false;
         this.saving.set(false);
@@ -350,8 +391,8 @@ export class BookingFormDialogComponent implements OnInit {
         next: (client) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Cliente creado',
-            detail: 'El nuevo cliente ha sido registrado correctamente',
+            summary: this.lang.t('toast.client_created.summary'),
+            detail:  this.lang.t('toast.client_created.detail'),
           });
           this.showAddClient = false;
           this.formData.client_id = client.id;
@@ -371,5 +412,34 @@ export class BookingFormDialogComponent implements OnInit {
   private formatDateTime(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toISOString().replace('T', ' ').substring(0, 19);
+  }
+
+  // ── Service creation panel ───────────────────────────────────────────────────
+
+  openServicePanel(): void {
+    this.newService = { name: '', price: 0, duration_minutes: 60 };
+    this.showServicePanel = true;
+  }
+
+  closeServicePanel(): void {
+    this.showServicePanel = false;
+  }
+
+  saveNewService(): void {
+    if (!this.newService.name || !this.newService.duration_minutes) return;
+    this.savingService.set(true);
+    this.apiService.createService(this.newService).subscribe({
+      next: (service) => {
+        this.messageService.add({ severity: 'success', summary: this.lang.t('toast.service_created.summary'), detail: service.name, life: 3000 });
+        this.dataCache.invalidateCacheEntries(CACHE_KEYS.SERVICES);
+        this.savingService.set(false);
+        this.showServicePanel = false;
+        this.loadFormData();
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'crear servicio');
+        this.savingService.set(false);
+      },
+    });
   }
 }

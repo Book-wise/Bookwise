@@ -157,6 +157,11 @@
   overflow: hidden;
 }
 
+::ng-deep .fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview) {
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+}
+
 // ── Payment indicator inside event ───────────────────────────────────────────
 
 ::ng-deep .fc .ev-inner {
@@ -528,14 +533,14 @@ body.dark-theme {
 ::ng-deep .fc-blocked-slot {
   background: repeating-linear-gradient(
     -45deg,
-    rgba(107, 114, 128, 0.12) 0px,
-    rgba(107, 114, 128, 0.12) 3px,
-    rgba(243, 244, 246, 0.85) 3px,
-    rgba(243, 244, 246, 0.85) 11px
+    #9ca3af 0px,
+    #9ca3af 3px,
+    #ffffff 3px,
+    #ffffff 11px
   ) !important;
   border-color: #9ca3af !important;
   border-left: 3px solid #6b7280 !important;
-  cursor: default !important;
+  cursor: pointer !important;
 
   .fc-event-main {
     padding: 2px 4px;

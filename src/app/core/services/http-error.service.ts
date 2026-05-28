@@ -1,6 +1,7 @@
 import { DestroyRef, inject, Injectable, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
+import { LanguageService } from './language.service';
 
 export interface ToastConfig {
   severity: 'error' | 'warn' | 'info';
@@ -16,6 +17,7 @@ export class HttpErrorService {
   private messageService = inject(MessageService);
   private zone           = inject(NgZone);
   private destroyRef     = inject(DestroyRef);
+  private lang           = inject(LanguageService);
   private offlineActive  = false;
 
   constructor() {
@@ -73,8 +75,8 @@ export class HttpErrorService {
     // sticky + life largo como doble garantía de persistencia.
     this.messageService.add({
       severity: 'error',
-      summary:  'Sin conexión',
-      detail:   'No hay conexión con el servidor. Se cerrará automáticamente al reconectar.',
+      summary:  this.lang.t('toast.offline.summary'),
+      detail:   this.lang.t('toast.offline.detail'),
       sticky:   true,
       life:     86_400_000,
     });
@@ -91,8 +93,8 @@ export class HttpErrorService {
     this.messageService.clear();
     this.messageService.add({
       severity: 'success',
-      summary:  'Conexión restaurada',
-      detail:   'Podés volver a trabajar con normalidad.',
+      summary:  this.lang.t('toast.reconnected.summary'),
+      detail:   this.lang.t('toast.reconnected.detail'),
       life:     4000,
     });
   }
@@ -107,21 +109,10 @@ export class HttpErrorService {
   }
 
   private summary(status: number, action?: string): string {
-    const titles: Record<number, string> = {
-      400: 'Solicitud inválida',
-      401: 'Sesión expirada',
-      402: 'Pago requerido',
-      403: 'Sin permisos',
-      404: 'No encontrado',
-      409: 'Conflicto de horario',
-      422: 'Error de validación',
-      429: 'Demasiadas solicitudes',
-      500: 'Error del servidor',
-      502: 'Servicio no disponible',
-      503: 'Servicio no disponible',
-      504: 'Tiempo de espera agotado',
-    };
-    const title = titles[status] ?? `Error ${status}`;
+    const knownStatuses = [400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504];
+    const title = knownStatuses.includes(status)
+      ? this.lang.t(`error.${status}`)
+      : this.lang.t('error.unknown', { status: String(status) });
     return action ? `${title} — ${action}` : title;
   }
 
@@ -140,20 +131,9 @@ export class HttpErrorService {
   }
 
   private defaultDetail(status: number): string {
-    const defaults: Record<number, string> = {
-      400: 'Los datos enviados no son válidos.',
-      401: 'Tu sesión expiró. Iniciá sesión de nuevo.',
-      402: 'Se requiere pago para continuar.',
-      403: 'No tenés permisos para realizar esta acción.',
-      404: 'El recurso ya no existe. Recargá la página.',
-      409: 'Ese horario ya está ocupado. Revisá el calendario antes de confirmar.',
-      422: 'Hay campos con errores. Revisá el formulario.',
-      429: 'Demasiadas solicitudes. Esperá un momento e intentá de nuevo.',
-      500: 'Error interno del servidor. Si persiste, contactá soporte.',
-      502: 'El servidor no responde. Intentá en unos minutos.',
-      503: 'El servicio está temporalmente no disponible.',
-      504: 'El servidor tardó demasiado en responder. Intentá de nuevo.',
-    };
-    return defaults[status] ?? 'Ocurrió un error inesperado. Intentá de nuevo.';
+    const knownStatuses = [400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504];
+    return knownStatuses.includes(status)
+      ? this.lang.t(`error.${status}.detail`)
+      : this.lang.t('error.default.detail');
   }
 }

@@ -24,3 +24,13 @@ export interface ApiErrorResponse {
   detail: string;
   conflicts_with?: { id: number; start_time: string; end_time: string };
 }
+
+export interface BlockConflict {
+  provider: { id: number; first_name: string; last_name: string };
+  conflict: { id: number; start_time: string; end_time: string };
+}
+
+export interface BlockConflictResponse {
+  blocked: number[];
+  conflicts: BlockConflict[];
+}
