@@ -18,6 +18,8 @@ import {
   AuthResponse,
   LoginCredentials,
   RegisterData,
+  CreateBooking,
+  UpdateBooking,
 } from '../models';
 
 @Injectable({
@@ -154,11 +156,11 @@ export class ApiService {
     return this.http.get<Booking>(`${this.baseUrl}/bookings/${id}`);
   }
 
-  createBooking(booking: Partial<Booking>): Observable<Booking> {
+  createBooking(booking: CreateBooking): Observable<Booking> {
     return this.http.post<Booking>(`${this.baseUrl}/bookings`, booking);
   }
 
-  updateBooking(id: number, booking: Partial<Booking>): Observable<Booking> {
+  updateBooking(id: number, booking: UpdateBooking): Observable<Booking> {
     return this.http.patch<Booking>(`${this.baseUrl}/bookings/${id}`, booking);
   }
 

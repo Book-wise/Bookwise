@@ -72,7 +72,6 @@
             [showTime]="true"
             hourFormat="24"
             class="w-full"
-            (onClose)="onStartTimeChange()"
             inputId="startTime"
           />
           <label for="startTime">{{ lang.t('booking_dlg.date_time') }}</label>
@@ -87,7 +86,6 @@
             [min]="15"
             [max]="240"
             class="w-full"
-            (onInput)="onDurationChange()"
             inputId="duration"
           />
           <label for="duration">{{ lang.t('booking_dlg.duration') }}</label>

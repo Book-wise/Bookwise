@@ -43,14 +43,14 @@
 
         <div class="calendar-actions">
           <p-button
-            label="Nueva Reserva"
+            [label]="lang.t('slot.new_booking')"
             icon="pi pi-plus"
             size="small"
             (onClick)="openNewBooking()"
           >
           </p-button>
           <p-button
-            label="Bloquear Horario"
+            [label]="lang.t('slot.block_time')"
             icon="pi pi-lock"
             size="small"
             severity="secondary"

@@ -27,12 +27,14 @@ export interface CreateBooking {
   // Backend returns 422 { error: "invalid_input" } if both or neither are sent.
   service_id?: number;
   service_pack_id?: number;
-  provider_id: number;
+  provider_id?: number;
   client_id: number;
   location_id: number;
   status_id: number;
   // price: required for service bookings, omitted for pack bookings (backend sets it)
   price?: number;
+  // Optional custom duration — omit to use the service's canonical duration_minutes
+  custom_duration_minutes?: number;
   notes?: string;
   wc_order_id?: number | null;
 }
@@ -42,6 +44,7 @@ export interface UpdateBooking {
   end_time?: string;
   status_id?: number;
   price?: number;
+  custom_duration_minutes?: number;
   notes?: string;
   provider_id?: number;
 }

@@ -10,7 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService } from 'primeng/api';
-import { Booking, Client, Service, Provider, Location } from '../../../../core/models';
+import { Booking, Client, Service, Provider, Location, CreateBooking } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
@@ -21,11 +21,11 @@ export interface BookingFormData {
   id?: number;
   client_id: number;
   service_id: number;
+  service_pack_id?: number | null;
   provider_id: number | null;
   location_id: number;
   status_id: number;
   start_time: Date;
-  end_time: Date;
   duration_minutes: number;
   price: number;
   notes: string;
@@ -118,11 +118,11 @@ export class BookingDialogComponent implements OnInit {
     return {
       client_id: 0,
       service_id: 0,
+      service_pack_id: null,
       provider_id: null,
       location_id: 0,
       status_id: 1,
       start_time: new Date(),
-      end_time: new Date(),
       duration_minutes: 60,
       price: 0,
       notes: '',
@@ -148,17 +148,17 @@ export class BookingDialogComponent implements OnInit {
     if (booking) {
       this.isEdit.set(true);
       this.formData = {
-        id: booking.id,
-        client_id: booking.client_id ?? booking.client?.id ?? 0,
-        service_id: booking.service_id ?? booking.service?.id ?? 0,
-        provider_id: booking.provider_id ?? booking.provider?.id ?? 0,
-        location_id: booking.location_id ?? booking.location?.id ?? 0,
-        status_id: booking.status_id,
-        start_time: new Date(booking.start_time),
-        end_time: new Date(booking.end_time),
+        id:               booking.id,
+        client_id:        booking.client_id ?? booking.client?.id ?? 0,
+        service_id:       booking.pack_session?.service_pack_id ? 0 : (booking.service_id ?? booking.service?.id ?? 0),
+        service_pack_id:  booking.pack_session?.service_pack_id ?? null,
+        provider_id:      booking.provider_id ?? booking.provider?.id ?? 0,
+        location_id:      booking.location_id ?? booking.location?.id ?? 0,
+        status_id:        booking.status_id,
+        start_time:       new Date(booking.start_time),
         duration_minutes: booking.custom_duration_minutes || 60,
-        price: Number(booking.price) || 0,
-        notes: booking.notes || '',
+        price:            Number(booking.price) || 0,
+        notes:            booking.notes || '',
       };
     } else {
       this.formData = this.getEmptyForm();
@@ -176,7 +176,7 @@ export class BookingDialogComponent implements OnInit {
   isFormValid(): boolean {
     return !!(
       this.formData.client_id &&
-      this.formData.service_id &&
+      (this.formData.service_id || this.formData.service_pack_id) &&
       this.formData.location_id &&
       this.formData.start_time
     );
@@ -191,7 +191,6 @@ export class BookingDialogComponent implements OnInit {
   }
   onServiceChange() {
     delete this.errors['service_id'];
-    // Auto-fill duration and price from service
     const service = this.services().find((s) => s.id === this.formData.service_id);
     if (service) {
       this.formData.duration_minutes = service.duration_minutes;
@@ -209,34 +208,27 @@ export class BookingDialogComponent implements OnInit {
     delete this.errors['location_id'];
   }
 
-  onStartTimeChange() {
-    const start = this.formData.start_time;
-    const duration = this.formData.duration_minutes || 60;
-    this.formData.end_time = new Date(start.getTime() + duration * 60000);
-  }
-
-  onDurationChange() {
-    const start = this.formData.start_time;
-    const duration = this.formData.duration_minutes || 60;
-    this.formData.end_time = new Date(start.getTime() + duration * 60000);
-  }
-
   onSave() {
     if (!this.isFormValid()) return;
 
     this.saving.set(true);
     this.errors = {};
 
-    const bookingData = {
-      client_id:   this.formData.client_id,
-      service_id:  this.formData.service_id,
-      provider_id: this.formData.provider_id || undefined,
-      location_id: this.formData.location_id,
-      status_id:   this.formData.status_id,
-      start_time:  this.formatDateTime(this.formData.start_time),
-      price:       this.formData.price,
-      notes:       this.formData.notes || undefined,
+    const bookingData: CreateBooking = {
+      client_id:               this.formData.client_id,
+      provider_id:             this.formData.provider_id || undefined,
+      location_id:             this.formData.location_id,
+      status_id:               this.formData.status_id,
+      start_time:              this.formatDateTime(this.formData.start_time),
+      custom_duration_minutes: this.formData.duration_minutes || undefined,
+      notes:                   this.formData.notes || undefined,
     };
+    if (this.formData.service_pack_id) {
+      bookingData.service_pack_id = this.formData.service_pack_id;
+    } else {
+      bookingData.service_id = this.formData.service_id;
+      bookingData.price      = this.formData.price;
+    }
 
     const request = this.isEdit()
       ? this.api.updateBooking(this.formData.id!, bookingData)
