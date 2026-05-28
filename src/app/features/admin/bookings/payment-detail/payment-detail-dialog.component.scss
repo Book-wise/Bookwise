@@ -1,0 +1,78 @@
+.payment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.payment-booking-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: 0.25rem;
+}
+
+.booking-client {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.booking-service {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.booking-date {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.payment-status-row {
+  padding-top: 0.75rem;
+}
+
+.payment-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.payment-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.payment-total   { color: var(--text-color); }
+.payment-paid    { color: var(--green-600); }
+.payment-remaining { color: var(--orange-600); }
+
+.payment-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: var(--text-color-secondary);
+
+  &__icon {
+    font-size: 2.5rem;
+    opacity: 0.4;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+}

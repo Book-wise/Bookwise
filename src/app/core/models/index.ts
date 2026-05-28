@@ -147,6 +147,7 @@ export interface Booking {
   pack_session?: PackSession | null;
   // Meta
   notes?: string | null;
+  internal_notes?: string | null;
   wc_order_id?: number | null;
   created_at?: string;
   updated_at?: string;

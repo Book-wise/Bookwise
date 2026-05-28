@@ -1,0 +1,64 @@
+<p-dialog
+  header="Detalle del pago"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="close()"
+>
+  @if (booking()) {
+    <div class="payment-detail">
+
+      <!-- Booking summary -->
+      <div class="payment-booking-summary">
+        <span class="booking-client">
+          {{ booking()!.client?.first_name }} {{ booking()!.client?.last_name }}
+        </span>
+        <span class="booking-service">{{ booking()!.service?.name }}</span>
+        <span class="booking-date">{{ booking()!.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+
+      <p-divider />
+
+      @if (payment) {
+        <!-- Payment data -->
+        <div class="payment-row">
+          <span class="payment-label">Total</span>
+          <span class="payment-value payment-total">
+            ${{ payment.total | number:'1.0-0' }}
+          </span>
+        </div>
+        <div class="payment-row">
+          <span class="payment-label">Pagado</span>
+          <span class="payment-value payment-paid">
+            ${{ payment.paid_amount | number:'1.0-0' }}
+          </span>
+        </div>
+        @if (payment.remaining_amount > 0) {
+          <div class="payment-row">
+            <span class="payment-label">Saldo pendiente</span>
+            <span class="payment-value payment-remaining">
+              ${{ payment.remaining_amount | number:'1.0-0' }}
+            </span>
+          </div>
+        }
+        <div class="payment-row payment-status-row">
+          <span class="payment-label">Estado del pago</span>
+          <p-tag [value]="statusLabel" [severity]="statusSeverity" />
+        </div>
+      } @else {
+        <!-- No payment recorded -->
+        <div class="payment-empty">
+          <i class="pi pi-wallet payment-empty__icon"></i>
+          <p class="payment-empty__text">No hay pagos registrados para esta cita.</p>
+        </div>
+      }
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" severity="secondary" [outlined]="true" (onClick)="close()" />
+  </ng-template>
+</p-dialog>
