@@ -64,6 +64,18 @@ export const EN: Record<string, string> = {
   'error.504.detail': 'The server took too long to respond. Please try again.',
   'error.default.detail': 'An unexpected error occurred. Please try again.',
 
+  // Business errors (API error keys)
+  'biz.invalid_input':              'Invalid input',
+  'biz.forbidden':                  'Unauthorized',
+  'biz.provider_location_mismatch': 'Wrong location',
+  'biz.conflict':                   'Scheduling conflict',
+  'biz.already_cancelled':          'Already cancelled',
+  'biz.slot_collision':             'Scheduling conflict',
+  'biz.client_not_found':           'Client not found',
+  'biz.already_inactive':           'Already inactive',
+  'biz.pack_not_active':            'Pack not active',
+  'biz.no_sessions_remaining':      'No sessions remaining',
+
   // UI
   'ui.logout': 'Log out',
   'ui.dark_mode': 'Dark Mode',

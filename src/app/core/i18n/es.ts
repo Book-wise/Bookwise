@@ -64,6 +64,18 @@ export const ES: Record<string, string> = {
   'error.504.detail': 'El servidor tardó demasiado en responder. Intentá de nuevo.',
   'error.default.detail': 'Ocurrió un error inesperado. Intentá de nuevo.',
 
+  // Business errors (API error keys)
+  'biz.invalid_input':              'Error de entrada',
+  'biz.forbidden':                  'Sin permisos',
+  'biz.provider_location_mismatch': 'Sede incorrecta',
+  'biz.conflict':                   'Conflicto de horario',
+  'biz.already_cancelled':          'Reserva ya cancelada',
+  'biz.slot_collision':             'Conflicto de horario',
+  'biz.client_not_found':           'Cliente no encontrado',
+  'biz.already_inactive':           'Ya inactivo',
+  'biz.pack_not_active':            'Pack inactivo',
+  'biz.no_sessions_remaining':      'Sin sesiones disponibles',
+
   // UI
   'ui.logout': 'Salir',
   'ui.dark_mode': 'Modo Oscuro',

@@ -277,19 +277,6 @@ export class BookingDialogComponent implements OnInit {
 
   private handleApiError(err: any): void {
     this.httpError.handle(err);
-
-    // 409: segunda toast con el detalle de la reserva que genera el conflicto
-    if (err.status === 409) {
-      const conflicts = (err.error as ApiErrorResponse)?.conflicts_with;
-      if (conflicts) {
-        this.messageService.add({
-          severity: 'info',
-          summary: this.lang.t('toast.booking_conflict.summary'),
-          detail: `ID ${conflicts.id} · ${this.formatDateTime(conflicts.start_time)} → ${this.formatDateTime(conflicts.end_time)}`,
-          life: 9000,
-        });
-      }
-    }
   }
 
   private formatDateTime(date: Date | string): string {

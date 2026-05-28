@@ -31,6 +31,10 @@ export class LanguageService {
     }
   }
 
+  has(key: string): boolean {
+    return key in TRANSLATIONS[this.lang()];
+  }
+
   t(key: string, params?: Record<string, string>): string {
     const dict = TRANSLATIONS[this.lang()];
     let value = dict[key] ?? key;
