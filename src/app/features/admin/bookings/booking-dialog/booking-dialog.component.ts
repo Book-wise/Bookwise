@@ -228,16 +228,14 @@ export class BookingDialogComponent implements OnInit {
     this.errors = {};
 
     const bookingData = {
-      client_id: this.formData.client_id,
-      service_id: this.formData.service_id,
+      client_id:   this.formData.client_id,
+      service_id:  this.formData.service_id,
       provider_id: this.formData.provider_id || undefined,
       location_id: this.formData.location_id,
-      status_id: this.formData.status_id,
-      start_time: this.formatDateTime(this.formData.start_time),
-      end_time: this.formatDateTime(this.formData.end_time),
-      duration_minutes: this.formData.duration_minutes,
-      price: this.formData.price,
-      notes: this.formData.notes || undefined,
+      status_id:   this.formData.status_id,
+      start_time:  this.formatDateTime(this.formData.start_time),
+      price:       this.formData.price,
+      notes:       this.formData.notes || undefined,
     };
 
     const request = this.isEdit()

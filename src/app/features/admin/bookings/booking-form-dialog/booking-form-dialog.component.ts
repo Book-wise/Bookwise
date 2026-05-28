@@ -331,21 +331,17 @@ export class BookingFormDialogComponent implements OnInit {
     this.saving.set(true);
 
     const startDate = new Date(this.formData.start_time);
-    const endDate = new Date(startDate.getTime() + this.formData.duration_minutes * 60000);
 
     const bookingData: any = {
-      client_id: this.formData.client_id,
-      ...(this.formData.service_pack_id
-        ? { service_pack_id: this.formData.service_pack_id }
-        : { service_id: this.formData.service_id }),
+      client_id:   this.formData.client_id,
       provider_id: this.formData.provider_id || undefined,
       location_id: this.formData.location_id,
-      status_id: this.formData.status_id,
-      start_time: this.formatDateTime(startDate),
-      end_time: this.formatDateTime(endDate),
-      duration_minutes: this.formData.duration_minutes,
-      price: this.formData.price,
-      notes: this.formData.notes || undefined,
+      status_id:   this.formData.status_id,
+      start_time:  this.formatDateTime(startDate),
+      notes:       this.formData.notes || undefined,
+      ...(this.formData.service_pack_id
+        ? { service_pack_id: this.formData.service_pack_id }
+        : { service_id: this.formData.service_id, price: this.formData.price }),
     };
 
     if (this.formData.repeat_enabled) {

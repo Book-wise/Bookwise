@@ -113,7 +113,7 @@ export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 export interface Payment {
   id?: number;
   booking_id?: number;
-  total_amount: number;
+  total: number;
   paid_amount: number;
   remaining_amount: number;
   status: PaymentStatus;
@@ -142,7 +142,7 @@ export interface Booking {
   custom_duration_minutes?: number | null;
   // Financials
   price: string | number;
-  payment_status?: PaymentStatus | null;
+  payment_status?: PaymentStatus;
   payment?: Payment | Record<string, never>;   // {} when no payment
   pack_session?: PackSession | null;
   // Meta

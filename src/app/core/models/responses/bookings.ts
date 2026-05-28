@@ -25,14 +25,20 @@ export interface Booking {
   price: number;
   notes?: string;
   wc_order_id?: number | null;
+  created_at?: string;
+  // Status — both id and object returned
+  status_id: number;
+  status: BookingStatus;
+  // Nested objects
   client: BookingClient;
   service: BookingService;
   provider: BookingProvider;
   location: BookingLocation;
-  status: BookingStatus;
+  // Financials — payment_status is never null
   payment_status: 'paid' | 'unpaid' | 'partial';
-  payment?: BookingPayment;
-  pack_session?: BookingPackSession;
+  payment?: BookingPayment | null;
+  // Pack
+  pack_session?: BookingPackSession | null;
 }
 
 export interface BookingClient {
@@ -42,11 +48,14 @@ export interface BookingClient {
   email: string;
   phone?: string;
   rut?: string;
+  gender?: string;
+  active?: boolean;
 }
 
 export interface BookingService {
   id: number;
   name: string;
+  duration_minutes?: number;
   price: number;
 }
 
@@ -70,7 +79,8 @@ export interface BookingStatus {
 
 export interface BookingPayment {
   id: number;
-  total_amount: number;
+  booking_id?: number;
+  total: number;
   paid_amount: number;
   remaining_amount: number;
   status: string;
