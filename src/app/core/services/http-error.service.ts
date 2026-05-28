@@ -38,14 +38,8 @@ export class HttpErrorService {
     });
   }
 
-  /**
-   * Muestra el toast correcto según el error.
-   * Corre dentro de NgZone para garantizar que el change detection actualice el DOM.
-   */
   handle(err: HttpErrorResponse, action?: string): void {
-    // status 0 = error de red; también chequeamos navigator.onLine como fallback
     const isOffline = err.status === 0 || !navigator.onLine;
-
     this.zone.run(() => {
       if (isOffline) {
         this.showOfflineToast();
@@ -55,24 +49,29 @@ export class HttpErrorService {
     });
   }
 
-  /** Utilidad: devuelve la config del toast sin side effects. */
+  /** Utility: returns the toast config without side effects. */
   toToastConfig(err: HttpErrorResponse, action?: string): ToastConfig {
-    return {
-      severity: this.severity(err.status),
-      summary:  this.summary(err.status, action),
-      detail:   this.detail(err),
-      life:     7000,
-    };
+    const body = err.error;
+
+    // ── 1. Business error — { error: 'conflict', detail: '...' }
+    if (body?.error) {
+      return this.bizConfig(body, err.status, action);
+    }
+
+    // ── 2. Laravel field validation — { errors: { campo: ['...'] } }
+    if (body?.errors && typeof body.errors === 'object') {
+      return this.validationConfig(body, err.status, action);
+    }
+
+    // ── 3. Framework / fallback — { message: '...' } or generic
+    return this.frameworkConfig(body, err.status, action);
   }
 
-  // ── Offline ─────────────────────────────────────────────────────────────────
+  // ── Offline ──────────────────────────────────────────────────────────────────
 
   private showOfflineToast(): void {
     if (this.offlineActive) return;
     this.offlineActive = true;
-
-    // Sin key — usa el toast por defecto que siempre está suscrito.
-    // sticky + life largo como doble garantía de persistencia.
     this.messageService.add({
       severity: 'error',
       summary:  this.lang.t('toast.offline.summary'),
@@ -80,7 +79,6 @@ export class HttpErrorService {
       sticky:   true,
       life:     86_400_000,
     });
-
     window.addEventListener('online', () => {
       this.zone.run(() => this.onReconnect());
     }, { once: true });
@@ -89,7 +87,6 @@ export class HttpErrorService {
   private onReconnect(): void {
     if (!this.offlineActive) return;
     this.offlineActive = false;
-    // clear() sin key limpia todos los mensajes activos (incluyendo el sticky offline)
     this.messageService.clear();
     this.messageService.add({
       severity: 'success',
@@ -99,41 +96,78 @@ export class HttpErrorService {
     });
   }
 
-  // ── Lógica interna ──────────────────────────────────────────────────────────
+  // ── Branch 1: Business error ─────────────────────────────────────────────────
+
+  private bizConfig(body: any, status: number, action?: string): ToastConfig {
+    const bizKey  = `biz.${body.error as string}`;
+    const title   = this.lang.has(bizKey)
+      ? this.lang.t(bizKey)
+      : this.statusTitle(status);
+    const summary = action ? `${title} — ${action}` : title;
+
+    let detail = (body.detail as string | undefined) || this.defaultDetail(status);
+    if (body.conflicts_with) {
+      const c = body.conflicts_with;
+      detail += ` · #${c.id} ${this.fmtTime(c.start_time)} → ${this.fmtTime(c.end_time)}`;
+    }
+
+    return { severity: this.severity(status), summary, detail, life: 8000 };
+  }
+
+  // ── Branch 2: Field validation ───────────────────────────────────────────────
+
+  private validationConfig(body: any, status: number, action?: string): ToastConfig {
+    const msgs  = (Object.values(body.errors) as string[][]).flat().slice(0, 2).join(' · ');
+    const title = this.statusTitle(status);
+    return {
+      severity: 'warn',
+      summary:  action ? `${title} — ${action}` : title,
+      detail:   msgs || this.defaultDetail(status),
+      life:     7000,
+    };
+  }
+
+  // ── Branch 3: Framework / generic ───────────────────────────────────────────
+
+  private frameworkConfig(body: any, status: number, action?: string): ToastConfig {
+    const detail = body?.message && body.message !== 'Server Error'
+      ? body.message
+      : this.defaultDetail(status);
+    const title  = this.statusTitle(status);
+    return {
+      severity: this.severity(status),
+      summary:  action ? `${title} — ${action}` : title,
+      detail,
+      life: 7000,
+    };
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   private severity(status: number): 'error' | 'warn' | 'info' {
-    if (status >= 500)                              return 'error';
-    if ([409, 429].includes(status))               return 'warn';
+    if (status >= 500)                               return 'error';
+    if ([409, 429].includes(status))                return 'warn';
     if ([400, 402, 403, 404, 422].includes(status)) return 'warn';
     return 'error';
   }
 
-  private summary(status: number, action?: string): string {
-    const knownStatuses = [400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504];
-    const title = knownStatuses.includes(status)
+  private statusTitle(status: number): string {
+    const known = [400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504];
+    return known.includes(status)
       ? this.lang.t(`error.${status}`)
       : this.lang.t('error.unknown', { status: String(status) });
-    return action ? `${title} — ${action}` : title;
-  }
-
-  private detail(err: HttpErrorResponse): string {
-    const body = err.error;
-    if (body) {
-      if (body.errors && typeof body.errors === 'object') {
-        const msgs = (Object.values(body.errors) as string[][])
-          .flat().slice(0, 2).join(' · ');
-        if (msgs) return msgs;
-      }
-      if (body.message && body.message !== 'Server Error') return body.message;
-      if (body.detail) return body.detail;
-    }
-    return this.defaultDetail(err.status);
   }
 
   private defaultDetail(status: number): string {
-    const knownStatuses = [400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504];
-    return knownStatuses.includes(status)
+    const known = [400, 401, 402, 403, 404, 409, 422, 429, 500, 502, 503, 504];
+    return known.includes(status)
       ? this.lang.t(`error.${status}.detail`)
       : this.lang.t('error.default.detail');
+  }
+
+  private fmtTime(iso: string): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 }

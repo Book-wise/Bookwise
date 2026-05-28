@@ -21,9 +21,21 @@ export interface BookingFormData {
 }
 
 export interface ApiErrorResponse {
-  error: string;
-  detail: string;
-  conflicts_with?: { id: number; start_time: string; end_time: string };
+  // Business error key (e.g. 'conflict', 'invalid_input', 'slot_collision')
+  error?: string;
+  // Human-readable detail from the backend (Spanish)
+  detail?: string;
+  // Laravel field validation errors
+  errors?: Record<string, string[]>;
+  // Laravel/framework messages
+  message?: string;
+  // Conflict metadata for 409 responses
+  conflicts_with?: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    type?: 'blocked_slot' | 'booking';
+  };
 }
 
 export interface BlockConflict {
