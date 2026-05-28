@@ -5,6 +5,7 @@ import {
   inject,
   signal,
   computed,
+  effect,
   CUSTOM_ELEMENTS_SCHEMA,
   ElementRef,
   ViewChild,
@@ -30,6 +31,7 @@ import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialo
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
+import { LanguageService } from '../../../core/services/language.service';
 import { forkJoin } from 'rxjs';
 import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -77,7 +79,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private api        = inject(ApiService);
   private httpError  = inject(HttpErrorService);
   private messageService = inject(MessageService);
-  private ngZone = inject(NgZone);
+  private ngZone     = inject(NgZone);
+  readonly lang      = inject(LanguageService);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -98,11 +101,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedProviderId: number | null = null;
   selectedStatusIds: number[] = [];
 
-  readonly statusFilterOptions = BOOKING_STATUSES.map(s => ({
-    label: s.label,
-    value: s.value,
-    color: s.color,
-  }));
+  statusFilterOptions = computed(() =>
+    BOOKING_STATUSES.map(s => ({ label: this.lang.t(s.labelKey), value: s.value, color: s.color }))
+  );
   // Track previous location to detect changes
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
@@ -128,11 +129,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       right: 'bwNewBooking bwBlockTime dayGridMonth,timeGridWeek,timeGridDay',
     },
     buttonText: {
-      today: 'Hoy',
-      month: 'Mes',
-      week: 'Semana',
-      day: 'Día',
-      list: 'Lista',
+      today: this.lang.t('cal.today'),
+      month: this.lang.t('cal.month'),
+      week:  this.lang.t('cal.week'),
+      day:   this.lang.t('cal.day'),
+      list:  this.lang.t('cal.list'),
     },
     nowIndicator: true,
     editable: true,
@@ -168,10 +169,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedBooking = signal<Booking | null>(null);
   showEventDialog = signal(false);
 
+  constructor() {
+    effect(() => {
+      void this.lang.lang();
+      this.updateCalendarI18n();
+    });
+  }
+
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
-    // Providers now loaded after location selection
   }
 
   ngAfterViewInit(): void {
@@ -267,11 +274,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         eventResize: (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
         customButtons: {
           bwNewBooking: {
-            text: 'Reserva',
+            text: this.lang.t('cal.new_booking'),
             click: () => this.ngZone.run(() => this.openNewBooking()),
           },
           bwBlockTime: {
-            text: 'Bloquear',
+            text: this.lang.t('cal.block_time'),
             click: () => this.ngZone.run(() => this.openBlockTime()),
           },
         },
@@ -284,6 +291,29 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     if (this.nowLabelInterval) clearInterval(this.nowLabelInterval);
     if (this.calendar) this.calendar.destroy();
+  }
+
+  private updateCalendarI18n(): void {
+    if (!this.calendar) return;
+    this.ngZone.runOutsideAngular(() => {
+      this.calendar!.setOption('buttonText', {
+        today: this.lang.t('cal.today'),
+        month: this.lang.t('cal.month'),
+        week:  this.lang.t('cal.week'),
+        day:   this.lang.t('cal.day'),
+        list:  this.lang.t('cal.list'),
+      });
+      this.calendar!.setOption('customButtons', {
+        bwNewBooking: {
+          text: this.lang.t('cal.new_booking'),
+          click: () => this.ngZone.run(() => this.openNewBooking()),
+        },
+        bwBlockTime: {
+          text: this.lang.t('cal.block_time'),
+          click: () => this.ngZone.run(() => this.openBlockTime()),
+        },
+      });
+    });
   }
 
   private startNowLabel(): void {
@@ -474,8 +504,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.api.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
         next: () => this.messageService.add({
           severity: 'info',
-          summary: 'Bloqueo movido',
-          detail: `${slot.reason || 'Bloqueo'} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
+          summary: this.lang.t('toast.block_moved.summary'),
+          detail: `${slot.reason || this.lang.t('toast.block_moved.summary')} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
           life: 5000,
         }),
         error: (err) => {
@@ -502,7 +532,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         next: () => this.messageService.add({
           severity: 'success',
           summary: clientName,
-          detail: `${serviceName} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}${meta ? ' · ' + meta : ''}`,
+          detail: `${serviceName} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}${meta ? ` · ${meta}` : ''}`,
           life: 5000,
         }),
         error: (err) => {

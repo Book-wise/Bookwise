@@ -1,5 +1,5 @@
 <p-dialog
-  [header]="isEdit() ? 'Editar Reserva' : 'Nueva Reserva'"
+  [header]="isEdit() ? lang.t('booking_dlg.title.edit') : lang.t('booking_dlg.title.create')"
   [(visible)]="visible"
   [modal]="true"
   [style]="{ width: '500px' }"
@@ -13,9 +13,9 @@
       <p-select
         [options]="clientOptions()"
         [(ngModel)]="formData.client_id"
-        placeholder="Seleccionar cliente"
+        [placeholder]="lang.t('booking_dlg.placeholder.client')"
         [filter]="true"
-        filterPlaceholder="Buscar..."
+        [filterPlaceholder]="lang.t('common.search')"
         class="w-full"
         (onChange)="onClientChange()"
       >
@@ -28,7 +28,7 @@
       <p-select
         [options]="serviceOptions()"
         [(ngModel)]="formData.service_id"
-        placeholder="Seleccionar servicio"
+        [placeholder]="lang.t('booking_dlg.placeholder.service')"
         class="w-full"
         (onChange)="onServiceChange()"
       >
@@ -41,7 +41,7 @@
       <p-select
         [options]="locationOptions()"
         [(ngModel)]="formData.location_id"
-        placeholder="Seleccionar ubicación"
+        [placeholder]="lang.t('booking_dlg.placeholder.location')"
         class="w-full"
         (onChange)="onLocationChange()"
       >
@@ -54,7 +54,7 @@
       <p-select
         [options]="providerOptions()"
         [(ngModel)]="formData.provider_id"
-        placeholder="Seleccionar profesional (opcional)"
+        [placeholder]="lang.t('booking_dlg.placeholder.provider')"
         [showClear]="true"
         class="w-full"
         (onChange)="onProviderChange()"
@@ -75,7 +75,7 @@
             (onClose)="onStartTimeChange()"
             inputId="startTime"
           />
-          <label for="startTime">Fecha y hora</label>
+          <label for="startTime">{{ lang.t('booking_dlg.date_time') }}</label>
         </p-floatlabel>
       </div>
 
@@ -90,7 +90,7 @@
             (onInput)="onDurationChange()"
             inputId="duration"
           />
-          <label for="duration">Duración (min)</label>
+          <label for="duration">{{ lang.t('booking_dlg.duration') }}</label>
         </p-floatlabel>
       </div>
     </div>
@@ -100,7 +100,7 @@
       <p-select
         [options]="statusOptions()"
         [(ngModel)]="formData.status_id"
-        placeholder="Estado"
+        [placeholder]="lang.t('status.5')"
         class="w-full"
       >
       </p-select>
@@ -118,7 +118,7 @@
           class="w-full"
           inputId="price"
         />
-        <label for="price">Precio</label>
+        <label for="price">{{ lang.t('common.price') }}</label>
       </p-floatlabel>
     </div>
 
@@ -128,7 +128,7 @@
         pTextarea
         [(ngModel)]="formData.notes"
         rows="3"
-        placeholder="Notas adicionales"
+        [placeholder]="lang.t('booking_dlg.notes_placeholder')"
         class="w-full"
       ></textarea>
     </div>
@@ -138,7 +138,7 @@
     <div class="dialog-footer">
       <p-button
         *ngIf="isEdit() && canCancel()"
-        label="Cancelar Reserva"
+        [label]="lang.t('booking_dlg.btn.cancel_booking')"
         icon="pi pi-times"
         class="p-button-danger p-button-outlined"
         (onClick)="onCancel()"
@@ -147,10 +147,10 @@
 
       <div class="spacer"></div>
 
-      <p-button label="Cerrar" class="p-button-text" (onClick)="onClose()"> </p-button>
+      <p-button [label]="lang.t('common.close')" class="p-button-text" (onClick)="onClose()"></p-button>
 
       <p-button
-        [label]="isEdit() ? 'Actualizar' : 'Crear'"
+        [label]="isEdit() ? lang.t('booking_dlg.btn.update') : lang.t('booking_dlg.btn.create')"
         icon="pi pi-check"
         [loading]="saving()"
         [disabled]="!isFormValid()"

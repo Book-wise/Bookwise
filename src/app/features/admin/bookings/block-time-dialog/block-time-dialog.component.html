@@ -8,7 +8,7 @@
 
   <ng-template pTemplate="header">
     <div class="block-dialog-header">
-      <span class="block-dialog-title">{{ editMode ? 'Bloqueo de horas' : 'Bloquear Horario' }}</span>
+      <span class="block-dialog-title">{{ editMode ? lang.t('block.title.edit') : lang.t('block.title.create') }}</span>
       @if (editMode) {
         <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" (onClick)="deleteBlock()" />
       }
@@ -17,51 +17,53 @@
 
   <div class="block-form">
 
-    <!-- Alcance del bloqueo -->
-    <div class="scope-section">
-      <label class="scope-label">Aplicar bloqueo a:</label>
-      <div class="scope-options">
-        @for (opt of scopeOptions; track opt.value) {
-          <div class="scope-option">
-            <p-radioButton
-              [value]="opt.value"
-              [(ngModel)]="scopeValue"
-              [inputId]="'scope-' + opt.value"
-              (onClick)="onScopeChange()" />
-            <label [for]="'scope-' + opt.value">{{ opt.label }}</label>
-          </div>
-        }
+    <!-- Alcance del bloqueo: oculto cuando el provider está bloqueado -->
+    @if (!lockedProviderId) {
+      <div class="scope-section">
+        <label class="scope-label">{{ lang.t('block.apply_to') }}</label>
+        <div class="scope-options">
+          @for (opt of scopeOptions(); track opt.value) {
+            <div class="scope-option">
+              <p-radioButton
+                [value]="opt.value"
+                [(ngModel)]="scopeValue"
+                [inputId]="'scope-' + opt.value"
+                (onClick)="onScopeChange()" />
+              <label [for]="'scope-' + opt.value">{{ opt.label }}</label>
+            </div>
+          }
+        </div>
       </div>
-    </div>
 
-    @if (scope() === 'location') {
-      <div class="field">
-        <label>Seleccionar ubicación</label>
-        <p-select
-          [options]="locationOptions()"
-          [(ngModel)]="locationId"
-          placeholder="Elige una ubicación"
-          [appendTo]="'body'"
-          class="w-full" />
-      </div>
-    }
+      @if (scope() === 'location') {
+        <div class="field">
+          <label>{{ lang.t('block.select_location') }}</label>
+          <p-select
+            [options]="locationOptions()"
+            [(ngModel)]="locationId"
+            [placeholder]="lang.t('block.choose_location')"
+            [appendTo]="'body'"
+            class="w-full" />
+        </div>
+      }
 
-    @if (scope() === 'provider') {
-      <div class="field">
-        <label>Seleccionar profesional</label>
-        <p-select
-          [options]="providerOptions()"
-          [(ngModel)]="providerId"
-          placeholder="Elige un profesional"
-          [appendTo]="'body'"
-          class="w-full" />
-      </div>
+      @if (scope() === 'provider') {
+        <div class="field">
+          <label>{{ lang.t('block.select_provider') }}</label>
+          <p-select
+            [options]="providerOptions()"
+            [(ngModel)]="providerId"
+            [placeholder]="lang.t('block.choose_provider')"
+            [appendTo]="'body'"
+            class="w-full" />
+        </div>
+      }
     }
 
     <!-- Fecha y hora inicio -->
     <div class="datetime-row">
       <div class="field">
-        <label>Fecha inicio</label>
+        <label>{{ lang.t('block.date_start') }}</label>
         <p-datepicker
           [(ngModel)]="startDateValue"
           dateFormat="dd/mm/yy"
@@ -69,7 +71,7 @@
           class="w-full" />
       </div>
       <div class="field">
-        <label>Hora inicio</label>
+        <label>{{ lang.t('block.time_start') }}</label>
         <input
           type="time"
           class="time-input"
@@ -81,7 +83,7 @@
     <!-- Fecha y hora fin -->
     <div class="datetime-row">
       <div class="field">
-        <label>Fecha fin</label>
+        <label>{{ lang.t('block.date_end') }}</label>
         <p-datepicker
           [(ngModel)]="endDateValue"
           dateFormat="dd/mm/yy"
@@ -89,7 +91,7 @@
           class="w-full" />
       </div>
       <div class="field">
-        <label>Hora fin</label>
+        <label>{{ lang.t('block.time_end') }}</label>
         <input
           type="time"
           class="time-input"
@@ -100,12 +102,12 @@
 
     <!-- Motivo -->
     <div class="field">
-      <label>Motivo (opcional)</label>
+      <label>{{ lang.t('block.reason') }}</label>
       <textarea
         pTextArea
         [(ngModel)]="reason"
         rows="2"
-        placeholder="Motivo del bloqueo"
+        [placeholder]="lang.t('block.reason_placeholder')"
         class="w-full">
       </textarea>
     </div>
@@ -118,16 +120,16 @@
           [(ngModel)]="repeatEnabledValue"
           [binary]="true"
           inputId="repeatBlock" />
-        <label for="repeatBlock" class="repeat-toggle-label">Repetir bloqueo</label>
+        <label for="repeatBlock" class="repeat-toggle-label">{{ lang.t('block.repeat_toggle') }}</label>
       </div>
 
       @if (repeatEnabled()) {
         <!-- Frecuencia -->
         <div class="repeat-freq-row">
           <div class="freq-select">
-            <label class="repeat-label">Repetir</label>
+            <label class="repeat-label">{{ lang.t('block.repeat_freq') }}</label>
             <p-select
-              [options]="repeatTypeOptions"
+              [options]="repeatTypeOptions()"
               [(ngModel)]="repeatTypeValue"
               optionLabel="label"
               optionValue="value"
@@ -135,7 +137,7 @@
               class="w-full" />
           </div>
           <div class="freq-interval">
-            <label class="repeat-label">Cada</label>
+            <label class="repeat-label">{{ lang.t('common.every') }}</label>
             <div class="interval-row">
               <p-inputnumber
                 [(ngModel)]="repeatIntervalValue"
@@ -150,9 +152,9 @@
         <!-- Días de la semana -->
         @if (repeatType() === 'weekly') {
           <div class="field">
-            <label class="repeat-label">Se repite el</label>
+            <label class="repeat-label">{{ lang.t('block.repeat_on') }}</label>
             <div class="day-buttons">
-              @for (day of days; track day.value) {
+              @for (day of days(); track day.value) {
                 <button
                   type="button"
                   class="day-btn"
@@ -167,10 +169,10 @@
 
         <!-- Finaliza -->
         <div class="field">
-          <label class="repeat-label">Finaliza:</label>
+          <label class="repeat-label">{{ lang.t('block.ends') }}</label>
           <div class="end-row">
             <p-select
-              [options]="endTypeOptions"
+              [options]="endTypeOptions()"
               [(ngModel)]="repeatEndTypeValue"
               optionLabel="label"
               optionValue="value"
@@ -184,11 +186,11 @@
                 [max]="999"
                 placeholder="Ej. 5"
                 class="count-input" />
-              <span class="end-label">repeticiones</span>
+              <span class="end-label">{{ lang.t('block.occurrences') }}</span>
             }
 
             @if (repeatEndType() === 'until') {
-              <span class="end-label">Fecha de finalización</span>
+              <span class="end-label">{{ lang.t('common.end_date') }}</span>
               <p-datepicker
                 [(ngModel)]="repeatUntilValue"
                 dateFormat="dd/mm/yy"
@@ -197,7 +199,7 @@
             }
           </div>
           @if (repeatEndType() === 'after') {
-            <span class="hint">Incluye la original</span>
+            <span class="hint">{{ lang.t('block.includes_original') }}</span>
           }
         </div>
       }
@@ -208,12 +210,12 @@
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
-      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="onClose()" />
+      <p-button [label]="lang.t('common.cancel')" severity="secondary" [outlined]="true" (onClick)="onClose()" />
       @if (editMode) {
-        <p-button label="Guardar bloqueo" icon="pi pi-check" [loading]="saving()" (onClick)="updateBlock()" />
+        <p-button [label]="lang.t('block.btn.save')" icon="pi pi-check" [loading]="saving()" (onClick)="updateBlock()" />
       } @else {
         <p-button
-          [label]="repeatEnabled() ? 'Bloquear y repetir' : 'Bloquear horario'"
+          [label]="repeatEnabled() ? lang.t('block.btn.block_repeat') : lang.t('block.btn.block')"
           icon="pi pi-lock"
           [loading]="saving()"
           (onClick)="block()" />

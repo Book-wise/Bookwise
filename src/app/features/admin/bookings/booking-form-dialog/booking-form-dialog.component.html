@@ -40,7 +40,7 @@
     <!-- Fecha y hora -->
     <div class="datetime-section">
       <div class="field">
-        <label class="field-label">Fecha</label>
+        <label class="field-label">{{ lang.t('common.date') }}</label>
         <p-datepicker
           [(ngModel)]="formData.start_time"
           dateFormat="dd/mm/yy"
@@ -48,7 +48,7 @@
           class="w-full" />
       </div>
       <div class="field">
-        <label class="field-label">Hora</label>
+        <label class="field-label">{{ lang.t('common.time') }}</label>
         <input
           type="time"
           class="time-input"
@@ -58,7 +58,7 @@
       <div class="field repeat-col">
         <label class="field-label">&nbsp;</label>
         <p-button
-          [label]="formData.repeat_enabled ? 'Repetición activa' : 'Repetir'"
+          [label]="formData.repeat_enabled ? lang.t('booking_form.repeat_active') : lang.t('booking_form.repeat_btn')"
           [icon]="formData.repeat_enabled ? 'pi pi-check' : 'pi pi-refresh'"
           [outlined]="!formData.repeat_enabled"
           size="small"
@@ -69,14 +69,14 @@
 
     <!-- Paciente -->
     <div class="field">
-      <label class="field-label">Paciente</label>
+      <label class="field-label">{{ lang.t('booking_form.patient') }}</label>
       <div class="field-with-action">
         <p-select
           [options]="clientOptions()"
           [(ngModel)]="formData.client_id"
-          placeholder="Buscar por nombre, apellido, email..."
+          [placeholder]="lang.t('booking_form.patient_placeholder')"
           [filter]="true"
-          filterPlaceholder="Buscar..."
+          [filterPlaceholder]="lang.t('common.search')"
           showClear="true"
           class="w-full"
           (onFilter)="onClientFilter($event)">
@@ -88,7 +88,7 @@
           </ng-template>
         </p-select>
         <p-button
-          label="Agregar paciente"
+          [label]="lang.t('booking_form.add_patient')"
           icon="pi pi-user-plus"
           severity="secondary"
           [outlined]="true"
@@ -99,31 +99,33 @@
     </div>
 
     <!-- Profesional -->
-    <div class="field">
-      <label class="field-label">Profesional</label>
-      <p-select
-        [options]="providerOptions()"
-        [(ngModel)]="formData.provider_id"
-        placeholder="Seleccionar profesional"
-        [showClear]="true"
-        class="w-full">
-      </p-select>
-    </div>
+    @if (!lockedProviderId) {
+      <div class="field">
+        <label class="field-label">{{ lang.t('booking_form.provider') }}</label>
+        <p-select
+          [options]="providerOptions()"
+          [(ngModel)]="formData.provider_id"
+          [placeholder]="lang.t('booking_form.provider_placeholder')"
+          [showClear]="true"
+          class="w-full">
+        </p-select>
+      </div>
+    }
 
     <!-- Servicio -->
     <div class="field">
-      <label class="field-label">Servicio</label>
+      <label class="field-label">{{ lang.t('booking_form.service') }}</label>
       <p-select
         [options]="serviceOptions()"
-        [(ngModel)]="formData.service_id"
-        placeholder="Seleccionar servicio o pack"
+        [(ngModel)]="selectedServiceKey"
+        [placeholder]="lang.t('booking_form.service_placeholder')"
         [filter]="true"
-        filterPlaceholder="Buscar..."
+        [filterPlaceholder]="lang.t('common.search')"
         class="w-full"
         (onChange)="onServiceChange()">
         <ng-template pTemplate="header">
           <button class="service-create-btn" type="button" (click)="openServicePanel()">
-            <i class="pi pi-plus"></i> Crear un nuevo servicio
+            <i class="pi pi-plus"></i> {{ lang.t('booking_form.create_service_btn') }}
           </button>
         </ng-template>
         <ng-template pTemplate="item" let-service>
@@ -137,11 +139,11 @@
 
     <!-- Sede -->
     <div class="field">
-      <label class="field-label">Sede / Ubicación</label>
+      <label class="field-label">{{ lang.t('booking_form.location') }}</label>
       <p-select
         [options]="locationOptions()"
         [(ngModel)]="formData.location_id"
-        placeholder="Seleccionar sede"
+        [placeholder]="lang.t('booking_form.location_placeholder')"
         optionLabel="label"
         optionValue="value"
         class="w-full">
@@ -151,11 +153,11 @@
     <!-- Información adicional -->
     <p-accordion>
       <p-accordion-panel value="0">
-        <p-accordion-header>Información adicional</p-accordion-header>
+        <p-accordion-header>{{ lang.t('booking_form.additional_info') }}</p-accordion-header>
         <p-accordion-content>
           <div class="additional-fields">
             <div class="field">
-              <label class="field-label">Precio</label>
+              <label class="field-label">{{ lang.t('common.price') }}</label>
               <p-inputnumber
                 [(ngModel)]="formData.price"
                 mode="currency"
@@ -164,22 +166,22 @@
                 class="w-full" />
             </div>
             <div class="field">
-              <label class="field-label">Notas para el paciente</label>
+              <label class="field-label">{{ lang.t('booking_form.notes_patient') }}</label>
               <textarea
                 pTextarea
                 [(ngModel)]="formData.notes"
                 rows="2"
-                placeholder="Visibles para el paciente"
+                [placeholder]="lang.t('booking_form.notes_patient_placeholder')"
                 class="w-full">
               </textarea>
             </div>
             <div class="field">
-              <label class="field-label">Nota interna</label>
+              <label class="field-label">{{ lang.t('booking_form.notes_internal') }}</label>
               <textarea
                 pTextarea
                 [(ngModel)]="formData.internal_notes"
                 rows="2"
-                placeholder="Solo visible para el equipo"
+                [placeholder]="lang.t('booking_form.notes_internal_placeholder')"
                 class="w-full">
               </textarea>
             </div>
@@ -192,26 +194,26 @@
 
   <!-- Panel de creación de servicio -->
   <div class="service-creation-panel">
-    <h3 class="service-panel-title">Crear un nuevo servicio</h3>
+    <h3 class="service-panel-title">{{ lang.t('booking_form.new_service.title') }}</h3>
 
     <div class="field">
-      <label class="field-label">Nombre del servicio <span class="required-mark">*</span></label>
-      <input pInputText [(ngModel)]="newService.name" placeholder="Nombre de la categoría" class="w-full" />
+      <label class="field-label">{{ lang.t('booking_form.new_service.name') }} <span class="required-mark">*</span></label>
+      <input pInputText [(ngModel)]="newService.name" [placeholder]="lang.t('booking_form.new_service.name_placeholder')" class="w-full" />
     </div>
 
     <div class="field">
-      <label class="field-label">Precio <span class="required-mark">*</span></label>
+      <label class="field-label">{{ lang.t('common.price') }} <span class="required-mark">*</span></label>
       <p-inputnumber [(ngModel)]="newService.price" mode="currency" currency="USD" locale="es-CO" class="w-full" />
     </div>
 
     <div class="field">
-      <label class="field-label">Duración (min) <span class="required-mark">*</span></label>
-      <input pInputText type="number" [(ngModel)]="newService.duration_minutes" placeholder="Ej. 5, 10, 45, 200" class="w-full" />
+      <label class="field-label">{{ lang.t('booking_form.new_service.duration') }} <span class="required-mark">*</span></label>
+      <input pInputText type="number" [(ngModel)]="newService.duration_minutes" [placeholder]="lang.t('booking_form.new_service.duration_placeholder')" class="w-full" />
     </div>
 
     <div class="service-panel-actions">
-      <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closeServicePanel()" />
-      <p-button label="Guardar servicio" icon="pi pi-check" [loading]="savingService()" (onClick)="saveNewService()" />
+      <p-button [label]="lang.t('common.back')" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closeServicePanel()" />
+      <p-button [label]="lang.t('booking_form.btn.save_service')" icon="pi pi-check" [loading]="savingService()" (onClick)="saveNewService()" />
     </div>
   </div>
 
@@ -220,13 +222,13 @@
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
       <p-button
-        label="Cancelar"
+        [label]="lang.t('common.cancel')"
         severity="secondary"
         [outlined]="true"
         (onClick)="onClose()">
       </p-button>
       <p-button
-        [label]="hasRepeatData() ? 'Guardar repetición' : 'Guardar reserva'"
+        [label]="hasRepeatData() ? lang.t('booking_form.btn.save_repeat') : lang.t('booking_form.btn.save')"
         icon="pi pi-check"
         [loading]="saving()"
         [disabled]="!isFormValid()"
@@ -238,7 +240,7 @@
 
 <!-- Repeticiones de Reserva Dialog -->
 <p-dialog
-  header="Repeticiones de reserva"
+  [header]="lang.t('booking_form.repeat.title')"
   [(visible)]="showRepeatDialog"
   [modal]="true"
   [style]="{width: '480px'}"
@@ -251,9 +253,9 @@
     <div class="repeat-section">
       <div class="repeat-freq-row">
         <div class="freq-select">
-          <label class="section-label">Repetir</label>
+          <label class="section-label">{{ lang.t('common.repeat') }}</label>
           <p-select
-            [options]="repeatTypeOptions"
+            [options]="repeatTypeOptions()"
             [(ngModel)]="formData.repeat_type"
             optionLabel="label"
             optionValue="value"
@@ -263,7 +265,7 @@
 
         @if (formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly') {
           <div class="freq-interval">
-            <label class="section-label">Cada</label>
+            <label class="section-label">{{ lang.t('common.every') }}</label>
             <div class="interval-row">
               <p-inputnumber
                 [(ngModel)]="formData.repeat_interval"
@@ -271,7 +273,7 @@
                 [max]="99"
                 class="interval-input" />
               <span class="interval-label">
-                {{ formData.repeat_type === 'weekly' ? 'semanas' : 'meses' }}
+                {{ formData.repeat_type === 'weekly' ? lang.t('booking_form.repeat.weeks') : lang.t('booking_form.repeat.months') }}
               </span>
             </div>
           </div>
@@ -280,10 +282,10 @@
 
       @if (formData.repeat_type === 'daily') {
         <div>
-          <label class="section-label">Se repite el</label>
+          <label class="section-label">{{ lang.t('booking_form.repeat.on') }}</label>
           <div class="days-buttons">
             <button
-              *ngFor="let day of daysOfWeek"
+              *ngFor="let day of daysOfWeek()"
               type="button"
               class="day-btn"
               [class.active]="isDaySelected(day.value)"
@@ -296,20 +298,20 @@
     </div>
 
     <div class="repeat-section">
-      <label class="section-label">Finaliza</label>
+      <label class="section-label">{{ lang.t('common.ends') }}</label>
       <div class="end-option">
         <p-radiobutton
           [(ngModel)]="formData.repeat_end_type"
           name="repeatEndType"
           value="after"
           inputId="endAfter" />
-        <label for="endAfter">Después de</label>
+        <label for="endAfter">{{ lang.t('booking_form.repeat.after') }}</label>
         @if (formData.repeat_end_type === 'after') {
           <p-inputnumber
             [(ngModel)]="formData.repeat_count"
             [min]="1"
             class="count-input" />
-          <span>repeticiones</span>
+          <span>{{ lang.t('common.occurrences') }}</span>
         }
       </div>
       <div class="end-option">
@@ -318,9 +320,9 @@
           name="repeatEndType"
           value="until"
           inputId="endUntil" />
-        <label for="endUntil">Fecha específica</label>
+        <label for="endUntil">{{ lang.t('booking_form.repeat.specific_date') }}</label>
         @if (formData.repeat_end_type === 'until') {
-          <span class="end-sublabel">Fecha de finalización</span>
+          <span class="end-sublabel">{{ lang.t('booking_form.repeat.end_sublabel') }}</span>
           <p-datepicker
             [(ngModel)]="formData.repeat_until"
             dateFormat="dd/mm/yy"
@@ -335,19 +337,19 @@
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
       <p-button
-        label="Cancelar"
+        [label]="lang.t('common.cancel')"
         severity="secondary"
         [outlined]="true"
         (onClick)="showRepeatDialog = false">
       </p-button>
-      <p-button label="Aplicar" icon="pi pi-check" (onClick)="applyRepeat()"></p-button>
+      <p-button [label]="lang.t('common.apply')" icon="pi pi-check" (onClick)="applyRepeat()"></p-button>
     </div>
   </ng-template>
 </p-dialog>
 
 <!-- Nuevo Paciente Dialog -->
 <p-dialog
-  header="Nuevo Paciente"
+  [header]="lang.t('patient.dialog_title')"
   [(visible)]="showAddClient"
   [modal]="true"
   [style]="{width: '460px'}"
@@ -357,7 +359,7 @@
   <form class="add-client-form" #addClientForm="ngForm" (ngSubmit)="saveClient(addClientForm)">
 
     <div class="field">
-      <label class="field-label">Nombre</label>
+      <label class="field-label">{{ lang.t('patient.first_name') }}</label>
       <input
         pInputText
         name="firstName"
@@ -365,14 +367,14 @@
         required
         #firstName="ngModel"
         class="w-full"
-        placeholder="Juan" />
+        [placeholder]="lang.t('patient.first_name_placeholder')" />
       @if (firstName.invalid && firstName.touched) {
-        <span class="field-error">El nombre es obligatorio</span>
+        <span class="field-error">{{ lang.t('patient.error.first_name_required') }}</span>
       }
     </div>
 
     <div class="field">
-      <label class="field-label">Apellido</label>
+      <label class="field-label">{{ lang.t('patient.last_name') }}</label>
       <input
         pInputText
         name="lastName"
@@ -380,14 +382,14 @@
         required
         #lastName="ngModel"
         class="w-full"
-        placeholder="Pérez" />
+        [placeholder]="lang.t('patient.last_name_placeholder')" />
       @if (lastName.invalid && lastName.touched) {
-        <span class="field-error">El apellido es obligatorio</span>
+        <span class="field-error">{{ lang.t('patient.error.last_name_required') }}</span>
       }
     </div>
 
     <div class="field">
-      <label class="field-label">Email</label>
+      <label class="field-label">{{ lang.t('patient.email') }}</label>
       <input
         pInputText
         name="clientEmail"
@@ -397,25 +399,25 @@
         email
         #clientEmail="ngModel"
         class="w-full"
-        placeholder="juan@email.com" />
+        [placeholder]="lang.t('patient.email_placeholder')" />
       @if (clientEmail.invalid && clientEmail.touched) {
         @if (clientEmail.errors?.['required']) {
-          <span class="field-error">El email es obligatorio</span>
+          <span class="field-error">{{ lang.t('patient.error.email_required') }}</span>
         } @else if (clientEmail.errors?.['email']) {
-          <span class="field-error">El email no es válido</span>
+          <span class="field-error">{{ lang.t('patient.error.email_invalid') }}</span>
         }
       }
     </div>
 
     <div class="field">
-      <label class="field-label">Teléfono</label>
+      <label class="field-label">{{ lang.t('patient.phone') }}</label>
       <bw-phone-input
         name="clientPhone"
         [(ngModel)]="newClient.phone"
         #clientPhone="ngModel"
-        placeholder="Teléfono" />
+        [placeholder]="lang.t('patient.phone_placeholder')" />
       @if (clientPhone.invalid && clientPhone.touched && clientPhone.errors?.['invalidPhone']) {
-        <span class="field-error">El número de teléfono no es válido para este país</span>
+        <span class="field-error">{{ lang.t('patient.error.phone_invalid') }}</span>
       }
     </div>
 
@@ -424,13 +426,13 @@
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
       <p-button
-        label="Cancelar"
+        [label]="lang.t('common.cancel')"
         severity="secondary"
         [outlined]="true"
         (onClick)="showAddClient = false">
       </p-button>
       <p-button
-        label="Guardar paciente"
+        [label]="lang.t('patient.btn.save')"
         icon="pi pi-check"
         (onClick)="saveClient(addClientForm)">
       </p-button>

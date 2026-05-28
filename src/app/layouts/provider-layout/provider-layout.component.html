@@ -1,11 +1,23 @@
+<p-toast position="top-right" [life]="4500" />
+
 <div class="layout">
-  <p-menubar [model]="menuItems">
+  <p-menubar [model]="menuItems()">
     <ng-template pTemplate="start">
       <span class="app-title">Kinesilk - Profesional</span>
     </ng-template>
     <ng-template pTemplate="end">
-      <p-button icon="pi pi-sign-out" label="Salir" class="p-button-text" (onClick)="logout()">
-      </p-button>
+      <div class="menubar-end">
+        <p-select
+          [options]="langService.langOptions"
+          [ngModel]="langService.lang()"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="onLangChange($event.value)"
+          [appendTo]="'body'"
+          class="lang-select"
+        />
+        <p-button icon="pi pi-sign-out" [label]="langService.t('ui.logout')" class="p-button-text" (onClick)="logout()" />
+      </div>
     </ng-template>
   </p-menubar>
 

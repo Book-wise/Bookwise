@@ -28,10 +28,10 @@
         <a [routerLink]="item.routerLink"
            class="nav-item"
            [class.active]="isActive(item.routerLink!)"
-           [title]="sidebarCollapsed() ? item.label : ''">
+           [title]="sidebarCollapsed() ? langService.t(item.label!) : ''">
           <i class="pi" [ngClass]="item.icon"></i>
           @if (!sidebarCollapsed()) {
-            <span class="nav-label">{{ item.label }}</span>
+            <span class="nav-label">{{ langService.t(item.label!) }}</span>
           }
         </a>
       }
@@ -51,19 +51,34 @@
             class="theme-select"
           />
         </div>
+        <div class="theme-selector">
+          <p-select
+            [options]="langService.langOptions"
+            [ngModel]="langService.lang()"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="onLangChange($event.value)"
+            [appendTo]="'body'"
+            class="theme-select"
+          />
+        </div>
+      } @else {
+        <button class="nav-item" (click)="onLangChange(langService.lang() === 'es' ? 'en' : 'es')" [title]="langService.lang() === 'es' ? 'English' : 'Español'">
+          <i class="pi pi-globe"></i>
+        </button>
       }
 
-      <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="sidebarCollapsed() ? (darkMode() ? 'Modo Claro' : 'Modo Oscuro') : ''">
+      <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="sidebarCollapsed() ? langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') : ''">
         <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
         @if (!sidebarCollapsed()) {
-          <span class="nav-label">{{ darkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+          <span class="nav-label">{{ langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') }}</span>
         }
       </button>
 
       <button class="nav-item logout-btn" (click)="logout()">
         <i class="pi pi-sign-out"></i>
         @if (!sidebarCollapsed()) {
-          <span class="nav-label">Salir</span>
+          <span class="nav-label">{{ langService.t('ui.logout') }}</span>
         }
       </button>
     </div>

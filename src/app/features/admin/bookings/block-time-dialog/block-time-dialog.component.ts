@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
 import { CommonModule } from '@angular/common';
@@ -16,6 +16,7 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constant
 import { Location, Provider, CreateBlockedSlot, BlockedSlot } from '../../../../core/models';
 import { BlockConflict, BlockConflictResponse } from '../interfaces/booking-form-data.interface';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
+import { LanguageService } from '../../../../core/services/language.service';
 
 @Component({
   selector: 'bw-block-time-dialog',
@@ -39,8 +40,10 @@ export class BlockTimeDialogComponent implements OnInit {
   private messageService = inject(MessageService);
   private api        = inject(ApiService);
   private dataCache  = inject(DataCacheService);
-  private httpError = inject(HttpErrorService);
+  private httpError  = inject(HttpErrorService);
+  readonly lang      = inject(LanguageService);
 
+  @Input() lockedProviderId: number | null = null;
   @Output() onBlocked = new EventEmitter<void>();
 
   visible     = false;
@@ -81,13 +84,19 @@ export class BlockTimeDialogComponent implements OnInit {
   repeatCount    = signal(5);
   repeatUntil    = signal<Date | null>(null);
 
-  readonly days              = DAYS_OF_WEEK;
-  readonly endTypeOptions    = END_TYPE_OPTIONS;
-  readonly repeatTypeOptions = REPEAT_TYPE_OPTIONS;
-  readonly scopeOptions = [
-    { label: 'Ubicación específica', value: 'location' },
-    { label: 'Profesional específico', value: 'provider' },
-  ];
+  days = computed(() =>
+    DAYS_OF_WEEK.map(d => ({ label: this.lang.t(d.labelKey), value: d.value }))
+  );
+  endTypeOptions = computed(() =>
+    END_TYPE_OPTIONS.map(o => ({ label: this.lang.t(o.labelKey), value: o.value }))
+  );
+  repeatTypeOptions = computed(() =>
+    REPEAT_TYPE_OPTIONS.map(o => ({ label: this.lang.t(o.labelKey), value: o.value }))
+  );
+  scopeOptions = computed(() => [
+    { label: this.lang.t('scope.location'), value: 'location' },
+    { label: this.lang.t('scope.provider'), value: 'provider' },
+  ]);
 
   locationOptions = computed(() => this.locations().map(l => ({ label: l.name, value: l.id })));
   providerOptions = computed(() => this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })));
@@ -130,8 +139,12 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   set repeatUntilValue(v: Date | null) { this.repeatUntil.set(v); }
 
   intervalLabel = computed(() => {
-    const map: Record<string, string> = { daily: 'día(s)', weekly: 'semana(s)', monthly: 'mes(es)' };
-    return map[this.repeatType()] ?? 'semana(s)';
+    const map: Record<string, string> = {
+      daily:   this.lang.t('block.interval.day'),
+      weekly:  this.lang.t('block.interval.week'),
+      monthly: this.lang.t('block.interval.month'),
+    };
+    return map[this.repeatType()] ?? this.lang.t('block.interval.week');
   });
 
   // Scope getters for ngModel
@@ -180,9 +193,15 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     this.loadFormData();
     if (startTime) this.startDate.set(startTime);
     if (endTime)   this.endDate.set(endTime);
-    this.locationId = locationId ?? null;
-    this.providerId = providerId ?? null;
-    this.scope.set('location');
+    if (this.lockedProviderId) {
+      this.scope.set('provider');
+      this.providerId = this.lockedProviderId;
+      this.locationId = null;
+    } else {
+      this.locationId = locationId ?? null;
+      this.providerId = providerId ?? null;
+      this.scope.set('location');
+    }
     this.visible = true;
   }
 
@@ -191,8 +210,13 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     this.editingSlotId = slot.id;
     this.loadFormData();
     this.reason     = slot.reason ?? '';
-    this.providerId = slot.provider_id ?? null;
-    this.scope.set(slot.provider_id ? 'provider' : 'location');
+    if (this.lockedProviderId) {
+      this.scope.set('provider');
+      this.providerId = this.lockedProviderId;
+    } else {
+      this.providerId = slot.provider_id ?? null;
+      this.scope.set(slot.provider_id ? 'provider' : 'location');
+    }
     this.startDate.set(new Date(slot.start_time));
     this.endDate.set(new Date(slot.end_time));
     this.visible = true;
@@ -251,8 +275,8 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
             const conflictTime = new Date(c.conflict.start_time).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
             this.messageService.add({
               severity: 'warn',
-              summary: `Conflicto — ${providerName}`,
-              detail: `Ya tiene un bloqueo desde las ${conflictTime}`,
+              summary: this.lang.t('toast.block_conflict.summary', { name: providerName }),
+              detail:  this.lang.t('toast.block_conflict.detail',  { time: conflictTime }),
               life: 7000,
             });
           });
@@ -260,10 +284,10 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
         if (!result.conflicts?.length || result.blocked?.length) {
           this.messageService.add({
             severity: 'success',
-            summary: 'Horario bloqueado',
-            detail: this.repeatEnabled()
-              ? 'Las repeticiones se registraron en la agenda.'
-              : 'El bloqueo quedó registrado en la agenda.',
+            summary: this.lang.t('toast.block_created.summary'),
+            detail:  this.repeatEnabled()
+              ? this.lang.t('toast.block_created_repeat.detail')
+              : this.lang.t('toast.block_created.detail'),
           });
         }
         this.saving.set(false);
@@ -288,7 +312,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       provider_id: this.scope() === 'provider' ? (this.providerId ?? null) : null,
     }).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Bloqueo actualizado', detail: 'Los cambios quedaron guardados.', life: 3000 });
+        this.messageService.add({ severity: 'success', summary: this.lang.t('toast.block_updated.summary'), detail: this.lang.t('toast.block_updated.detail'), life: 3000 });
         this.saving.set(false);
         this.visible = false;
         this.onBlocked.emit();
@@ -304,7 +328,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     if (!this.editingSlotId) return;
     this.api.deleteBlockedSlot(this.editingSlotId).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'info', summary: 'Bloqueo eliminado', life: 3000 });
+        this.messageService.add({ severity: 'info', summary: this.lang.t('toast.block_deleted.summary'), life: 3000 });
         this.visible = false;
         this.onBlocked.emit();
       },

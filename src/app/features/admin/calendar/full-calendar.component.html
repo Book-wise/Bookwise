@@ -23,7 +23,7 @@
           </p-select>
 
           <p-multiselect
-            [options]="statusFilterOptions"
+            [options]="statusFilterOptions()"
             [(ngModel)]="selectedStatusIds"
             optionLabel="label"
             optionValue="value"
@@ -228,14 +228,14 @@
       pButton
       class="slot-menu-item"
       icon="pi pi-plus"
-      label="Nueva Reserva"
+      [label]="lang.t('slot.new_booking')"
       (click)="openNewBooking()"
     ></button>
     <button
       pButton
       class="slot-menu-item"
       icon="pi pi-lock"
-      label="Bloquear Horario"
+      [label]="lang.t('slot.block_time')"
       severity="secondary"
       (click)="openBlockTime()"
     ></button>
