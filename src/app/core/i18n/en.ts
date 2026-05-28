@@ -64,7 +64,7 @@ export const EN: Record<string, string> = {
   'error.504.detail': 'The server took too long to respond. Please try again.',
   'error.default.detail': 'An unexpected error occurred. Please try again.',
 
-  // Business errors (API error keys)
+  // Business errors — summary (API error keys)
   'biz.invalid_input':              'Invalid input',
   'biz.forbidden':                  'Unauthorized',
   'biz.provider_location_mismatch': 'Wrong location',
@@ -75,6 +75,18 @@ export const EN: Record<string, string> = {
   'biz.already_inactive':           'Already inactive',
   'biz.pack_not_active':            'Pack not active',
   'biz.no_sessions_remaining':      'No sessions remaining',
+
+  // Business errors — detail
+  'biz.invalid_input.detail':              'Check your fields and try again.',
+  'biz.forbidden.detail':                  'You do not have permission to perform this action.',
+  'biz.provider_location_mismatch.detail': 'The provider does not belong to the selected location.',
+  'biz.conflict.detail':                   'That time slot is already taken.',
+  'biz.already_cancelled.detail':          'This booking has already been cancelled.',
+  'biz.slot_collision.detail':             'That slot is already blocked or booked.',
+  'biz.client_not_found.detail':           'Client profile not found.',
+  'biz.already_inactive.detail':           'This record is already inactive.',
+  'biz.pack_not_active.detail':            'The pack is not currently active.',
+  'biz.no_sessions_remaining.detail':      'The pack has no sessions remaining.',
 
   // UI
   'ui.logout': 'Log out',

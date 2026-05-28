@@ -99,16 +99,20 @@ export class HttpErrorService {
   // ── Branch 1: Business error ─────────────────────────────────────────────────
 
   private bizConfig(body: any, status: number, action?: string): ToastConfig {
-    const bizKey  = `biz.${body.error as string}`;
-    const title   = this.lang.has(bizKey)
-      ? this.lang.t(bizKey)
-      : this.statusTitle(status);
+    const errorKey   = body.error as string;
+    const summaryKey = `biz.${errorKey}`;
+    const detailKey  = `biz.${errorKey}.detail`;
+
+    const title   = this.lang.has(summaryKey) ? this.lang.t(summaryKey) : this.statusTitle(status);
     const summary = action ? `${title} — ${action}` : title;
 
-    let detail = (body.detail as string | undefined) || this.defaultDetail(status);
+    // Always use our own translated detail for known keys — never trust body.detail language
+    let detail = this.lang.has(detailKey) ? this.lang.t(detailKey) : this.defaultDetail(status);
+
+    // Append conflict time range (no ID — internal data not relevant to the user)
     if (body.conflicts_with) {
       const c = body.conflicts_with;
-      detail += ` · #${c.id} ${this.fmtTime(c.start_time)} → ${this.fmtTime(c.end_time)}`;
+      detail += ` (${this.fmtTime(c.start_time)} – ${this.fmtTime(c.end_time)})`;
     }
 
     return { severity: this.severity(status), summary, detail, life: 8000 };

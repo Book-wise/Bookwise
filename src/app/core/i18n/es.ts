@@ -64,7 +64,7 @@ export const ES: Record<string, string> = {
   'error.504.detail': 'El servidor tardó demasiado en responder. Intentá de nuevo.',
   'error.default.detail': 'Ocurrió un error inesperado. Intentá de nuevo.',
 
-  // Business errors (API error keys)
+  // Business errors — summary (API error keys)
   'biz.invalid_input':              'Error de entrada',
   'biz.forbidden':                  'Sin permisos',
   'biz.provider_location_mismatch': 'Sede incorrecta',
@@ -75,6 +75,18 @@ export const ES: Record<string, string> = {
   'biz.already_inactive':           'Ya inactivo',
   'biz.pack_not_active':            'Pack inactivo',
   'biz.no_sessions_remaining':      'Sin sesiones disponibles',
+
+  // Business errors — detail
+  'biz.invalid_input.detail':              'Verificá los campos e intentá de nuevo.',
+  'biz.forbidden.detail':                  'No tenés permisos para realizar esta acción.',
+  'biz.provider_location_mismatch.detail': 'El profesional no pertenece a la sede seleccionada.',
+  'biz.conflict.detail':                   'Ese horario ya está ocupado.',
+  'biz.already_cancelled.detail':          'Esta reserva ya fue cancelada.',
+  'biz.slot_collision.detail':             'Ese horario ya está bloqueado o reservado.',
+  'biz.client_not_found.detail':           'No se encontró el perfil del cliente.',
+  'biz.already_inactive.detail':           'Este registro ya está inactivo.',
+  'biz.pack_not_active.detail':            'El pack no está activo.',
+  'biz.no_sessions_remaining.detail':      'El pack no tiene sesiones disponibles.',
 
   // UI
   'ui.logout': 'Salir',
