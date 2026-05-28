@@ -117,7 +117,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     initialView: 'timeGridWeek',
     slotMinTime: '09:00:00',
     slotMaxTime: '21:00:00',
-    locale: esLocale,
+    locale: this.lang.lang() === 'en' ? 'en' : esLocale,
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -277,6 +277,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   private updateCalendarI18n(): void {
     if (!this.calendar) return;
     this.ngZone.runOutsideAngular(() => {
+      this.calendar!.setOption('locale', this.lang.lang() === 'en' ? 'en' : esLocale);
       this.calendar!.setOption('buttonText', {
         today: this.lang.t('cal.today'),
         month: this.lang.t('cal.month'),

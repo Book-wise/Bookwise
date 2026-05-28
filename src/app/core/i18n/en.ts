@@ -140,6 +140,9 @@ export const EN: Record<string, string> = {
   'cal.list': 'List',
   'cal.new_booking': 'Booking',
   'cal.block_time': 'Block',
+  'cal.placeholder.all_locations': 'All locations',
+  'cal.placeholder.all_providers': 'All providers',
+  'cal.placeholder.all_statuses': 'All statuses',
 
   // Slot action menu
   'slot.new_booking': 'New Booking',

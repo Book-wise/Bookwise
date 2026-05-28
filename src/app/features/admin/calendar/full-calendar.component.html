@@ -6,7 +6,7 @@
           <p-select
             [options]="locationOptions()"
             [(ngModel)]="selectedLocationId"
-            placeholder="Todas las Locations"
+            [placeholder]="lang.t('cal.placeholder.all_locations')"
             [showClear]="true"
             (onChange)="onLocationChange()"
           >
@@ -15,7 +15,7 @@
           <p-select
             [options]="providerOptions()"
             [(ngModel)]="selectedProviderId"
-            placeholder="Todos los Profesionales"
+            [placeholder]="lang.t('cal.placeholder.all_providers')"
             [showClear]="true"
             [loading]="providersLoading()"
             (onChange)="onFilterChange()"
@@ -27,7 +27,7 @@
             [(ngModel)]="selectedStatusIds"
             optionLabel="label"
             optionValue="value"
-            placeholder="Todos los estados"
+            [placeholder]="lang.t('cal.placeholder.all_statuses')"
             [showClear]="true"
             display="chip"
             (onChange)="onFilterChange()"

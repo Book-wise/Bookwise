@@ -140,6 +140,9 @@ export const ES: Record<string, string> = {
   'cal.list': 'Lista',
   'cal.new_booking': 'Reserva',
   'cal.block_time': 'Bloquear',
+  'cal.placeholder.all_locations': 'Todas las ubicaciones',
+  'cal.placeholder.all_providers': 'Todos los profesionales',
+  'cal.placeholder.all_statuses': 'Todos los estados',
 
   // Slot action menu
   'slot.new_booking': 'Nueva Reserva',
