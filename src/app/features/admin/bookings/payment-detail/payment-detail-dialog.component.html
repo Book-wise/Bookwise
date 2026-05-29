@@ -6,6 +6,7 @@
   [draggable]="false"
   [resizable]="false"
   (onHide)="close()"
+  [pt]="{ root: { class: 'bw-payment-dialog' } }"
 >
   <ng-template pTemplate="header">
     @if (booking()) {
@@ -18,14 +19,11 @@
           </span>
           <p-tag [value]="booking()!.service?.name || ''" severity="secondary" class="booking-service-tag" />
         </div>
-        <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))" class="booking-dialog-tabs">
+        <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs">
           <p-tablist>
-            <p-tab value="reserva">Reserva</p-tab>
-            <p-tab value="pago">Pago</p-tab>
-            <p-tab value="recordatorios">Recordatorios</p-tab>
-            <p-tab value="paciente">Paciente</p-tab>
-            <p-tab value="ficha">Ficha médica</p-tab>
-            <p-tab value="historial">Historial</p-tab>
+            @for (tab of TABS; track tab.value) {
+              <p-tab [value]="tab.value">{{ tab.label }}</p-tab>
+            }
           </p-tablist>
         </p-tabs>
       </div>
@@ -168,6 +166,15 @@
             <div class="empty-state">
               <i class="pi pi-history empty-state__icon"></i>
               <p class="empty-state__text">Historial de reservas próximamente.</p>
+            </div>
+          </div>
+        }
+
+        @default {
+          <div class="tab-content">
+            <div class="empty-state">
+              <i class="pi pi-exclamation-circle empty-state__icon"></i>
+              <p class="empty-state__text">Tab no encontrado.</p>
             </div>
           </div>
         }

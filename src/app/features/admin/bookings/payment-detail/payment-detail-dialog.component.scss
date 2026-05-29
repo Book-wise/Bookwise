@@ -116,7 +116,7 @@
   .bw-mobile-header  { display: flex; }
 
   // Dialog full-screen en mobile
-  :host ::ng-deep .p-dialog {
+  :host ::ng-deep .bw-payment-dialog {
     width: 100vw !important;
     max-width: 100vw !important;
     min-height: 100dvh !important;

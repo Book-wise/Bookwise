@@ -22,17 +22,18 @@ export class PaymentDetailDialogComponent {
   booking   = signal<Booking | null>(null);
   activeTab = signal<BookingTab>('pago');
 
-  readonly mobileTabTitle = computed(() => {
-    const labels: Record<BookingTab, string> = {
-      reserva:       'Reserva',
-      pago:          'Pago',
-      recordatorios: 'Recordatorios',
-      paciente:      'Paciente',
-      ficha:         'Ficha médica',
-      historial:     'Historial',
-    };
-    return labels[this.activeTab()];
-  });
+  readonly TABS: { value: BookingTab; label: string }[] = [
+    { value: 'reserva',       label: 'Reserva' },
+    { value: 'pago',          label: 'Pago' },
+    { value: 'recordatorios', label: 'Recordatorios' },
+    { value: 'paciente',      label: 'Paciente' },
+    { value: 'ficha',         label: 'Ficha médica' },
+    { value: 'historial',     label: 'Historial' },
+  ];
+
+  readonly mobileTabTitle = computed(() =>
+    this.TABS.find(t => t.value === this.activeTab())?.label ?? ''
+  );
 
   readonly statusSeverity = computed(() => {
     const name = this.booking()?.status?.name?.toLowerCase();
@@ -48,6 +49,10 @@ export class PaymentDetailDialogComponent {
     this.booking.set(booking);
     this.activeTab.set(tab);
     this.visible.set(true);
+  }
+
+  onTabChange(value: string | number | undefined): void {
+    if (value !== undefined) this.activeTab.set(value as BookingTab);
   }
 
   close(): void {
