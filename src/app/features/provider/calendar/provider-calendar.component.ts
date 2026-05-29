@@ -347,7 +347,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       blockedSlotsRes: this.api.getBlockedSlots(slotParams),
     }).subscribe({
       next: ({ bookingsRes, blockedSlotsRes }) => {
-        const bookings: Booking[] = bookingsRes.data ?? [];
+        const raw = bookingsRes as unknown as Booking[] | { data: Booking[] };
+        const bookings: Booking[] = Array.isArray(raw) ? raw : (raw.data ?? []);
 
         const visibleBookings = this.selectedStatusIds.length > 0
           ? bookings.filter(b => this.selectedStatusIds.includes(b.status_id))
