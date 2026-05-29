@@ -33,7 +33,11 @@ import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-ti
 import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { LanguageService } from '../../../core/services/language.service';
 import { forkJoin } from 'rxjs';
-import { Calendar, CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
+import {
+  Calendar, CalendarOptions, EventClickArg, DateSelectArg,
+  EventContentArg, EventInput, EventSourceFuncArg, EventDropArg,
+} from '@fullcalendar/core';
+import { EventResizeDoneArg } from '@fullcalendar/interaction';
 import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
@@ -144,7 +148,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     longPressDelay: 300,
     eventLongPressDelay: 300,
     selectLongPressDelay: 300,
-    events: (fetchInfo: any, successCallback: any, failureCallback: any) => {
+    events: (
+      fetchInfo: EventSourceFuncArg,
+      successCallback: (events: EventInput[]) => void,
+      failureCallback: (error: Error) => void,
+    ) => {
       this.fetchEventsForCalendar(fetchInfo, successCallback, failureCallback);
     },
     eventClick: this.handleEventClick.bind(this),
@@ -367,9 +375,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private fetchEventsForCalendar(
-    fetchInfo: { startStr: string; endStr: string },
-    successCallback: (events: CalendarEvent[]) => void,
-    failureCallback: () => void
+    fetchInfo: EventSourceFuncArg,
+    successCallback: (events: EventInput[]) => void,
+    failureCallback: (error: Error) => void,
   ): void {
     this.ngZone.run(() => this.loading.set(true));
 
@@ -421,7 +429,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       },
       error: () => {
-        failureCallback();
+        failureCallback(new Error('Failed to load calendar events'));
         this.ngZone.run(() => this.loading.set(false));
       },
     });
@@ -455,7 +463,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.removeSlotPreview();
   }
 
-  private buildEventContent(info: any): { html: string } {
+  private buildEventContent(info: EventContentArg): { html: string } {
     if (info.event.id === this.SLOT_PREVIEW_ID) {
       return { html: '<div class="bw-slot-preview-inner"></div>' };
     }
@@ -487,9 +495,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return status?.color || '#6b7280';
   }
 
-  private handleEventMove(info: any, newStart: string, newEnd: string): void {
+  private handleEventMove(info: EventDropArg | EventResizeDoneArg, newStart: string, newEnd: string): void {
     const isBlocked = info.event.extendedProps['isBlocked'];
-    const oldStart  = (info.oldEvent?.startStr ?? info.prevEvent?.startStr ?? '') as string;
+    const oldStart  = (info.oldEvent?.startStr ?? '') as string;
 
     // Guard: endStr puede ser null en eventos sin duración explícita
     const safeEnd = newEnd || newStart;

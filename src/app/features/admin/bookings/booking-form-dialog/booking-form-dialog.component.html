@@ -79,7 +79,7 @@
           [filterPlaceholder]="lang.t('common.search')"
           showClear="true"
           class="w-full"
-          (onFilter)="onClientFilter($event)">
+          (onFilter)="onClientFilter()">
           <ng-template pTemplate="item" let-client>
             <div class="client-option">
               <span class="client-name">{{ client.first_name }} {{ client.last_name }}</span>

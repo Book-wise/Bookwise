@@ -3,6 +3,20 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { LanguageService } from './language.service';
 
+/** Shape of the error body returned by the Kinesilk API. */
+interface ApiErrorBody {
+  error?: string;
+  detail?: string;
+  errors?: Record<string, string[]>;
+  message?: string;
+  conflicts_with?: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    type?: 'blocked_slot' | 'booking';
+  };
+}
+
 export interface ToastConfig {
   severity: 'error' | 'warn' | 'info';
   summary: string;
@@ -51,7 +65,7 @@ export class HttpErrorService {
 
   /** Utility: returns the toast config without side effects. */
   toToastConfig(err: HttpErrorResponse, action?: string): ToastConfig {
-    const body = err.error;
+    const body = err.error as ApiErrorBody | null;
 
     // ── 1. Business error — { error: 'conflict', detail: '...' }
     if (body?.error) {
@@ -98,7 +112,7 @@ export class HttpErrorService {
 
   // ── Branch 1: Business error ─────────────────────────────────────────────────
 
-  private bizConfig(body: any, status: number, action?: string): ToastConfig {
+  private bizConfig(body: ApiErrorBody, status: number, action?: string): ToastConfig {
     const errorKey   = body.error as string;
     const summaryKey = `biz.${errorKey}`;
     const detailKey  = `biz.${errorKey}.detail`;
@@ -120,8 +134,8 @@ export class HttpErrorService {
 
   // ── Branch 2: Field validation ───────────────────────────────────────────────
 
-  private validationConfig(body: any, status: number, action?: string): ToastConfig {
-    const msgs  = (Object.values(body.errors) as string[][]).flat().slice(0, 2).join(' · ');
+  private validationConfig(body: ApiErrorBody, status: number, action?: string): ToastConfig {
+    const msgs  = (Object.values(body.errors ?? {}) as string[][]).flat().slice(0, 2).join(' · ');
     const title = this.statusTitle(status);
     return {
       severity: 'warn',
@@ -133,7 +147,7 @@ export class HttpErrorService {
 
   // ── Branch 3: Framework / generic ───────────────────────────────────────────
 
-  private frameworkConfig(body: any, status: number, action?: string): ToastConfig {
+  private frameworkConfig(body: ApiErrorBody | null, status: number, action?: string): ToastConfig {
     const detail = body?.message && body.message !== 'Server Error'
       ? body.message
       : this.defaultDetail(status);

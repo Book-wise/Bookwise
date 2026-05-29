@@ -10,6 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService } from 'primeng/api';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Booking, Client, Service, Provider, Location, CreateBooking } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
@@ -245,7 +246,7 @@ export class BookingDialogComponent implements OnInit {
         this.saving.set(false);
         this.onSuccessCallback?.();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.saving.set(false);
         this.handleApiError(err);
       },
@@ -268,14 +269,14 @@ export class BookingDialogComponent implements OnInit {
         this.saving.set(false);
         this.onCancelCallback?.();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.saving.set(false);
         this.handleApiError(err);
       },
     });
   }
 
-  private handleApiError(err: any): void {
+  private handleApiError(err: HttpErrorResponse): void {
     this.httpError.handle(err);
   }
 

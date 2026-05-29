@@ -25,6 +25,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../../core/models';
 import { ApiService } from '../../../../core/services/api.service';
 import { HttpErrorService } from '../../../../core/services/http-error.service';
@@ -318,7 +319,7 @@ export class BookingFormDialogComponent implements OnInit {
     }
   }
 
-  onClientFilter(_event: any) {}
+  onClientFilter(): void {}
 
   // ── Save ────────────────────────────────────────────────────────────────────
 
@@ -374,7 +375,7 @@ export class BookingFormDialogComponent implements OnInit {
         this.saving.set(false);
         this.onSaved.emit();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.saving.set(false);
         this.handleApiError(err);
       },
@@ -411,7 +412,7 @@ export class BookingFormDialogComponent implements OnInit {
       });
   }
 
-  private handleApiError(err: any): void {
+  private handleApiError(err: HttpErrorResponse): void {
     this.httpError.handle(err, 'guardar reserva');
   }
 

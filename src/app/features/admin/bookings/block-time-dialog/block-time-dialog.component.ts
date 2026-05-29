@@ -14,7 +14,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageService } from 'primeng/api';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
 import { Location, Provider, CreateBlockedSlot, BlockedSlot } from '../../../../core/models';
-import { BlockConflict, BlockConflictResponse } from '../interfaces/booking-form-data.interface';
+import { BlockConflict, BlockConflictResponse } from '../../../../core/models';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
 import { LanguageService } from '../../../../core/services/language.service';
 
@@ -124,13 +124,13 @@ export class BlockTimeDialogComponent implements OnInit {
   set repeatEnabledValue(v: boolean) { this.repeatEnabled.set(v); }
 
   get repeatTypeValue(): string { return this.repeatType(); }
-  set repeatTypeValue(v: any) { this.repeatType.set(v); }
+  set repeatTypeValue(v: 'daily' | 'weekly' | 'monthly') { this.repeatType.set(v); }
 
   get repeatIntervalValue(): number { return this.repeatInterval(); }
   set repeatIntervalValue(v: number) { this.repeatInterval.set(v); }
 
   get repeatEndTypeValue(): string { return this.repeatEndType(); }
-  set repeatEndTypeValue(v: any) { this.repeatEndType.set(v); }
+  set repeatEndTypeValue(v: 'after' | 'until' | 'never') { this.repeatEndType.set(v); }
 
   get repeatCountValue(): number { return this.repeatCount(); }
   set repeatCountValue(v: number) { this.repeatCount.set(v); }
@@ -267,11 +267,9 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     }
 
     this.api.createBlockedSlot(body).subscribe({
-      next: (response: any) => {
-        // Respuesta parcial: algunos providers bloqueados, otros con conflicto
-        const result = response as Partial<BlockConflictResponse>;
-        if (result.conflicts?.length) {
-          result.conflicts.forEach((c: BlockConflict) => {
+      next: (response: Partial<BlockConflictResponse>) => {
+        if (response.conflicts?.length) {
+          response.conflicts!.forEach((c: BlockConflict) => {
             const providerName = `${c.provider.first_name} ${c.provider.last_name}`;
             const conflictTime = new Date(c.conflict.start_time).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
             this.messageService.add({
@@ -282,7 +280,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
             });
           });
         }
-        if (!result.conflicts?.length || result.blocked?.length) {
+        if (!response.conflicts?.length || response.blocked?.length) {
           this.messageService.add({
             severity: 'success',
             summary: this.lang.t('toast.block_created.summary'),

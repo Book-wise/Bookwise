@@ -20,6 +20,7 @@ import {
   RegisterData,
   CreateBooking,
   UpdateBooking,
+  BlockConflictResponse,
 } from '../models';
 
 @Injectable({
@@ -89,8 +90,8 @@ export class ApiService {
     start_time: string; end_time: string;
     reason?: string; provider_id?: number | null; location_id?: number | null;
     repeat?: { type: string; interval: number; days?: number[]; end_type: string; count?: number; until?: string };
-  }): Observable<{ data: BlockedSlot[] }> {
-    return this.http.post<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, body);
+  }): Observable<Partial<BlockConflictResponse>> {
+    return this.http.post<Partial<BlockConflictResponse>>(`${this.baseUrl}/blocked-slots`, body);
   }
 
   updateBlockedSlot(id: number, body: { start_time: string; end_time: string; reason?: string; provider_id?: number | null }): Observable<BlockedSlot> {

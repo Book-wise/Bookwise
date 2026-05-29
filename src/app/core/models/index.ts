@@ -71,7 +71,7 @@ export interface Client {
   gender?: string | null;
   wc_customer_id?: number | null;
   active: boolean;
-  custom_attributes?: Record<string, any>;
+  custom_attributes?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }
