@@ -44,8 +44,7 @@ export interface Booking {
   service: BookingService;
   provider: BookingProvider;
   location: BookingLocation;
-  // Financials — payment_status is never null
-  payment_status: 'paid' | 'unpaid' | 'partial';
+  payment_status: 'paid' | 'unpaid' | 'partial' | null;
   payment?: BookingPayment | null;
   // Pack
   pack_session?: BookingPackSession | null;
@@ -90,7 +89,7 @@ export interface BookingStatus {
 export interface BookingPayment {
   id: number;
   booking_id?: number;
-  total: number;
+  total_amount: number;
   paid_amount: number;
   remaining_amount: number;
   status: string;
