@@ -49,9 +49,9 @@ interface CalendarEvent {
   end: string;
   backgroundColor?: string;
   borderColor?: string;
-  extendedProps?: {
-    booking: Booking;
-  };
+  textColor?: string;
+  classNames?: string[];
+  extendedProps?: Record<string, unknown>;
 }
 
 @Component({
@@ -347,8 +347,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       blockedSlotsRes: this.api.getBlockedSlots(slotParams),
     }).subscribe({
       next: ({ bookingsRes, blockedSlotsRes }) => {
-        const data     = (bookingsRes as any).data || bookingsRes;
-        const bookings: Booking[] = Array.isArray(data) ? data : [];
+        const bookings: Booking[] = bookingsRes.data ?? [];
 
         const visibleBookings = this.selectedStatusIds.length > 0
           ? bookings.filter(b => this.selectedStatusIds.includes(b.status_id))
@@ -373,7 +372,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
           end: slot.end_time,
           classNames: ['fc-blocked-slot'],
           extendedProps: { isBlocked: true, blockedSlot: slot },
-        } as any));
+        }));
 
         successCallback([...bookingEvents, ...blockedEvents]);
         this.ngZone.run(() => {

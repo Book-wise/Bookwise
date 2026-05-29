@@ -37,6 +37,17 @@ export interface CreateBooking {
   custom_duration_minutes?: number;
   notes?: string;
   wc_order_id?: number | null;
+  repeat?: BookingRepeat;
+}
+
+export interface BookingRepeat {
+  enabled?: boolean;
+  type?: 'daily' | 'weekly' | 'monthly';
+  days?: number[];
+  interval?: number;
+  end_type?: 'never' | 'after' | 'until';
+  count?: number;
+  until?: string;
 }
 
 export interface UpdateBooking {

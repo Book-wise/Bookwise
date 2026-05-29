@@ -26,7 +26,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Booking, Client, Service, ServicePack, Location, Provider } from '@models';
+import { Booking, Client, Service, ServicePack, Location, Provider, CreateBooking, BookingRepeat } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
@@ -36,6 +36,9 @@ import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { forkJoin } from 'rxjs';
+
+/** Service or ServicePack tagged with _isPack by loadFormData() — never sent to the API. */
+type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
 
 @Component({
   selector: 'bw-booking-form-dialog',
@@ -108,13 +111,13 @@ export class BookingFormDialogComponent implements OnInit {
     })),
   );
 
-  providerOptions = computed(() => [
-    { label: this.lang.t('misc.unassigned'), value: null as any },
+  providerOptions = computed<Array<{ label: string; value: number | null }>>(() => [
+    { label: this.lang.t('misc.unassigned'), value: null },
     ...this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   ]);
 
   serviceOptions = computed(() =>
-    this.services().map((s: any) => ({
+    this.services().map((s: TaggedService) => ({
       label: `${s.name} (${s.duration_minutes || 60} min)`,
       value: s._isPack ? `pack_${s.id}` : `svc_${s.id}`,
       name: s.name,
@@ -315,7 +318,7 @@ export class BookingFormDialogComponent implements OnInit {
       this.formData.service_id      = isPack ? 0 : option._id;
       this.formData.service_pack_id = isPack ? option._id : null;
       this.formData.duration_minutes = option.duration_minutes;
-      this.formData.price            = option.price;
+      this.formData.price            = Number(option.price) || 0;
     }
   }
 
@@ -333,31 +336,34 @@ export class BookingFormDialogComponent implements OnInit {
 
     const startDate = new Date(this.formData.start_time);
 
-    const bookingData: any = {
-      client_id:              this.formData.client_id,
-      provider_id:            this.formData.provider_id || undefined,
-      location_id:            this.formData.location_id,
-      status_id:              this.formData.status_id,
-      start_time:             this.formatDateTime(startDate),
+    const bookingData: CreateBooking = {
+      client_id:               this.formData.client_id,
+      provider_id:             this.formData.provider_id || undefined,
+      location_id:             this.formData.location_id,
+      status_id:               this.formData.status_id,
+      start_time:              this.formatDateTime(startDate),
       custom_duration_minutes: this.formData.duration_minutes || undefined,
-      notes:                  this.formData.notes || undefined,
-      ...(this.formData.service_pack_id
-        ? { service_pack_id: this.formData.service_pack_id }
-        : { service_id: this.formData.service_id, price: this.formData.price }),
+      notes:                   this.formData.notes || undefined,
     };
 
+    if (this.formData.service_pack_id) {
+      bookingData.service_pack_id = this.formData.service_pack_id;
+    } else {
+      bookingData.service_id = this.formData.service_id;
+      bookingData.price      = this.formData.price;
+    }
+
     if (this.formData.repeat_enabled) {
-      bookingData.repeat = {
-        enabled: true,
-        type: this.formData.repeat_type,
-        days: this.formData.repeat_days,
+      const repeat: BookingRepeat = {
+        enabled:  true,
+        type:     this.formData.repeat_type,
+        days:     this.formData.repeat_days,
         interval: this.formData.repeat_interval,
         end_type: this.formData.repeat_end_type,
-        count: this.formData.repeat_count,
-        until: this.formData.repeat_until
-          ? this.formatDateTime(this.formData.repeat_until)
-          : undefined,
+        count:    this.formData.repeat_count,
+        until:    this.formData.repeat_until ? this.formatDateTime(this.formData.repeat_until) : undefined,
       };
+      bookingData.repeat = repeat;
     }
 
     const request = this.isEdit()

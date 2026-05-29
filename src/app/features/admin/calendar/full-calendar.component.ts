@@ -52,9 +52,9 @@ interface CalendarEvent {
   end: string;
   backgroundColor?: string;
   borderColor?: string;
-  extendedProps?: {
-    booking: Booking;
-  };
+  textColor?: string;
+  classNames?: string[];
+  extendedProps?: Record<string, unknown>;
 }
 
 @Component({
@@ -384,18 +384,26 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const dateFrom = fetchInfo.startStr.split('T')[0];
     const dateTo   = fetchInfo.endStr.split('T')[0];
 
-    const bookingParams: any = { date_from: dateFrom, date_to: dateTo, per_page: 500 };
-    const slotParams: any    = { date_from: dateFrom, date_to: dateTo };
-    if (this.selectedLocationId) { bookingParams.location_id = this.selectedLocationId; slotParams.location_id = this.selectedLocationId; }
-    if (this.selectedProviderId) { bookingParams.provider_id = this.selectedProviderId; slotParams.provider_id = this.selectedProviderId; }
+    const bookingParams = {
+      date_from:   dateFrom,
+      date_to:     dateTo,
+      per_page:    500,
+      ...(this.selectedLocationId ? { location_id: this.selectedLocationId } : {}),
+      ...(this.selectedProviderId ? { provider_id: this.selectedProviderId } : {}),
+    };
+    const slotParams = {
+      date_from: dateFrom,
+      date_to:   dateTo,
+      ...(this.selectedLocationId ? { location_id: this.selectedLocationId } : {}),
+      ...(this.selectedProviderId ? { provider_id: this.selectedProviderId } : {}),
+    };
 
     forkJoin({
       bookingsRes:      this.api.getBookings(bookingParams),
       blockedSlotsRes:  this.api.getBlockedSlots(slotParams),
     }).subscribe({
       next: ({ bookingsRes, blockedSlotsRes }) => {
-        const data     = (bookingsRes as any).data || bookingsRes;
-        const bookings: Booking[] = Array.isArray(data) ? data : [];
+        const bookings: Booking[] = bookingsRes.data ?? [];
 
         const visibleBookings = this.selectedStatusIds.length > 0
           ? bookings.filter(b => this.selectedStatusIds.includes(b.status_id))
@@ -420,7 +428,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           end: slot.end_time,
           classNames: ['fc-blocked-slot'],
           extendedProps: { isBlocked: true, blockedSlot: slot },
-        } as any));
+        }));
 
         successCallback([...bookingEvents, ...blockedEvents]);
         this.ngZone.run(() => {

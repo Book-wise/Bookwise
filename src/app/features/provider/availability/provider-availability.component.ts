@@ -86,7 +86,7 @@ loadAvailability(): void {
     
     this.availabilityService.getProviderAvailability(providerId).subscribe({
       next: (response) => {
-        const data = (response as any).data || response;
+        const data = response;
         this.availabilitySlots.set(data);
       },
       error: (err) => this.httpError.handle(err, 'cargar disponibilidad'),
@@ -150,7 +150,7 @@ saveAvailability(): void {
     
     this.availabilityService.saveProviderAvailability(providerId, this.availabilitySlots()).subscribe({
       next: (response) => {
-        const data = (response as any).data || response;
+        const data = response;
         this.availabilitySlots.set(data);
         this.toast.success('Guardado', 'Tu disponibilidad ha sido actualizada');
         this.saving.set(false);

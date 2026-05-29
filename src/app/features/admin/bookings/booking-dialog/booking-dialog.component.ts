@@ -202,7 +202,7 @@ export class BookingDialogComponent implements OnInit {
     delete this.errors['provider_id'];
     // 0 means "no provider assigned" - convert to null
     if (this.formData.provider_id === 0) {
-      this.formData.provider_id = null as any;
+      this.formData.provider_id = null;
     }
   }
   onLocationChange() {
