@@ -76,7 +76,14 @@ export const EN: Record<string, string> = {
   'biz.pack_not_active':            'Pack not active',
   'biz.no_sessions_remaining':      'No sessions remaining',
 
+  // Business errors — summary
+  'biz.sale_already_exists':          'Duplicate sale',
+  'biz.amount_exceeds_remaining':     'Amount exceeds balance',
+
   // Business errors — detail
+  'biz.sale_already_exists.detail':       'A sale already exists for this concept.',
+  'biz.amount_exceeds_remaining.detail':  'The amount exceeds the remaining balance of the sale.',
+
   'biz.invalid_input.detail':              'Check your fields and try again.',
   'biz.forbidden.detail':                  'You do not have permission to perform this action.',
   'biz.provider_location_mismatch.detail': 'The provider does not belong to the selected location.',

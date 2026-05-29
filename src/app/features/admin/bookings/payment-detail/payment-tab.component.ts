@@ -7,7 +7,7 @@ import { MenuModule } from 'primeng/menu';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { MenuItem } from 'primeng/api';
-import { Booking, SaleTransaction } from '../../../../core/models';
+import { Booking, SaleTransaction, BookingPayment } from '../../../../core/models';
 
 export interface SaleItem {
   name: string;
@@ -17,8 +17,8 @@ export interface SaleItem {
   total: number;
 }
 
-// Presentation model — mirrors GET /api/v1/sales/:id { data } shape
-// plus client/item info resolved from the booking context.
+// Presentation model — mirrors GET /api/v1/sales/:id { data } shape.
+// Amounts stored as numbers for easy display; API returns decimal strings.
 export interface SaleDetail {
   id: number;
   date: string;
@@ -26,6 +26,7 @@ export interface SaleDetail {
   paid_amount: number;
   remaining_amount: number;
   status: 'paid' | 'partial' | 'unpaid';
+  payment_method?: string | null;
   client_name: string;
   items: SaleItem[];
   transactions: SaleTransaction[];
@@ -58,23 +59,29 @@ export class PaymentTabComponent implements OnInit {
   }
 
   // ── Data loading ─────────────────────────────────────────────────────────────
-  // Mock: maps booking.payment + booking context into SaleDetail.
+  // Mock: maps booking.payment (BookingPayment) into SaleDetail for display.
+  // booking.payment uses total_amount (older booking list field).
   //
-  // TODO: replace the setTimeout block with:
-  //   const saleId = (this.booking.payment as any)?.id;
+  // TODO: replace the setTimeout block with a real API call:
+  //   inject ApiService and call:
+  //
+  //   const saleId = (this.booking.payment as BookingPayment | null)?.id;
   //   if (!saleId) { this.loading.set(false); return; }
-  //   this.apiService.getSale(saleId).subscribe({
+  //   this.api.getSale(saleId).subscribe({
   //     next: ({ data }) => {
   //       this.sale.set({
   //         id:               data.id,
-  //         date:             this.booking.start_time,
+  //         date:             data.created_at ?? this.booking.start_time,
   //         total:            Number(data.total),
   //         paid_amount:      Number(data.paid_amount),
   //         remaining_amount: Number(data.remaining_amount),
   //         status:           data.payment_status,
-  //         client_name:      `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
-  //         items:            this.buildItems(),
-  //         transactions:     data.transactions,
+  //         payment_method:   data.payment_method ?? null,
+  //         client_name:      data.client
+  //           ? `${data.client.first_name} ${data.client.last_name}`
+  //           : `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
+  //         items:  this.buildItems(data),
+  //         transactions: data.transactions,
   //       });
   //       this.loading.set(false);
   //     },
@@ -83,25 +90,21 @@ export class PaymentTabComponent implements OnInit {
 
   private loadPaymentData(): void {
     setTimeout(() => {
-      const raw    = this.booking.payment as any;
-      const hasPay = raw && typeof raw === 'object' && 'total' in raw;
-      const total  = hasPay ? Number(raw.total) : Number(this.booking.price) || 0;
+      const raw    = this.booking.payment as (BookingPayment & { total_amount: number }) | null;
+      const hasPay = raw != null && 'total_amount' in raw;
+      const total  = hasPay ? Number(raw!.total_amount) : Number(this.booking.price) || 0;
 
       this.sale.set({
         id:               raw?.id ?? 1,
         date:             this.booking.start_time,
         total,
-        paid_amount:      hasPay ? Number(raw.paid_amount) : 0,
-        remaining_amount: hasPay ? Number(raw.remaining_amount) : total,
+        paid_amount:      hasPay ? Number(raw!.paid_amount) : 0,
+        remaining_amount: hasPay ? Number(raw!.remaining_amount) : total,
         status:           (this.booking.payment_status as SaleDetail['status']) ?? 'unpaid',
+        payment_method:   null,
         client_name:      `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
         items:            this.buildItems(),
-        transactions:     hasPay ? [{
-          id:             raw.id ?? 1,
-          amount:         raw.paid_amount ?? total,
-          payment_method: 'Efectivo',
-          paid_at:        this.booking.created_at ?? this.booking.start_time,
-        }] : [],
+        transactions:     [],
       });
       this.loading.set(false);
     }, 300);

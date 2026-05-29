@@ -76,7 +76,14 @@ export const ES: Record<string, string> = {
   'biz.pack_not_active':            'Pack inactivo',
   'biz.no_sessions_remaining':      'Sin sesiones disponibles',
 
+  // Business errors — summary
+  'biz.sale_already_exists':          'Venta duplicada',
+  'biz.amount_exceeds_remaining':     'Monto supera el saldo',
+
   // Business errors — detail
+  'biz.sale_already_exists.detail':       'Ya existe una venta para este concepto.',
+  'biz.amount_exceeds_remaining.detail':  'El monto supera el saldo pendiente de la venta.',
+
   'biz.invalid_input.detail':              'Verificá los campos e intentá de nuevo.',
   'biz.forbidden.detail':                  'No tenés permisos para realizar esta acción.',
   'biz.provider_location_mismatch.detail': 'El profesional no pertenece a la sede seleccionada.',
