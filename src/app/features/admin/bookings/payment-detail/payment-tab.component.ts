@@ -7,7 +7,7 @@ import { MenuModule } from 'primeng/menu';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { MenuItem } from 'primeng/api';
-import { Booking } from '../../../../core/models';
+import { Booking, SaleTransaction } from '../../../../core/models';
 
 export interface SaleItem {
   name: string;
@@ -17,13 +17,8 @@ export interface SaleItem {
   total: number;
 }
 
-export interface SaleTransaction {
-  id: string;
-  date: string;
-  payment_method: string;
-  amount: number;
-}
-
+// Presentation model — mirrors GET /api/v1/sales/:id { data } shape
+// plus client/item info resolved from the booking context.
 export interface SaleDetail {
   id: number;
   date: string;
@@ -62,7 +57,28 @@ export class PaymentTabComponent implements OnInit {
   }
 
   // ── Data loading ─────────────────────────────────────────────────────────────
-  // TODO: replace with real API call → this.api.getSale(this.booking.payment?.id)
+  // Mock: maps booking.payment + booking context into SaleDetail.
+  //
+  // TODO: replace the setTimeout block with:
+  //   const saleId = (this.booking.payment as any)?.id;
+  //   if (!saleId) { this.loading.set(false); return; }
+  //   this.apiService.getSale(saleId).subscribe({
+  //     next: ({ data }) => {
+  //       this.sale.set({
+  //         id:               data.id,
+  //         date:             this.booking.start_time,
+  //         total:            Number(data.total),
+  //         paid_amount:      Number(data.paid_amount),
+  //         remaining_amount: Number(data.remaining_amount),
+  //         status:           data.payment_status,
+  //         client_name:      `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
+  //         items:            this.buildItems(),
+  //         transactions:     data.transactions,
+  //       });
+  //       this.loading.set(false);
+  //     },
+  //     error: () => { this.sale.set(null); this.loading.set(false); },
+  //   });
 
   private loadPaymentData(): void {
     setTimeout(() => {
@@ -70,36 +86,36 @@ export class PaymentTabComponent implements OnInit {
       const hasPay = raw && typeof raw === 'object' && 'total' in raw;
       const total  = hasPay ? Number(raw.total) : Number(this.booking.price) || 0;
 
-      const items: SaleItem[] = [{
-        name: this.booking.service?.name ?? 'Servicio',
-        description: this.booking.pack_session
-          ? `Sesión ${this.booking.pack_session.session_number} de ${this.booking.pack_session.total_sessions}`
-          : undefined,
-        quantity:   1,
-        unit_price: Number(this.booking.price) || 0,
-        total:      Number(this.booking.price) || 0,
-      }];
-
-      const transactions: SaleTransaction[] = hasPay ? [{
-        id:             `TXN-${String(raw.id ?? 1).padStart(4, '0')}`,
-        date:           this.booking.created_at ?? this.booking.start_time,
-        payment_method: 'Efectivo',
-        amount:         Number(raw.paid_amount ?? total),
-      }] : [];
-
       this.sale.set({
-        id:                raw?.id ?? 1,
-        date:              this.booking.start_time,
+        id:               raw?.id ?? 1,
+        date:             this.booking.start_time,
         total,
-        paid_amount:       hasPay ? Number(raw.paid_amount) : 0,
-        remaining_amount:  hasPay ? Number(raw.remaining_amount) : total,
-        status:            (this.booking.payment_status as SaleDetail['status']) ?? 'unpaid',
-        client_name:       `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
-        items,
-        transactions,
+        paid_amount:      hasPay ? Number(raw.paid_amount) : 0,
+        remaining_amount: hasPay ? Number(raw.remaining_amount) : total,
+        status:           (this.booking.payment_status as SaleDetail['status']) ?? 'unpaid',
+        client_name:      `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
+        items:            this.buildItems(),
+        transactions:     hasPay ? [{
+          id:             raw.id ?? 1,
+          amount:         raw.paid_amount ?? total,
+          payment_method: 'Efectivo',
+          paid_at:        this.booking.created_at ?? this.booking.start_time,
+        }] : [],
       });
       this.loading.set(false);
     }, 300);
+  }
+
+  private buildItems(): SaleItem[] {
+    return [{
+      name:       this.booking.service?.name ?? 'Servicio',
+      description: this.booking.pack_session
+        ? `Sesión ${this.booking.pack_session.session_number} de ${this.booking.pack_session.total_sessions}`
+        : undefined,
+      quantity:   1,
+      unit_price: Number(this.booking.price) || 0,
+      total:      Number(this.booking.price) || 0,
+    }];
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────

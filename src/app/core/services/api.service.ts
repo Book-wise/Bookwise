@@ -20,6 +20,11 @@ import {
   RegisterData,
   CreateBooking,
   UpdateBooking,
+  CreateSaleRequest,
+  UpdateSaleRequest,
+  CreateTransactionRequest,
+  SaleDetailResponse,
+  CreateTransactionResponse,
 } from '../models';
 
 @Injectable({
@@ -202,6 +207,9 @@ export class ApiService {
 
   // Sales
   getSales(params?: {
+    client_id?: number;
+    client_pack_id?: number;
+    payment_status?: 'paid' | 'partial' | 'unpaid';
     location_id?: number;
     date_from?: string;
     date_to?: string;
@@ -219,8 +227,24 @@ export class ApiService {
     return this.http.get<PaginatedResponse<Sale>>(`${this.baseUrl}/sales`, { params: httpParams });
   }
 
-  getSale(id: number): Observable<Sale> {
-    return this.http.get<Sale>(`${this.baseUrl}/sales/${id}`);
+  getSale(id: number): Observable<SaleDetailResponse> {
+    return this.http.get<SaleDetailResponse>(`${this.baseUrl}/sales/${id}`);
+  }
+
+  createSale(body: CreateSaleRequest): Observable<SaleDetailResponse> {
+    return this.http.post<SaleDetailResponse>(`${this.baseUrl}/sales`, body);
+  }
+
+  updateSale(id: number, body: UpdateSaleRequest): Observable<SaleDetailResponse> {
+    return this.http.patch<SaleDetailResponse>(`${this.baseUrl}/sales/${id}`, body);
+  }
+
+  createTransaction(saleId: number, body: CreateTransactionRequest): Observable<CreateTransactionResponse> {
+    return this.http.post<CreateTransactionResponse>(`${this.baseUrl}/sales/${saleId}/transactions`, body);
+  }
+
+  deleteTransaction(saleId: number, transactionId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/sales/${saleId}/transactions/${transactionId}`);
   }
 
   // Client Packs

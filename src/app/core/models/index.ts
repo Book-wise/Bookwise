@@ -2,9 +2,11 @@
 
 // Re-export requests
 export * from './requests/blocked-slots';
+export * from './requests/sales';
 
 // Re-export responses
 export * from './responses/bookings';
+export * from './responses/sales';
 
 export interface Location {
   id: number;

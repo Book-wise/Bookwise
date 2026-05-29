@@ -75,9 +75,9 @@
       @for (txn of sale.transactions; track txn.id) {
         <div class="sale-txn">
           <div class="sale-txn__left">
-            <span class="sale-txn__time">{{ txn.date | date:'HH:mm' }}</span>
-            <span class="sale-txn__date">{{ txn.date | date:'dd/MM/yy' }}</span>
-            <span class="sale-txn__id">{{ txn.id }}</span>
+            <span class="sale-txn__time">{{ txn.paid_at | date:'HH:mm' }}</span>
+            <span class="sale-txn__date">{{ txn.paid_at | date:'dd/MM/yy' }}</span>
+            <span class="sale-txn__id">#{{ txn.id }}</span>
           </div>
           <div class="sale-txn__right">
             <span class="sale-txn__method">{{ txn.payment_method }}</span>
