@@ -239,6 +239,38 @@ input.p-inputtext {
 }
 
 // ============================================
+// bw-sale-menu — popup de acciones de venta
+// ============================================
+
+.bw-sale-menu {
+  .p-menu-item {
+    .p-menu-item-content {
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+
+    &:not(.p-disabled):hover .p-menu-item-content {
+      background: var(--bw-50, #f0f6ff);
+    }
+
+    .p-menu-item-icon {
+      color: var(--bw-300, #046af4);
+    }
+  }
+
+  .bw-menu-danger {
+    .p-menu-item-icon,
+    .p-menu-item-label {
+      color: var(--red-500, #ef4444);
+    }
+
+    &:not(.p-disabled):hover .p-menu-item-content {
+      background: var(--red-50, #fef2f2);
+    }
+  }
+}
+
+// ============================================
 // Toast — Mobile Responsive
 // ============================================
 

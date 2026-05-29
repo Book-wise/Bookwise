@@ -51,10 +51,10 @@ export class PaymentTabComponent implements OnInit {
   noteText = signal('');
 
   saleMenuItems: MenuItem[] = [
-    { label: 'Imprimir comprobante', icon: 'pi pi-print' },
-    { label: 'Enviar por email',     icon: 'pi pi-envelope' },
+    { label: 'Ver comprobante',    icon: 'pi pi-eye' },
+    { label: 'Enviar comprobante', icon: 'pi pi-send' },
     { separator: true },
-    { label: 'Anular venta',         icon: 'pi pi-times',   styleClass: 'p-menuitem-danger' },
+    { label: 'Eliminar venta',     icon: 'pi pi-trash', styleClass: 'bw-menu-danger' },
   ];
 
   ngOnInit(): void {

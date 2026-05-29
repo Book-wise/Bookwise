@@ -17,17 +17,17 @@
         <span class="sale-id">#{{ sale.id }}</span>
         <p-tag [value]="statusLabel" [severity]="statusSeverity" />
       </div>
-      <p-button
-        icon="pi pi-ellipsis-v"
-        [rounded]="true"
-        [text]="true"
-        severity="secondary"
-        size="small"
-        (onClick)="saleMenu.toggle($event)"
-        pTooltip="Opciones"
-        tooltipPosition="left"
-      />
-      <p-menu #saleMenu [model]="saleMenuItems" [popup]="true" [appendTo]="'body'" />
+      <div class="sale-card__actions">
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          (onClick)="saleMenu.toggle($event)"
+        />
+        <p-menu #saleMenu [model]="saleMenuItems" [popup]="true" [appendTo]="'body'" styleClass="bw-sale-menu" />
+      </div>
     </div>
   </div>
 

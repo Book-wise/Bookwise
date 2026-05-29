@@ -27,6 +27,11 @@
     gap: 0.5rem;
   }
 
+  &__actions {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
   &__title-group {
     display: flex;
     align-items: center;
