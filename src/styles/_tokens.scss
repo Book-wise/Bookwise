@@ -47,6 +47,67 @@
   // ── Typography ────────────────────────────────
   --font-family: 'Roboto', sans-serif;
 
+  // ── Type Scale (rem / px at 16px base) ───────────────────────────────
+  //
+  //  Step    Token              rem        px    Uso típico
+  // ─────────────────────────────────────────────────────────────────────
+  //  2xs   --bw-text-2xs    0.6875rem    11px   overlines, section labels en caps
+  //  xs    --bw-text-xs     0.75rem      12px   captions, helper text, code labels
+  //  sm    --bw-text-sm     0.875rem     14px   tablas, texto denso en diálogos
+  //  base  --bw-text-base   1rem         16px   body (raíz del sistema)
+  //  lg    --bw-text-lg     1.125rem     18px   títulos de card, cabeceras de dialog
+  //  xl    --bw-text-xl     1.25rem      20px   cifras monetarias inline ($40,000)
+  //  2xl   --bw-text-2xl    1.5rem       24px   subtotales, cifras de sección
+  //  3xl   --bw-text-3xl    1.875rem     30px   KPIs del dashboard
+  //  4xl   --bw-text-4xl    2.25rem      36px   hero / display figures
+  //
+  --bw-text-2xs:  0.6875rem;
+  --bw-text-xs:   0.75rem;
+  --bw-text-sm:   0.875rem;
+  --bw-text-base: 1rem;
+  --bw-text-lg:   1.125rem;
+  --bw-text-xl:   1.25rem;
+  --bw-text-2xl:  1.5rem;
+  --bw-text-3xl:  1.875rem;
+  --bw-text-4xl:  2.25rem;
+
+  // ── Font Weights ──────────────────────────────────────────────────────
+  --bw-weight-regular:  400;
+  --bw-weight-medium:   500;
+  --bw-weight-semibold: 600;
+  --bw-weight-bold:     700;
+
+  // ── Letter Spacing ────────────────────────────────────────────────────
+  --bw-tracking-overline: 0.06em;   // section labels en uppercase
+  --bw-tracking-tight:   -0.01em;   // display / hero numbers
+
+  // ── Semantic Typography Roles ─────────────────────────────────────────
+  // Nombrados por ROL, no por tamaño.
+  // Para ajustar la escala global: modificá --bw-text-* arriba.
+  // Los componentes NUNCA usan valores literales — solo estos tokens.
+  //
+  //  Token                 Escala       Uso
+  // ─────────────────────────────────────────────────────────────────────
+  //  --bw-font-overline    2xs  11px    "DETALLE", "TRANSACCIONES" — all-caps labels
+  //  --bw-font-caption     xs   12px    helper text, descriptions, badge labels
+  //  --bw-font-table       sm   14px    celdas de tabla, texto denso en diálogos
+  //  --bw-font-body        base 16px    texto de lectura estándar
+  //  --bw-font-title       lg   18px    títulos de card, cabeceras de dialog
+  //  --bw-font-amount      xl   20px    cifras monetarias inline ($40,000 en filas)
+  //  --bw-font-subtotal    2xl  24px    subtotales, cifras de sección destacadas
+  //  --bw-font-kpi         3xl  30px    cajas KPI del dashboard
+  //  --bw-font-display     4xl  36px    hero / showcase totals
+  //
+  --bw-font-overline:  var(--bw-text-2xs);
+  --bw-font-caption:   var(--bw-text-xs);
+  --bw-font-table:     var(--bw-text-sm);
+  --bw-font-body:      var(--bw-text-base);
+  --bw-font-title:     var(--bw-text-lg);
+  --bw-font-amount:    var(--bw-text-xl);
+  --bw-font-subtotal:  var(--bw-text-2xl);
+  --bw-font-kpi:       var(--bw-text-3xl);
+  --bw-font-display:   var(--bw-text-4xl);
+
   // ── Form controls ─────────────────────────────
   --bw-control-height: 2.5rem;
 }
