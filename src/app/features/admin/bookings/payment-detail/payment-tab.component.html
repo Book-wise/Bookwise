@@ -1,0 +1,121 @@
+@if (loading()) {
+
+  <div class="sale-skeleton">
+    <p-skeleton height="5rem"  borderRadius="8px" />
+    <p-skeleton height="4rem"  borderRadius="8px" />
+    <p-skeleton height="6rem"  borderRadius="8px" />
+    <p-skeleton height="3rem"  borderRadius="8px" />
+  </div>
+
+} @else if (sale(); as sale) {
+<div class="sale-body">
+
+  <!-- ── Card 1: encabezado de venta ──────────────────────────────────────── -->
+  <div class="sale-card sale-card--header">
+    <div class="sale-card__title-row">
+      <div class="sale-card__title-group">
+        <span class="sale-title">Detalle de venta</span>
+        <span class="sale-id">#{{ sale.id }}</span>
+        <p-tag [value]="statusLabel" [severity]="statusSeverity" />
+      </div>
+      <div class="sale-card__actions">
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          (onClick)="saleMenu.toggle($event)"
+        />
+        <p-menu #saleMenu [model]="saleMenuItems" [popup]="true" [appendTo]="'body'" styleClass="bw-sale-menu" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Card 2: resumen ─────────────────────────────────────────────────── -->
+  <div class="sale-card">
+    <div class="sale-row">
+      <div class="sale-row__meta">
+        <i class="pi pi-calendar sale-row__icon"></i>
+        <span>{{ sale.date | date:'dd MMM yyyy, HH:mm':'':'es' }}</span>
+      </div>
+      <span class="sale-amount">${{ sale.total | number:'1.0-0' }}</span>
+    </div>
+    <div class="sale-row sale-row--client">
+      <div class="sale-row__meta">
+        <i class="pi pi-user sale-row__icon"></i>
+        <span>{{ sale.client_name }}</span>
+      </div>
+      @if (sale.remaining_amount > 0) {
+        <span class="sale-remaining">Saldo ${{ sale.remaining_amount | number:'1.0-0' }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- ── Card 3: detalle de ítems ────────────────────────────────────────── -->
+  <div class="sale-card">
+    <span class="sale-card__section-label">Detalle</span>
+    @for (item of sale.items; track $index) {
+      <div class="sale-item">
+        <div class="sale-item__info">
+          <span class="sale-item__name">{{ item.name }}</span>
+          @if (item.description) {
+            <span class="sale-item__desc">{{ item.description }}</span>
+          }
+        </div>
+        <span class="sale-item__price">${{ item.total | number:'1.0-0' }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- ── Card 4: transacciones ───────────────────────────────────────────── -->
+  <div class="sale-card">
+    <span class="sale-card__section-label">Transacciones</span>
+    @if (sale.transactions.length > 0) {
+      @for (txn of sale.transactions; track txn.id) {
+        <div class="sale-txn">
+          <div class="sale-txn__left">
+            <span class="sale-txn__time">{{ txn.paid_at | date:'HH:mm' }}</span>
+            <span class="sale-txn__date">{{ txn.paid_at | date:'dd/MM/yy' }}</span>
+            <span class="sale-txn__id">#{{ txn.id }}</span>
+          </div>
+          <div class="sale-txn__right">
+            <span class="sale-txn__method">{{ txn.payment_method }}</span>
+            <span class="sale-txn__amount">${{ txn.amount | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      }
+    } @else {
+      <span class="sale-card__empty">Sin transacciones registradas.</span>
+    }
+  </div>
+
+  <!-- ── Card 5: nota ────────────────────────────────────────────────────── -->
+  <div class="sale-card">
+    <span class="sale-card__section-label">Nota</span>
+    <textarea
+      pTextarea
+      [ngModel]="noteText()"
+      (ngModelChange)="noteText.set($event)"
+      rows="2"
+      placeholder="Agregar nota interna sobre este pago..."
+      class="sale-note-input"
+      autoResize="true">
+    </textarea>
+    @if (noteText()) {
+      <div class="sale-note-actions">
+        <p-button label="Guardar nota" icon="pi pi-check" size="small" (onClick)="saveNote()" />
+      </div>
+    }
+  </div>
+
+</div><!-- /sale-body -->
+
+} @else {
+
+  <div class="sale-empty">
+    <i class="pi pi-wallet sale-empty__icon"></i>
+    <p>No hay pagos registrados para esta cita.</p>
+  </div>
+
+}

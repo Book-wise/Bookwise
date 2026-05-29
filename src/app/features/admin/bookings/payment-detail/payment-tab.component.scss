@@ -1,0 +1,254 @@
+.sale-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-ground);
+  border-radius: 10px;
+}
+
+// ── Contenedor general ────────────────────────────────────────────────────────
+// Fondo gris → los cards blancos flotan encima con contraste natural.
+
+.sale-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  background: var(--surface-ground, #f9fafb);
+  border-radius: 10px;
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+
+.sale-card {
+  background: var(--surface-0, #ffffff);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  // Header card: tinte azul Bookwise + borde izquierdo de acento
+  &--header {
+    background: var(--bw-50, #f0f6ff);
+    border-color: var(--bw-100, #dbeafe);
+    border-left: 3px solid var(--bw-300, #046af4);
+    box-shadow: none;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__actions {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  &__section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-color-secondary);
+    margin-bottom: 0.15rem;
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.sale-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.sale-id {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  font-family: monospace;
+}
+
+// ── Resumen ───────────────────────────────────────────────────────────────────
+
+.sale-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+
+  &__icon {
+    font-size: 0.85rem;
+    color: var(--bw-300, #046af4);
+  }
+
+  &--client .sale-row__meta {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+.sale-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.sale-remaining {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--orange-600);
+  background: var(--orange-50);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+// ── Ítems ─────────────────────────────────────────────────────────────────────
+
+.sale-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+
+  & + .sale-item {
+    border-top: 1px solid var(--surface-border);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  &__name {
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+
+  &__desc {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__price {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    color: var(--text-color);
+  }
+}
+
+// ── Transacciones ─────────────────────────────────────────────────────────────
+
+.sale-txn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.625rem;
+  border-radius: 6px;
+  gap: 0.5rem;
+  background: var(--surface-ground, #f9fafb);
+  margin-bottom: 0.375rem;
+
+  &:last-child { margin-bottom: 0; }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  &__date {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__id {
+    font-size: 0.75rem;
+    color: var(--bw-300, #046af4);
+    font-family: monospace;
+    background: var(--bw-50, #f0f6ff);
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+  }
+
+  &__method {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__amount {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+  }
+}
+
+// ── Nota ──────────────────────────────────────────────────────────────────────
+
+.sale-note-input {
+  width: 100%;
+  resize: none;
+}
+
+.sale-note-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+// ── Empty ─────────────────────────────────────────────────────────────────────
+
+.sale-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary);
+
+  &__icon {
+    font-size: 2.5rem;
+    opacity: 0.35;
+  }
+
+  p { margin: 0; font-size: 0.9rem; }
+}

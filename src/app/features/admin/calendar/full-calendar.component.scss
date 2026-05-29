@@ -478,6 +478,17 @@ body.dark-theme {
   }
 }
 
+.detail-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.whatsapp-link {
+  text-decoration: none;
+  display: inline-flex;
+}
+
 // ── Event hover tooltip ───────────────────────────────────────────────────────
 
 ::ng-deep .event-tooltip-panel {

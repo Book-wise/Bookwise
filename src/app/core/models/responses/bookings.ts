@@ -34,6 +34,7 @@ export interface Booking {
   custom_duration_minutes?: number | null;
   price: number;
   notes?: string;
+  internal_notes?: string | null;
   wc_order_id?: number | null;
   created_at?: string;
   // Status — both id and object returned

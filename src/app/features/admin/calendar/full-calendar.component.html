@@ -146,7 +146,7 @@
   }
 </p-popover>
 
-<!-- Dialog para mostrar detalles de la reserva -->
+<!-- Dialog — Detalles de la Cita -->
 <p-dialog
   header="Detalles de la Cita"
   [visible]="showEventDialog()"
@@ -156,56 +156,111 @@
   [draggable]="false"
   [resizable]="false"
 >
-  <div class="event-details" *ngIf="selectedBooking() as booking">
-    <div class="detail-row">
-      <span class="label">Cliente:</span>
-      <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
-    </div>
-    @if (booking.client?.rut) {
+  @if (selectedBooking(); as booking) {
+    <div class="event-details">
+
       <div class="detail-row">
-        <span class="label">RUT:</span>
-        <span class="value">{{ booking.client!.rut }}</span>
+        <span class="label">Cliente</span>
+        <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
       </div>
-    }
-    <div class="detail-row">
-      <span class="label">Servicio:</span>
-      <span class="value">{{ booking.service?.name }}</span>
+
+      @if (booking.client?.rut) {
+        <div class="detail-row">
+          <span class="label">RUT</span>
+          <span class="value">{{ booking.client!.rut }}</span>
+        </div>
+      }
+
+      @if (booking.client?.phone) {
+        <div class="detail-row">
+          <span class="label">Teléfono</span>
+          <div class="detail-inline">
+            <span class="value">{{ booking.client!.phone }}</span>
+            <a
+              [href]="'https://wa.me/' + booking.client!.phone!.replace('+', '').replace(/\s/g, '')"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="whatsapp-link"
+            >
+              <p-button
+                icon="pi pi-whatsapp"
+                label="WhatsApp"
+                severity="success"
+                [outlined]="true"
+                size="small"
+              />
+            </a>
+          </div>
+        </div>
+      }
+
+      <div class="detail-row">
+        <span class="label">Servicio</span>
+        <span class="value">{{ booking.service?.name }}</span>
+      </div>
+
+      @if (booking.pack_session) {
+        <div class="detail-row">
+          <span class="label">Sesión</span>
+          <span class="value">{{ booking.pack_session.session_number }} / {{ booking.pack_session.total_sessions }}</span>
+        </div>
+      }
+
+      <div class="detail-row">
+        <span class="label">Profesional</span>
+        <span class="value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Ubicación</span>
+        <span class="value">{{ booking.location?.name }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Fecha</span>
+        <span class="value">{{ booking.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Precio</span>
+        <span class="value">${{ booking.price | number:'1.0-0' }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Estado</span>
+        <p-tag
+          [value]="booking.status?.name || 'Sin estado'"
+          [severity]="getStatusSeverity(booking.status?.name, booking.status_id)"
+        />
+      </div>
+
+      @if (booking.notes) {
+        <div class="detail-row">
+          <span class="label">Notas para el paciente</span>
+          <span class="value">{{ booking.notes }}</span>
+        </div>
+      }
+
+      @if (booking.internal_notes) {
+        <div class="detail-row">
+          <span class="label">Comentario interno</span>
+          <span class="value">{{ booking.internal_notes }}</span>
+        </div>
+      }
+
     </div>
-    <div class="detail-row">
-      <span class="label">Profesional:</span>
-      <span class="value"
-        >{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span
-      >
-    </div>
-    <div class="detail-row">
-      <span class="label">Ubicación:</span>
-      <span class="value">{{ booking.location?.name }}</span>
-    </div>
-    <div class="detail-row">
-      <span class="label">Fecha:</span>
-      <span class="value">{{ booking.start_time | date: 'dd/MM/yyyy HH:mm' }}</span>
-    </div>
-    <div class="detail-row">
-      <span class="label">Precio:</span>
-      <span class="value">${{ booking.price | number: '1.0-0' }}</span>
-    </div>
-    <div class="detail-row">
-      <span class="label">Estado:</span>
-      <p-tag
-        [value]="booking.status?.name || 'Sin estado'"
-        [severity]="getStatusSeverity(booking.status?.name)"
-      ></p-tag>
-    </div>
-    <div class="detail-row" *ngIf="booking.notes">
-      <span class="label">Notas:</span>
-      <span class="value">{{ booking.notes }}</span>
-    </div>
-  </div>
+  }
+
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" (onClick)="closeDialog()" class="p-button-text"></p-button>
-    <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()"></p-button>
+    <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
+    @if (selectedBooking()?.payment_status && selectedBooking()?.payment_status !== 'unpaid') {
+      <p-button label="Ver pago" icon="pi pi-dollar" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail()" />
+    }
+    <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()" />
   </ng-template>
 </p-dialog>
+
+<bw-payment-detail-dialog #paymentDetailDialog />
 
 <!-- Booking Dialog para crear/editar -->
 <bw-booking-dialog

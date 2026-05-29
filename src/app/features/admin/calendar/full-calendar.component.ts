@@ -30,6 +30,7 @@ import { Booking, BlockedSlot, Location, Provider } from '@models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
+import { PaymentDetailDialogComponent } from '../bookings/payment-detail/payment-detail-dialog.component';
 import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { LanguageService } from '@services/language.service';
 import { forkJoin } from 'rxjs';
@@ -74,6 +75,7 @@ interface CalendarEvent {
     BookingFormDialogComponent,
     PopoverModule,
     BlockTimeDialogComponent,
+    PaymentDetailDialogComponent,
   ],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
@@ -92,7 +94,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('eventTooltip') eventTooltip!: Popover;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
-  @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
+  @ViewChild(BlockTimeDialogComponent)   blockTimeDialog!: BlockTimeDialogComponent;
+  @ViewChild(PaymentDetailDialogComponent) paymentDialog!: PaymentDetailDialogComponent;
 
   loading = signal(true);
   providersLoading = signal(false);
@@ -650,6 +653,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   closeDialog(): void {
     this.showEventDialog.set(false);
     this.selectedBooking.set(null);
+  }
+
+  openPaymentDetail(): void {
+    const booking = this.selectedBooking();
+    if (!booking) return;
+    this.showEventDialog.set(false);
+    setTimeout(() => this.paymentDialog.open(booking), 100);
   }
 
   getStatusSeverity(

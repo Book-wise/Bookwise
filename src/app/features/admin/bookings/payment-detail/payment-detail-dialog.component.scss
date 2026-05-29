@@ -1,0 +1,139 @@
+// ── PrimeNG tabs — Bookwise theme override ────────────────────────────────────
+:host ::ng-deep .p-tabs {
+  --p-tabs-active-bar-color: var(--color-primary, #046af4);
+
+  .p-tab {
+    font-size: 0.875rem;
+    white-space: nowrap;
+
+    &[data-p-active='true'] {
+      color: var(--color-primary, #046af4);
+    }
+  }
+
+  .p-tabpanels {
+    padding: 1rem 0 0;
+  }
+}
+
+// ── Skeleton layouts ──────────────────────────────────────────────────────────
+
+.dialog-header-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dialog-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0;
+}
+
+.skeleton-tablist {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+
+  &--placeholder {
+    opacity: 0.5;
+    padding: 0.5rem 0;
+  }
+}
+
+.skeleton-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+// ── Dialog header ─────────────────────────────────────────────────────────────
+.booking-dialog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.booking-dialog-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-color);
+}
+
+.booking-service-tag {
+  align-self: flex-start;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  min-height: 160px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+
+  &--block {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.info-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  text-align: right;
+
+  &.paid      { color: var(--green-600); font-weight: 600; }
+  &.remaining { color: var(--orange-600); font-weight: 600; }
+}
+
+.info-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.whatsapp-link {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary);
+
+  &__icon {
+    font-size: 2.5rem;
+    opacity: 0.35;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+}
