@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -13,7 +13,6 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
 @Component({
   selector: 'bw-payment-detail-dialog',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, DialogModule, ButtonModule, TagModule, TabsModule, SkeletonModule, PaymentTabComponent],
   templateUrl: './payment-detail-dialog.component.html',
   styleUrl: './payment-detail-dialog.component.scss',
@@ -23,7 +22,18 @@ export class PaymentDetailDialogComponent {
   booking   = signal<Booking | null>(null);
   activeTab = signal<BookingTab>('pago');
 
-  // Computed to avoid recalculation in template
+  readonly mobileTabTitle = computed(() => {
+    const labels: Record<BookingTab, string> = {
+      reserva:       'Reserva',
+      pago:          'Pago',
+      recordatorios: 'Recordatorios',
+      paciente:      'Paciente',
+      ficha:         'Ficha médica',
+      historial:     'Historial',
+    };
+    return labels[this.activeTab()];
+  });
+
   readonly statusSeverity = computed(() => {
     const name = this.booking()?.status?.name?.toLowerCase();
     if (!name) return undefined as any;
