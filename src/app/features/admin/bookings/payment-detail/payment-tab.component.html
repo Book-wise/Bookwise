@@ -1,4 +1,4 @@
-@if (loading()) {
+@if (vm().loading) {
 
   <div class="sale-skeleton">
     <p-skeleton height="5rem"  borderRadius="8px" />
@@ -7,7 +7,7 @@
     <p-skeleton height="3rem"  borderRadius="8px" />
   </div>
 
-} @else if (sale(); as sale) {
+} @else if (vm().sale; as sale) {
 <div class="sale-body">
 
   <!-- ── Card 1: encabezado de venta ──────────────────────────────────────── -->
@@ -22,7 +22,7 @@
         <p-button
           icon="pi pi-ellipsis-v"
           [rounded]="true"
-          [text]="true"
+          variant="text"
           severity="secondary"
           size="small"
           (onClick)="saleMenu.toggle($event)"
@@ -53,41 +53,54 @@
   </div>
 
   <!-- ── Card 3: detalle de ítems ────────────────────────────────────────── -->
-  <div class="sale-card">
+  <div class="sale-card sale-card--detail">
     <span class="sale-card__section-label">Detalle</span>
-    @for (item of sale.items; track $index) {
-      <div class="sale-item">
-        <div class="sale-item__info">
-          <span class="sale-item__name">{{ item.name }}</span>
-          @if (item.description) {
-            <span class="sale-item__desc">{{ item.description }}</span>
-          }
-        </div>
-        <span class="sale-item__price">${{ item.total | number:'1.0-0' }}</span>
-      </div>
-    }
+    <p-table
+      [value]="sale.items"
+      [stripedRows]="true"
+      [scrollable]="true"
+      size="small"
+      class="bw-detail-table"
+    >
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td class="bw-detail__name">
+            {{ item.name }}
+            @if (item.description) {
+              <span class="bw-detail__desc">{{ item.description }}</span>
+            }
+          </td>
+          <td class="bw-detail__price">${{ item.total | number:'1.0-0' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 
   <!-- ── Card 4: transacciones ───────────────────────────────────────────── -->
-  <div class="sale-card">
+  <div class="sale-card sale-card--txn">
     <span class="sale-card__section-label">Transacciones</span>
-    @if (sale.transactions.length > 0) {
-      @for (txn of sale.transactions; track txn.id) {
-        <div class="sale-txn">
-          <div class="sale-txn__left">
-            <span class="sale-txn__time">{{ txn.paid_at | date:'HH:mm' }}</span>
-            <span class="sale-txn__date">{{ txn.paid_at | date:'dd/MM/yy' }}</span>
-            <span class="sale-txn__id">#{{ txn.id }}</span>
-          </div>
-          <div class="sale-txn__right">
-            <span class="sale-txn__method">{{ txn.payment_method }}</span>
-            <span class="sale-txn__amount">${{ txn.amount | number:'1.0-0' }}</span>
-          </div>
-        </div>
-      }
-    } @else {
-      <span class="sale-card__empty">Sin transacciones registradas.</span>
-    }
+    <p-table
+      [value]="sale.transactions"
+      [stripedRows]="true"
+      [scrollable]="true"
+      size="small"
+      class="bw-txn-table"
+    >
+      <ng-template pTemplate="body" let-txn>
+        <tr>
+          <td class="bw-txn__time">{{ txn.paid_at | date:'HH:mm' }}</td>
+          <td class="bw-txn__date">{{ txn.paid_at | date:'dd/MM/yy' }}</td>
+          <td class="bw-txn__id">#{{ txn.id }}</td>
+          <td class="bw-txn__method">{{ txn.payment_method }}</td>
+          <td class="bw-txn__amount">${{ txn.amount | number:'1.0-0' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="bw-txn__empty">Sin transacciones registradas.</td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 
   <!-- ── Card 5: nota ────────────────────────────────────────────────────── -->

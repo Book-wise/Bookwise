@@ -8,7 +8,6 @@
 }
 
 // ── Contenedor general ────────────────────────────────────────────────────────
-// Fondo gris → los cards blancos flotan encima con contraste natural.
 
 .sale-body {
   display: flex;
@@ -31,7 +30,6 @@
   gap: 0.6rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 
-  // Header card: tinte azul Bookwise + borde izquierdo de acento
   &--header {
     background: var(--bw-50, #f0f6ff);
     border-color: var(--bw-100, #dbeafe);
@@ -59,28 +57,28 @@
   }
 
   &__section-label {
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--bw-font-overline);
+    font-weight: var(--bw-weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--bw-tracking-overline);
     color: var(--text-color-secondary);
     margin-bottom: 0.15rem;
   }
 
   &__empty {
-    font-size: 0.875rem;
+    font-size: var(--bw-font-table);
     color: var(--text-color-secondary);
   }
 }
 
 .sale-title {
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: var(--bw-weight-semibold);
+  font-size: var(--bw-font-body);
   color: var(--text-color);
 }
 
 .sale-id {
-  font-size: 0.85rem;
+  font-size: var(--bw-font-table);
   color: var(--text-color-secondary);
   font-family: monospace;
 }
@@ -97,129 +95,127 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.9rem;
+    font-size: var(--bw-font-table);
     color: var(--text-color);
   }
 
   &__icon {
-    font-size: 0.85rem;
+    font-size: var(--bw-font-table);
     color: var(--bw-300, #046af4);
   }
 
   &--client .sale-row__meta {
     color: var(--text-color-secondary);
-    font-size: 0.875rem;
+    font-size: var(--bw-font-table);
   }
 }
 
 .sale-amount {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--bw-font-amount);
+  font-weight: var(--bw-weight-bold);
   color: var(--text-color);
 }
 
 .sale-remaining {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-semibold);
   color: var(--orange-600);
   background: var(--orange-50);
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
 }
 
-// ── Ítems ─────────────────────────────────────────────────────────────────────
+// ── Detalle ───────────────────────────────────────────────────────────────────
 
-.sale-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.35rem 0;
+.sale-card--detail,
+.sale-card--txn {
+  padding-bottom: 0;
 
-  & + .sale-item {
-    border-top: 1px solid var(--surface-border);
+  .sale-card__section-label {
+    margin-bottom: 0.5rem;
   }
+}
 
-  &__info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
+.bw-detail-table {
+  margin-bottom: 0.75rem;
+
+  table { min-width: 260px; }
+
+  td {
+    font-size: var(--bw-font-table);
+    border: none !important;
   }
+}
 
+.bw-detail {
   &__name {
-    font-size: 0.9rem;
     color: var(--text-color);
+    width: 100%;
   }
 
   &__desc {
-    font-size: 0.8rem;
+    display: block;
+    font-size: var(--bw-font-caption);
     color: var(--text-color-secondary);
+    margin-top: 0.1rem;
   }
 
   &__price {
-    font-weight: 600;
-    font-size: 0.9rem;
-    white-space: nowrap;
+    font-weight: var(--bw-weight-semibold);
     color: var(--text-color);
+    text-align: right;
+    white-space: nowrap;
   }
 }
 
 // ── Transacciones ─────────────────────────────────────────────────────────────
 
-.sale-txn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.625rem;
-  border-radius: 6px;
-  gap: 0.5rem;
-  background: var(--surface-ground, #f9fafb);
-  margin-bottom: 0.375rem;
+.bw-txn-table {
+  margin-bottom: 0.75rem;
 
-  &:last-child { margin-bottom: 0; }
+  table { min-width: 380px; }
 
-  &__left {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+  td {
+    white-space: nowrap;
+    font-size: var(--bw-font-table);
+    border: none !important;
   }
+}
 
-  &__right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
+.bw-txn {
   &__time {
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: var(--bw-weight-semibold);
     color: var(--text-color);
   }
 
   &__date {
-    font-size: 0.8rem;
     color: var(--text-color-secondary);
   }
 
   &__id {
-    font-size: 0.75rem;
     color: var(--bw-300, #046af4);
     font-family: monospace;
     background: var(--bw-50, #f0f6ff);
     padding: 0.1rem 0.45rem;
     border-radius: 4px;
+    font-size: var(--bw-font-caption);
   }
 
   &__method {
-    font-size: 0.85rem;
     color: var(--text-color-secondary);
   }
 
   &__amount {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: var(--bw-weight-semibold);
     color: var(--text-color);
-    white-space: nowrap;
+    text-align: right;
+  }
+
+  &__empty {
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+    text-align: center;
+    padding: 1rem !important;
   }
 }
 
@@ -250,5 +246,5 @@
     opacity: 0.35;
   }
 
-  p { margin: 0; font-size: 0.9rem; }
+  p { margin: 0; font-size: var(--bw-font-table); }
 }
