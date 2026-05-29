@@ -1,3 +1,22 @@
+// ── PrimeNG tabs — Bookwise theme override ────────────────────────────────────
+:host ::ng-deep .p-tabs {
+  --p-tabs-active-bar-color: var(--color-primary, #046af4);
+
+  .p-tab {
+    font-size: 0.875rem;
+    white-space: nowrap;
+
+    &[data-p-active='true'] {
+      color: var(--color-primary, #046af4);
+    }
+  }
+
+  .p-tabpanels {
+    padding: 1rem 0 0;
+  }
+}
+
+// ── Dialog header ─────────────────────────────────────────────────────────────
 .booking-dialog-header {
   display: flex;
   flex-direction: column;

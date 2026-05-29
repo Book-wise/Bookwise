@@ -1,38 +1,212 @@
-.payment-skeleton {
+.sale-skeleton {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   padding: 0.5rem 0;
 }
 
-.payment-rows {
+// ── Cards ──────────────────────────────────────────────────────────────────────
+
+.sale-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
+  gap: 0.6rem;
+
+  &--header {
+    background: var(--surface-ground);
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  &__section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-color-secondary);
+    margin-bottom: 0.1rem;
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
 }
 
-.payment-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.payment-label {
-  font-size: 0.875rem;
-  color: var(--text-color-secondary);
-}
-
-.payment-value {
+.sale-title {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--text-color);
-
-  &.paid      { color: var(--green-600); }
-  &.remaining { color: var(--orange-600); }
 }
 
-.payment-empty {
+.sale-id {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  font-family: monospace;
+}
+
+// ── Resumen row ────────────────────────────────────────────────────────────────
+
+.sale-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+
+  &__icon {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+  }
+
+  &--client .sale-row__meta {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+.sale-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.sale-remaining {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--orange-600);
+  background: var(--orange-50);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+// ── Ítems ──────────────────────────────────────────────────────────────────────
+
+.sale-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  &__name {
+    font-size: 0.9rem;
+    color: var(--text-color);
+  }
+
+  &__desc {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__price {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    color: var(--text-color);
+  }
+}
+
+// ── Transacciones ──────────────────────────────────────────────────────────────
+
+.sale-txn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--surface-border);
+  gap: 0.5rem;
+
+  &:last-child { border-bottom: none; }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  &__date {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__id {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    font-family: monospace;
+    background: var(--surface-ground);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  &__method {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__amount {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+  }
+}
+
+// ── Nota ───────────────────────────────────────────────────────────────────────
+
+.sale-note-input {
+  width: 100%;
+  resize: none;
+}
+
+.sale-note-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+// ── Empty ──────────────────────────────────────────────────────────────────────
+
+.sale-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,9 +219,5 @@
     opacity: 0.35;
   }
 
-  &__text {
-    margin: 0;
-    font-size: 0.9rem;
-    text-align: center;
-  }
+  p { margin: 0; font-size: 0.9rem; }
 }
