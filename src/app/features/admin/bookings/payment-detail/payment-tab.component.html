@@ -95,7 +95,8 @@
     <span class="sale-card__section-label">Nota</span>
     <textarea
       pTextarea
-      [(ngModel)]="noteText"
+      [ngModel]="noteText()"
+      (ngModelChange)="noteText.set($event)"
       rows="2"
       placeholder="Agregar nota interna sobre este pago..."
       class="sale-note-input"

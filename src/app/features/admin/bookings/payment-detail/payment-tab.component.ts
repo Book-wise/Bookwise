@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -34,6 +34,7 @@ export interface SaleDetail {
 @Component({
   selector: 'bw-payment-tab',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, SkeletonModule, ButtonModule, MenuModule, TextareaModule, TagModule],
   templateUrl: './payment-tab.component.html',
   styleUrl: './payment-tab.component.scss',

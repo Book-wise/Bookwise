@@ -1,5 +1,6 @@
 <p-dialog
-  [(visible)]="visible"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
   [modal]="true"
   [style]="{ width: '820px', maxWidth: '97vw' }"
   [draggable]="false"
@@ -12,172 +13,244 @@
         <span class="booking-dialog-title">
           Reserva de {{ booking()!.client?.first_name }} {{ booking()!.client?.last_name }}
         </span>
-        <p-tag
-          [value]="booking()!.service?.name || ''"
-          severity="secondary"
-          class="booking-service-tag"
-        />
+        <p-tag [value]="booking()!.service?.name || ''" severity="secondary" class="booking-service-tag" />
+      </div>
+    } @else {
+      <div class="dialog-header-skeleton">
+        <p-skeleton height="1.25rem" width="200px" />
+        <p-skeleton height="1.25rem" width="100px" borderRadius="999px" />
       </div>
     }
   </ng-template>
 
-  @if (booking(); as booking) {
-    <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
-      <p-tablist>
-        <p-tab value="reserva">Reserva</p-tab>
-        <p-tab value="pago">Pago</p-tab>
-        <p-tab value="recordatorios">Recordatorios</p-tab>
-        <p-tab value="paciente">Paciente</p-tab>
-        <p-tab value="ficha">Ficha médica</p-tab>
-        <p-tab value="historial">Historial</p-tab>
-      </p-tablist>
+  <!-- Nivel 1: @defer hasta que el dialog abre → no renderiza hasta visible() === true -->
+  @defer (when visible()) {
 
-      <p-tabpanels>
+    @if (booking(); as booking) {
+      <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
+        <p-tablist>
+          <p-tab value="reserva">Reserva</p-tab>
+          <p-tab value="pago">Pago</p-tab>
+          <p-tab value="recordatorios">Recordatorios</p-tab>
+          <p-tab value="paciente">Paciente</p-tab>
+          <p-tab value="ficha">Ficha médica</p-tab>
+          <p-tab value="historial">Historial</p-tab>
+        </p-tablist>
 
-        <!-- ── Reserva ───────────────────────────────────────────── -->
-        <p-tabpanel value="reserva">
-          <div class="tab-content">
-            <div class="info-row">
-              <span class="info-label">Servicio</span>
-              <span class="info-value">{{ booking.service?.name }}</span>
-            </div>
-            @if (booking.pack_session) {
-              <div class="info-row">
-                <span class="info-label">Sesión</span>
-                <span class="info-value">
-                  {{ booking.pack_session.session_number }} / {{ booking.pack_session.total_sessions }}
-                </span>
-              </div>
-            }
-            <div class="info-row">
-              <span class="info-label">Profesional</span>
-              <span class="info-value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Ubicación</span>
-              <span class="info-value">{{ booking.location?.name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Fecha</span>
-              <span class="info-value">{{ booking.start_time | date:'EEEE d MMM yyyy, HH:mm':'':'es' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Estado</span>
-              <p-tag
-                [value]="booking.status?.name || 'Sin estado'"
-                [severity]="statusSeverity"
-              />
-            </div>
-            <div class="info-row">
-              <span class="info-label">Precio</span>
-              <span class="info-value">${{ booking.price | number:'1.0-0' }}</span>
-            </div>
-            @if (booking.notes) {
-              <div class="info-row info-row--block">
-                <span class="info-label">Notas para el paciente</span>
-                <span class="info-value">{{ booking.notes }}</span>
-              </div>
-            }
-            @if (booking.internal_notes) {
-              <div class="info-row info-row--block">
-                <span class="info-label">Comentario interno</span>
-                <span class="info-value">{{ booking.internal_notes }}</span>
-              </div>
-            }
-          </div>
-        </p-tabpanel>
+        <p-tabpanels>
 
-        <!-- ── Pago — carga diferida al activar el tab ──────────── -->
-        <p-tabpanel value="pago">
-          <div class="tab-content">
-            @defer (when activeTab() === 'pago') {
-              <bw-payment-tab [booking]="booking" />
-            } @loading (minimum 200ms) {
+          <!-- ── Reserva — Nivel 2: defer hasta que el tab se activa ── -->
+          <p-tabpanel value="reserva">
+            @defer (when activeTab() === 'reserva') {
+              <div class="tab-content">
+                <div class="info-row">
+                  <span class="info-label">Servicio</span>
+                  <span class="info-value">{{ booking.service?.name }}</span>
+                </div>
+                @if (booking.pack_session) {
+                  <div class="info-row">
+                    <span class="info-label">Sesión</span>
+                    <span class="info-value">
+                      {{ booking.pack_session.session_number }} / {{ booking.pack_session.total_sessions }}
+                    </span>
+                  </div>
+                }
+                <div class="info-row">
+                  <span class="info-label">Profesional</span>
+                  <span class="info-value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Ubicación</span>
+                  <span class="info-value">{{ booking.location?.name }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Fecha</span>
+                  <span class="info-value">{{ booking.start_time | date:'EEEE d MMM yyyy, HH:mm':'':'es' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Estado</span>
+                  <p-tag [value]="booking.status?.name || 'Sin estado'" [severity]="statusSeverity()" />
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Precio</span>
+                  <span class="info-value">${{ booking.price | number:'1.0-0' }}</span>
+                </div>
+                @if (booking.notes) {
+                  <div class="info-row info-row--block">
+                    <span class="info-label">Notas para el paciente</span>
+                    <span class="info-value">{{ booking.notes }}</span>
+                  </div>
+                }
+                @if (booking.internal_notes) {
+                  <div class="info-row info-row--block">
+                    <span class="info-label">Comentario interno</span>
+                    <span class="info-value">{{ booking.internal_notes }}</span>
+                  </div>
+                }
+              </div>
+            } @loading (minimum 120ms) {
               <div class="tab-skeleton">
-                <p-skeleton height="1.5rem" width="60%" />
-                <p-skeleton height="1.5rem" />
-                <p-skeleton height="1.5rem" />
+                @for (i of [1,2,3,4,5,6,7]; track i) {
+                  <div class="skeleton-row">
+                    <p-skeleton height="0.85rem" width="28%" />
+                    <p-skeleton height="0.85rem" width="48%" />
+                  </div>
+                }
               </div>
             } @placeholder {
-              <div class="tab-skeleton">
-                <p-skeleton height="1.5rem" width="40%" />
+              <div class="tab-skeleton tab-skeleton--placeholder">
+                <p-skeleton height="0.85rem" width="40%" />
               </div>
             }
-          </div>
-        </p-tabpanel>
+          </p-tabpanel>
 
-        <!-- ── Recordatorios ─────────────────────────────────────── -->
-        <p-tabpanel value="recordatorios">
-          <div class="tab-content">
-            <div class="empty-state">
-              <i class="pi pi-bell empty-state__icon"></i>
-              <p class="empty-state__text">Sin recordatorios configurados.</p>
+          <!-- ── Pago — defer + PaymentTabComponent (bundle lazy) ─── -->
+          <p-tabpanel value="pago">
+            <div class="tab-content">
+              @defer (when activeTab() === 'pago') {
+                <bw-payment-tab [booking]="booking" />
+              } @loading (minimum 200ms) {
+                <div class="tab-skeleton">
+                  <p-skeleton height="5rem" borderRadius="8px" />
+                  <p-skeleton height="4rem" borderRadius="8px" />
+                  <p-skeleton height="3rem" borderRadius="8px" />
+                </div>
+              } @placeholder {
+                <div class="tab-skeleton tab-skeleton--placeholder">
+                  <p-skeleton height="1.5rem" width="40%" />
+                </div>
+              }
             </div>
-          </div>
-        </p-tabpanel>
+          </p-tabpanel>
 
-        <!-- ── Paciente ──────────────────────────────────────────── -->
-        <p-tabpanel value="paciente">
-          <div class="tab-content">
-            @if (booking.client) {
-              <div class="info-row">
-                <span class="info-label">Nombre</span>
-                <span class="info-value">{{ booking.client.first_name }} {{ booking.client.last_name }}</span>
-              </div>
-              @if (booking.client.rut) {
-                <div class="info-row">
-                  <span class="info-label">RUT</span>
-                  <span class="info-value">{{ booking.client.rut }}</span>
+          <!-- ── Recordatorios ─────────────────────────────────────── -->
+          <p-tabpanel value="recordatorios">
+            <div class="tab-content">
+              @defer (when activeTab() === 'recordatorios') {
+                <div class="empty-state">
+                  <i class="pi pi-bell empty-state__icon"></i>
+                  <p class="empty-state__text">Sin recordatorios configurados.</p>
+                </div>
+              } @placeholder {
+                <div class="tab-skeleton tab-skeleton--placeholder">
+                  <p-skeleton height="6rem" borderRadius="8px" />
                 </div>
               }
-              @if (booking.client.email) {
-                <div class="info-row">
-                  <span class="info-label">Email</span>
-                  <span class="info-value">{{ booking.client.email }}</span>
-                </div>
-              }
-              @if (booking.client.phone) {
-                <div class="info-row">
-                  <span class="info-label">Teléfono</span>
-                  <div class="info-inline">
-                    <span class="info-value">{{ booking.client.phone }}</span>
-                    <a
-                      [href]="'https://wa.me/' + booking.client.phone.replace('+', '').replace(' ', '')"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="whatsapp-link"
-                    >
-                      <p-button icon="pi pi-whatsapp" label="WhatsApp" severity="success" [outlined]="true" size="small" />
-                    </a>
+            </div>
+          </p-tabpanel>
+
+          <!-- ── Paciente — defer con skeleton de filas ────────────── -->
+          <p-tabpanel value="paciente">
+            @defer (when activeTab() === 'paciente') {
+              <div class="tab-content">
+                @if (booking.client) {
+                  <div class="info-row">
+                    <span class="info-label">Nombre</span>
+                    <span class="info-value">{{ booking.client.first_name }} {{ booking.client.last_name }}</span>
                   </div>
+                  @if (booking.client.rut) {
+                    <div class="info-row">
+                      <span class="info-label">RUT</span>
+                      <span class="info-value">{{ booking.client.rut }}</span>
+                    </div>
+                  }
+                  @if (booking.client.email) {
+                    <div class="info-row">
+                      <span class="info-label">Email</span>
+                      <span class="info-value">{{ booking.client.email }}</span>
+                    </div>
+                  }
+                  @if (booking.client.phone) {
+                    <div class="info-row">
+                      <span class="info-label">Teléfono</span>
+                      <div class="info-inline">
+                        <span class="info-value">{{ booking.client.phone }}</span>
+                        <a
+                          [href]="'https://wa.me/' + booking.client.phone.replace('+', '').replace(' ', '')"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="whatsapp-link"
+                        >
+                          <p-button icon="pi pi-whatsapp" label="WhatsApp" severity="success" [outlined]="true" size="small" />
+                        </a>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            } @loading (minimum 120ms) {
+              <div class="tab-skeleton">
+                @for (i of [1,2,3,4]; track i) {
+                  <div class="skeleton-row">
+                    <p-skeleton height="0.85rem" width="25%" />
+                    <p-skeleton height="0.85rem" width="52%" />
+                  </div>
+                }
+              </div>
+            } @placeholder {
+              <div class="tab-skeleton tab-skeleton--placeholder">
+                <p-skeleton height="0.85rem" width="40%" />
+              </div>
+            }
+          </p-tabpanel>
+
+          <!-- ── Ficha médica ──────────────────────────────────────── -->
+          <p-tabpanel value="ficha">
+            <div class="tab-content">
+              @defer (when activeTab() === 'ficha') {
+                <div class="empty-state">
+                  <i class="pi pi-file-edit empty-state__icon"></i>
+                  <p class="empty-state__text">Ficha médica próximamente.</p>
+                </div>
+              } @placeholder {
+                <div class="tab-skeleton tab-skeleton--placeholder">
+                  <p-skeleton height="6rem" borderRadius="8px" />
                 </div>
               }
-            }
-          </div>
-        </p-tabpanel>
-
-        <!-- ── Ficha médica ──────────────────────────────────────── -->
-        <p-tabpanel value="ficha">
-          <div class="tab-content">
-            <div class="empty-state">
-              <i class="pi pi-file-edit empty-state__icon"></i>
-              <p class="empty-state__text">Ficha médica próximamente.</p>
             </div>
-          </div>
-        </p-tabpanel>
+          </p-tabpanel>
 
-        <!-- ── Historial ─────────────────────────────────────────── -->
-        <p-tabpanel value="historial">
-          <div class="tab-content">
-            <div class="empty-state">
-              <i class="pi pi-history empty-state__icon"></i>
-              <p class="empty-state__text">Historial de reservas próximamente.</p>
+          <!-- ── Historial ─────────────────────────────────────────── -->
+          <p-tabpanel value="historial">
+            <div class="tab-content">
+              @defer (when activeTab() === 'historial') {
+                <div class="empty-state">
+                  <i class="pi pi-history empty-state__icon"></i>
+                  <p class="empty-state__text">Historial de reservas próximamente.</p>
+                </div>
+              } @placeholder {
+                <div class="tab-skeleton tab-skeleton--placeholder">
+                  <p-skeleton height="6rem" borderRadius="8px" />
+                </div>
+              }
             </div>
-          </div>
-        </p-tabpanel>
+          </p-tabpanel>
 
-      </p-tabpanels>
-    </p-tabs>
+        </p-tabpanels>
+      </p-tabs>
+    }
+
+  } @loading (minimum 150ms) {
+    <!-- Skeleton mientras el contenido diferido carga por primera vez -->
+    <div class="dialog-loading-skeleton">
+      <div class="skeleton-tablist">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <p-skeleton height="2rem" width="80px" borderRadius="6px" />
+        }
+      </div>
+      <div class="tab-skeleton">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="skeleton-row">
+            <p-skeleton height="0.85rem" width="30%" />
+            <p-skeleton height="0.85rem" width="50%" />
+          </div>
+        }
+      </div>
+    </div>
+  } @placeholder {
+    <div class="tab-skeleton tab-skeleton--placeholder">
+      <p-skeleton height="2rem" width="100%" />
+    </div>
   }
 
   <ng-template pTemplate="footer">
