@@ -155,17 +155,7 @@ export interface Booking {
   updated_at?: string;
 }
 
-export interface Sale {
-  id: number;
-  client_id: number;
-  client?: Client;
-  booking_id?: number;
-  booking?: Booking;
-  amount: number;
-  payment_method?: string;
-  wc_order_id?: number;
-  created_at?: string;
-}
+// Sale interface is defined in responses/sales.ts and re-exported via the barrel
 
 export interface AvailableSlot {
   location_id: number;

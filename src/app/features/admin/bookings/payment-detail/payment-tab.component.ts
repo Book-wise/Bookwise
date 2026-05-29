@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -7,7 +7,9 @@ import { MenuModule } from 'primeng/menu';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { MenuItem } from 'primeng/api';
-import { Booking, SaleTransaction, BookingPayment } from '../../../../core/models';
+import { Booking, SaleTransaction, BookingPayment, Sale } from '@models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
 
 export interface SaleItem {
   name: string;
@@ -41,6 +43,9 @@ export interface SaleDetail {
   styleUrl: './payment-tab.component.scss',
 })
 export class PaymentTabComponent implements OnInit {
+  private readonly api       = inject(ApiService);
+  private readonly httpError = inject(HttpErrorService);
+
   @Input() booking!: Booking;
 
   loading  = signal(true);
@@ -59,63 +64,65 @@ export class PaymentTabComponent implements OnInit {
   }
 
   // ── Data loading ─────────────────────────────────────────────────────────────
-  // Mock: maps booking.payment (BookingPayment) into SaleDetail for display.
-  // booking.payment uses total_amount (older booking list field).
-  //
-  // TODO: replace the setTimeout block with a real API call:
-  //   inject ApiService and call:
-  //
-  //   const saleId = (this.booking.payment as BookingPayment | null)?.id;
-  //   if (!saleId) { this.loading.set(false); return; }
-  //   this.api.getSale(saleId).subscribe({
-  //     next: ({ data }) => {
-  //       this.sale.set({
-  //         id:               data.id,
-  //         date:             data.created_at ?? this.booking.start_time,
-  //         total:            Number(data.total),
-  //         paid_amount:      Number(data.paid_amount),
-  //         remaining_amount: Number(data.remaining_amount),
-  //         status:           data.payment_status,
-  //         payment_method:   data.payment_method ?? null,
-  //         client_name:      data.client
-  //           ? `${data.client.first_name} ${data.client.last_name}`
-  //           : `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
-  //         items:  this.buildItems(data),
-  //         transactions: data.transactions,
-  //       });
-  //       this.loading.set(false);
-  //     },
-  //     error: () => { this.sale.set(null); this.loading.set(false); },
-  //   });
 
   private loadPaymentData(): void {
-    setTimeout(() => {
-      const raw    = this.booking.payment as (BookingPayment & { total_amount: number }) | null;
-      const hasPay = raw != null && 'total_amount' in raw;
-      const total  = hasPay ? Number(raw!.total_amount) : Number(this.booking.price) || 0;
+    const payment = this.booking.payment as (BookingPayment & { total_amount: number }) | null;
+    const saleId  = payment?.id;
 
-      this.sale.set({
-        id:               raw?.id ?? 1,
-        date:             this.booking.start_time,
-        total,
-        paid_amount:      hasPay ? Number(raw!.paid_amount) : 0,
-        remaining_amount: hasPay ? Number(raw!.remaining_amount) : total,
-        status:           (this.booking.payment_status as SaleDetail['status']) ?? 'unpaid',
-        payment_method:   null,
-        client_name:      `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
-        items:            this.buildItems(),
-        transactions:     [],
-      });
+    if (!saleId) {
       this.loading.set(false);
-    }, 300);
+      return;
+    }
+
+    this.api.getSale(saleId).subscribe({
+      next: ({ data }) => {
+        this.sale.set({
+          id:               data.id,
+          date:             data.created_at ?? this.booking.start_time,
+          total:            Number(data.total),
+          paid_amount:      Number(data.paid_amount),
+          remaining_amount: Number(data.remaining_amount),
+          status:           data.payment_status,
+          payment_method:   data.payment_method ?? null,
+          client_name:      data.client
+            ? `${data.client.first_name} ${data.client.last_name}`
+            : `${this.booking.client?.first_name ?? ''} ${this.booking.client?.last_name ?? ''}`.trim(),
+          items:        this.buildItems(data),
+          transactions: data.transactions,
+        });
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'cargar venta');
+        this.sale.set(null);
+        this.loading.set(false);
+      },
+    });
   }
 
-  private buildItems(): SaleItem[] {
+  private buildItems(data: Sale): SaleItem[] {
+    if (data.booking) {
+      return [{
+        name:        data.booking.service.name,
+        description: this.booking.pack_session
+          ? `Sesión ${this.booking.pack_session.session_number} de ${this.booking.pack_session.total_sessions}`
+          : undefined,
+        quantity:   1,
+        unit_price: Number(data.booking.price),
+        total:      Number(data.booking.price),
+      }];
+    }
+    if (data.client_pack) {
+      return [{
+        name:        data.client_pack.service_pack.name,
+        description: `${data.client_pack.total_sessions} sesiones`,
+        quantity:    1,
+        unit_price:  Number(data.client_pack.service_pack.price),
+        total:       Number(data.client_pack.service_pack.price),
+      }];
+    }
     return [{
       name:       this.booking.service?.name ?? 'Servicio',
-      description: this.booking.pack_session
-        ? `Sesión ${this.booking.pack_session.session_number} de ${this.booking.pack_session.total_sessions}`
-        : undefined,
       quantity:   1,
       unit_price: Number(this.booking.price) || 0,
       total:      Number(this.booking.price) || 0,
