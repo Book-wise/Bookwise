@@ -1,8 +1,12 @@
+// ── Monetary value — API returns strings for some fields, numbers for others ──
+
+type Amount = string | number;
+
 // ── Sale transaction ──────────────────────────────────────────────────────────
 
 export interface SaleTransaction {
   id: number;
-  amount: string;
+  amount: Amount;
   payment_method: string;
   notes?: string | null;
   paid_at: string;
@@ -17,16 +21,32 @@ export interface SaleClient {
   last_name: string;
   email: string;
   phone?: string | null;
+  rut?: string | null;
+  gender?: string | null;
+  wc_customer_id?: number | null;
+  address?: string | null;
+  notes?: string | null;
+  active?: boolean;
+  created_at?: string;
 }
 
 export interface SaleBooking {
   id: number;
   start_time: string;
   end_time: string;
-  price: string;
-  service:  { id: number; name: string };
+  effective_duration_minutes?: number;
+  custom_duration_minutes?: number | null;
+  price: Amount;
+  notes?: string | null;
+  wc_order_id?: number | null;
+  created_at?: string;
+  payment_status?: string | null;
+  status_id?: number;
+  service:  { id: number; name: string; duration_minutes?: number; price?: Amount };
   provider: { id: number; first_name: string; last_name: string };
-  status:   { id: number; name: string; color: string };
+  location?: { id: number; name: string; address?: string; city?: string };
+  status:   { id: number; name: string; color: string; is_cancellation?: boolean };
+  client?:  SaleClient;
 }
 
 export interface SaleClientPack {
@@ -38,16 +58,16 @@ export interface SaleClientPack {
     id: number;
     name: string;
     total_sessions: number;
-    price: string;
+    price: Amount;
   };
 }
 
 // ── Sale summary — returned inside transaction responses ──────────────────────
 
 export interface SaleSummary {
-  total: string;
-  paid_amount: string;
-  remaining_amount: string;
+  total: Amount;
+  paid_amount: Amount;
+  remaining_amount: Amount;
   payment_status: 'paid' | 'partial' | 'unpaid';
 }
 
@@ -56,10 +76,9 @@ export interface SaleSummary {
 export interface Sale {
   id: number;
   wc_order_id?: number | null;
-  // Amounts are decimal strings ("35000.00")
-  total: string;
-  paid_amount: string;
-  remaining_amount: string;
+  total: Amount;
+  paid_amount: Amount;
+  remaining_amount: Amount;
   payment_status: 'paid' | 'partial' | 'unpaid';
   payment_method?: string | null;
   paid_at?: string | null;
