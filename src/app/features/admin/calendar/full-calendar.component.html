@@ -253,7 +253,10 @@
 
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
-    @if (selectedBooking()?.payment_status && selectedBooking()?.payment_status !== 'unpaid') {
+    @if (selectedBooking()?.payment_status !== 'paid') {
+      <p-button label="Abonar" icon="pi pi-plus" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail()" />
+    }
+    @if (selectedBooking()?.payment_status === 'partial' || selectedBooking()?.payment_status === 'paid') {
       <p-button label="Ver pago" icon="pi pi-dollar" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail()" />
     }
     <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()" />
