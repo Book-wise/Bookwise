@@ -219,6 +219,50 @@
   }
 }
 
+// ── Abono ─────────────────────────────────────────────────────────────────────
+
+.bw-abono-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem 0.75rem;
+
+  &__label {
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+
+    strong {
+      color: var(--orange-600);
+      font-weight: var(--bw-weight-semibold);
+    }
+  }
+}
+
+.bw-abono-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  margin: 0 0 0.75rem;
+  background: var(--surface-ground);
+  border-radius: 6px;
+
+  &__row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.375rem;
+  }
+}
+
+.bw-abono-amount  { flex: 1; }
+.bw-abono-method  { flex: 1; }
+.bw-abono-notes   { width: 100%; resize: none; }
+
 // ── Nota ──────────────────────────────────────────────────────────────────────
 
 .sale-note-input {
