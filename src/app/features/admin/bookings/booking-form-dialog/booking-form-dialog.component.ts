@@ -26,15 +26,15 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Booking, Client, Service, ServicePack, Location, Provider } from '../../../../core/models';
-import { ApiService } from '../../../../core/services/api.service';
-import { HttpErrorService } from '../../../../core/services/http-error.service';
-import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
-import { LanguageService } from '../../../../core/services/language.service';
+import { Booking, Client, Service, ServicePack, Location, Provider } from '@models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
+import { LanguageService } from '@services/language.service';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
-import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input.component';
+import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { forkJoin } from 'rxjs';
 
 @Component({

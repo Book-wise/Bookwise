@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { ES } from '../i18n/es';
-import { EN } from '../i18n/en';
+import { ES } from '@i18n/es';
+import { EN } from '@i18n/en';
 
 export type Language = 'es' | 'en';
 

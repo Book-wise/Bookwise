@@ -7,15 +7,15 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
-import { ToastService } from '../../../shared/components/toast-modal/toast.service';
+import { ToastService } from '@shared/components/toast-modal/toast.service';
 import {
   AvailabilityService,
   ProviderAvailabilitySlot,
-} from '../../../core/services/availability.service';
-import { ApiService } from '../../../core/services/api.service';
-import { HttpErrorService } from '../../../core/services/http-error.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Location } from '../../../core/models';
+} from '@services/availability.service';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { AuthService } from '@services/auth.service';
+import { Location } from '@models';
 
 const DAYS_OF_WEEK = [
   { label: 'Domingo', value: 0 },

@@ -7,8 +7,8 @@ import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { FormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
-import { AuthService } from '../../core/services/auth.service';
-import { LanguageService, Language } from '../../core/services/language.service';
+import { AuthService } from '@services/auth.service';
+import { LanguageService, Language } from '@services/language.service';
 
 @Component({
   selector: 'bw-provider-layout',

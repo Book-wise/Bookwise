@@ -23,14 +23,14 @@ import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '../../../core/services/api.service';
-import { HttpErrorService } from '../../../core/services/http-error.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Booking, BlockedSlot } from '../../../core/models';
-import { BookingFormDialogComponent } from '../../admin/bookings/booking-form-dialog/booking-form-dialog.component';
-import { BlockTimeDialogComponent } from '../../admin/bookings/block-time-dialog/block-time-dialog.component';
-import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../../admin/bookings/constants/booking-statuses';
-import { LanguageService } from '../../../core/services/language.service';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { AuthService } from '@services/auth.service';
+import { Booking, BlockedSlot } from '@models';
+import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
+import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
+import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-statuses';
+import { LanguageService } from '@services/language.service';
 import { forkJoin } from 'rxjs';
 import {
   Calendar, CalendarOptions, EventClickArg, DateSelectArg,

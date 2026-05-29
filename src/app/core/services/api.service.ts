@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, of, map } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 import {
   Location,
   Provider,
@@ -21,7 +21,7 @@ import {
   CreateBooking,
   UpdateBooking,
   BlockConflictResponse,
-} from '../models';
+} from '@models';
 
 @Injectable({
   providedIn: 'root',

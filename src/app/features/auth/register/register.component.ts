@@ -7,10 +7,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { ApiService } from '../../../core/services/api.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { RegisterData } from '../../../core/models';
-import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
+import { ApiService } from '@services/api.service';
+import { AuthService } from '@services/auth.service';
+import { RegisterData } from '@models';
+import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'bw-register',

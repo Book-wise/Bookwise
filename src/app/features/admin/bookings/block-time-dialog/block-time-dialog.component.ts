@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { ApiService } from '../../../../core/services/api.service';
-import { HttpErrorService } from '../../../../core/services/http-error.service';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -13,10 +13,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageService } from 'primeng/api';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
-import { Location, Provider, CreateBlockedSlot, BlockedSlot } from '../../../../core/models';
-import { BlockConflict, BlockConflictResponse } from '../../../../core/models';
-import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
-import { LanguageService } from '../../../../core/services/language.service';
+import { Location, Provider, CreateBlockedSlot, BlockedSlot } from '@models';
+import { BlockConflict, BlockConflictResponse } from '@models';
+import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
+import { LanguageService } from '@services/language.service';
 
 @Component({
   selector: 'bw-block-time-dialog',

@@ -4,9 +4,9 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { ApiService } from '../../../core/services/api.service';
-import { HttpErrorService } from '../../../core/services/http-error.service';
-import { Location } from '../../../core/models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { Location } from '@models';
 
 @Component({
   selector: 'bw-locations-list',

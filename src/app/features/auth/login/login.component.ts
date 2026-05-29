@@ -6,9 +6,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { ApiService } from '../../../core/services/api.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { LoginCredentials } from '../../../core/models';
+import { ApiService } from '@services/api.service';
+import { AuthService } from '@services/auth.service';
+import { LoginCredentials } from '@models';
 
 @Component({
   selector: 'bw-login',

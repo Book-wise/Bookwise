@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-import { ProviderAvailability, AvailableSlot } from '../models';
+import { environment } from '@env/environment';
+import { ProviderAvailability, AvailableSlot } from '@models';
 
 // Interfaz para disponibilidad - aún sin endpoint en API
 export interface ProviderAvailabilitySlot {

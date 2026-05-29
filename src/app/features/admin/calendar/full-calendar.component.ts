@@ -24,14 +24,14 @@ import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '../../../core/services/api.service';
-import { HttpErrorService } from '../../../core/services/http-error.service';
-import { Booking, BlockedSlot, Location, Provider } from '../../../core/models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { Booking, BlockedSlot, Location, Provider } from '@models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
-import { LanguageService } from '../../../core/services/language.service';
+import { LanguageService } from '@services/language.service';
 import { forkJoin } from 'rxjs';
 import {
   Calendar, CalendarOptions, EventClickArg, DateSelectArg,

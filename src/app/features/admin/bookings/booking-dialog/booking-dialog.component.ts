@@ -11,12 +11,12 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Booking, Client, Service, Provider, Location, CreateBooking } from '../../../../core/models';
-import { ApiService } from '../../../../core/services/api.service';
-import { HttpErrorService } from '../../../../core/services/http-error.service';
-import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '../../../../core/services/data-cache.service';
+import { Booking, Client, Service, Provider, Location, CreateBooking } from '@models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
-import { LanguageService } from '../../../../core/services/language.service';
+import { LanguageService } from '@services/language.service';
 
 export interface BookingFormData {
   id?: number;

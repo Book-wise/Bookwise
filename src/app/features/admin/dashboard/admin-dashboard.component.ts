@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
-import { ApiService } from '../../../core/services/api.service';
-import { HttpErrorService } from '../../../core/services/http-error.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Location, Provider } from '../../../core/models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { AuthService } from '@services/auth.service';
+import { Location, Provider } from '@models';
 
 interface ChartDataset { data: number[]; backgroundColor?: string | string[]; borderColor?: string; fill?: boolean; tension?: number; label?: string }
 interface DashboardChartData { labels: string[]; datasets: ChartDataset[] }
