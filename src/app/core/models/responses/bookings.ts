@@ -96,12 +96,24 @@ export interface BookingPayment {
   status: string;
 }
 
+export interface BookingPackSessionItem {
+  id: number;
+  session_number: number;
+  status: 'attended' | 'scheduled' | 'pending';
+  effective_price: number;
+  booking: { start_time: string } | null;
+}
+
 export interface BookingPackSession {
   session_number: number;
   total_sessions: number;
   client_pack_id: number;
   service_pack_id: number;
+  effective_price: number;
+  price: number | null;
+  notes: string | null;
   status: string;
+  all_sessions: BookingPackSessionItem[];
 }
 
 export interface BookingListResponse {

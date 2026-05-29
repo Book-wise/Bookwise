@@ -30,6 +30,21 @@ export interface SaleClient {
   created_at?: string;
 }
 
+export interface SaleBookingPackSessionItem {
+  session_number: number;
+  status: 'attended' | 'scheduled' | 'pending';
+  booking: { start_time: string } | null;
+}
+
+export interface SaleBookingPackSession {
+  session_number: number;
+  total_sessions: number;
+  client_pack_id: number;
+  service_pack_id: number;
+  effective_price: number;
+  all_sessions: SaleBookingPackSessionItem[];
+}
+
 export interface SaleBooking {
   id: number;
   start_time: string;
@@ -47,6 +62,21 @@ export interface SaleBooking {
   location?: { id: number; name: string; address?: string; city?: string };
   status:   { id: number; name: string; color: string; is_cancellation?: boolean };
   client?:  SaleClient;
+  pack_session?: SaleBookingPackSession | null;
+}
+
+export interface SalePackSession {
+  id: number;
+  session_number: number;
+  status: 'attended' | 'scheduled' | 'pending';
+  effective_price: number;
+  price: number | null;
+  notes: string | null;
+  booking: {
+    start_time: string;
+    provider: { id: number; first_name: string; last_name: string };
+    location: { id: number; name: string };
+  } | null;
 }
 
 export interface SaleClientPack {
@@ -59,7 +89,9 @@ export interface SaleClientPack {
     name: string;
     total_sessions: number;
     price: Amount;
+    service?: { id: number; name: string; price: Amount };
   };
+  sessions: SalePackSession[];
 }
 
 // ── Sale summary — returned inside transaction responses ──────────────────────
