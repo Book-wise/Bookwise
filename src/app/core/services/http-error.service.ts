@@ -15,6 +15,8 @@ interface ApiErrorBody {
     end_time: string;
     type?: 'blocked_slot' | 'booking';
   };
+  // amount_exceeds_remaining error — remaining balance
+  remaining?: string;
 }
 
 export interface ToastConfig {
@@ -127,6 +129,10 @@ export class HttpErrorService {
     if (body.conflicts_with) {
       const c = body.conflicts_with;
       detail += ` (${this.fmtTime(c.start_time)} – ${this.fmtTime(c.end_time)})`;
+    }
+    // Append remaining balance for amount_exceeds_remaining
+    if (body.remaining) {
+      detail += ` Saldo: $${Number(body.remaining).toLocaleString('es-CL')}`;
     }
 
     return { severity: this.severity(status), summary, detail, life: 8000 };

@@ -76,6 +76,10 @@ a {
 body.dark-theme {
   --surface-ground: #0f172a;
   --surface-card:   #1e293b;
+  --surface-0:      #1e293b;
+  --surface-border: #334155;
+  --bw-50:          rgba(4, 106, 244, 0.1);
+  --bw-100:         rgba(4, 106, 244, 0.22);
   --text-color:           #e4e4e7;
   --text-color-secondary: #94a3b8;
 
@@ -148,6 +152,20 @@ body.dark-theme {
       color: var(--text-color) !important;
     }
   }
+
+  // Popover / tooltip
+  .p-popover {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-popover-content {
+      background: var(--surface-card) !important;
+    }
+
+    &::before { border-bottom-color: var(--surface-border) !important; }
+    &::after  { border-bottom-color: var(--surface-card)   !important; }
+  }
   
   // FullCalendar
   .fc {
@@ -208,11 +226,16 @@ body.dark-theme {
 }
 
 // ============================================
-// Dialog content spacing
+// Dialog
 // ============================================
 
-.p-dialog .p-dialog-content {
-  padding-top: 1.25rem !important;
+.p-dialog {
+  overflow: hidden; // clip content to border-radius — prevents background bleeding past corners
+
+  .p-dialog-content {
+    padding-top: 1.25rem !important;
+    background: var(--surface-ground) !important;
+  }
 }
 
 // ============================================

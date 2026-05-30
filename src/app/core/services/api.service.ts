@@ -26,6 +26,8 @@ import {
   CreateTransactionRequest,
   SaleDetailResponse,
   CreateTransactionResponse,
+  TransactionListResponse,
+  DeleteTransactionResponse,
 } from '@models';
 
 @Injectable({
@@ -209,9 +211,10 @@ export class ApiService {
   // Sales
   getSales(params?: {
     client_id?: number;
+    booking_id?: number;
     client_pack_id?: number;
     payment_status?: 'paid' | 'partial' | 'unpaid';
-    location_id?: number;
+    payment_method?: string;
     date_from?: string;
     date_to?: string;
     page?: number;
@@ -240,12 +243,16 @@ export class ApiService {
     return this.http.patch<SaleDetailResponse>(`${this.baseUrl}/sales/${id}`, body);
   }
 
+  getTransactions(saleId: number): Observable<TransactionListResponse> {
+    return this.http.get<TransactionListResponse>(`${this.baseUrl}/sales/${saleId}/transactions`);
+  }
+
   createTransaction(saleId: number, body: CreateTransactionRequest): Observable<CreateTransactionResponse> {
     return this.http.post<CreateTransactionResponse>(`${this.baseUrl}/sales/${saleId}/transactions`, body);
   }
 
-  deleteTransaction(saleId: number, transactionId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/sales/${saleId}/transactions/${transactionId}`);
+  deleteTransaction(saleId: number, transactionId: number): Observable<DeleteTransactionResponse> {
+    return this.http.delete<DeleteTransactionResponse>(`${this.baseUrl}/sales/${saleId}/transactions/${transactionId}`);
   }
 
   // Client Packs
