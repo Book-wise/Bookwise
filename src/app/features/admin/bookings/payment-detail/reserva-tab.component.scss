@@ -1,0 +1,183 @@
+.reserva-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+
+.rf-card {
+  background: var(--surface-0, #ffffff);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+// ── Fecha + Hora ──────────────────────────────────────────────────────────────
+
+.rf-datetime {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.rf-label {
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color-secondary);
+}
+
+.rf-datepicker {
+  width: 100%;
+}
+
+.rf-time-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.rf-time-sel {
+  width: 72px !important;
+  min-width: 72px;
+
+  // Override PrimeNG control height for compactness
+  :host ::ng-deep .p-select {
+    height: 2.25rem !important;
+  }
+}
+
+.rf-sep {
+  font-weight: var(--bw-weight-bold);
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.rf-to {
+  font-size: var(--bw-font-table);
+  color: var(--text-color-secondary);
+  padding: 0 0.25rem;
+}
+
+// ── Cliente ───────────────────────────────────────────────────────────────────
+
+.rf-client {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  &__left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: var(--bw-weight-semibold);
+    font-size: var(--bw-font-body);
+    color: var(--text-color);
+  }
+
+  &__meta {
+    display: flex;
+    gap: 0.875rem;
+    flex-wrap: wrap;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: var(--bw-font-table);
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+
+      i { font-size: 0.75rem; }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    flex-shrink: 0;
+  }
+}
+
+.rf-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bw-200, #60a7f0);
+  color: #fff;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rf-wa-link {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+// ── Profesional + Servicio ────────────────────────────────────────────────────
+
+.rf-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.rf-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rf-select {
+  flex: 1;
+  min-width: 0;
+
+  &--locked {
+    opacity: 0.6;
+  }
+}
+
+// ── Panel (Información adicional) ─────────────────────────────────────────────
+
+.rf-notes {
+  width: 100%;
+  resize: none;
+}
+
+// ── Acciones ──────────────────────────────────────────────────────────────────
+
+.rf-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.125rem;
+}

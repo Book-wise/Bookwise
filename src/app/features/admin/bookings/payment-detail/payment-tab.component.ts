@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, switchMap, concat, of, map, catchError } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -56,8 +56,24 @@ interface SaleVm {
 export class PaymentTabComponent {
   private readonly api       = inject(ApiService);
   private readonly httpError = inject(HttpErrorService);
+  private readonly el        = inject(ElementRef);
 
-  readonly booking = input.required<Booking>();
+  readonly booking      = input.required<Booking>();
+  readonly scrollToTxn  = input(false);
+
+  constructor() {
+    effect(() => {
+      const should = this.scrollToTxn();
+      const loaded = !this.vm().loading && !!this.vm().sale;
+      if (should && loaded) {
+        setTimeout(() => {
+          this.el.nativeElement
+            .querySelector('.sale-card--txn')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
+    });
+  }
 
   private readonly refresh        = signal(0);
   private readonly overrideSaleId = signal<number | null>(null);
@@ -149,6 +165,14 @@ export class PaymentTabComponent {
     if (s === 'paid')    return 'Pagado';
     if (s === 'partial') return 'Pago parcial';
     return 'No pagado';
+  });
+
+  readonly lastTransactionDate = computed((): string | null => {
+    const txns = this.vm().sale?.transactions ?? [];
+    if (!txns.length) return null;
+    return txns.reduce((latest, t) =>
+      new Date(t.paid_at) > new Date(latest.paid_at) ? t : latest
+    ).paid_at;
   });
 
   // ── Actions ──────────────────────────────────────────────────────────────────

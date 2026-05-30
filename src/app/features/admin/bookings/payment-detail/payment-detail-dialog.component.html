@@ -18,6 +18,28 @@
             {{ booking()!.client?.first_name }} {{ booking()!.client?.last_name }}
           </span>
           <p-tag [value]="booking()!.service?.name || ''" severity="secondary" class="booking-service-tag" />
+          <p-select
+            [options]="statusOptions"
+            [ngModel]="selectedStatusId()"
+            (ngModelChange)="selectedStatusId.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            [appendTo]="'body'"
+            class="bw-status-select"
+          >
+            <ng-template #item let-s>
+              <div class="bw-status-option">
+                <span class="bw-status-dot" [style.background]="s.color"></span>
+                {{ s.label }}
+              </div>
+            </ng-template>
+            <ng-template #selectedItem let-s>
+              <div class="bw-status-option">
+                <span class="bw-status-dot" [style.background]="s.color"></span>
+                {{ s.label }}
+              </div>
+            </ng-template>
+          </p-select>
         </div>
         <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs">
           <p-tablist>
@@ -30,7 +52,7 @@
 
       <!-- ── Mobile: flecha + nombre del tab activo ───────────────────── -->
       <div class="bw-mobile-header">
-        <button class="bw-back-btn" (click)="close()" aria-label="Volver">
+        <button class="bw-back-btn" (click)="goBack()" aria-label="Volver">
           <i class="pi pi-arrow-left"></i>
         </button>
         <span class="bw-mobile-tab-title">{{ mobileTabTitle() }}</span>
@@ -51,56 +73,13 @@
 
         @case ('reserva') {
           <div class="tab-content">
-            <div class="info-row">
-              <span class="info-label">Servicio</span>
-              <span class="info-value">{{ booking.service?.name }}</span>
-            </div>
-            @if (booking.pack_session) {
-              <div class="info-row">
-                <span class="info-label">Sesión</span>
-                <span class="info-value">
-                  {{ booking.pack_session.session_number }} / {{ booking.pack_session.total_sessions }}
-                </span>
-              </div>
-            }
-            <div class="info-row">
-              <span class="info-label">Profesional</span>
-              <span class="info-value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Ubicación</span>
-              <span class="info-value">{{ booking.location?.name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Fecha</span>
-              <span class="info-value">{{ booking.start_time | date:'EEEE d MMM yyyy, HH:mm':'':'es' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Estado</span>
-              <p-tag [value]="booking.status?.name || 'Sin estado'" [severity]="statusSeverity()" />
-            </div>
-            <div class="info-row">
-              <span class="info-label">Precio</span>
-              <span class="info-value">${{ booking.price | number:'1.0-0' }}</span>
-            </div>
-            @if (booking.notes) {
-              <div class="info-row info-row--block">
-                <span class="info-label">Notas para el paciente</span>
-                <span class="info-value">{{ booking.notes }}</span>
-              </div>
-            }
-            @if (booking.internal_notes) {
-              <div class="info-row info-row--block">
-                <span class="info-label">Comentario interno</span>
-                <span class="info-value">{{ booking.internal_notes }}</span>
-              </div>
-            }
+            <bw-reserva-tab [booking]="booking" [statusId]="selectedStatusId()" (bookingUpdated)="onBookingUpdated($event)" />
           </div>
         }
 
         @case ('pago') {
           <div class="tab-content">
-            <bw-payment-tab [booking]="booking" />
+            <bw-payment-tab [booking]="booking" [scrollToTxn]="scrollToTxn()" />
           </div>
         }
 
@@ -143,7 +122,7 @@
                       rel="noopener noreferrer"
                       class="whatsapp-link"
                     >
-                      <p-button icon="pi pi-whatsapp" label="WhatsApp" severity="success" [outlined]="true" size="small" />
+                      <p-button icon="pi pi-whatsapp" label="Hablar por WhatsApp" severity="success" [outlined]="true" size="small" />
                     </a>
                   </div>
                 </div>

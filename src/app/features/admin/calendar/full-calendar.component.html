@@ -159,7 +159,7 @@
   @if (selectedBooking(); as booking) {
     <div class="event-details">
 
-      <div class="detail-row">
+      <div class="detail-row detail-row--full">
         <span class="label">Cliente</span>
         <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
       </div>
@@ -171,8 +171,18 @@
         </div>
       }
 
-      @if (booking.client?.phone) {
+      @if (booking.pack_session) {
         <div class="detail-row">
+          <span class="label">Sesión</span>
+          <span class="session-badge">
+            <span class="session-badge__dot"></span>
+            Sesión {{ booking.pack_session.session_number }} de {{ booking.pack_session.total_sessions }}
+          </span>
+        </div>
+      }
+
+      @if (booking.client?.phone) {
+        <div class="detail-row detail-row--full">
           <span class="label">Teléfono</span>
           <div class="detail-inline">
             <span class="value">{{ booking.client!.phone }}</span>
@@ -184,7 +194,7 @@
             >
               <p-button
                 icon="pi pi-whatsapp"
-                label="WhatsApp"
+                label="Hablar por WhatsApp"
                 severity="success"
                 [outlined]="true"
                 size="small"
@@ -194,17 +204,10 @@
         </div>
       }
 
-      <div class="detail-row">
+      <div class="detail-row detail-row--full">
         <span class="label">Servicio</span>
         <span class="value">{{ booking.service?.name }}</span>
       </div>
-
-      @if (booking.pack_session) {
-        <div class="detail-row">
-          <span class="label">Sesión</span>
-          <span class="value">{{ booking.pack_session.session_number }} / {{ booking.pack_session.total_sessions }}</span>
-        </div>
-      }
 
       <div class="detail-row">
         <span class="label">Profesional</span>
@@ -216,7 +219,7 @@
         <span class="value">{{ booking.location?.name }}</span>
       </div>
 
-      <div class="detail-row">
+      <div class="detail-row detail-row--full">
         <span class="label">Fecha</span>
         <span class="value">{{ booking.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
       </div>
@@ -235,14 +238,14 @@
       </div>
 
       @if (booking.notes) {
-        <div class="detail-row">
+        <div class="detail-row detail-row--full">
           <span class="label">Notas para el paciente</span>
           <span class="value">{{ booking.notes }}</span>
         </div>
       }
 
       @if (booking.internal_notes) {
-        <div class="detail-row">
+        <div class="detail-row detail-row--full">
           <span class="label">Comentario interno</span>
           <span class="value">{{ booking.internal_notes }}</span>
         </div>
@@ -254,7 +257,7 @@
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
     @if (selectedBooking()?.payment_status !== 'paid') {
-      <p-button label="Abonar" icon="pi pi-plus" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail()" />
+      <p-button label="Abonar" icon="pi pi-plus" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail(true)" />
     }
     @if (selectedBooking()?.payment_status === 'partial' || selectedBooking()?.payment_status === 'paid') {
       <p-button label="Ver pago" icon="pi pi-dollar" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail()" />
@@ -263,7 +266,7 @@
   </ng-template>
 </p-dialog>
 
-<bw-payment-detail-dialog #paymentDetailDialog />
+<bw-payment-detail-dialog #paymentDetailDialog (backToDetail)="onBackToDetail($event)" />
 
 <!-- Booking Dialog para crear/editar -->
 <bw-booking-dialog

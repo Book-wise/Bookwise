@@ -594,12 +594,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   editBooking(): void {
     const booking = this.selectedBooking();
     if (!booking) return;
-
     this.showEventDialog.set(false);
-    // Delay para que cierre el dialog primero
-    setTimeout(() => {
-      this.newBookingDialog.openNew(booking);
-    }, 100);
+    setTimeout(() => this.paymentDialog.open(booking, 'reserva'), 100);
   }
 
   onBookingSaved(): void {
@@ -655,11 +651,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedBooking.set(null);
   }
 
-  openPaymentDetail(): void {
+  openPaymentDetail(scrollToTxn = false): void {
     const booking = this.selectedBooking();
     if (!booking) return;
     this.showEventDialog.set(false);
-    setTimeout(() => this.paymentDialog.open(booking), 100);
+    setTimeout(() => this.paymentDialog.open(booking, 'pago', scrollToTxn), 100);
+  }
+
+  onBackToDetail(booking: Booking): void {
+    this.selectedBooking.set(booking);
+    setTimeout(() => this.showEventDialog.set(true), 100);
   }
 
   getStatusSeverity(

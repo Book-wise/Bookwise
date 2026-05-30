@@ -2,18 +2,24 @@
 // p-tabs solo contiene p-tablist — sin p-tabpanels.
 // El @switch del template maneja el contenido activo.
 
+:host ::ng-deep .bw-payment-dialog .p-dialog-header {
+  padding-bottom: 0;
+}
+
 :host ::ng-deep .booking-dialog-tabs {
   --p-tabs-active-bar-color: var(--color-primary, #046af4);
 
   .p-tablist {
-    border-bottom: none; // el borde lo provee el propio dialog entre header y body
+    border-bottom: none;
     padding: 0;
+    margin-bottom: 0;
   }
 
   .p-tab {
     font-size: var(--bw-font-table);
     white-space: nowrap;
     padding: 0.5rem 0.875rem;
+    padding-bottom: 0.625rem;
 
     &[data-p-active='true'] {
       color: var(--color-primary, #046af4);
@@ -150,6 +156,24 @@
 
 .booking-service-tag {
   align-self: flex-start;
+}
+
+.bw-status-select {
+  height: 2.25rem !important;
+  font-size: var(--bw-font-table);
+}
+
+.bw-status-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bw-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .tab-content {

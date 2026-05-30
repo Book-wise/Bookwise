@@ -1,0 +1,133 @@
+<div class="reserva-form">
+
+  <!-- ── Fecha + Hora ──────────────────────────────────────────────────────────── -->
+  <div class="rf-card rf-datetime">
+
+    <div class="rf-field">
+      <label class="rf-label">Fecha</label>
+      <p-datepicker
+        [ngModel]="selectedDate()"
+        (ngModelChange)="selectedDate.set($event)"
+        dateFormat="dd/mm/yy"
+        [appendTo]="'body'"
+        class="rf-datepicker"
+      />
+    </div>
+
+    <div class="rf-field">
+      <label class="rf-label">Hora</label>
+      <div class="rf-time-row">
+        <p-select [options]="hours" [ngModel]="startHour()"   (ngModelChange)="startHour.set($event)"   class="rf-time-sel" />
+        <span class="rf-sep">:</span>
+        <p-select [options]="minutes" [ngModel]="startMinute()" (ngModelChange)="startMinute.set($event)" class="rf-time-sel" />
+        <span class="rf-to">a</span>
+        <p-select [options]="hours" [ngModel]="endHour()"     (ngModelChange)="endHour.set($event)"     class="rf-time-sel" />
+        <span class="rf-sep">:</span>
+        <p-select [options]="minutes" [ngModel]="endMinute()"   (ngModelChange)="endMinute.set($event)"   class="rf-time-sel" />
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Cliente ───────────────────────────────────────────────────────────────── -->
+  <div class="rf-card rf-client">
+
+    <div class="rf-client__left">
+      <div class="rf-avatar">{{ clientInitials() }}</div>
+      <div class="rf-client__info">
+        <span class="rf-client__name">
+          {{ booking().client?.first_name }} {{ booking().client?.last_name }}
+        </span>
+        <div class="rf-client__meta">
+          @if (booking().client?.email) {
+            <span><i class="pi pi-envelope"></i> {{ booking().client!.email }}</span>
+          }
+          @if (booking().client?.phone) {
+            <span><i class="pi pi-mobile"></i> {{ booking().client!.phone }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="rf-client__actions">
+      @if (booking().client?.phone) {
+        <a [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" class="rf-wa-link">
+          <p-button icon="pi pi-whatsapp" severity="success" variant="text" [rounded]="true" size="small" />
+        </a>
+      }
+      <p-button icon="pi pi-pencil" variant="text" severity="secondary" [rounded]="true" size="small" />
+    </div>
+
+  </div>
+
+  <!-- ── Profesional + Servicio ────────────────────────────────────────────────── -->
+  <div class="rf-card rf-fields">
+
+    <div class="rf-field">
+      <label class="rf-label">Profesional</label>
+      <div class="rf-field-row">
+        <p-select
+          [options]="providerOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="selectedProviderId()"
+          (ngModelChange)="selectedProviderId.set($event)"
+          placeholder="Seleccionar profesional"
+          [appendTo]="'body'"
+          class="rf-select"
+        />
+        <p-button icon="pi pi-building" variant="text" severity="secondary" [rounded]="true" size="small" />
+      </div>
+    </div>
+
+    <div class="rf-field">
+      <label class="rf-label">Servicios</label>
+      <div class="rf-field-row">
+        <p-select
+          [options]="[{ label: booking().service?.name ?? 'Sin servicio', value: booking().service_id }]"
+          [ngModel]="booking().service_id"
+          [disabled]="true"
+          [appendTo]="'body'"
+          class="rf-select rf-select--locked"
+        />
+        <p-button
+          [icon]="serviceDisabled() ? 'pi pi-lock' : 'pi pi-lock-open'"
+          variant="text"
+          [severity]="serviceDisabled() ? 'danger' : 'secondary'"
+          [rounded]="true"
+          size="small"
+          [disabled]="true"
+        />
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Información adicional ─────────────────────────────────────────────────── -->
+  <p-panel header="Información adicional" [toggleable]="true" [collapsed]="true" class="rf-panel">
+    <div class="rf-field">
+      <label class="rf-label">Notas para el paciente</label>
+      <textarea
+        pTextarea
+        [ngModel]="notes()"
+        (ngModelChange)="notes.set($event)"
+        rows="3"
+        placeholder="Agregar notas..."
+        class="rf-notes"
+        autoResize="true"
+      ></textarea>
+    </div>
+  </p-panel>
+
+  <!-- ── Acciones ──────────────────────────────────────────────────────────────── -->
+  <div class="rf-actions">
+    <p-button
+      label="Guardar cambios"
+      icon="pi pi-check"
+      size="small"
+      [loading]="saving()"
+      (onClick)="save()"
+    />
+  </div>
+
+</div>

@@ -10,15 +10,20 @@
 } @else if (vm().sale; as sale) {
 <div class="sale-body">
 
-  <!-- ── Card 1: encabezado de venta ──────────────────────────────────────── -->
+  <!-- ── Card 1: resumen de pago ───────────────────────────────────────────── -->
   <div class="sale-card sale-card--header">
-    <div class="sale-card__title-row">
-      <div class="sale-card__title-group">
-        <span class="sale-title">Detalle de venta</span>
-        <span class="sale-id">#{{ sale.id }}</span>
-        <p-tag [value]="statusLabel()" [severity]="statusSeverity()" />
+
+    <div class="sale-header__top">
+      <div class="sale-header__meta">
+        @if (lastTransactionDate()) {
+          <i class="pi pi-clock sale-row__icon"></i>
+          <span class="sale-header__date">{{ lastTransactionDate() | date:'dd/MM/yyyy - hh:mm a':'':'es' }}</span>
+        } @else {
+          <span class="sale-header__no-txn">Sin transacciones</span>
+        }
       </div>
-      <div class="sale-card__actions">
+      <div class="sale-header__actions">
+        <p-tag [value]="statusLabel()" [severity]="statusSeverity()" />
         <p-button
           icon="pi pi-ellipsis-v"
           [rounded]="true"
@@ -30,25 +35,24 @@
         <p-menu #saleMenu [model]="saleMenuItems" [popup]="true" [appendTo]="'body'" styleClass="bw-sale-menu" />
       </div>
     </div>
+
+    <div class="sale-header__bottom">
+      <span class="sale-paid-amount">${{ sale.paid_amount | number:'1.0-0' }}</span>
+      @if (sale.remaining_amount > 0) {
+        <span class="sale-remaining">Por pagar: ${{ sale.remaining_amount | number:'1.0-0' }}</span>
+      }
+    </div>
+
   </div>
 
-  <!-- ── Card 2: resumen ─────────────────────────────────────────────────── -->
+  <!-- ── Card 2: cliente + total de la venta ────────────────────────────── -->
   <div class="sale-card">
     <div class="sale-row">
-      <div class="sale-row__meta">
-        <i class="pi pi-calendar sale-row__icon"></i>
-        <span>{{ sale.date | date:'dd MMM yyyy, HH:mm':'':'es' }}</span>
-      </div>
-      <span class="sale-amount">${{ sale.total | number:'1.0-0' }}</span>
-    </div>
-    <div class="sale-row sale-row--client">
       <div class="sale-row__meta">
         <i class="pi pi-user sale-row__icon"></i>
         <span>{{ sale.client_name }}</span>
       </div>
-      @if (sale.remaining_amount > 0) {
-        <span class="sale-remaining">Saldo ${{ sale.remaining_amount | number:'1.0-0' }}</span>
-      }
+      <span class="sale-amount sale-amount--secondary">${{ sale.total | number:'1.0-0' }}</span>
     </div>
   </div>
 

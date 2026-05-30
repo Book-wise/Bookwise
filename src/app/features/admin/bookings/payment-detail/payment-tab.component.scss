@@ -110,10 +110,65 @@
   }
 }
 
+// ── Header card layout ────────────────────────────────────────────────────────
+
+.sale-header {
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__bottom {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  &__date {
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+  }
+
+  &__no-txn {
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+    font-style: italic;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+  }
+}
+
+.sale-paid-amount {
+  font-size: var(--bw-font-subtotal);
+  font-weight: var(--bw-weight-bold);
+  color: var(--text-color);
+}
+
 .sale-amount {
   font-size: var(--bw-font-amount);
   font-weight: var(--bw-weight-bold);
   color: var(--text-color);
+
+  &--secondary {
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-color-secondary);
+  }
 }
 
 .sale-remaining {
