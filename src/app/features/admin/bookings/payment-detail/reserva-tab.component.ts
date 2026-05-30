@@ -7,14 +7,18 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { PanelModule } from 'primeng/panel';
+import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
+import { PopoverModule } from 'primeng/popover';
 import { Booking } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'bw-reserva-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, DatePickerModule, TextareaModule, PanelModule],
+  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, DatePickerModule, TextareaModule, PanelModule, InputTextModule, CheckboxModule, PopoverModule, PhoneInputComponent],
   templateUrl: './reserva-tab.component.html',
   styleUrl: './reserva-tab.component.scss',
 })
@@ -36,6 +40,25 @@ export class ReservaTabComponent {
   readonly selectedProviderId = signal<number | null>(null);
   readonly notes              = signal('');
   readonly saving             = signal(false);
+
+  // ── Client edit state ─────────────────────────────────────────────────────────
+
+  readonly editingClient  = signal(false);
+  readonly savingClient   = signal(false);
+  readonly editFirstName  = signal('');
+  readonly editLastName   = signal('');
+  readonly editEmail      = signal('');
+  readonly editPhone      = signal('');
+  readonly reqOpen        = signal(true);
+  readonly addOpen        = signal(true);
+
+  // ── Notifications state ───────────────────────────────────────────────────────
+
+  readonly notifOpen      = signal(false);
+  readonly notifCitaEmail = signal(false);
+  readonly notifCitaWa    = signal(false);
+  readonly reminderEmail  = signal(false);
+  readonly reminderWa     = signal(false);
 
   // ── Options ───────────────────────────────────────────────────────────────────
 
@@ -121,6 +144,51 @@ export class ReservaTabComponent {
       error: (err) => {
         this.httpError.handle(err, 'guardar reserva');
         this.saving.set(false);
+      },
+    });
+  }
+
+  // ── Client edit ───────────────────────────────────────────────────────────────
+
+  startEditClient(): void {
+    const c = this.booking().client;
+    this.editFirstName.set(c?.first_name ?? '');
+    this.editLastName.set(c?.last_name ?? '');
+    this.editEmail.set(c?.email ?? '');
+    this.editPhone.set(c?.phone ?? '');
+    this.reqOpen.set(true);
+    this.addOpen.set(true);
+    this.editingClient.set(true);
+  }
+
+  cancelEditClient(): void {
+    this.editingClient.set(false);
+  }
+
+  saveClient(): void {
+    const clientId = this.booking().client?.id;
+    if (!clientId) return;
+
+    this.savingClient.set(true);
+    this.api.updateClient(clientId, {
+      first_name: this.editFirstName(),
+      last_name:  this.editLastName(),
+      email:      this.editEmail() || undefined,
+      phone:      this.editPhone() || undefined,
+    }).subscribe({
+      next: () => {
+        this.api.getBooking(this.booking().id).subscribe({
+          next: (refreshed) => {
+            this.savingClient.set(false);
+            this.editingClient.set(false);
+            this.bookingUpdated.emit(refreshed as unknown as Booking);
+          },
+          error: () => this.savingClient.set(false),
+        });
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'actualizar paciente');
+        this.savingClient.set(false);
       },
     });
   }

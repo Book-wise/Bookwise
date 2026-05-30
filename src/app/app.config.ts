@@ -25,6 +25,15 @@ export const appConfig: ApplicationConfig = {
         options: {
           darkModeSelector: false
         }
+      },
+      translation: {
+        dayNames:       ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+        dayNamesShort:  ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        dayNamesMin:    ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+        monthNames:     ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+        monthNamesShort:['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+        today:          'Hoy',
+        clear:          'Limpiar',
       }
     })
   ]

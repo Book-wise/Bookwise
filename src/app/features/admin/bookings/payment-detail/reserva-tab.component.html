@@ -1,15 +1,14 @@
 <div class="reserva-form">
-
   <!-- ── Fecha + Hora ──────────────────────────────────────────────────────────── -->
   <div class="rf-card rf-datetime">
-
     <div class="rf-field">
       <label class="rf-label">Fecha</label>
       <p-datepicker
         [ngModel]="selectedDate()"
         (ngModelChange)="selectedDate.set($event)"
-        dateFormat="dd/mm/yy"
+        dateFormat="DD d 'de' MM 'de' yy"
         [appendTo]="'body'"
+        [inputStyle]="{ width: '100%' }"
         class="rf-datepicker"
       />
     </div>
@@ -17,52 +16,223 @@
     <div class="rf-field">
       <label class="rf-label">Hora</label>
       <div class="rf-time-row">
-        <p-select [options]="hours" [ngModel]="startHour()"   (ngModelChange)="startHour.set($event)"   class="rf-time-sel" />
-        <span class="rf-sep">:</span>
-        <p-select [options]="minutes" [ngModel]="startMinute()" (ngModelChange)="startMinute.set($event)" class="rf-time-sel" />
-        <span class="rf-to">a</span>
-        <p-select [options]="hours" [ngModel]="endHour()"     (ngModelChange)="endHour.set($event)"     class="rf-time-sel" />
-        <span class="rf-sep">:</span>
-        <p-select [options]="minutes" [ngModel]="endMinute()"   (ngModelChange)="endMinute.set($event)"   class="rf-time-sel" />
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ── Cliente ───────────────────────────────────────────────────────────────── -->
-  <div class="rf-card rf-client">
-
-    <div class="rf-client__left">
-      <div class="rf-avatar">{{ clientInitials() }}</div>
-      <div class="rf-client__info">
-        <span class="rf-client__name">
-          {{ booking().client?.first_name }} {{ booking().client?.last_name }}
-        </span>
-        <div class="rf-client__meta">
-          @if (booking().client?.email) {
-            <span><i class="pi pi-envelope"></i> {{ booking().client!.email }}</span>
-          }
-          @if (booking().client?.phone) {
-            <span><i class="pi pi-mobile"></i> {{ booking().client!.phone }}</span>
-          }
+        <div class="rf-time-group">
+          <span class="rf-time-label">Desde</span>
+          <p-select [options]="hours"   [ngModel]="startHour()"   (ngModelChange)="startHour.set($event)"   [style]="{ width: '5.3rem' }" />
+          <span class="rf-sep">:</span>
+          <p-select [options]="minutes" [ngModel]="startMinute()" (ngModelChange)="startMinute.set($event)" [style]="{ width: '5.3rem' }" />
+        </div>
+        <div class="rf-time-group">
+          <span class="rf-time-label">Hasta</span>
+          <p-select [options]="hours"   [ngModel]="endHour()"     (ngModelChange)="endHour.set($event)"     [style]="{ width: '5.3rem' }" />
+          <span class="rf-sep">:</span>
+          <p-select [options]="minutes" [ngModel]="endMinute()"   (ngModelChange)="endMinute.set($event)"   [style]="{ width: '5.3rem' }" />
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="rf-client__actions">
-      @if (booking().client?.phone) {
-        <a [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" class="rf-wa-link">
-          <p-button icon="pi pi-whatsapp" severity="success" variant="text" [rounded]="true" size="small" />
-        </a>
-      }
-      <p-button icon="pi pi-pencil" variant="text" severity="secondary" [rounded]="true" size="small" />
+  <!-- ── Cliente ───────────────────────────────────────────────────────────────── -->
+  @if (!editingClient()) {
+    <div class="rf-card rf-client">
+      <!-- client info row -->
+      <div class="rf-client__row">
+        <div class="rf-client__left">
+          <div class="rf-avatar">{{ clientInitials() }}</div>
+          <div class="rf-client__info">
+            <span class="rf-client__name">
+              {{ booking().client?.first_name }} {{ booking().client?.last_name }}
+            </span>
+            <div class="rf-client__meta">
+              @if (booking().client?.email) {
+                <span><i class="pi pi-envelope"></i> {{ booking().client!.email }}</span>
+              }
+              @if (booking().client?.phone) {
+                <span><i class="pi pi-mobile"></i> {{ booking().client!.phone }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="rf-client__actions">
+          @if (booking().client?.phone) {
+            <a [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" class="rf-wa-link">
+              <p-button
+                icon="pi pi-whatsapp"
+                severity="success"
+                variant="text"
+                [rounded]="true"
+                size="small"
+              />
+            </a>
+          }
+          <p-button
+            icon="pi pi-pencil"
+            variant="text"
+            severity="secondary"
+            [rounded]="true"
+            size="small"
+            (onClick)="startEditClient()"
+          />
+        </div>
+      </div>
+
+      <!-- notifications section -->
+      <div class="rf-notif">
+        <button type="button" class="rf-notif__header" (click)="notifOpen.set(!notifOpen())">
+          <span class="rf-notif__title">Notificaciones automáticas de cita y recordatorios</span>
+          <i
+            class="pi"
+            [class.pi-chevron-down]="!notifOpen()"
+            [class.pi-chevron-up]="notifOpen()"
+          ></i>
+        </button>
+
+        @if (!notifOpen()) {
+          <p class="rf-notif__subtitle">Vía Email y WhatsApp</p>
+        }
+
+        @if (notifOpen()) {
+          <div class="rf-notif__table">
+            <div class="rf-notif__row rf-notif__row--head">
+              <span>Tipo de mensajería</span>
+              <span>Email</span>
+              <span>Whatsapp</span>
+            </div>
+            <div class="rf-notif__row">
+              <div class="rf-notif__type">
+                <span>Notificaciones de cita</span>
+                <span class="rf-notif__tag">Inmediato</span>
+                <button
+                  type="button"
+                  class="rf-notif__info-btn"
+                  (click)="citaInfoPop.toggle($event)"
+                >
+                  <i class="pi pi-question-circle"></i>
+                </button>
+              </div>
+              <p-checkbox
+                [ngModel]="notifCitaEmail()"
+                (ngModelChange)="notifCitaEmail.set($event)"
+                [binary]="true"
+              />
+              <p-checkbox
+                [ngModel]="notifCitaWa()"
+                (ngModelChange)="notifCitaWa.set($event)"
+                [binary]="true"
+              />
+            </div>
+            <div class="rf-notif__row">
+              <div class="rf-notif__type">
+                <span>Recordatorio</span>
+                <span class="rf-notif__tag">Programado</span>
+              </div>
+              <p-checkbox
+                [ngModel]="reminderEmail()"
+                (ngModelChange)="reminderEmail.set($event)"
+                [binary]="true"
+              />
+              <p-checkbox
+                [ngModel]="reminderWa()"
+                (ngModelChange)="reminderWa.set($event)"
+                [binary]="true"
+              />
+            </div>
+          </div>
+        }
+      </div>
     </div>
 
-  </div>
+    <p-popover #citaInfoPop>
+      <p class="rf-notif__popover-text">
+        Por <strong>email</strong> se notifica la creación, edición y cancelación de la cita. Por
+        <strong>WhatsApp</strong> sólo se notifica la creación de la cita.
+      </p>
+    </p-popover>
+  } @else {
+    <div class="rf-card rf-client-edit">
+      <p class="rce-title">Editando información</p>
+
+      <!-- Required section -->
+      <div class="rce-section">
+        <button type="button" class="rce-section__header" (click)="reqOpen.set(!reqOpen())">
+          <span>Información requerida</span>
+          <i class="pi" [class.pi-chevron-up]="reqOpen()" [class.pi-chevron-down]="!reqOpen()"></i>
+        </button>
+        @if (reqOpen()) {
+          <div class="rce-section__content">
+            <div class="rce-field">
+              <label class="rf-label">Nombre <span class="rce-req">*</span></label>
+              <input
+                pInputText
+                [ngModel]="editFirstName()"
+                (ngModelChange)="editFirstName.set($event)"
+                class="rce-input"
+              />
+            </div>
+            <div class="rce-field">
+              <label class="rf-label">Apellido <span class="rce-req">*</span></label>
+              <input
+                pInputText
+                [ngModel]="editLastName()"
+                (ngModelChange)="editLastName.set($event)"
+                class="rce-input"
+              />
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Additional section -->
+      <div class="rce-section">
+        <button type="button" class="rce-section__header" (click)="addOpen.set(!addOpen())">
+          <span>Información adicional</span>
+          <i class="pi" [class.pi-chevron-up]="addOpen()" [class.pi-chevron-down]="!addOpen()"></i>
+        </button>
+        @if (addOpen()) {
+          <div class="rce-section__content">
+            <div class="rce-field">
+              <label class="rf-label">Email</label>
+              <input
+                pInputText
+                type="email"
+                [ngModel]="editEmail()"
+                (ngModelChange)="editEmail.set($event)"
+                class="rce-input"
+              />
+            </div>
+            <div class="rce-field">
+              <label class="rf-label">Teléfono</label>
+              <bw-phone-input [ngModel]="editPhone()" (ngModelChange)="editPhone.set($event)" />
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="rce-actions">
+        <p-button
+          label="Volver"
+          icon="pi pi-chevron-left"
+          variant="text"
+          severity="secondary"
+          size="small"
+          (onClick)="cancelEditClient()"
+        />
+        <p-button
+          label="Actualizar paciente"
+          icon="pi pi-check"
+          size="small"
+          [loading]="savingClient()"
+          [disabled]="!editFirstName() || !editLastName()"
+          (onClick)="saveClient()"
+        />
+      </div>
+    </div>
+  }
 
   <!-- ── Profesional + Servicio ────────────────────────────────────────────────── -->
   <div class="rf-card rf-fields">
-
     <div class="rf-field">
       <label class="rf-label">Profesional</label>
       <div class="rf-field-row">
@@ -76,7 +246,13 @@
           [appendTo]="'body'"
           class="rf-select"
         />
-        <p-button icon="pi pi-building" variant="text" severity="secondary" [rounded]="true" size="small" />
+        <p-button
+          icon="pi pi-building"
+          variant="text"
+          severity="secondary"
+          [rounded]="true"
+          size="small"
+        />
       </div>
     </div>
 
@@ -84,7 +260,9 @@
       <label class="rf-label">Servicios</label>
       <div class="rf-field-row">
         <p-select
-          [options]="[{ label: booking().service?.name ?? 'Sin servicio', value: booking().service_id }]"
+          [options]="[
+            { label: booking().service?.name ?? 'Sin servicio', value: booking().service_id },
+          ]"
           [ngModel]="booking().service_id"
           [disabled]="true"
           [appendTo]="'body'"
@@ -100,7 +278,6 @@
         />
       </div>
     </div>
-
   </div>
 
   <!-- ── Información adicional ─────────────────────────────────────────────────── -->
@@ -129,5 +306,4 @@
       (onClick)="save()"
     />
   </div>
-
 </div>

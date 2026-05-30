@@ -204,6 +204,10 @@ export class ApiService {
     return this.http.post<Client>(`${this.baseUrl}/clients`, client);
   }
 
+  updateClient(id: number, data: Partial<Client>): Observable<Client> {
+    return this.http.patch<Client>(`${this.baseUrl}/clients/${id}`, data);
+  }
+
   getClientPacks(clientId: number): Observable<ClientPack[]> {
     return this.http.get<ClientPack[]>(`${this.baseUrl}/clients/${clientId}/packs`);
   }
