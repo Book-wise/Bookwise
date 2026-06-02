@@ -1,64 +1,78 @@
 <div class="full-calendar-container">
   <p-card>
     <ng-template pTemplate="header">
-      <div class="calendar-header">
-        <div class="filters">
-          <p-select
-            [options]="locationOptions()"
-            [(ngModel)]="selectedLocationId"
-            [placeholder]="lang.t('cal.placeholder.all_locations')"
-            [showClear]="true"
-            (onChange)="onLocationChange()"
-          >
-          </p-select>
-
-          <p-select
-            [options]="providerOptions()"
-            [(ngModel)]="selectedProviderId"
-            [placeholder]="lang.t('cal.placeholder.all_providers')"
-            [showClear]="true"
-            [loading]="providersLoading()"
-            (onChange)="onFilterChange()"
-          >
-          </p-select>
-
-          <p-multiselect
-            [options]="statusFilterOptions()"
-            [(ngModel)]="selectedStatusIds"
-            optionLabel="label"
-            optionValue="value"
-            [placeholder]="lang.t('cal.placeholder.all_statuses')"
-            [showClear]="true"
-            display="chip"
-            (onChange)="onFilterChange()"
-          >
-            <ng-template #item let-opt>
-              <div class="bw-status-filter-option">
-                <span class="bw-status-filter-dot" [style.background]="opt.color"></span>
-                <span>{{ opt.label }}</span>
-              </div>
-            </ng-template>
-          </p-multiselect>
+      @if (loading()) {
+        <div class="cal-header-skeleton">
+          <div class="cal-sk-filters bw-sk-card">
+            <p-skeleton width="160px" height="2.25rem" borderRadius="6px" />
+            <p-skeleton width="160px" height="2.25rem" borderRadius="6px" />
+            <p-skeleton width="180px" height="2.25rem" borderRadius="6px" />
+          </div>
+          <div class="cal-sk-actions">
+            <p-skeleton width="110px" height="2.25rem" borderRadius="6px" />
+            <p-skeleton width="120px" height="2.25rem" borderRadius="6px" />
+          </div>
         </div>
+      } @else {
+        <div class="calendar-header">
+          <div class="filters">
+            <p-select
+              [options]="locationOptions()"
+              [(ngModel)]="selectedLocationId"
+              [placeholder]="lang.t('cal.placeholder.all_locations')"
+              [showClear]="true"
+              (onChange)="onLocationChange()"
+            >
+            </p-select>
 
-        <div class="calendar-actions">
-          <p-button
-            [label]="lang.t('slot.new_booking')"
-            icon="pi pi-plus"
-            size="small"
-            (onClick)="openNewBooking()"
-          >
-          </p-button>
-          <p-button
-            [label]="lang.t('slot.block_time')"
-            icon="pi pi-lock"
-            size="small"
-            severity="secondary"
-            (onClick)="openBlockTime()"
-          >
-          </p-button>
+            <p-select
+              [options]="providerOptions()"
+              [(ngModel)]="selectedProviderId"
+              [placeholder]="lang.t('cal.placeholder.all_providers')"
+              [showClear]="true"
+              [loading]="providersLoading()"
+              (onChange)="onFilterChange()"
+            >
+            </p-select>
+
+            <p-multiselect
+              [options]="statusFilterOptions()"
+              [(ngModel)]="selectedStatusIds"
+              optionLabel="label"
+              optionValue="value"
+              [placeholder]="lang.t('cal.placeholder.all_statuses')"
+              [showClear]="true"
+              display="chip"
+              (onChange)="onFilterChange()"
+            >
+              <ng-template #item let-opt>
+                <div class="bw-status-filter-option">
+                  <span class="bw-status-filter-dot" [style.background]="opt.color"></span>
+                  <span>{{ opt.label }}</span>
+                </div>
+              </ng-template>
+            </p-multiselect>
+          </div>
+
+          <div class="calendar-actions">
+            <p-button
+              [label]="lang.t('slot.new_booking')"
+              icon="pi pi-plus"
+              size="small"
+              (onClick)="openNewBooking()"
+            >
+            </p-button>
+            <p-button
+              [label]="lang.t('slot.block_time')"
+              icon="pi pi-lock"
+              size="small"
+              severity="secondary"
+              (onClick)="openBlockTime()"
+            >
+            </p-button>
+          </div>
         </div>
-      </div>
+      }
     </ng-template>
 
     <div class="calendar-area">
@@ -66,11 +80,6 @@
       @if (loading()) {
         <div class="calendar-loading">
           <div class="cal-skeleton">
-            <div class="cal-sk-filter-bar bw-sk-card">
-              <p-skeleton width="160px" height="2.25rem" borderRadius="6px" />
-              <p-skeleton width="160px" height="2.25rem" borderRadius="6px" />
-              <p-skeleton width="180px" height="2.25rem" borderRadius="6px" />
-            </div>
             <div class="cal-sk-grid bw-sk-card">
               @for (col of [1,2,3,4,5,6,7]; track col) {
                 <div class="cal-sk-col"></div>
