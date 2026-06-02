@@ -269,12 +269,8 @@
 <bw-payment-detail-dialog #paymentDetailDialog (backToDetail)="onBackToDetail($event)" />
 
 <!-- Booking Dialog para crear/editar -->
-<bw-booking-dialog
-  #bookingDialog
-  (onSuccess)="onBookingSaved()"
-  (onCancel)="onBookingCancelled()"
-></bw-booking-dialog>
-<bw-booking-form-dialog #newBookingDialog (onSaved)="onBookingSaved()"></bw-booking-form-dialog>
+<bw-booking-dialog #bookingDialog></bw-booking-dialog>
+<bw-booking-form-dialog #newBookingDialog></bw-booking-form-dialog>
 <bw-block-time-dialog #blockTimeDialog (onBlocked)="onBookingSaved()"></bw-block-time-dialog>
 
 <!-- Slot Action Menu Overlay -->

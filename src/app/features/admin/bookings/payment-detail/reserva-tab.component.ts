@@ -138,8 +138,8 @@ export class ReservaTabComponent {
         this.api.getBooking(b.id).subscribe({
           next: (refreshed) => {
             this.saving.set(false);
-            this.bookingUpdated.emit(refreshed as unknown as Booking);
-            this.bookingUpdate.notify(refreshed as unknown as Booking);
+            this.bookingUpdated.emit(refreshed);
+            this.bookingUpdate.notify(refreshed);
           },
           error: () => this.saving.set(false),
         });
@@ -184,8 +184,8 @@ export class ReservaTabComponent {
           next: (refreshed) => {
             this.savingClient.set(false);
             this.editingClient.set(false);
-            this.bookingUpdated.emit(refreshed as unknown as Booking);
-            this.bookingUpdate.notify(refreshed as unknown as Booking);
+            this.bookingUpdated.emit(refreshed);
+            this.bookingUpdate.notify(refreshed);
           },
           error: () => this.savingClient.set(false),
         });
