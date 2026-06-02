@@ -374,3 +374,30 @@
 ::ng-deep .p-accordion {
   margin-top: 0;
 }
+
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
+.bfd-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.25rem 0;
+}
+
+.bfd-sk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bfd-sk-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.bfd-sk-btn {
+  display: flex;
+  align-items: flex-end;
+}

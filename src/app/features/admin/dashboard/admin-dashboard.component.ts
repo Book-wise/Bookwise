@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
+import { SkeletonModule } from 'primeng/skeleton';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
@@ -21,7 +23,7 @@ interface DashboardChartOptions {
   selector: 'bw-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ChartModule],
+  imports: [CommonModule, CardModule, ChartModule, SkeletonModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
@@ -30,6 +32,7 @@ export class AdminDashboardComponent implements OnInit {
   private httpError = inject(HttpErrorService);
   private auth      = inject(AuthService);
 
+  loading        = signal(true);
   locations      = signal<Location[]>([]);
   providers      = signal<Provider[]>([]);
   todayBookings  = signal(0);
@@ -60,24 +63,25 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadData(): void {
-    this.api.getLocations().subscribe({
-      next: (data) => this.locations.set(data),
-      error: (err) => { this.locations.set([]); this.httpError.handle(err, 'cargar locations'); }
-    });
-
-    this.api.getProviders().subscribe({
-      next: (data) => this.providers.set(data),
-      error: (err) => { this.providers.set([]); this.httpError.handle(err, 'cargar providers'); }
-    });
-
-    this.api.getBookings({ per_page: 100 }).subscribe({
-      next: (response) => {
-        const bookings = response.data ?? [];
+    this.loading.set(true);
+    forkJoin({
+      locations: this.api.getLocations(),
+      providers: this.api.getProviders(),
+      bookings:  this.api.getBookings({ per_page: 100 }),
+    }).subscribe({
+      next: ({ locations, providers, bookings }) => {
+        this.locations.set(locations);
+        this.providers.set(providers);
+        const list = bookings.data ?? [];
         const today = new Date().toISOString().split('T')[0];
-        this.todayBookings.set(bookings.filter(b => b.start_time.startsWith(today)).length);
-        this.pendingBookings.set(bookings.filter(b => b.status?.name === 'pending').length);
+        this.todayBookings.set(list.filter(b => b.start_time.startsWith(today)).length);
+        this.pendingBookings.set(list.filter(b => b.status?.name === 'pending').length);
+        this.loading.set(false);
       },
-      error: (err) => this.httpError.handle(err, 'cargar reservas'),
+      error: (err) => {
+        this.httpError.handle(err, 'cargar dashboard');
+        this.loading.set(false);
+      },
     });
   }
 

@@ -310,3 +310,24 @@ input.p-inputtext {
     width: 100% !important;
   }
 }
+
+// ── Skeleton global ───────────────────────────────────────────────────────────
+
+@keyframes bw-skeleton-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.bw-sk-card {
+  background-color: var(--p-skeleton-background, #dee2e6) !important;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  ) !important;
+  background-size: 400% 100% !important;
+  animation: bw-skeleton-shimmer 1.4s ease-in-out infinite !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}

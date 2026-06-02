@@ -81,3 +81,19 @@ h2 { margin-bottom: 0.5rem; }
   align-items: center;
   gap: 0.5rem;
 }
+
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
+.avail-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+}
+
+.avail-sk-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}

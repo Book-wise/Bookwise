@@ -13,12 +13,25 @@
     </p-iconfield>
   </div>
 
+  @if (loading()) {
+    <div class="list-skeleton">
+      @for (row of [1,2,3,4,5]; track row) {
+        <div class="list-sk-row bw-sk-card">
+          <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
+          <p-skeleton width="14%"   height="1rem" borderRadius="4px" />
+          <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
+          <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+        </div>
+      }
+    </div>
+  } @else {
   <p-table
     [value]="clients()"
     [tableStyle]="{ 'min-width': '50rem' }"
     [paginator]="true"
     [rows]="10"
-    [loading]="loading()"
   >
     <ng-template pTemplate="header">
       <tr>
@@ -58,4 +71,5 @@
       </tr>
     </ng-template>
   </p-table>
+  }
 </p-card>

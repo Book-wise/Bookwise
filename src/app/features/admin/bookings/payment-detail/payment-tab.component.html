@@ -1,10 +1,48 @@
 @if (vm().loading) {
 
-  <div class="sale-skeleton">
-    <p-skeleton height="5rem"  borderRadius="8px" />
-    <p-skeleton height="4rem"  borderRadius="8px" />
-    <p-skeleton height="6rem"  borderRadius="8px" />
-    <p-skeleton height="3rem"  borderRadius="8px" />
+  <div class="sale-body sale-skeleton">
+
+    <!-- Card 1: header -->
+    <div class="sale-card sale-card--header bw-sk-card">
+      <div class="sale-header__top">
+        <p-skeleton width="140px" height="0.875rem" />
+        <p-skeleton width="90px" height="1.5rem" borderRadius="4px" />
+      </div>
+      <div class="sale-header__bottom">
+        <p-skeleton width="110px" height="2rem" />
+        <p-skeleton width="90px" height="1.25rem" borderRadius="4px" />
+      </div>
+    </div>
+
+    <!-- Card 2: cliente + total -->
+    <div class="sale-card bw-sk-card">
+      <div class="sale-row">
+        <p-skeleton width="160px" height="0.875rem" />
+        <p-skeleton width="65px" height="0.875rem" />
+      </div>
+    </div>
+
+    <!-- Card 3: detalle -->
+    <div class="sale-card sale-card--detail bw-sk-card">
+      <p-skeleton width="55px" height="0.7rem" />
+      <div class="sk-gap"></div>
+      <p-skeleton width="100%" height="2.5rem" borderRadius="4px" />
+    </div>
+
+    <!-- Card 4: transacciones -->
+    <div class="sale-card sale-card--txn bw-sk-card">
+      <p-skeleton width="95px" height="0.7rem" />
+      <div class="sk-gap"></div>
+      <p-skeleton width="100%" height="2.5rem" borderRadius="4px" />
+    </div>
+
+    <!-- Card 5: nota -->
+    <div class="sale-card bw-sk-card">
+      <p-skeleton width="40px" height="0.7rem" />
+      <div class="sk-gap"></div>
+      <p-skeleton width="100%" height="3.5rem" borderRadius="4px" />
+    </div>
+
   </div>
 
 } @else if (vm().sale; as sale) {

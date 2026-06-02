@@ -7,6 +7,8 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
+import { SkeletonModule } from 'primeng/skeleton';
+import { forkJoin } from 'rxjs';
 import { ToastService } from '@shared/components/toast-modal/toast.service';
 import {
   AvailabilityService,
@@ -39,6 +41,7 @@ const DAYS_OF_WEEK = [
     ToggleSwitchModule,
     TableModule,
     DialogModule,
+    SkeletonModule,
   ],
   templateUrl: './provider-availability.component.html',
   styleUrls: ['./provider-availability.component.scss'],
@@ -50,6 +53,7 @@ export class ProviderAvailabilityComponent implements OnInit {
   private api  = inject(ApiService);
   private auth = inject(AuthService);
 
+  loading = signal(true);
   locations = signal<Location[]>([]);
   availabilitySlots = signal<ProviderAvailabilitySlot[]>([]);
   saving = signal(false);
@@ -67,29 +71,26 @@ export class ProviderAvailabilityComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadLocations();
-    this.loadAvailability();
-  }
-
-  loadLocations(): void {
-    this.api.getLocations().subscribe({
-      next: (data) => this.locations.set(data),
-      error: (err) => { this.locations.set([]); this.httpError.handle(err, 'cargar locations'); },
-    });
-  }
-
-loadAvailability(): void {
     const providerId = this.auth.user()?.provider_id;
-    if (!providerId) return;
-    
-    this.newSlot.provider_id = providerId;
-    
-    this.availabilityService.getProviderAvailability(providerId).subscribe({
-      next: (response) => {
-        const data = response;
-        this.availabilitySlots.set(data);
+    if (providerId) {
+      this.newSlot.provider_id = providerId;
+    }
+
+    forkJoin({
+      locations:    this.api.getLocations(),
+      availability: providerId
+        ? this.availabilityService.getProviderAvailability(providerId)
+        : Promise.resolve([]),
+    }).subscribe({
+      next: ({ locations, availability }) => {
+        this.locations.set(locations);
+        this.availabilitySlots.set(availability as ProviderAvailabilitySlot[]);
+        this.loading.set(false);
       },
-      error: (err) => this.httpError.handle(err, 'cargar disponibilidad'),
+      error: (err) => {
+        this.httpError.handle(err, 'cargar disponibilidad');
+        this.loading.set(false);
+      },
     });
   }
 

@@ -11,9 +11,11 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
 import { Location, Provider, CreateBlockedSlot, BlockedSlot } from '@models';
+import { forkJoin } from 'rxjs';
 import { BlockConflict, BlockConflictResponse } from '@models';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { LanguageService } from '@services/language.service';
@@ -32,6 +34,7 @@ import { LanguageService } from '@services/language.service';
     SelectModule,
     InputNumberModule,
     RadioButtonModule,
+    SkeletonModule,
   ],
   templateUrl: './block-time-dialog.component.html',
   styleUrls: ['./block-time-dialog.component.scss'],
@@ -50,6 +53,7 @@ export class BlockTimeDialogComponent implements OnInit {
   editMode    = false;
   editingSlotId: number | null = null;
   saving      = signal(false);
+  loading     = signal(false);
   reason      = '';
 
   // ── Scope (location/provider) ────────────────────────────────────────────
@@ -105,10 +109,18 @@ export class BlockTimeDialogComponent implements OnInit {
   ngOnInit(): void { /* datos cargados al abrir, no al montar */ }
 
   private loadFormData(): void {
-    this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(), CACHE_TTL.LOCATIONS)
-      .subscribe({ next: d => this.locations.set(d) });
-    this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(), CACHE_TTL.PROVIDERS)
-      .subscribe({ next: d => this.providers.set(d) });
+    this.loading.set(true);
+    forkJoin({
+      locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(), CACHE_TTL.LOCATIONS),
+      providers: this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(), CACHE_TTL.PROVIDERS),
+    }).subscribe({
+      next: ({ locations, providers }) => {
+        this.locations.set(locations);
+        this.providers.set(providers);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 
   onScopeChange(): void {

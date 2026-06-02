@@ -33,3 +33,18 @@
 .spacer {
   flex: 1;
 }
+
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
+.bd-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.bd-sk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

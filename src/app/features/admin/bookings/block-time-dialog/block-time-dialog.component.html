@@ -15,6 +15,38 @@
     </div>
   </ng-template>
 
+  @if (loading()) {
+    <div class="btd-skeleton bw-sk-card">
+      <div class="btd-sk-field">
+        <p-skeleton width="80px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="btd-sk-field">
+        <p-skeleton width="80px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="btd-sk-row">
+        <div class="btd-sk-field">
+          <p-skeleton width="70px" height="0.75rem" />
+          <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+        </div>
+        <div class="btd-sk-field">
+          <p-skeleton width="60px" height="0.75rem" />
+          <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+        </div>
+      </div>
+      <div class="btd-sk-row">
+        <div class="btd-sk-field">
+          <p-skeleton width="70px" height="0.75rem" />
+          <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+        </div>
+        <div class="btd-sk-field">
+          <p-skeleton width="60px" height="0.75rem" />
+          <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+        </div>
+      </div>
+    </div>
+  } @else {
   <div class="block-form">
 
     <!-- Alcance del bloqueo: oculto cuando el provider está bloqueado -->
@@ -207,6 +239,7 @@
     </div>
 
   </div>
+  }
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">

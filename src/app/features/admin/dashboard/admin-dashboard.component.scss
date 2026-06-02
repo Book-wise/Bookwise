@@ -57,6 +57,24 @@ h1 {
   height: 280px;
 }
 
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
+.dash-sk-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.dash-sk-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+}
+
 @media (max-width: 768px) {
   .dashboard {
     padding: 0.75rem;

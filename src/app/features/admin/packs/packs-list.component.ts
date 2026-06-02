@@ -4,6 +4,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ServicePack } from '@models';
@@ -13,7 +14,7 @@ import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
   selector: 'bw-packs-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule, BwCurrencyPipe],
+  imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule, BwCurrencyPipe, SkeletonModule],
   templateUrl: './packs-list.component.html',
   styleUrls: ['./packs-list.component.scss']
 })

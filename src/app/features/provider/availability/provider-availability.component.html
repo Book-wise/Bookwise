@@ -1,7 +1,21 @@
 <div class="availability-container">
   <h2>Mi Disponibilidad</h2>
   <p class="subtitle">Configura tus horarios de atención por día de la semana</p>
-  
+
+  @if (loading()) {
+    <div class="avail-skeleton bw-sk-card">
+      <p-skeleton width="30%" height="1rem" borderRadius="4px" />
+      @for (row of [1,2,3,4,5]; track row) {
+        <div class="avail-sk-row">
+          <p-skeleton width="15%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="12%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="12%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="40px" height="1.5rem" borderRadius="12px" />
+          <p-skeleton width="40px" height="1rem" borderRadius="4px" />
+        </div>
+      }
+    </div>
+  } @else {
   <p-card>
     <p-table [value]="availabilitySlots()" [tableStyle]="{'min-width': '50rem'}">
       <ng-template pTemplate="header">
@@ -72,6 +86,7 @@
   <div class="actions">
     <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="saveAvailability()" [loading]="saving()"></p-button>
   </div>
+  }
 </div>
 
 <!-- Dialog para agregar nuevo horario -->

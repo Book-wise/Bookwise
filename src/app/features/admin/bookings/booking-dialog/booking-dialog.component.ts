@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Booking, Client, Service, Provider, Location, CreateBooking } from '@models';
@@ -19,6 +20,7 @@ import { BookingUpdateService } from '@services/booking-update.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
 import { CURRENCY_CONFIG, formatCLP } from '@shared/config/currency.config';
+import { forkJoin } from 'rxjs';
 
 export interface BookingFormData {
   id?: number;
@@ -48,6 +50,7 @@ export interface BookingFormData {
     DialogModule,
     DatePickerModule,
     FloatLabelModule,
+    SkeletonModule,
   ],
   templateUrl: './booking-dialog.component.html',
   styleUrl: './booking-dialog.component.scss',
@@ -64,6 +67,7 @@ export class BookingDialogComponent implements OnInit {
 
   visible = false;
   saving = signal(false);
+  loading = signal(false);
   isEdit = signal(false);
 
   // Options
@@ -136,14 +140,24 @@ export class BookingDialogComponent implements OnInit {
   }
 
   loadFormData(): void {
-    this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.api.getClients({ per_page: 500 }), CACHE_TTL.CLIENTS)
-      .subscribe({ next: d => this.clients.set(d),   error: () => this.clients.set([]) });
-    this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.api.getServices(),                 CACHE_TTL.SERVICES)
-      .subscribe({ next: d => this.services.set(d),  error: () => this.services.set([]) });
-    this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(),                CACHE_TTL.PROVIDERS)
-      .subscribe({ next: d => this.providers.set(d), error: () => this.providers.set([]) });
-    this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(),                CACHE_TTL.LOCATIONS)
-      .subscribe({ next: d => this.locations.set(d), error: () => this.locations.set([]) });
+    this.loading.set(true);
+    forkJoin({
+      clients:   this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.api.getClients({ per_page: 500 }), CACHE_TTL.CLIENTS),
+      services:  this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.api.getServices(),                 CACHE_TTL.SERVICES),
+      providers: this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(),                CACHE_TTL.PROVIDERS),
+      locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(),                CACHE_TTL.LOCATIONS),
+    }).subscribe({
+      next: ({ clients, services, providers, locations }) => {
+        this.clients.set(clients);
+        this.services.set(services);
+        this.providers.set(providers);
+        this.locations.set(locations);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      },
+    });
   }
 
   openNew(booking?: Booking) {

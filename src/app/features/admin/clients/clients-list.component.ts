@@ -12,6 +12,7 @@ import { Client } from '@models';
 import { debounceTime, Subject } from 'rxjs';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'bw-clients-list',
@@ -27,6 +28,7 @@ import { InputIconModule } from 'primeng/inputicon';
     InputTextModule,
     IconFieldModule,
     InputIconModule,
+    SkeletonModule,
   ],
   templateUrl: './clients-list.component.html',
   styleUrls: ['./clients-list.component.scss'],

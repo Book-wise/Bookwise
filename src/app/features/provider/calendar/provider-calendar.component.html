@@ -44,7 +44,16 @@
       <div class="calendar-wrapper" #calendarContainer></div>
       @if (loading()) {
         <div class="calendar-loading">
-          <p-progressSpinner strokeWidth="3" animationDuration=".8s" />
+          <div class="cal-skeleton">
+            <div class="cal-sk-filter-bar bw-sk-card">
+              <p-skeleton width="180px" height="2.25rem" borderRadius="6px" />
+            </div>
+            <div class="cal-sk-grid bw-sk-card">
+              @for (col of [1,2,3,4,5,6,7]; track col) {
+                <div class="cal-sk-col"></div>
+              }
+            </div>
+          </div>
         </div>
       }
     </div>

@@ -225,3 +225,25 @@
   color: #9ca3af;
   margin-top: 0.25rem;
 }
+
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
+.btd-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.25rem 0;
+}
+
+.btd-sk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.btd-sk-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: end;
+}

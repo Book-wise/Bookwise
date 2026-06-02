@@ -4,6 +4,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { Provider } from '@models';
@@ -12,7 +13,7 @@ import { Provider } from '@models';
   selector: 'bw-providers-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule],
+  imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule, SkeletonModule],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss']
 })

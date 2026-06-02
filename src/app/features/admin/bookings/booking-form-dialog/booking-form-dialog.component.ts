@@ -37,6 +37,7 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { forkJoin } from 'rxjs';
+import { SkeletonModule } from 'primeng/skeleton';
 
 /** Service or ServicePack tagged with _isPack by loadFormData() — never sent to the API. */
 type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
@@ -59,6 +60,7 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
     RadioButtonModule,
     TooltipModule,
     PhoneInputComponent,
+    SkeletonModule,
   ],
   templateUrl: './booking-form-dialog.component.html',
   styleUrls: ['./booking-form-dialog.component.scss'],

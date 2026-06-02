@@ -7,6 +7,34 @@
   [resizable]="false"
   (onHide)="onClose()"
 >
+  @if (loading()) {
+    <div class="bd-skeleton bw-sk-card">
+      <div class="bd-sk-field">
+        <p-skeleton width="60px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="bd-sk-field">
+        <p-skeleton width="70px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="bd-sk-field">
+        <p-skeleton width="70px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="bd-sk-field">
+        <p-skeleton width="80px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="bd-sk-field">
+        <p-skeleton width="100px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+      <div class="bd-sk-field">
+        <p-skeleton width="50px" height="0.75rem" />
+        <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
+      </div>
+    </div>
+  } @else {
   <div class="form-grid">
     <!-- Cliente -->
     <div class="field">
@@ -130,6 +158,7 @@
       ></textarea>
     </div>
   </div>
+  }
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">

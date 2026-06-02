@@ -23,7 +23,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -69,7 +69,7 @@ interface CalendarEvent {
     MultiSelectModule,
     TagModule,
     DialogModule,
-    ProgressSpinnerModule,
+    SkeletonModule,
     BookingFormDialogComponent,
     PopoverModule,
     BlockTimeDialogComponent,
