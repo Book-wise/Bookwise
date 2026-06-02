@@ -12,7 +12,9 @@ import {
   AfterViewInit,
   HostListener,
   NgZone,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -26,6 +28,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { BookingUpdateService } from '@services/booking-update.service';
 import { Booking, BlockedSlot, Location, Provider } from '@models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
@@ -84,11 +87,13 @@ interface CalendarEvent {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api        = inject(ApiService);
-  private httpError  = inject(HttpErrorService);
+  private api           = inject(ApiService);
+  private httpError     = inject(HttpErrorService);
   private messageService = inject(MessageService);
-  private ngZone     = inject(NgZone);
-  readonly lang      = inject(LanguageService);
+  private ngZone        = inject(NgZone);
+  readonly lang         = inject(LanguageService);
+  private bookingUpdate = inject(BookingUpdateService);
+  private destroyRef    = inject(DestroyRef);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -192,6 +197,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
+    this.bookingUpdate.updated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.onBookingSaved());
   }
 
   ngAfterViewInit(): void {
