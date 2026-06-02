@@ -15,6 +15,7 @@ import { Booking, Client, Service, Provider, Location, CreateBooking } from '@mo
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
+import { BookingUpdateService } from '@services/booking-update.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
 import { CURRENCY_CONFIG, formatCLP } from '@shared/config/currency.config';
@@ -54,11 +55,12 @@ export interface BookingFormData {
 export class BookingDialogComponent implements OnInit {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private api        = inject(ApiService);
-  private httpError  = inject(HttpErrorService);
-  private dataCache  = inject(DataCacheService);
+  private api           = inject(ApiService);
+  private httpError     = inject(HttpErrorService);
+  private dataCache     = inject(DataCacheService);
   private messageService = inject(MessageService);
-  readonly lang      = inject(LanguageService);
+  readonly lang         = inject(LanguageService);
+  private bookingUpdate = inject(BookingUpdateService);
 
   visible = false;
   saving = signal(false);
@@ -239,7 +241,7 @@ export class BookingDialogComponent implements OnInit {
       : this.api.createBooking(bookingData);
 
     request.subscribe({
-      next: () => {
+      next: (saved: Booking) => {
         this.messageService.add({
           severity: 'success',
           summary: this.lang.t(this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary'),
@@ -247,6 +249,7 @@ export class BookingDialogComponent implements OnInit {
         });
         this.visible = false;
         this.saving.set(false);
+        this.bookingUpdate.notify(saved);
         this.onSuccessCallback?.();
       },
       error: (err: HttpErrorResponse) => {
@@ -262,7 +265,7 @@ export class BookingDialogComponent implements OnInit {
     this.saving.set(true);
 
     this.api.cancelBooking(this.formData.id!).subscribe({
-      next: () => {
+      next: (cancelled: Booking) => {
         this.messageService.add({
           severity: 'success',
           summary: this.lang.t('toast.booking_cancelled.summary'),
@@ -270,6 +273,7 @@ export class BookingDialogComponent implements OnInit {
         });
         this.visible = false;
         this.saving.set(false);
+        this.bookingUpdate.notify(cancelled);
         this.onCancelCallback?.();
       },
       error: (err: HttpErrorResponse) => {

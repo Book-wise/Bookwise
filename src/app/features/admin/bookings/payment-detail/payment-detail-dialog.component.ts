@@ -12,6 +12,7 @@ import { Booking } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { BookingUpdateService } from '@services/booking-update.service';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { PaymentTabComponent } from './payment-tab.component';
 import { ReservaTabComponent } from './reserva-tab.component';
@@ -30,6 +31,7 @@ export class PaymentDetailDialogComponent {
   private httpError      = inject(HttpErrorService);
   private messageService = inject(MessageService);
   readonly lang          = inject(LanguageService);
+  private bookingUpdate  = inject(BookingUpdateService);
 
   visible           = signal(false);
   booking           = signal<Booking | null>(null);
@@ -93,6 +95,7 @@ export class PaymentDetailDialogComponent {
         const current = this.booking();
         if (current) {
           this.booking.set({ ...current, status_id: updated.status_id, status: updated.status });
+          this.bookingUpdate.notify({ ...current, status_id: updated.status_id, status: updated.status });
         }
         this.messageService.add({
           severity: 'success',

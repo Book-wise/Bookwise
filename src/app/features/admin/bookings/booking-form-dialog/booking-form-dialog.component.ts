@@ -30,6 +30,7 @@ import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { LanguageService } from '@services/language.service';
+import { BookingUpdateService } from '@services/booking-update.service';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
@@ -65,12 +66,13 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
 export class BookingFormDialogComponent implements OnInit {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private apiService    = inject(ApiService);
-  private httpError     = inject(HttpErrorService);
+  private apiService     = inject(ApiService);
+  private httpError      = inject(HttpErrorService);
   private messageService = inject(MessageService);
-  private cdr           = inject(ChangeDetectorRef);
-  private dataCache     = inject(DataCacheService);
-  readonly lang         = inject(LanguageService);
+  private cdr            = inject(ChangeDetectorRef);
+  private dataCache      = inject(DataCacheService);
+  readonly lang          = inject(LanguageService);
+  private bookingUpdate  = inject(BookingUpdateService);
 
   @Input() initialDate?: Date;
   @Input() lockedProviderId: number | null = null;
@@ -387,7 +389,7 @@ export class BookingFormDialogComponent implements OnInit {
       : this.apiService.createBooking(bookingData);
 
     request.subscribe({
-      next: () => {
+      next: (saved: Booking) => {
         this.messageService.add({
           severity: 'success',
           summary: this.lang.t(this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary'),
@@ -395,6 +397,7 @@ export class BookingFormDialogComponent implements OnInit {
         });
         this.visible = false;
         this.saving.set(false);
+        this.bookingUpdate.notify(saved);
         this.onSaved.emit();
       },
       error: (err: HttpErrorResponse) => {

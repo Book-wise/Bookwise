@@ -12,7 +12,9 @@ import {
   AfterViewInit,
   HostListener,
   NgZone,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -26,6 +28,7 @@ import { MessageService } from 'primeng/api';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
+import { BookingUpdateService } from '@services/booking-update.service';
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
@@ -77,12 +80,14 @@ interface CalendarEvent {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api        = inject(ApiService);
-  private httpError  = inject(HttpErrorService);
-  private auth       = inject(AuthService);
+  private api           = inject(ApiService);
+  private httpError     = inject(HttpErrorService);
+  private auth          = inject(AuthService);
   private messageService = inject(MessageService);
-  private ngZone     = inject(NgZone);
-  readonly lang      = inject(LanguageService);
+  private ngZone        = inject(NgZone);
+  readonly lang         = inject(LanguageService);
+  private bookingUpdate = inject(BookingUpdateService);
+  private destroyRef    = inject(DestroyRef);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -171,6 +176,9 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnInit(): void {
     this.checkViewport();
+    this.bookingUpdate.updated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.onBookingSaved());
   }
 
   ngAfterViewInit(): void {
