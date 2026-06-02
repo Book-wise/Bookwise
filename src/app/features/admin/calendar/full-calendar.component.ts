@@ -32,6 +32,7 @@ import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/book
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { PaymentDetailDialogComponent } from '../bookings/payment-detail/payment-detail-dialog.component';
 import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
+import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { forkJoin } from 'rxjs';
 import {
@@ -76,6 +77,7 @@ interface CalendarEvent {
     PopoverModule,
     BlockTimeDialogComponent,
     PaymentDetailDialogComponent,
+    BwCurrencyPipe,
   ],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],

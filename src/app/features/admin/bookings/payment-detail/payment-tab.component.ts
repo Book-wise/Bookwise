@@ -15,6 +15,8 @@ import { MenuItem } from 'primeng/api';
 import { Booking, BookingPayment, CreateSaleRequest, Sale, SaleTransaction } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
+import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 
 export interface SaleItem {
   name: string;
@@ -49,11 +51,14 @@ interface SaleVm {
     CommonModule, FormsModule,
     SkeletonModule, ButtonModule, MenuModule, TextareaModule, TagModule,
     TableModule, InputNumberModule, SelectModule,
+    BwCurrencyPipe,
   ],
   templateUrl: './payment-tab.component.html',
   styleUrl: './payment-tab.component.scss',
 })
 export class PaymentTabComponent {
+  readonly currencyConfig = CURRENCY_CONFIG;
+
   private readonly api       = inject(ApiService);
   private readonly httpError = inject(HttpErrorService);
   private readonly el        = inject(ElementRef);

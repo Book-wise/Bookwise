@@ -8,7 +8,6 @@ import {
   Input,
   Output,
   EventEmitter,
-  ViewChild,
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -35,6 +34,7 @@ import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
+import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { forkJoin } from 'rxjs';
 
 /** Service or ServicePack tagged with _isPack by loadFormData() — never sent to the API. */
@@ -63,6 +63,8 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
   styleUrls: ['./booking-form-dialog.component.scss'],
 })
 export class BookingFormDialogComponent implements OnInit {
+  readonly currencyConfig = CURRENCY_CONFIG;
+
   private apiService    = inject(ApiService);
   private httpError     = inject(HttpErrorService);
   private messageService = inject(MessageService);
@@ -76,8 +78,9 @@ export class BookingFormDialogComponent implements OnInit {
   @Output() onCancelled = new EventEmitter<void>();
 
   visible     = false;
-  saving      = signal(false);
-  loadingData = signal(false);
+  saving           = signal(false);
+  loadingData      = signal(false);
+  loadingProviders = signal(false);
   isEdit      = signal(false);
   showRepeatDialog  = false;
   showAddClient     = false;
@@ -187,11 +190,14 @@ export class BookingFormDialogComponent implements OnInit {
 
   loadFormData(): void {
     this.loadingData.set(true);
+    this.loadingProviders.set(true);
     forkJoin({
       clients:   this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.apiService.getClients({ per_page: 100 }), CACHE_TTL.CLIENTS),
       services:  this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.apiService.getServices(),                 CACHE_TTL.SERVICES),
       packs:     this.dataCache.getOrFetchResource(CACHE_KEYS.PACKS,     () => this.apiService.getPacks(),                    CACHE_TTL.PACKS),
-      providers: this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.apiService.getProviders(),                CACHE_TTL.PROVIDERS),
+      providers: this.apiService.getProviders(
+        this.formData.location_id ? { location_id: this.formData.location_id } : undefined
+      ),
       locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.apiService.getLocations(),                CACHE_TTL.LOCATIONS),
     }).subscribe({
       next: ({ clients, services, packs, providers, locations }) => {
@@ -207,38 +213,38 @@ export class BookingFormDialogComponent implements OnInit {
           this._pendingServiceId = 0;
         }
         this.loadingData.set(false);
+        this.loadingProviders.set(false);
       },
       error: (err) => {
         this.httpError.handle(err, 'cargar datos del formulario');
         this.loadingData.set(false);
+        this.loadingProviders.set(false);
       },
     });
   }
 
   openNew(booking?: Booking, initialDate?: Date, locationId?: number | null) {
     this.resetForm();
-    this.loadFormData();
 
     if (booking) {
       this.isEdit.set(true);
-      const startDate   = new Date(booking.start_time);
-      const packId      = booking.pack_session?.service_pack_id ?? null;
-      const serviceId   = packId ? 0 : (booking.service_id ?? booking.service?.id ?? 0);
+      const startDate = new Date(booking.start_time);
+      const packId    = booking.pack_session?.service_pack_id ?? null;
+      const serviceId = packId ? 0 : (booking.service_id ?? booking.service?.id ?? 0);
       this.formData = {
-        id: booking.id,
-        client_id:      booking.client_id ?? booking.client?.id ?? 0,
-        service_id:     serviceId,
-        service_pack_id: packId,
-        provider_id:    this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
-        location_id:    booking.location_id ?? booking.location?.id ?? 0,
-        status_id:      booking.status_id,
-        start_time:     startDate,
+        ...this.getEmptyForm(),
+        id:               booking.id,
+        client_id:        booking.client_id ?? booking.client?.id ?? 0,
+        service_id:       serviceId,
+        service_pack_id:  packId,
+        provider_id:      this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
+        location_id:      booking.location_id ?? booking.location?.id ?? 1,
+        status_id:        booking.status_id,
+        start_time:       startDate,
         duration_minutes: booking.custom_duration_minutes || 60,
-        price:          Number(booking.price) || 0,
-        notes:          booking.notes || '',
+        price:            Number(booking.price) || 0,
+        notes:            booking.notes || '',
       };
-      // Use pack_session.service_pack_id when available (authoritative);
-      // fall back to heuristic for old API responses without it.
       this._pendingServiceId = packId ?? serviceId;
     } else {
       if (initialDate) this.formData.start_time = initialDate;
@@ -246,6 +252,7 @@ export class BookingFormDialogComponent implements OnInit {
       if (this.lockedProviderId) this.formData.provider_id = this.lockedProviderId;
     }
 
+    this.loadFormData();
     this.visible = true;
     this.cdr.detectChanges();
   }
@@ -320,6 +327,15 @@ export class BookingFormDialogComponent implements OnInit {
       this.formData.duration_minutes = option.duration_minutes;
       this.formData.price            = Number(option.price) || 0;
     }
+  }
+
+  onLocationChange(): void {
+    this.formData.provider_id = null;
+    this.loadingProviders.set(true);
+    this.apiService.getProviders({ location_id: this.formData.location_id }).subscribe({
+      next: (data) => { this.providers.set(data); this.loadingProviders.set(false); },
+      error: (err) => { this.httpError.handle(err, 'cargar profesionales'); this.loadingProviders.set(false); },
+    });
   }
 
   onClientFilter(): void {}

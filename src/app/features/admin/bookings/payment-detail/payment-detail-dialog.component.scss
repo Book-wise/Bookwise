@@ -114,12 +114,21 @@
   color: var(--text-color);
 }
 
+.bw-status-mobile {
+  display: none;
+}
+
 // ── Responsive — Mobile ───────────────────────────────────────────────────────
 
 @media (max-width: 768px) {
   // Intercambiar headers
   .bw-desktop-header { display: none; }
   .bw-mobile-header  { display: flex; }
+
+  .bw-status-mobile {
+    display: block;
+    margin-bottom: var(--bw-space-md);
+  }
 
   // Dialog full-screen en mobile
   :host ::ng-deep .bw-payment-dialog {

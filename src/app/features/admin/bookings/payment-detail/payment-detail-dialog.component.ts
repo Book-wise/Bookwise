@@ -1,4 +1,4 @@
-import { Component, computed, signal, output } from '@angular/core';
+import { Component, computed, signal, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -7,7 +7,11 @@ import { TagModule } from 'primeng/tag';
 import { TabsModule } from 'primeng/tabs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SelectModule } from 'primeng/select';
-import { Booking } from '../../../../core/models';
+import { MessageService } from 'primeng/api';
+import { Booking } from '@models';
+import { ApiService } from '@services/api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { LanguageService } from '@services/language.service';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { PaymentTabComponent } from './payment-tab.component';
 import { ReservaTabComponent } from './reserva-tab.component';
@@ -22,6 +26,11 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
   styleUrl: './payment-detail-dialog.component.scss',
 })
 export class PaymentDetailDialogComponent {
+  private api            = inject(ApiService);
+  private httpError      = inject(HttpErrorService);
+  private messageService = inject(MessageService);
+  readonly lang          = inject(LanguageService);
+
   visible           = signal(false);
   booking           = signal<Booking | null>(null);
   activeTab         = signal<BookingTab>('pago');
@@ -70,6 +79,33 @@ export class PaymentDetailDialogComponent {
   onBookingUpdated(updated: Booking): void {
     this.booking.set(updated);
     this.selectedStatusId.set(updated.status_id ?? 0);
+  }
+
+  onStatusChange(newStatusId: number): void {
+    const booking = this.booking();
+    if (!booking?.id) return;
+
+    const previousId = this.selectedStatusId();
+    this.selectedStatusId.set(newStatusId);
+
+    this.api.updateBooking(booking.id, { status_id: newStatusId }).subscribe({
+      next: (updated) => {
+        const current = this.booking();
+        if (current) {
+          this.booking.set({ ...current, status_id: updated.status_id, status: updated.status });
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: this.lang.t('toast.booking_updated.summary'),
+          detail:  this.lang.t('toast.booking_updated.detail'),
+          life: 3000,
+        });
+      },
+      error: (err) => {
+        this.selectedStatusId.set(previousId);
+        this.httpError.handle(err, 'actualizar estado');
+      },
+    });
   }
 
   goBack(): void {

@@ -21,11 +21,12 @@
           <p-select
             [options]="statusOptions"
             [ngModel]="selectedStatusId()"
-            (ngModelChange)="selectedStatusId.set($event)"
+            (ngModelChange)="onStatusChange($event)"
             optionLabel="label"
             optionValue="value"
             [appendTo]="'body'"
             class="bw-status-select"
+            [style]="{ marginLeft: 'auto' }"
           >
             <ng-template #item let-s>
               <div class="bw-status-option">
@@ -69,6 +70,33 @@
   <!-- ── Panel content — driven by activeTab() signal ──────────────────── -->
   @if (visible()) {
     @if (booking(); as booking) {
+
+      <!-- Estado (mobile only — in header on desktop) -->
+      <div class="bw-status-mobile">
+        <p-select
+          [options]="statusOptions"
+          [ngModel]="selectedStatusId()"
+          (ngModelChange)="onStatusChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          [appendTo]="'body'"
+          [style]="{ width: '100%' }"
+        >
+          <ng-template #item let-s>
+            <div class="bw-status-option">
+              <span class="bw-status-dot" [style.background]="s.color"></span>
+              {{ s.label }}
+            </div>
+          </ng-template>
+          <ng-template #selectedItem let-s>
+            <div class="bw-status-option">
+              <span class="bw-status-dot" [style.background]="s.color"></span>
+              {{ s.label }}
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
       @switch (activeTab()) {
 
         @case ('reserva') {

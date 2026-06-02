@@ -17,7 +17,7 @@
         <td>{{ pack.name }}</td>
         <td>{{ pack.service?.name || 'N/A' }}</td>
         <td>{{ pack.total_sessions }}</td>
-        <td>\${{ pack.price | number:'1.2-2' }}</td>
+        <td>{{ pack.price | bwCurrency }}</td>
         <td>
           <p-tag [value]="pack.active ? 'Activo' : 'Inactivo'" 
                  [severity]="pack.active ? 'success' : 'danger'"></p-tag>

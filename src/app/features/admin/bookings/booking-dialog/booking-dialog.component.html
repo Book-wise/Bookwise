@@ -107,12 +107,11 @@
     <!-- Precio -->
     <div class="field">
       <p-floatlabel>
-        <input
-          pInputNumber
+        <p-inputnumber
           [(ngModel)]="formData.price"
           mode="currency"
-          currency="CLP"
-          locale="es-CL"
+          [currency]="currencyConfig.code"
+          [locale]="currencyConfig.locale"
           class="w-full"
           inputId="price"
         />

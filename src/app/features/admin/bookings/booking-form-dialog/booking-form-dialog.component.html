@@ -17,7 +17,8 @@
         optionLabel="label"
         optionValue="value"
         [appendTo]="'body'"
-        class="header-status-select">
+        class="header-status-select"
+        [style]="{ marginLeft: 'auto', minWidth: '160px', maxWidth: '210px' }">
         <ng-template pTemplate="item" let-status>
           <div class="status-option">
             <span class="status-dot" [style.backgroundColor]="status.color"></span>
@@ -36,6 +37,31 @@
 
   <div class="dialog-panels" [class.show-service-panel]="showServicePanel">
   <div class="dialog-content">
+
+    <!-- Estado (mobile only — in header on desktop) -->
+    <div class="field status-field-mobile">
+      <label class="field-label">{{ lang.t('booking_form.status') }}</label>
+      <p-select
+        [options]="statusOptions()"
+        [(ngModel)]="formData.status_id"
+        optionLabel="label"
+        optionValue="value"
+        [appendTo]="'body'"
+        class="w-full">
+        <ng-template pTemplate="item" let-status>
+          <div class="status-option">
+            <span class="status-dot" [style.backgroundColor]="status.color"></span>
+            <span>{{ status.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="selectedItem" let-status>
+          <div class="status-option">
+            <span class="status-dot" [style.backgroundColor]="status.color"></span>
+            <span>{{ status.label }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
 
     <!-- Fecha y hora -->
     <div class="datetime-section">
@@ -98,6 +124,20 @@
       </div>
     </div>
 
+    <!-- Sede -->
+    <div class="field">
+      <label class="field-label">{{ lang.t('booking_form.location') }}</label>
+      <p-select
+        [options]="locationOptions()"
+        [(ngModel)]="formData.location_id"
+        [placeholder]="lang.t('booking_form.location_placeholder')"
+        optionLabel="label"
+        optionValue="value"
+        class="w-full"
+        (onChange)="onLocationChange()">
+      </p-select>
+    </div>
+
     <!-- Profesional -->
     @if (!lockedProviderId) {
       <div class="field">
@@ -107,6 +147,7 @@
           [(ngModel)]="formData.provider_id"
           [placeholder]="lang.t('booking_form.provider_placeholder')"
           [showClear]="true"
+          [loading]="loadingProviders()"
           class="w-full">
         </p-select>
       </div>
@@ -137,19 +178,6 @@
       </p-select>
     </div>
 
-    <!-- Sede -->
-    <div class="field">
-      <label class="field-label">{{ lang.t('booking_form.location') }}</label>
-      <p-select
-        [options]="locationOptions()"
-        [(ngModel)]="formData.location_id"
-        [placeholder]="lang.t('booking_form.location_placeholder')"
-        optionLabel="label"
-        optionValue="value"
-        class="w-full">
-      </p-select>
-    </div>
-
     <!-- Información adicional -->
     <p-accordion>
       <p-accordion-panel value="0">
@@ -161,8 +189,8 @@
               <p-inputnumber
                 [(ngModel)]="formData.price"
                 mode="currency"
-                currency="USD"
-                locale="es-CO"
+                [currency]="currencyConfig.code"
+                [locale]="currencyConfig.locale"
                 class="w-full" />
             </div>
             <div class="field">
@@ -203,7 +231,7 @@
 
     <div class="field">
       <label class="field-label">{{ lang.t('common.price') }} <span class="required-mark">*</span></label>
-      <p-inputnumber [(ngModel)]="newService.price" mode="currency" currency="USD" locale="es-CO" class="w-full" />
+      <p-inputnumber [(ngModel)]="newService.price" mode="currency" [currency]="currencyConfig.code" [locale]="currencyConfig.locale" class="w-full" />
     </div>
 
     <div class="field">

@@ -222,6 +222,7 @@ export const ES: Record<string, string> = {
   'booking_form.service': 'Servicio',
   'booking_form.service_placeholder': 'Seleccionar servicio o pack',
   'booking_form.create_service_btn': 'Crear un nuevo servicio',
+  'booking_form.status': 'Estado',
   'booking_form.location': 'Sede / Ubicación',
   'booking_form.location_placeholder': 'Seleccionar sede',
   'booking_form.additional_info': 'Información adicional',

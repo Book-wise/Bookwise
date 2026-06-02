@@ -7,12 +7,13 @@ import { TagModule } from 'primeng/tag';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ServicePack } from '@models';
+import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 
 @Component({
   selector: 'bw-packs-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule],
+  imports: [CommonModule, TableModule, ButtonModule, CardModule, TagModule, BwCurrencyPipe],
   templateUrl: './packs-list.component.html',
   styleUrls: ['./packs-list.component.scss']
 })

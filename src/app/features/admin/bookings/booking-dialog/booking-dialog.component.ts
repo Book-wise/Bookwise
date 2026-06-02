@@ -17,6 +17,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
+import { CURRENCY_CONFIG, formatCLP } from '@shared/config/currency.config';
 
 export interface BookingFormData {
   id?: number;
@@ -51,6 +52,8 @@ export interface BookingFormData {
   styleUrl: './booking-dialog.component.scss',
 })
 export class BookingDialogComponent implements OnInit {
+  readonly currencyConfig = CURRENCY_CONFIG;
+
   private api        = inject(ApiService);
   private httpError  = inject(HttpErrorService);
   private dataCache  = inject(DataCacheService);
@@ -89,7 +92,7 @@ export class BookingDialogComponent implements OnInit {
 
   serviceOptions = computed(() =>
     this.services().map((s) => ({
-      label: `${s.name} (${s.duration_minutes} min) - $${s.price}`,
+      label: `${s.name} (${s.duration_minutes} min) - ${formatCLP(s.price)}`,
       value: s.id,
     })),
   );

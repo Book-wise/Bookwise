@@ -37,9 +37,9 @@
     </div>
 
     <div class="sale-header__bottom">
-      <span class="sale-paid-amount">${{ sale.paid_amount | number:'1.0-0' }}</span>
+      <span class="sale-paid-amount">{{ sale.paid_amount | bwCurrency }}</span>
       @if (sale.remaining_amount > 0) {
-        <span class="sale-remaining">Por pagar: ${{ sale.remaining_amount | number:'1.0-0' }}</span>
+        <span class="sale-remaining">Por pagar: {{ sale.remaining_amount | bwCurrency }}</span>
       }
     </div>
 
@@ -52,7 +52,7 @@
         <i class="pi pi-user sale-row__icon"></i>
         <span>{{ sale.client_name }}</span>
       </div>
-      <span class="sale-amount sale-amount--secondary">${{ sale.total | number:'1.0-0' }}</span>
+      <span class="sale-amount sale-amount--secondary">{{ sale.total | bwCurrency }}</span>
     </div>
   </div>
 
@@ -74,7 +74,7 @@
               <span class="bw-detail__desc">{{ item.description }}</span>
             }
           </td>
-          <td class="bw-detail__price">${{ item.total | number:'1.0-0' }}</td>
+          <td class="bw-detail__price">{{ item.total | bwCurrency }}</td>
         </tr>
       </ng-template>
     </p-table>
@@ -96,7 +96,7 @@
           <td class="bw-txn__date">{{ txn.paid_at | date:'dd/MM/yy' }}</td>
           <td class="bw-txn__id">#{{ txn.id }}</td>
           <td class="bw-txn__method">{{ txn.payment_method }}</td>
-          <td class="bw-txn__amount">${{ txn.amount | number:'1.0-0' }}</td>
+          <td class="bw-txn__amount">{{ txn.amount | bwCurrency }}</td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
@@ -111,7 +111,7 @@
         <!-- Trigger -->
         <div class="bw-abono-trigger">
           <span class="bw-abono-trigger__label">
-            Pendiente: <strong>${{ sale.remaining_amount | number:'1.0-0' }}</strong>
+            Pendiente: <strong>{{ sale.remaining_amount | bwCurrency }}</strong>
           </span>
           <p-button
             label="Abonar"
@@ -129,7 +129,7 @@
             <p-inputnumber
               [ngModel]="abonoAmount()"
               (ngModelChange)="abonoAmount.set($event)"
-              prefix="$"
+              [prefix]="currencyConfig.symbol"
               [min]="1"
               [max]="sale.remaining_amount"
               placeholder="Monto"
