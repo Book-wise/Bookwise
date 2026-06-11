@@ -87,7 +87,24 @@
             [(ngModel)]="providerId"
             [placeholder]="lang.t('block.choose_provider')"
             [appendTo]="'body'"
-            class="w-full" />
+            class="w-full">
+            <ng-template #selectedItem let-p>
+              <div class="provider-option">
+                <span class="provider-name">{{ p.label }}</span>
+                @if (p.locationLabel) {
+                  <span class="provider-location">{{ p.locationLabel }}</span>
+                }
+              </div>
+            </ng-template>
+            <ng-template #item let-p>
+              <div class="provider-option">
+                <span class="provider-name">{{ p.label }}</span>
+                @if (p.locationLabel) {
+                  <span class="provider-location">{{ p.locationLabel }}</span>
+                }
+              </div>
+            </ng-template>
+          </p-select>
         </div>
       }
     }
@@ -131,6 +148,10 @@
           (change)="onEndTimeChange($event)" />
       </div>
     </div>
+
+    @if (endBeforeStart()) {
+      <span class="field-error">{{ lang.t('block.error.end_before_start') }}</span>
+    }
 
     <!-- Motivo -->
     <div class="field">
@@ -245,12 +266,13 @@
     <div class="dialog-footer">
       <p-button [label]="lang.t('common.cancel')" severity="secondary" [outlined]="true" (onClick)="onClose()" />
       @if (editMode) {
-        <p-button [label]="lang.t('block.btn.save')" icon="pi pi-check" [loading]="saving()" (onClick)="updateBlock()" />
+        <p-button [label]="lang.t('block.btn.save')" icon="pi pi-check" [loading]="saving()" [disabled]="endBeforeStart()" (onClick)="updateBlock()" />
       } @else {
         <p-button
           [label]="repeatEnabled() ? lang.t('block.btn.block_repeat') : lang.t('block.btn.block')"
           icon="pi pi-lock"
           [loading]="saving()"
+          [disabled]="endBeforeStart()"
           (onClick)="block()" />
       }
     </div>

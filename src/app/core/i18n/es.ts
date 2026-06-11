@@ -10,10 +10,13 @@ export const ES: Record<string, string> = {
 
   // Toast — block time
   'toast.block_created.summary': 'Horario bloqueado',
+  'toast.block_created.summary_named': 'Horario bloqueado — {{name}}',
+  'toast.block_created.summary_bulk': 'Se realizó el bloqueo de horario para {{count}} profesionales en "{{location}}"',
   'toast.block_created.detail': 'El bloqueo quedó registrado en la agenda.',
   'toast.block_created_repeat.detail': 'Las repeticiones se registraron en la agenda.',
   'toast.block_conflict.summary': 'Conflicto — {{name}}',
-  'toast.block_conflict.detail': 'Ya tiene un bloqueo desde las {{time}}',
+  'toast.block_conflict.blocked': 'Ya tiene un bloqueo desde las {{time}}',
+  'toast.block_conflict.booking': 'Tiene una reserva ({{service}} con {{client}}) a las {{time}}',
   'toast.block_updated.summary': 'Bloqueo actualizado',
   'toast.block_updated.detail': 'Los cambios quedaron guardados.',
   'toast.block_deleted.summary': 'Bloqueo eliminado',
@@ -75,6 +78,7 @@ export const ES: Record<string, string> = {
   'biz.already_inactive':           'Ya inactivo',
   'biz.pack_not_active':            'Pack inactivo',
   'biz.no_sessions_remaining':      'Sin sesiones disponibles',
+  'biz.validation_error':           'Error de validación',
 
   // Business errors — summary
   'biz.sale_already_exists':          'Venta duplicada',
@@ -94,12 +98,23 @@ export const ES: Record<string, string> = {
   'biz.already_inactive.detail':           'Este registro ya está inactivo.',
   'biz.pack_not_active.detail':            'El pack no está activo.',
   'biz.no_sessions_remaining.detail':      'El pack no tiene sesiones disponibles.',
+  'biz.validation_error.detail':           'La hora de fin debe ser posterior a la hora de inicio.',
+
+  // slot_collision — specific detail by conflict type
+  'biz.slot_collision.detail.booking':      'El profesional ya tiene una reserva a esa hora.',
+  'biz.slot_collision.detail.blocked_slot': 'Ese horario ya está bloqueado para este profesional.',
+
+  // Auth
+  'auth.login_error': 'Credenciales incorrectas. Intentá de nuevo.',
+  'auth.register_error': 'Error al crear la cuenta. Intentá de nuevo.',
 
   // UI
   'ui.logout': 'Salir',
   'ui.dark_mode': 'Modo Oscuro',
   'ui.light_mode': 'Modo Claro',
   'ui.language': 'Idioma',
+  'ui.collapse_sidebar': 'Colapsar menú',
+  'ui.expand_sidebar': 'Expandir menú',
 
   // Nav — admin
   'nav.dashboard': 'Dashboard',
@@ -179,6 +194,7 @@ export const ES: Record<string, string> = {
   'common.every': 'Cada',
   'common.repeat': 'Repetir',
   'common.ends': 'Finaliza',
+  'common.occurrence': 'repetición',
   'common.occurrences': 'repeticiones',
   'common.end_date': 'Fecha de finalización',
 
@@ -208,6 +224,7 @@ export const ES: Record<string, string> = {
   'block.btn.save': 'Guardar bloqueo',
   'block.btn.block': 'Bloquear horario',
   'block.btn.block_repeat': 'Bloquear y repetir',
+  'block.error.end_before_start': 'La fecha y hora de fin no puede ser anterior o igual a la de inicio.',
 
   // Booking form dialog — main
   'booking_form.title.create': 'Nueva Reserva',
@@ -243,7 +260,9 @@ export const ES: Record<string, string> = {
 
   // Booking form dialog — repeat dialog
   'booking_form.repeat.title': 'Repeticiones de reserva',
+  'booking_form.repeat.week': 'semana',
   'booking_form.repeat.weeks': 'semanas',
+  'booking_form.repeat.month': 'mes',
   'booking_form.repeat.months': 'meses',
   'booking_form.repeat.on': 'Se repite el',
   'booking_form.repeat.after': 'Después de',

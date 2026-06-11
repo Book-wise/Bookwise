@@ -20,6 +20,8 @@ import { BlockConflict, BlockConflictResponse } from '@models';
 import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { LanguageService } from '@services/language.service';
 
+const BLOCK_BULK_THRESHOLD = 5;
+
 @Component({
   selector: 'bw-block-time-dialog',
   standalone: true,
@@ -47,6 +49,7 @@ export class BlockTimeDialogComponent implements OnInit {
   readonly lang      = inject(LanguageService);
 
   @Input() lockedProviderId: number | null = null;
+  @Input() lockedLocationId: number | null = null;
   @Output() onBlocked = new EventEmitter<void>();
 
   visible     = false;
@@ -71,6 +74,8 @@ export class BlockTimeDialogComponent implements OnInit {
 
   startTimeStr = computed(() => this.fmt(this.startDate()));
   endTimeStr   = computed(() => this.fmt(this.endDate()));
+
+  endBeforeStart = computed(() => this.endDate().getTime() <= this.startDate().getTime());
 
   get startDateValue(): Date { return this.startDate(); }
   set startDateValue(d: Date) { this.startDate.set(d); }
@@ -103,7 +108,11 @@ export class BlockTimeDialogComponent implements OnInit {
   ]);
 
   locationOptions = computed(() => this.locations().map(l => ({ label: l.name, value: l.id })));
-  providerOptions = computed(() => this.providers().map(p => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })));
+  providerOptions = computed(() => this.providers().map(p => ({
+    label: `${p.first_name} ${p.last_name}`,
+    locationLabel: p.location?.name ?? '—',
+    value: p.id,
+  })));
 
   // Lifecycle
   ngOnInit(): void { /* datos cargados al abrir, no al montar */ }
@@ -126,8 +135,6 @@ export class BlockTimeDialogComponent implements OnInit {
   onScopeChange(): void {
     if (this.scope() === 'location') {
       this.providerId = null;
-    } else if (this.scope() === 'provider') {
-      this.locationId = null;
     }
   }
 
@@ -208,7 +215,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     if (this.lockedProviderId) {
       this.scope.set('provider');
       this.providerId = this.lockedProviderId;
-      this.locationId = null;
+      this.locationId = this.lockedLocationId ?? locationId ?? null;
     } else {
       this.locationId = locationId ?? null;
       this.providerId = providerId ?? null;
@@ -225,9 +232,10 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     if (this.lockedProviderId) {
       this.scope.set('provider');
       this.providerId = this.lockedProviderId;
+      this.locationId = this.lockedLocationId ?? slot.location_id ?? null;
     } else {
       this.providerId = slot.provider_id ?? null;
-      this.locationId = slot.provider_id ? null : (slot.location_id ?? null);
+      this.locationId = slot.location_id ?? null;
       this.scope.set(slot.provider_id ? 'provider' : 'location');
     }
     this.startDate.set(new Date(slot.start_time));
@@ -253,6 +261,10 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   }
 
   block(): void {
+    if (this.endBeforeStart()) {
+      this.messageService.add({ severity: 'warn', summary: this.lang.t('error.422'), detail: this.lang.t('block.error.end_before_start'), life: 4000 });
+      return;
+    }
     this.saving.set(true);
 
     const fmt = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19);
@@ -261,9 +273,14 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       start_time: fmt(this.startDate()),
       end_time:   fmt(this.endDate()),
       reason:     this.reason || undefined,
-      location_id: this.scope() === 'location' ? (this.locationId ?? undefined) : undefined,
-      provider_id: this.scope() === 'provider' ? (this.providerId ?? undefined) : undefined,
+      location_id: this.locationId ?? undefined,
     };
+
+    if (this.scope() === 'location') {
+      body.scope = 'all';
+    } else {
+      body.provider_id = this.providerId ?? undefined;
+    }
 
     if (this.repeatEnabled()) {
       body.repeat = {
@@ -284,22 +301,56 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
           response.conflicts!.forEach((c: BlockConflict) => {
             const providerName = `${c.provider.first_name} ${c.provider.last_name}`;
             const conflictTime = new Date(c.conflict.start_time).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+            const detail = c.conflict.type === 'booking'
+              ? this.lang.t('toast.block_conflict.booking', { service: c.conflict.service ?? '', client: c.conflict.client ?? '', time: conflictTime })
+              : this.lang.t('toast.block_conflict.blocked', { time: conflictTime });
             this.messageService.add({
               severity: 'warn',
               summary: this.lang.t('toast.block_conflict.summary', { name: providerName }),
-              detail:  this.lang.t('toast.block_conflict.detail',  { time: conflictTime }),
+              detail,
               life: 7000,
             });
           });
         }
-        if (!response.conflicts?.length || response.blocked?.length) {
-          this.messageService.add({
-            severity: 'success',
-            summary: this.lang.t('toast.block_created.summary'),
-            detail:  this.repeatEnabled()
-              ? this.lang.t('toast.block_created_repeat.detail')
-              : this.lang.t('toast.block_created.detail'),
-          });
+        const detail = this.repeatEnabled()
+          ? this.lang.t('toast.block_created_repeat.detail')
+          : this.lang.t('toast.block_created.detail');
+
+        if (this.scope() === 'provider') {
+          // Single-provider success response is `{ data: [...] }` — no `blocked`/`conflicts`.
+          // Conflicts for this scope arrive as an HTTP 409 via the error callback instead.
+          const provider = this.providers().find(p => p.id === this.providerId);
+          const summary = provider
+            ? this.lang.t('toast.block_created.summary_named', { name: `${provider.first_name} ${provider.last_name}` })
+            : this.lang.t('toast.block_created.summary');
+          this.messageService.add({ severity: 'success', summary, detail });
+        } else if (response.blocked?.length) {
+          // `response.blocked` holds blocked-slot IDs, not provider IDs — derive the
+          // affected providers from the location roster minus anyone in `conflicts`.
+          const conflictedProviderIds = new Set((response.conflicts ?? []).map(c => c.provider.id));
+          const blockedProviders = this.providers().filter(
+            p => p.location?.id === this.locationId && !conflictedProviderIds.has(p.id)
+          );
+
+          if (blockedProviders.length > BLOCK_BULK_THRESHOLD) {
+            const locationName = this.locations().find(l => l.id === this.locationId)?.name ?? '';
+            this.messageService.add({
+              severity: 'success',
+              summary: this.lang.t('toast.block_created.summary_bulk', {
+                count: String(blockedProviders.length),
+                location: locationName,
+              }),
+              detail,
+            });
+          } else {
+            blockedProviders.forEach((provider) => {
+              const summary = this.lang.t('toast.block_created.summary_named', { name: `${provider.first_name} ${provider.last_name}` });
+              this.messageService.add({ severity: 'success', summary, detail });
+            });
+          }
+        }
+
+        if (this.scope() === 'provider' || !response.conflicts?.length || response.blocked?.length) {
           this.saving.set(false);
           this.visible = false;
           this.onBlocked.emit();
@@ -316,12 +367,17 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
 
   updateBlock(): void {
     if (!this.editingSlotId) return;
+    if (this.endBeforeStart()) {
+      this.messageService.add({ severity: 'warn', summary: this.lang.t('error.422'), detail: this.lang.t('block.error.end_before_start'), life: 4000 });
+      return;
+    }
     this.saving.set(true);
     const fmt = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19);
     this.api.updateBlockedSlot(this.editingSlotId, {
       start_time: fmt(this.startDate()),
       end_time:   fmt(this.endDate()),
       reason:     this.reason || undefined,
+      location_id: this.locationId ?? null,
       provider_id: this.scope() === 'provider' ? (this.providerId ?? null) : null,
     }).subscribe({
       next: () => {

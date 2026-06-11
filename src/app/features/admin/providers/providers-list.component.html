@@ -33,10 +33,9 @@
         <td>{{ provider.email }}</td>
         <td>{{ provider.phone }}</td>
         <td>
-          @for (loc of provider.locations; track loc.id; let last = $last) {
-            {{ loc.name }}@if (!last) { , }
-          }
-          @if (!provider.locations?.length) {
+          @if (provider.location) {
+            {{ provider.location.name }}
+          } @else {
             <span class="text-muted">Sin asignar</span>
           }
         </td>

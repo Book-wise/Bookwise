@@ -16,7 +16,15 @@ export interface BlockedSlotListResponse {
 
 export interface BlockConflict {
   provider: { id: number; first_name: string; last_name: string };
-  conflict: { id: number; start_time: string; end_time: string };
+  conflict: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    type: 'booking' | 'blocked_slot';
+    reason?: string;
+    service?: string;
+    client?: string;
+  };
 }
 
 export interface BlockConflictResponse {

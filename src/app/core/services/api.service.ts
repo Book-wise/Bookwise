@@ -95,13 +95,13 @@ export class ApiService {
 
   createBlockedSlot(body: {
     start_time: string; end_time: string;
-    reason?: string; provider_id?: number | null; location_id?: number | null;
+    reason?: string; scope?: 'all'; provider_id?: number | null; location_id?: number | null;
     repeat?: { type: string; interval: number; days?: number[]; end_type: string; count?: number; until?: string };
   }): Observable<Partial<BlockConflictResponse>> {
     return this.http.post<Partial<BlockConflictResponse>>(`${this.baseUrl}/blocked-slots`, body);
   }
 
-  updateBlockedSlot(id: number, body: { start_time: string; end_time: string; reason?: string; provider_id?: number | null }): Observable<BlockedSlot> {
+  updateBlockedSlot(id: number, body: { start_time: string; end_time: string; reason?: string; provider_id?: number | null; location_id?: number | null }): Observable<BlockedSlot> {
     return this.http.patch<BlockedSlot>(`${this.baseUrl}/blocked-slots/${id}`, body);
   }
 

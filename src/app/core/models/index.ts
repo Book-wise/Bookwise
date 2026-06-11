@@ -26,7 +26,7 @@ export interface Provider {
   email: string;
   phone?: string | null;
   active: boolean;
-  locations?: Location[];
+  location?: Location | null;
   services?: Service[];
   created_at?: string;
   updated_at?: string;

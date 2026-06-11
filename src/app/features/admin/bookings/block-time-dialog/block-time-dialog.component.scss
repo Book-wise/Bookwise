@@ -8,7 +8,7 @@
 .block-dialog-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-heading);
 }
 
 .block-form {
@@ -29,7 +29,7 @@
 .scope-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-label);
 }
 
 .scope-options {
@@ -45,7 +45,7 @@
 
   label {
     font-size: 0.9375rem;
-    color: #374151;
+    color: var(--text-label);
     cursor: pointer;
   }
 }
@@ -65,7 +65,7 @@
   label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-label);
   }
 }
 
@@ -90,6 +90,29 @@
 
 .w-full {
   width: 100%;
+}
+
+// Provider select: name + location
+.provider-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  overflow: hidden;
+
+  .provider-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .provider-location {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 }
 
 .dialog-footer {
@@ -118,7 +141,7 @@
 .repeat-toggle-label {
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #111827;
+  color: var(--text-heading);
   cursor: pointer;
 }
 
@@ -216,7 +239,7 @@
 
 .end-label {
   font-size: 0.875rem;
-  color: #374151;
+  color: var(--text-label);
   white-space: nowrap;
 }
 
@@ -224,6 +247,12 @@
   font-size: 0.75rem;
   color: #9ca3af;
   margin-top: 0.25rem;
+}
+
+.field-error {
+  font-size: 0.8125rem;
+  color: #dc2626;
+  margin-top: -0.75rem;
 }
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────

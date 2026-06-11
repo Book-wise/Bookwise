@@ -125,6 +125,12 @@ export class HttpErrorService {
     // Always use our own translated detail for known keys — never trust body.detail language
     let detail = this.lang.has(detailKey) ? this.lang.t(detailKey) : this.defaultDetail(status);
 
+    // slot_collision: refine detail by conflict type (booking vs blocked slot)
+    if (errorKey === 'slot_collision' && body.conflicts_with?.type) {
+      const typedKey = `biz.slot_collision.detail.${body.conflicts_with.type}`;
+      if (this.lang.has(typedKey)) detail = this.lang.t(typedKey);
+    }
+
     // Append conflict time range (no ID — internal data not relevant to the user)
     if (body.conflicts_with) {
       const c = body.conflicts_with;

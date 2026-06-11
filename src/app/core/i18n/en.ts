@@ -10,10 +10,13 @@ export const EN: Record<string, string> = {
 
   // Toast — block time
   'toast.block_created.summary': 'Time blocked',
+  'toast.block_created.summary_named': 'Time blocked — {{name}}',
+  'toast.block_created.summary_bulk': 'Time blocked for {{count}} providers at "{{location}}"',
   'toast.block_created.detail': 'The block has been registered in the schedule.',
   'toast.block_created_repeat.detail': 'The recurring blocks have been registered.',
   'toast.block_conflict.summary': 'Conflict — {{name}}',
-  'toast.block_conflict.detail': 'Already has a block starting at {{time}}',
+  'toast.block_conflict.blocked': 'Already has a block starting at {{time}}',
+  'toast.block_conflict.booking': 'Has a booking ({{service}} with {{client}}) at {{time}}',
   'toast.block_updated.summary': 'Block updated',
   'toast.block_updated.detail': 'Changes were saved.',
   'toast.block_deleted.summary': 'Block deleted',
@@ -75,6 +78,7 @@ export const EN: Record<string, string> = {
   'biz.already_inactive':           'Already inactive',
   'biz.pack_not_active':            'Pack not active',
   'biz.no_sessions_remaining':      'No sessions remaining',
+  'biz.validation_error':           'Validation error',
 
   // Business errors — summary
   'biz.sale_already_exists':          'Duplicate sale',
@@ -94,12 +98,23 @@ export const EN: Record<string, string> = {
   'biz.already_inactive.detail':           'This record is already inactive.',
   'biz.pack_not_active.detail':            'The pack is not currently active.',
   'biz.no_sessions_remaining.detail':      'The pack has no sessions remaining.',
+  'biz.validation_error.detail':           'End time must be after start time.',
+
+  // slot_collision — specific detail by conflict type
+  'biz.slot_collision.detail.booking':      'The provider already has a booking at this time.',
+  'biz.slot_collision.detail.blocked_slot': 'That time slot is already blocked for this provider.',
+
+  // Auth
+  'auth.login_error': 'Incorrect credentials. Please try again.',
+  'auth.register_error': 'Error creating the account. Please try again.',
 
   // UI
   'ui.logout': 'Log out',
   'ui.dark_mode': 'Dark Mode',
   'ui.light_mode': 'Light Mode',
   'ui.language': 'Language',
+  'ui.collapse_sidebar': 'Collapse menu',
+  'ui.expand_sidebar': 'Expand menu',
 
   // Nav — admin
   'nav.dashboard': 'Dashboard',
@@ -179,6 +194,7 @@ export const EN: Record<string, string> = {
   'common.every': 'Every',
   'common.repeat': 'Repeat',
   'common.ends': 'Ends',
+  'common.occurrence': 'occurrence',
   'common.occurrences': 'occurrences',
   'common.end_date': 'End date',
 
@@ -208,6 +224,7 @@ export const EN: Record<string, string> = {
   'block.btn.save': 'Save block',
   'block.btn.block': 'Block time',
   'block.btn.block_repeat': 'Block & repeat',
+  'block.error.end_before_start': 'End date and time cannot be before or equal to the start.',
 
   // Booking form dialog — main
   'booking_form.title.create': 'New Booking',
@@ -243,7 +260,9 @@ export const EN: Record<string, string> = {
 
   // Booking form dialog — repeat dialog
   'booking_form.repeat.title': 'Recurring booking',
+  'booking_form.repeat.week': 'week',
   'booking_form.repeat.weeks': 'weeks',
+  'booking_form.repeat.month': 'month',
   'booking_form.repeat.months': 'months',
   'booking_form.repeat.on': 'Repeats on',
   'booking_form.repeat.after': 'After',

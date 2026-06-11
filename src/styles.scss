@@ -82,6 +82,8 @@ body.dark-theme {
   --bw-100:         rgba(4, 106, 244, 0.22);
   --text-color:           #e4e4e7;
   --text-color-secondary: #94a3b8;
+  --text-heading:         var(--text-color);
+  --text-label:           #cbd5e1;
 
   background: var(--surface-ground);
   color: var(--text-color);
