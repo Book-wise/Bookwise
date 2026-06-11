@@ -98,24 +98,39 @@
 
     <!-- Fecha y hora -->
     <div class="datetime-section">
-      <div class="field">
+      <!-- Date (long format, full row on mobile) -->
+      <div class="field dt-date">
         <label class="field-label">{{ lang.t('common.date') }}</label>
         <p-datepicker
           [(ngModel)]="formData.start_time"
-          dateFormat="dd/mm/yy"
+          dateFormat="DD d 'de' MM 'de' yy"
           [appendTo]="'body'"
           class="w-full" />
       </div>
+      <!-- Time: HH + MM selects -->
       <div class="field">
         <label class="field-label">{{ lang.t('common.time') }}</label>
-        <input
-          type="time"
-          class="time-input"
-          [value]="getTimeString()"
-          (change)="onTimeInputChange($event)" />
+        <div class="mobile-time-row">
+          <p-select
+            [options]="hours"
+            [(ngModel)]="mobileHour"
+            optionLabel="label"
+            optionValue="value"
+            [appendTo]="'body'"
+            class="mobile-time-select" />
+          <span class="time-sep">:</span>
+          <p-select
+            [options]="minutes"
+            [(ngModel)]="mobileMinute"
+            optionLabel="label"
+            optionValue="value"
+            [appendTo]="'body'"
+            class="mobile-time-select" />
+        </div>
       </div>
+      <!-- Repeat button -->
       <div class="field repeat-col">
-        <label class="field-label">&nbsp;</label>
+        <label class="field-label repeat-label">&nbsp;</label>
         <p-button
           [label]="formData.repeat_enabled ? lang.t('booking_form.repeat_active') : lang.t('booking_form.repeat_btn')"
           [icon]="formData.repeat_enabled ? 'pi pi-check' : 'pi pi-refresh'"
@@ -333,10 +348,8 @@
                 [(ngModel)]="formData.repeat_interval"
                 [min]="1"
                 [max]="99"
-                class="interval-input" />
-              <span class="interval-label">
-                {{ formData.repeat_type === 'weekly' ? lang.t('booking_form.repeat.weeks') : lang.t('booking_form.repeat.months') }}
-              </span>
+                [inputStyle]="{width: '5rem'}" />
+              <span class="interval-label">{{ intervalLabel() }}</span>
             </div>
           </div>
         }
@@ -369,11 +382,13 @@
           inputId="endAfter" />
         <label for="endAfter">{{ lang.t('booking_form.repeat.after') }}</label>
         @if (formData.repeat_end_type === 'after') {
-          <p-inputnumber
-            [(ngModel)]="formData.repeat_count"
-            [min]="1"
-            class="count-input" />
-          <span>{{ lang.t('common.occurrences') }}</span>
+          <div class="end-count-row">
+            <p-inputnumber
+              [(ngModel)]="formData.repeat_count"
+              [min]="1"
+              [inputStyle]="{width: '5rem'}" />
+            <span>{{ occurrencesLabel() }}</span>
+          </div>
         }
       </div>
       <div class="end-option">

@@ -108,6 +108,42 @@ export class BookingFormDialogComponent implements OnInit {
   selectedServiceKey = '';
   private _pendingServiceId = 0;
 
+  readonly hours   = Array.from({ length: 24 }, (_, i) => ({ label: i.toString().padStart(2, '0'), value: i }));
+  readonly minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(m => ({
+    label: m.toString().padStart(2, '0'), value: m,
+  }));
+
+  get mobileHour(): number {
+    return this.formData.start_time?.getHours() ?? 9;
+  }
+  set mobileHour(h: number) {
+    const d = new Date(this.formData.start_time || new Date());
+    d.setHours(h, d.getMinutes(), 0, 0);
+    this.formData.start_time = d;
+  }
+
+  get mobileMinute(): number {
+    return this.formData.start_time?.getMinutes() ?? 0;
+  }
+  set mobileMinute(m: number) {
+    const d = new Date(this.formData.start_time || new Date());
+    d.setMinutes(m, 0, 0);
+    this.formData.start_time = d;
+  }
+
+  intervalLabel(): string {
+    const count = this.formData.repeat_interval ?? 2;
+    if (this.formData.repeat_type === 'weekly') {
+      return this.lang.t(count === 1 ? 'booking_form.repeat.week' : 'booking_form.repeat.weeks');
+    }
+    return this.lang.t(count === 1 ? 'booking_form.repeat.month' : 'booking_form.repeat.months');
+  }
+
+  occurrencesLabel(): string {
+    const count = this.formData.repeat_count ?? 2;
+    return this.lang.t(count === 1 ? 'common.occurrence' : 'common.occurrences');
+  }
+
   clientOptions = computed(() =>
     this.clients().map((c) => ({
       label: `${c.first_name} ${c.last_name}`,
@@ -148,23 +184,6 @@ export class BookingFormDialogComponent implements OnInit {
   dialogTitle = computed(() => this.lang.t(this.isEdit() ? 'booking_form.title.edit' : 'booking_form.title.create'));
 
   ngOnInit() { /* datos cargados al abrir, no al montar */ }
-
-  // ── Time input helpers ──────────────────────────────────────────────────────
-
-  getTimeString(): string {
-    const d = this.formData.start_time;
-    if (!d) return '09:00';
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  }
-
-  onTimeInputChange(event: Event): void {
-    const val = (event.target as HTMLInputElement).value;
-    if (!val) return;
-    const [h, m] = val.split(':').map(Number);
-    const d = new Date(this.formData.start_time || new Date());
-    d.setHours(h, m, 0, 0);
-    this.formData.start_time = d;
-  }
 
   // ── Lifecycle ───────────────────────────────────────────────────────────────
 
