@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -71,7 +72,14 @@ export class ReservaTabComponent {
 
   // ── Remote data ───────────────────────────────────────────────────────────────
 
-  readonly providers = toSignal(this.api.getProviders(), { initialValue: [] as any[] });
+  readonly providers = toSignal(
+    toObservable(this.booking).pipe(
+      switchMap(b => this.api.getProviders({
+        location_id: b.location_id ?? b.location?.id,
+      }))
+    ),
+    { initialValue: [] as any[] }
+  );
 
   readonly providerOptions = computed(() =>
     (this.providers() ?? []).map((p: any) => ({
