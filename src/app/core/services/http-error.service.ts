@@ -2,6 +2,7 @@ import { DestroyRef, inject, Injectable, NgZone } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { LanguageService } from './language.service';
+import { translateValidationMessage } from '@i18n/validation-translator';
 
 /** Shape of the error body returned by the Kinesilk API. */
 interface ApiErrorBody {
@@ -147,7 +148,12 @@ export class HttpErrorService {
   // ── Branch 2: Field validation ───────────────────────────────────────────────
 
   private validationConfig(body: ApiErrorBody, status: number, action?: string): ToastConfig {
-    const msgs  = (Object.values(body.errors ?? {}) as string[][]).flat().slice(0, 2).join(' · ');
+    const lang  = this.lang.lang();
+    const msgs  = (Object.values(body.errors ?? {}) as string[][])
+      .flat()
+      .slice(0, 2)
+      .map((msg) => translateValidationMessage(msg, lang))
+      .join(' · ');
     const title = this.statusTitle(status);
     return {
       severity: 'warn',

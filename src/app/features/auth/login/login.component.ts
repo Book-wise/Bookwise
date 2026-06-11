@@ -8,6 +8,8 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { ApiService } from '@services/api.service';
 import { AuthService } from '@services/auth.service';
+import { LanguageService } from '@services/language.service';
+import { translateValidationMessage } from '@i18n/validation-translator';
 import { LoginCredentials } from '@models';
 
 @Component({
@@ -28,6 +30,7 @@ import { LoginCredentials } from '@models';
 export class LoginComponent {
   private api  = inject(ApiService);
   private auth = inject(AuthService);
+  private lang = inject(LanguageService);
 
   loading = signal(false);
   error   = signal<string | null>(null);
@@ -47,8 +50,12 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
+        const apiErrors = err.error?.errors as Record<string, string[]> | undefined;
+        const rawMsg = apiErrors?.['email']?.[0];
         this.error.set(
-          err.error?.message ?? 'Credenciales incorrectas. Intentá de nuevo.'
+          rawMsg
+            ? translateValidationMessage(rawMsg, this.lang.lang())
+            : this.lang.t('auth.login_error')
         );
       },
     });

@@ -9,6 +9,8 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { ApiService } from '@services/api.service';
 import { AuthService } from '@services/auth.service';
+import { LanguageService } from '@services/language.service';
+import { translateValidationMessage } from '@i18n/validation-translator';
 import { RegisterData } from '@models';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 
@@ -31,6 +33,7 @@ import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.
 export class RegisterComponent {
   private api = inject(ApiService);
   private auth = inject(AuthService);
+  private lang = inject(LanguageService);
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -74,9 +77,10 @@ export class RegisterComponent {
       error: (err) => {
         this.loading.set(false);
         const apiErrors = err.error?.errors as Record<string, string[]> | undefined;
+        const lang = this.lang.lang();
         const msg = apiErrors
-          ? Object.values(apiErrors).flat().join(' ')
-          : (err.error?.message ?? 'Error al crear la cuenta. Intentá de nuevo.');
+          ? Object.values(apiErrors).flat().map((m) => translateValidationMessage(m, lang)).join(' ')
+          : this.lang.t('auth.register_error');
         this.error.set(msg);
       },
     });
