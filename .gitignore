@@ -48,6 +48,7 @@ Thumbs.db
 .claude/
 .qwen/
 skills-lock.json
+.atl/.skill-registry.cache.json
 
 # Environment with secrets
 src/env.ts
