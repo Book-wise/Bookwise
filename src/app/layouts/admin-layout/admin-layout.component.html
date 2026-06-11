@@ -3,24 +3,23 @@
 <div class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
   <!-- Mobile Toggle Button (visible only on mobile) -->
   <button class="sidebar-toggle" (click)="toggleSidebar()">
-    <i class="pi" [class.pi-bars]="!sidebarCollapsed() && !mobileMenuOpen()" [class.pi-times]="sidebarCollapsed() || mobileMenuOpen()"></i>
+    <i class="pi" [class.pi-bars]="!mobileMenuOpen()" [class.pi-times]="mobileMenuOpen()"></i>
   </button>
 
   <!-- Sidebar -->
-  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="sidebarCollapsed()">
+  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="effectivelyCollapsed()">
     <div class="sidebar-header">
       @if (isMobile()) {
         <button class="mobile-close-btn" (click)="closeMenus()">
           <i class="pi pi-times"></i>
         </button>
       }
-      @if (!sidebarCollapsed()) {
-        <div class="logo-wrapper">
-          <img src="assets/images/LOGO.png" alt="Bookwise" class="sidebar-logo" />
-        </div>
-      } @else {
-        <img src="assets/images/icono.svg" alt="BW" class="sidebar-logo-icon" />
-      }
+      <div class="logo-wrapper" [class.logo-hidden]="effectivelyCollapsed()">
+        <img src="assets/images/LOGO.png" alt="Bookwise" class="sidebar-logo" />
+      </div>
+      <div class="logo-icon-wrapper" [class.logo-hidden]="!effectivelyCollapsed()">
+        <img src="assets/images/icono.svg" alt="BW" class="sidebar-icon-img" />
+      </div>
     </div>
 
     <nav class="sidebar-nav">
@@ -28,9 +27,9 @@
         <a [routerLink]="item.routerLink"
            class="nav-item"
            [class.active]="isActive(item.routerLink!)"
-           [title]="sidebarCollapsed() ? langService.t(item.label!) : ''">
+           [title]="effectivelyCollapsed() ? langService.t(item.label!) : ''">
           <i class="pi" [ngClass]="item.icon"></i>
-          @if (!sidebarCollapsed()) {
+          @if (!effectivelyCollapsed()) {
             <span class="nav-label">{{ langService.t(item.label!) }}</span>
           }
         </a>
@@ -38,7 +37,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      @if (!sidebarCollapsed()) {
+      @if (!effectivelyCollapsed()) {
         <div class="theme-selector">
           <p-select
             [options]="themeOptions"
@@ -68,21 +67,27 @@
         </button>
       }
 
-      <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="sidebarCollapsed() ? langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') : ''">
+      <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="effectivelyCollapsed() ? langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') : ''">
         <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
-        @if (!sidebarCollapsed()) {
+        @if (!effectivelyCollapsed()) {
           <span class="nav-label">{{ langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') }}</span>
         }
       </button>
 
       <button class="nav-item logout-btn" (click)="logout()">
         <i class="pi pi-sign-out"></i>
-        @if (!sidebarCollapsed()) {
+        @if (!effectivelyCollapsed()) {
           <span class="nav-label">{{ langService.t('ui.logout') }}</span>
         }
       </button>
     </div>
   </aside>
+
+  @if (!isMobile()) {
+    <button class="sidebar-collapse-tab" (click)="toggleSidebar()" [title]="sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar')">
+      <i class="pi" [class.pi-chevron-left]="!sidebarCollapsed()" [class.pi-chevron-right]="sidebarCollapsed()"></i>
+    </button>
+  }
 
   @if (mobileMenuOpen()) {
     <div class="mobile-overlay" (click)="closeMenus()"></div>

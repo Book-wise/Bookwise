@@ -321,11 +321,11 @@ input.p-inputtext {
 }
 
 .bw-sk-card {
-  background-color: var(--p-skeleton-background, #dee2e6) !important;
+  background-color: var(--p-skeleton-background) !important;
   background-image: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
+    var(--p-skeleton-animation-background) 50%,
     transparent 100%
   ) !important;
   background-size: 400% 100% !important;

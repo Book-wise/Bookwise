@@ -114,4 +114,24 @@
 
   // ── Form controls ─────────────────────────────
   --bw-control-height: 2.5rem;
+
+  // ── Z-Index Scale ─────────────────────────────────────────────────────────
+  //
+  //  Layer            Token              Value   Purpose
+  // ─────────────────────────────────────────────────────────────────────────
+  //  base             --z-base              1    Internal component stacking
+  //  content-overlay  --z-overlay          10    Skeleton/loading within sections
+  //  floating         --z-float           150    Slot menus, custom tooltips
+  //  backdrop         --z-backdrop        300    Mobile drawer backdrop
+  //  drawer           --z-drawer          400    Sidebar / drawer navigation
+  //  topbar           --z-topbar          500    Sticky top navigation bar
+  //                                  501–999    Reserved for future use
+  //  (PrimeNG uses 1000+ for its overlays — never go above 500 for app chrome)
+  //
+  --z-base:     1;
+  --z-overlay:  10;
+  --z-float:    150;
+  --z-backdrop: 300;
+  --z-drawer:   400;
+  --z-topbar:   500;
 }

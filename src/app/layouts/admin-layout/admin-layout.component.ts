@@ -1,4 +1,4 @@
-import { Component, signal, inject, HostListener, effect } from '@angular/core';
+import { Component, signal, computed, inject, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -26,6 +26,9 @@ export class AdminLayoutComponent {
   sidebarCollapsed = signal(false);
   mobileMenuOpen = signal(false);
   isMobile = signal(false);
+
+  // On mobile the sidebar is always in expanded format — collapsed is desktop-only
+  readonly effectivelyCollapsed = computed(() => this.sidebarCollapsed() && !this.isMobile());
   darkMode = signal<boolean>(this.getInitialDarkMode());
   
   themeOptions = this.themeService.themeOptions;

@@ -3,14 +3,20 @@
     <ng-template pTemplate="header">
       @if (loading()) {
         <div class="cal-header-skeleton">
-          <div class="cal-sk-filters bw-sk-card">
-            <p-skeleton width="160px" height="2.25rem" borderRadius="6px" />
-            <p-skeleton width="160px" height="2.25rem" borderRadius="6px" />
-            <p-skeleton width="180px" height="2.25rem" borderRadius="6px" />
+          <div class="cal-sk-filters">
+            <div class="cal-sk-fw cal-sk-fw-1">
+              <p-skeleton width="100%" height="2.5rem" borderRadius="2px" />
+            </div>
+            <div class="cal-sk-fw cal-sk-fw-2">
+              <p-skeleton width="100%" height="2.5rem" borderRadius="2px" />
+            </div>
+            <div class="cal-sk-fw cal-sk-fw-3">
+              <p-skeleton width="100%" height="2.5rem" borderRadius="2px" />
+            </div>
           </div>
           <div class="cal-sk-actions">
-            <p-skeleton width="110px" height="2.25rem" borderRadius="6px" />
-            <p-skeleton width="120px" height="2.25rem" borderRadius="6px" />
+            <p-skeleton width="150px" height="2.5rem" borderRadius="2px" />
+            <p-skeleton width="165px" height="2.5rem" borderRadius="2px" />
           </div>
         </div>
       } @else {
@@ -80,8 +86,24 @@
       @if (loading()) {
         <div class="calendar-loading">
           <div class="cal-skeleton">
+            <div class="cal-sk-toolbar">
+              <div class="cal-sk-tb-nav">
+                <p-skeleton width="2rem" height="2rem" borderRadius="6px" />
+                <p-skeleton width="2rem" height="2rem" borderRadius="6px" />
+                <p-skeleton width="3.5rem" height="2rem" borderRadius="6px" />
+              </div>
+              <p-skeleton width="8rem" height="1.25rem" borderRadius="4px" />
+              <div class="cal-sk-tb-views">
+                <p-skeleton class="cal-sk-tb-act" width="5.5rem" height="2rem" borderRadius="6px" />
+                <p-skeleton class="cal-sk-tb-act" width="5.5rem" height="2rem" borderRadius="6px" />
+                <p-skeleton width="3rem" height="2rem" borderRadius="6px" />
+                <p-skeleton width="4.5rem" height="2rem" borderRadius="6px" />
+                <p-skeleton width="2.75rem" height="2rem" borderRadius="6px" />
+              </div>
+            </div>
             <div class="cal-sk-grid bw-sk-card">
-              @for (col of [1,2,3,4,5,6,7]; track col) {
+              <div class="cal-sk-time-col"></div>
+              @for (col of [1, 2, 3, 4, 5, 6, 7]; track col) {
                 <div class="cal-sk-col"></div>
               }
             </div>
@@ -96,7 +118,6 @@
 <p-popover #eventTooltip class="event-tooltip-panel" [dismissable]="false">
   @if (hoveredBooking()) {
     <div class="ev-tooltip">
-
       <div class="ev-tooltip__name">
         {{ hoveredBooking()!.client?.first_name }} {{ hoveredBooking()!.client?.last_name }}
       </div>
@@ -111,13 +132,19 @@
       @if (hoveredBooking()!.pack_session) {
         <div class="ev-tooltip__row">
           <i class="pi pi-calendar"></i>
-          <span>Sesión {{ hoveredBooking()!.pack_session!.session_number }} de {{ hoveredBooking()!.pack_session!.total_sessions }}</span>
+          <span
+            >Sesión {{ hoveredBooking()!.pack_session!.session_number }} de
+            {{ hoveredBooking()!.pack_session!.total_sessions }}</span
+          >
         </div>
       }
 
       <div class="ev-tooltip__row">
         <i class="pi pi-clock"></i>
-        <span>{{ formatTooltipTime(hoveredBooking()!.start_time) }} – {{ formatTooltipTime(hoveredBooking()!.end_time) }}</span>
+        <span
+          >{{ formatTooltipTime(hoveredBooking()!.start_time) }} –
+          {{ formatTooltipTime(hoveredBooking()!.end_time) }}</span
+        >
       </div>
 
       @if (hoveredBooking()!.payment_status) {
@@ -161,7 +188,6 @@
           <span>{{ hoveredBooking()!.notes }}</span>
         </div>
       }
-
     </div>
   }
 </p-popover>
@@ -178,7 +204,6 @@
 >
   @if (selectedBooking(); as booking) {
     <div class="event-details">
-
       <div class="detail-row detail-row--full">
         <span class="label">Cliente</span>
         <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
@@ -196,7 +221,8 @@
           <span class="label">Sesión</span>
           <span class="session-badge">
             <span class="session-badge__dot"></span>
-            Sesión {{ booking.pack_session.session_number }} de {{ booking.pack_session.total_sessions }}
+            Sesión {{ booking.pack_session.session_number }} de
+            {{ booking.pack_session.total_sessions }}
           </span>
         </div>
       }
@@ -231,7 +257,9 @@
 
       <div class="detail-row">
         <span class="label">Profesional</span>
-        <span class="value">{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span>
+        <span class="value"
+          >{{ booking.provider?.first_name }} {{ booking.provider?.last_name }}</span
+        >
       </div>
 
       <div class="detail-row">
@@ -241,7 +269,7 @@
 
       <div class="detail-row detail-row--full">
         <span class="label">Fecha</span>
-        <span class="value">{{ booking.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
+        <span class="value">{{ booking.start_time | date: 'dd/MM/yyyy HH:mm' }}</span>
       </div>
 
       <div class="detail-row">
@@ -270,17 +298,31 @@
           <span class="value">{{ booking.internal_notes }}</span>
         </div>
       }
-
     </div>
   }
 
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
     @if (selectedBooking()?.payment_status !== 'paid') {
-      <p-button label="Abonar" icon="pi pi-plus" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail(true)" />
+      <p-button
+        label="Abonar"
+        icon="pi pi-plus"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="openPaymentDetail(true)"
+      />
     }
-    @if (selectedBooking()?.payment_status === 'partial' || selectedBooking()?.payment_status === 'paid') {
-      <p-button label="Ver pago" icon="pi pi-dollar" severity="secondary" [outlined]="true" (onClick)="openPaymentDetail()" />
+    @if (
+      selectedBooking()?.payment_status === 'partial' ||
+      selectedBooking()?.payment_status === 'paid'
+    ) {
+      <p-button
+        label="Ver pago"
+        icon="pi pi-dollar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="openPaymentDetail()"
+      />
     }
     <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()" />
   </ng-template>
