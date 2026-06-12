@@ -35,6 +35,7 @@ import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
+import { RutDirective } from '@shared/validators/rut.directive';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { forkJoin } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -60,6 +61,7 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
     RadioButtonModule,
     TooltipModule,
     PhoneInputComponent,
+    RutDirective,
     SkeletonModule,
   ],
   templateUrl: './booking-form-dialog.component.html',
@@ -87,13 +89,13 @@ export class BookingFormDialogComponent implements OnInit {
   loadingProviders = signal(false);
   isEdit      = signal(false);
   showRepeatDialog  = false;
-  showAddClient     = false;
   showServicePanel  = false;
+  showPatientPanel  = false;
   savingService     = signal(false);
 
   formData: BookingFormData = this.getEmptyForm();
 
-  newClient  = { first_name: '', last_name: '', email: '', phone: '' };
+  newClient  = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
   newService = { name: '', price: 0, duration_minutes: 60 };
 
   repeatAfterChecked = false;
@@ -286,7 +288,9 @@ export class BookingFormDialogComponent implements OnInit {
     this._pendingServiceId = 0;
     this.isEdit.set(false);
     this.showRepeatDialog = false;
-    this.showAddClient = false;
+    this.showServicePanel = false;
+    this.showPatientPanel = false;
+    this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
     this.repeatAfterChecked = false;
     this.repeatUntilChecked = false;
   }
@@ -439,6 +443,7 @@ export class BookingFormDialogComponent implements OnInit {
         last_name: this.newClient.last_name,
         email: this.newClient.email,
         phone: this.newClient.phone || undefined,
+        rut: this.newClient.rut || undefined,
       })
       .subscribe({
         next: (client) => {
@@ -447,7 +452,7 @@ export class BookingFormDialogComponent implements OnInit {
             summary: this.lang.t('toast.client_created.summary'),
             detail:  this.lang.t('toast.client_created.detail'),
           });
-          this.showAddClient = false;
+          this.showPatientPanel = false;
           this.formData.client_id = client.id;
           this.dataCache.invalidateCacheEntries(CACHE_KEYS.CLIENTS);
           this.loadFormData();
@@ -471,11 +476,25 @@ export class BookingFormDialogComponent implements OnInit {
 
   openServicePanel(): void {
     this.newService = { name: '', price: 0, duration_minutes: 60 };
+    this.showPatientPanel = false;
     this.showServicePanel = true;
   }
 
   closeServicePanel(): void {
     this.showServicePanel = false;
+  }
+
+  // ── Patient creation panel ──────────────────────────────────────────────────
+
+  openPatientPanel(): void {
+    this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
+    this.showServicePanel = false;
+    this.showPatientPanel = true;
+  }
+
+  closePatientPanel(): void {
+    this.showPatientPanel = false;
+    this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
   }
 
   saveNewService(): void {

@@ -284,6 +284,10 @@ export const ES: Record<string, string> = {
   'patient.error.email_required': 'El email es obligatorio',
   'patient.error.email_invalid': 'El email no es válido',
   'patient.error.phone_invalid': 'El número de teléfono no es válido para este país',
+  'patient.error.phone_required': 'El teléfono es obligatorio',
+  'patient.rut': 'RUT',
+  'patient.rut_placeholder': '12.345.678-9',
+  'patient.error.rut_invalid': 'El RUT no es válido',
   'patient.btn.save': 'Guardar paciente',
 
   // Booking dialog (legacy)
