@@ -135,6 +135,8 @@ export class BlockTimeDialogComponent implements OnInit {
   onScopeChange(): void {
     if (this.scope() === 'location') {
       this.providerId = null;
+    } else if (this.scope() === 'provider') {
+      this.locationId = null;
     }
   }
 

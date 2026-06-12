@@ -68,33 +68,8 @@
       </div>
     </div>
   } @else {
-  <div class="dialog-panels" [class.show-service-panel]="showServicePanel">
+  <div class="dialog-panels" [class.show-service-panel]="showServicePanel" [class.show-patient-panel]="showPatientPanel">
   <div class="dialog-content">
-
-    <!-- Estado (mobile only — in header on desktop) -->
-    <div class="field status-field-mobile">
-      <label class="field-label">{{ lang.t('booking_form.status') }}</label>
-      <p-select
-        [options]="statusOptions()"
-        [(ngModel)]="formData.status_id"
-        optionLabel="label"
-        optionValue="value"
-        [appendTo]="'body'"
-        class="w-full">
-        <ng-template pTemplate="item" let-status>
-          <div class="status-option">
-            <span class="status-dot" [style.backgroundColor]="status.color"></span>
-            <span>{{ status.label }}</span>
-          </div>
-        </ng-template>
-        <ng-template pTemplate="selectedItem" let-status>
-          <div class="status-option">
-            <span class="status-dot" [style.backgroundColor]="status.color"></span>
-            <span>{{ status.label }}</span>
-          </div>
-        </ng-template>
-      </p-select>
-    </div>
 
     <!-- Fecha y hora -->
     <div class="datetime-section">
@@ -167,7 +142,7 @@
           severity="secondary"
           [outlined]="true"
           size="small"
-          (onClick)="showAddClient = true">
+          (onClick)="openPatientPanel()">
         </p-button>
       </div>
     </div>
@@ -290,6 +265,120 @@
     <div class="service-panel-actions">
       <p-button [label]="lang.t('common.back')" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closeServicePanel()" />
       <p-button [label]="lang.t('booking_form.btn.save_service')" icon="pi pi-check" [loading]="savingService()" (onClick)="saveNewService()" />
+    </div>
+  </div>
+
+  <!-- Panel de creación de paciente -->
+  <div class="patient-creation-panel">
+    <div class="patient-panel-head">
+      <h3 class="service-panel-title">{{ lang.t('patient.dialog_title') }}</h3>
+      <i
+        class="pi validity-indicator"
+        [class.is-valid]="patientForm.valid"
+        [class.pi-check]="patientForm.valid"
+        [class.pi-exclamation-triangle]="!patientForm.valid"></i>
+    </div>
+
+    <form class="add-client-form" #patientForm="ngForm" (ngSubmit)="saveClient(patientForm)">
+
+      <div class="field">
+        <label class="field-label">{{ lang.t('patient.first_name') }} <span class="required-mark">*</span></label>
+        <input
+          pInputText
+          name="firstName"
+          [(ngModel)]="newClient.first_name"
+          required
+          #firstName="ngModel"
+          class="w-full"
+          [placeholder]="lang.t('patient.first_name_placeholder')" />
+        @if (firstName.invalid && firstName.touched) {
+          <span class="field-error">{{ lang.t('patient.error.first_name_required') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-label">{{ lang.t('patient.last_name') }} <span class="required-mark">*</span></label>
+        <input
+          pInputText
+          name="lastName"
+          [(ngModel)]="newClient.last_name"
+          required
+          #lastName="ngModel"
+          class="w-full"
+          [placeholder]="lang.t('patient.last_name_placeholder')" />
+        @if (lastName.invalid && lastName.touched) {
+          <span class="field-error">{{ lang.t('patient.error.last_name_required') }}</span>
+        }
+      </div>
+
+      <p-accordion value="0">
+        <p-accordion-panel value="0">
+          <p-accordion-header>{{ lang.t('booking_form.additional_info') }}</p-accordion-header>
+          <p-accordion-content>
+            <div class="additional-fields">
+
+              <div class="field">
+                <label class="field-label">{{ lang.t('patient.rut') }}</label>
+                <input
+                  pInputText
+                  name="rut"
+                  bwRut
+                  [(ngModel)]="newClient.rut"
+                  #rut="ngModel"
+                  class="w-full"
+                  [placeholder]="lang.t('patient.rut_placeholder')" />
+                @if (rut.invalid && rut.touched && rut.errors?.['rut']) {
+                  <span class="field-error">{{ lang.t('patient.error.rut_invalid') }}</span>
+                }
+              </div>
+
+              <div class="field">
+                <label class="field-label">{{ lang.t('patient.email') }} <span class="required-mark">*</span></label>
+                <input
+                  pInputText
+                  name="clientEmail"
+                  type="email"
+                  [(ngModel)]="newClient.email"
+                  required
+                  email
+                  #clientEmail="ngModel"
+                  class="w-full"
+                  [placeholder]="lang.t('patient.email_placeholder')" />
+                @if (clientEmail.invalid && clientEmail.touched) {
+                  @if (clientEmail.errors?.['required']) {
+                    <span class="field-error">{{ lang.t('patient.error.email_required') }}</span>
+                  } @else if (clientEmail.errors?.['email']) {
+                    <span class="field-error">{{ lang.t('patient.error.email_invalid') }}</span>
+                  }
+                }
+              </div>
+
+              <div class="field">
+                <label class="field-label">{{ lang.t('patient.phone') }} <span class="required-mark">*</span></label>
+                <bw-phone-input
+                  name="clientPhone"
+                  [(ngModel)]="newClient.phone"
+                  required
+                  #clientPhone="ngModel"
+                  [placeholder]="lang.t('patient.phone_placeholder')" />
+                @if (clientPhone.invalid && clientPhone.touched) {
+                  @if (clientPhone.errors?.['required']) {
+                    <span class="field-error">{{ lang.t('patient.error.phone_required') }}</span>
+                  } @else if (clientPhone.errors?.['invalidPhone']) {
+                    <span class="field-error">{{ lang.t('patient.error.phone_invalid') }}</span>
+                  }
+                }
+              </div>
+
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      </p-accordion>
+    </form>
+
+    <div class="service-panel-actions">
+      <p-button [label]="lang.t('common.back')" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closePatientPanel()" />
+      <p-button [label]="lang.t('patient.btn.save')" icon="pi pi-check" (onClick)="saveClient(patientForm)" />
     </div>
   </div>
 
@@ -420,99 +509,6 @@
         (onClick)="showRepeatDialog = false">
       </p-button>
       <p-button [label]="lang.t('common.apply')" icon="pi pi-check" (onClick)="applyRepeat()"></p-button>
-    </div>
-  </ng-template>
-</p-dialog>
-
-<!-- Nuevo Paciente Dialog -->
-<p-dialog
-  [header]="lang.t('patient.dialog_title')"
-  [(visible)]="showAddClient"
-  [modal]="true"
-  [style]="{width: '460px'}"
-  [draggable]="false"
-  [resizable]="false">
-
-  <form class="add-client-form" #addClientForm="ngForm" (ngSubmit)="saveClient(addClientForm)">
-
-    <div class="field">
-      <label class="field-label">{{ lang.t('patient.first_name') }}</label>
-      <input
-        pInputText
-        name="firstName"
-        [(ngModel)]="newClient.first_name"
-        required
-        #firstName="ngModel"
-        class="w-full"
-        [placeholder]="lang.t('patient.first_name_placeholder')" />
-      @if (firstName.invalid && firstName.touched) {
-        <span class="field-error">{{ lang.t('patient.error.first_name_required') }}</span>
-      }
-    </div>
-
-    <div class="field">
-      <label class="field-label">{{ lang.t('patient.last_name') }}</label>
-      <input
-        pInputText
-        name="lastName"
-        [(ngModel)]="newClient.last_name"
-        required
-        #lastName="ngModel"
-        class="w-full"
-        [placeholder]="lang.t('patient.last_name_placeholder')" />
-      @if (lastName.invalid && lastName.touched) {
-        <span class="field-error">{{ lang.t('patient.error.last_name_required') }}</span>
-      }
-    </div>
-
-    <div class="field">
-      <label class="field-label">{{ lang.t('patient.email') }}</label>
-      <input
-        pInputText
-        name="clientEmail"
-        type="email"
-        [(ngModel)]="newClient.email"
-        required
-        email
-        #clientEmail="ngModel"
-        class="w-full"
-        [placeholder]="lang.t('patient.email_placeholder')" />
-      @if (clientEmail.invalid && clientEmail.touched) {
-        @if (clientEmail.errors?.['required']) {
-          <span class="field-error">{{ lang.t('patient.error.email_required') }}</span>
-        } @else if (clientEmail.errors?.['email']) {
-          <span class="field-error">{{ lang.t('patient.error.email_invalid') }}</span>
-        }
-      }
-    </div>
-
-    <div class="field">
-      <label class="field-label">{{ lang.t('patient.phone') }}</label>
-      <bw-phone-input
-        name="clientPhone"
-        [(ngModel)]="newClient.phone"
-        #clientPhone="ngModel"
-        [placeholder]="lang.t('patient.phone_placeholder')" />
-      @if (clientPhone.invalid && clientPhone.touched && clientPhone.errors?.['invalidPhone']) {
-        <span class="field-error">{{ lang.t('patient.error.phone_invalid') }}</span>
-      }
-    </div>
-
-  </form>
-
-  <ng-template pTemplate="footer">
-    <div class="dialog-footer">
-      <p-button
-        [label]="lang.t('common.cancel')"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="showAddClient = false">
-      </p-button>
-      <p-button
-        [label]="lang.t('patient.btn.save')"
-        icon="pi pi-check"
-        (onClick)="saveClient(addClientForm)">
-      </p-button>
     </div>
   </ng-template>
 </p-dialog>

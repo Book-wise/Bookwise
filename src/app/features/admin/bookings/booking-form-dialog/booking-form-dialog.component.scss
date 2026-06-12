@@ -6,6 +6,10 @@
   width: 100%;
 }
 
+// Transform-owner: flex sizing + slide transition for the panel system.
+// A second `.dialog-content` block below owns internal layout (column/gap) —
+// intentionally split, do NOT merge (merging would mix transform concerns
+// with layout concerns and risk breaking the slide-panel math).
 .dialog-content {
   flex: 0 0 100%;
   width: 100%;
@@ -26,6 +30,50 @@
   .dialog-content,
   .service-creation-panel {
     transform: translateX(-100%);
+  }
+}
+
+.patient-creation-panel {
+  flex: 0 0 100%;
+  width: 100%;
+  padding: 0.25rem 0;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.show-patient-panel {
+  // .patient-creation-panel is the 3rd child (slot 2 of 3 in the 300%-wide
+  // .dialog-panels row), so it needs -200% (two panel-widths) to land in the
+  // visible [0%, 100%] viewport - unlike .service-creation-panel (slot 1),
+  // which only needs -100%.
+  .dialog-content,
+  .patient-creation-panel {
+    transform: translateX(-200%);
+  }
+}
+
+.patient-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.validity-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  color: #ffffff;
+  background-color: var(--bw-warning);
+  transition: background-color 0.2s ease;
+
+  &.is-valid {
+    background-color: var(--bw-success);
   }
 }
 
@@ -84,11 +132,6 @@
   color: var(--text-heading);
 }
 
-.status-field-mobile {
-  display: none;
-}
-
-
 .mobile-time-row {
   display: flex;
   align-items: center;
@@ -106,10 +149,6 @@
 }
 
 @media (max-width: 768px) {
-  .status-field-mobile {
-    display: flex !important;
-  }
-
   .repeat-label {
     display: none;
   }
@@ -138,6 +177,9 @@
 
 // ── Dialog body ──────────────────────────────────────────────────────────────
 
+// Layout-owner: internal stacking for the main form content.
+// See the transform-owner `.dialog-content` block near the top of this file —
+// intentionally split, do NOT merge.
 .dialog-content {
   display: flex;
   flex-direction: column;

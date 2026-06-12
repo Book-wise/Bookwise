@@ -55,6 +55,7 @@ function capitalize(text: string): string {
 // builds its Spanish translation from the captured groups.
 const RULE_PATTERNS_ES: { regex: RegExp; build: (...groups: string[]) => string }[] = [
   { regex: /^The (.+) field is required\.$/, build: (a) => `${capitalize(labelEs(a))} es obligatorio.` },
+  { regex: /^The (.+) has already been taken\.$/, build: (a) => `${capitalize(labelEs(a))} ya está en uso.` },
   { regex: /^The (.+) field must be an integer\.$/, build: (a) => `${capitalize(labelEs(a))} debe ser un número entero.` },
   { regex: /^The (.+) field must be a number\.$/, build: (a) => `${capitalize(labelEs(a))} debe ser un número.` },
   { regex: /^The (.+) field must be true or false\.$/, build: (a) => `${capitalize(labelEs(a))} debe ser verdadero o falso.` },

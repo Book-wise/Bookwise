@@ -284,6 +284,10 @@ export const EN: Record<string, string> = {
   'patient.error.email_required': 'Email is required',
   'patient.error.email_invalid': 'Invalid email address',
   'patient.error.phone_invalid': 'Invalid phone number for this country',
+  'patient.error.phone_required': 'Phone is required',
+  'patient.rut': 'RUT',
+  'patient.rut_placeholder': '12.345.678-9',
+  'patient.error.rut_invalid': 'Invalid RUT',
   'patient.btn.save': 'Save patient',
 
   // Booking dialog (legacy)
