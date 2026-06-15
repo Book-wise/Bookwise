@@ -343,6 +343,7 @@
                   email
                   #clientEmail="ngModel"
                   class="w-full"
+                  (blur)="onContactBlur(newClient.email, 'email')"
                   [placeholder]="lang.t('patient.email_placeholder')" />
                 @if (clientEmail.invalid && clientEmail.touched) {
                   @if (clientEmail.errors?.['required']) {
@@ -360,6 +361,7 @@
                   [(ngModel)]="newClient.phone"
                   required
                   #clientPhone="ngModel"
+                  (ngModelChange)="onPhoneChanged($event)"
                   [placeholder]="lang.t('patient.phone_placeholder')" />
                 @if (clientPhone.invalid && clientPhone.touched) {
                   @if (clientPhone.errors?.['required']) {
@@ -399,6 +401,59 @@
         [loading]="saving()"
         [disabled]="!isFormValid()"
         (onClick)="onSave()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Pacientes similares Dialog -->
+<p-dialog
+  [visible]="showSimilarDialog()"
+  (visibleChange)="showSimilarDialog.set($event)"
+  [modal]="true"
+  [header]="lang.t('similar_patients.title')"
+  [style]="{width: '480px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <p class="similar-subtitle">{{ lang.t('similar_patients.subtitle') }}</p>
+
+  <div class="similar-option">
+    <p-radioButton
+      name="similarOpt"
+      [value]="'new'"
+      [(ngModel)]="selectedClientOptionValue"
+      inputId="opt-new" />
+    <label for="opt-new">{{ lang.t('similar_patients.new_profile_option') }}</label>
+  </div>
+
+  @for (c of similarClients(); track c.id) {
+    <div class="similar-option candidate-row">
+      <p-radioButton
+        name="similarOpt"
+        [value]="c.id"
+        [(ngModel)]="selectedClientOptionValue"
+        [inputId]="'opt-' + c.id" />
+      <label [for]="'opt-' + c.id">
+        <span class="cand-name">{{ c.first_name }} {{ c.last_name }}</span>
+        <span class="cand-email">{{ c.email }}</span>
+        <span class="cand-phone">{{ c.phone }}</span>
+      </label>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        [label]="lang.t('similar_patients.cancel')"
+        severity="secondary"
+        [text]="true"
+        (onClick)="onSimilarCancel()">
+      </p-button>
+      <p-button
+        [label]="lang.t('similar_patients.accept')"
+        icon="pi pi-check"
+        (onClick)="onSimilarAccept()">
       </p-button>
     </div>
   </ng-template>

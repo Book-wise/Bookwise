@@ -10,6 +10,8 @@ import { HttpErrorService } from '@services/http-error.service';
 import { BookingUpdateService } from '@services/booking-update.service';
 import { MessageService } from 'primeng/api';
 import { rutValidator } from '@shared/validators/rut.validator';
+import type { NgForm } from '@angular/forms';
+import type { Client } from '@models';
 
 describe('BookingFormDialogComponent', () => {
   let component: BookingFormDialogComponent;
@@ -222,6 +224,391 @@ describe('BookingFormDialogComponent', () => {
       const errors = fixture.debugElement.queryAll(By.css('.field-error'));
       const texts = errors.map((e) => (e.nativeElement as HTMLElement).textContent?.trim());
       expect(texts).toContain(component['lang'].t('patient.error.rut_invalid'));
+    });
+  });
+
+  // ── Patient duplicate detection (similar-clients pre-check) ────────────────
+
+  function makeClient(overrides: Partial<Client> = {}): Client {
+    return {
+      id: 42,
+      first_name: 'Ana',
+      last_name: 'Test',
+      email: 'ana@test.com',
+      phone: '+56912345678',
+      active: true,
+      ...overrides,
+    } as Client;
+  }
+
+  describe('OnDestroy / teardown', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('completes destroy$ on ngOnDestroy and a late precheckTrigger$ emission does not call getClients', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+
+      component.ngOnInit();
+      component.ngOnDestroy();
+
+      apiService.getClients.mockClear();
+      (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('ana@test.com');
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('debounced similarity pre-check pipeline', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('calls getClients with the trigger term 400ms after precheckTrigger$ emits', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      component.ngOnInit();
+      (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('ana@test.com');
+
+      expect(apiService.getClients).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).toHaveBeenCalledTimes(1);
+      expect(apiService.getClients).toHaveBeenCalledWith({ search: 'ana@test.com' });
+    });
+  });
+
+  describe('onContactBlur trigger handlers', () => {
+    beforeEach(async () => {
+      vi.useFakeTimers();
+      component.visible = true;
+      component.showPatientPanel = true;
+      fixture.detectChanges(); // triggers ngOnInit (subscribes precheckTrigger$ once)
+      await fixture.whenStable();
+      fixture.detectChanges();
+    });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('calls getClients with trimmed email 400ms after email blur', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      component.newClient.email = '  ana@test.com  ';
+      const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
+      email.dispatchEvent(new Event('blur'));
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).toHaveBeenCalledTimes(1);
+      expect(apiService.getClients).toHaveBeenCalledWith({ search: 'ana@test.com' });
+    });
+
+    it('does not call getClients for sub-threshold email (<5 chars)', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      component.newClient.email = 'a@b';
+      const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
+      email.dispatchEvent(new Event('blur'));
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).not.toHaveBeenCalled();
+    });
+
+    it('calls getClients after phone settles via ngModelChange + 400ms', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      const phoneValue = '+56912345678'; // 11 digits after stripping
+      component.onPhoneChanged(phoneValue);
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).toHaveBeenCalledTimes(1);
+      expect(apiService.getClients).toHaveBeenCalledWith({ search: phoneValue });
+    });
+
+    it('does not call getClients for sub-threshold phone (<6 digits)', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      component.onPhoneChanged('12345'); // 5 digits
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).not.toHaveBeenCalled();
+    });
+
+    it('fires only one getClients for the latest value on rapid re-blur', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
+
+      component.newClient.email = 'ana@test.com';
+      email.dispatchEvent(new Event('blur'));
+
+      await vi.advanceTimersByTimeAsync(200);
+
+      component.newClient.email = 'ana2@test.com';
+      email.dispatchEvent(new Event('blur'));
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).toHaveBeenCalledTimes(1);
+      expect(apiService.getClients).toHaveBeenCalledWith({ search: 'ana2@test.com' });
+    });
+
+    it('no-ops when !showPatientPanel', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      component.showPatientPanel = false;
+      component.onContactBlur('ana@test.com', 'email');
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onPrecheckResult / picker visibility', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+      component.showPatientPanel = true;
+    });
+
+    it('opens picker with candidates and pre-selects "new"', () => {
+      component.newClient.email = 'ana@test.com';
+      const candidate = makeClient({ id: 7, email: 'ana@test.com' });
+
+      component.onPrecheckResult([candidate]);
+
+      expect(component.showSimilarDialog()).toBe(true);
+      expect(component.selectedClientOption()).toBe('new');
+      expect(component.similarClients().map(c => c.id)).toContain(7);
+    });
+
+    it('does not open picker when no candidates match', () => {
+      component.newClient.email = 'ana@test.com';
+      const candidate = makeClient({ id: 8, email: 'other@test.com', phone: '+5611111111' });
+
+      component.onPrecheckResult([candidate]);
+
+      expect(component.showSimilarDialog()).toBe(false);
+      expect(component.similarClients()).toEqual([]);
+    });
+
+    it('merges and dedupes candidates across email and phone triggers', () => {
+      component.newClient.email = 'ana@test.com';
+      component.newClient.phone = '+56912345678';
+      const candidate = makeClient({ id: 9, email: 'ana@test.com', phone: '+56912345678' });
+
+      component.onPrecheckResult([candidate]);
+      component.onPrecheckResult([candidate]);
+
+      const ids = component.similarClients().map(c => c.id);
+      expect(ids).toEqual([9]);
+    });
+  });
+
+  describe('similar-patients picker resolution', () => {
+    let apiService: { createClient: ReturnType<typeof vi.fn>; getClients: ReturnType<typeof vi.fn> };
+    let messageService: { add: ReturnType<typeof vi.fn> };
+
+    beforeEach(async () => {
+      apiService = TestBed.inject(ApiService) as unknown as typeof apiService;
+      messageService = TestBed.inject(MessageService) as unknown as typeof messageService;
+      apiService.createClient.mockClear();
+      messageService.add.mockClear();
+
+      component.visible = true;
+      component.showPatientPanel = true;
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    });
+
+    it('Cancelar closes the dialog without side effects', () => {
+      component.similarClients.set([makeClient({ id: 5 })]);
+      component.showSimilarDialog.set(true);
+      component.formData.client_id = 0;
+      component.newClient = { first_name: 'Juan', last_name: 'Perez', email: 'juan@test.com', phone: '+56911112222', rut: '' };
+
+      component.onSimilarCancel();
+
+      expect(component.showSimilarDialog()).toBe(false);
+      expect(component.similarClients()).toEqual([]);
+      expect(component.formData.client_id).toBe(0);
+      expect(component.showPatientPanel).toBe(true);
+      expect(component.newClient).toEqual({ first_name: 'Juan', last_name: 'Perez', email: 'juan@test.com', phone: '+56911112222', rut: '' });
+    });
+
+    it('Cancelar resets selectedClientOption back to "new"', () => {
+      component.similarClients.set([makeClient({ id: 42 })]);
+      component.showSimilarDialog.set(true);
+      component.selectedClientOption.set(42);
+
+      component.onSimilarCancel();
+
+      expect(component.selectedClientOption()).toBe('new');
+    });
+
+    it('selecting an existing client + Aceptar sets client_id, closes panel, no createClient, shows toast', () => {
+      component.similarClients.set([makeClient({ id: 42 })]);
+      component.showSimilarDialog.set(true);
+      component.selectedClientOption.set(42);
+
+      component.onSimilarAccept();
+
+      expect(component.formData.client_id).toBe(42);
+      expect(component.showPatientPanel).toBe(false);
+      expect(component.newClient).toEqual({ first_name: '', last_name: '', email: '', phone: '', rut: '' });
+      expect(apiService.createClient).not.toHaveBeenCalled();
+      expect(messageService.add).toHaveBeenCalledWith(expect.objectContaining({
+        severity: 'success',
+        summary: component['lang'].t('toast.existing_client_assigned.summary'),
+        detail: component['lang'].t('toast.existing_client_assigned.detail'),
+      }));
+      expect(component.showSimilarDialog()).toBe(false);
+    });
+
+    it('new-profile + Aceptar runs saveClient/createClient as today', async () => {
+      component.newClient = { first_name: 'Juan', last_name: 'Perez', email: 'juan@test.com', phone: '+56911112222', rut: '' };
+      component.similarClients.set([makeClient({ id: 42 })]);
+      component.showSimilarDialog.set(true);
+      component.selectedClientOption.set('new');
+
+      const firstName = fixture.debugElement.query(By.css('input[name="firstName"]')).nativeElement as HTMLInputElement;
+      firstName.value = 'Juan';
+      firstName.dispatchEvent(new Event('input'));
+      const lastName = fixture.debugElement.query(By.css('input[name="lastName"]')).nativeElement as HTMLInputElement;
+      lastName.value = 'Perez';
+      lastName.dispatchEvent(new Event('input'));
+      const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
+      email.value = 'juan@test.com';
+      email.dispatchEvent(new Event('input'));
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.onSimilarAccept();
+
+      expect(apiService.createClient).toHaveBeenCalledTimes(1);
+      expect(component.showSimilarDialog()).toBe(false);
+      expect(component.similarClients()).toEqual([]);
+    });
+  });
+
+  describe('pre-check in-flight at submit', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('clicking save before debounce elapses proceeds immediately and discards the pending result', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.createClient.mockClear();
+
+      const candidate = makeClient({ id: 99, email: 'pending@test.com' });
+      apiService.getClients.mockReturnValue(of([candidate]));
+
+      component.ngOnInit();
+      component.showPatientPanel = true;
+      component.newClient = { first_name: 'Pend', last_name: 'Ing', email: 'pending@test.com', phone: '', rut: '' };
+
+      (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('pending@test.com');
+
+      component.saveClient();
+
+      expect(apiService.createClient).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(component.showSimilarDialog()).toBe(false);
+    });
+
+    it('an invalid-form save attempt does not block a later legitimate pre-check result', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.createClient.mockClear();
+
+      const candidate = makeClient({ id: 100, email: 'late@test.com' });
+      apiService.getClients.mockReturnValue(of([candidate]));
+
+      component.ngOnInit();
+      component.showPatientPanel = true;
+      component.newClient = { first_name: 'Late', last_name: 'Result', email: 'late@test.com', phone: '', rut: '' };
+
+      (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('late@test.com');
+
+      const invalidForm = {
+        form: { markAllAsTouched: vi.fn() },
+        invalid: true,
+      } as unknown as NgForm;
+
+      component.saveClient(invalidForm);
+
+      expect(apiService.createClient).not.toHaveBeenCalled();
+      expect((component as unknown as { saveInProgress: boolean }).saveInProgress).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(component.showSimilarDialog()).toBe(true);
+    });
+  });
+
+  describe('single-page candidate set', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('does not issue a paginated getClients call during pre-check', async () => {
+      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      apiService.getClients.mockClear();
+      apiService.getClients.mockReturnValue(of([]));
+
+      component.ngOnInit();
+      component.showPatientPanel = true;
+      component.onContactBlur('ana@test.com', 'email');
+
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(apiService.getClients).toHaveBeenCalledTimes(1);
+      const [callArgs] = apiService.getClients.mock.calls[0];
+      expect(callArgs).not.toHaveProperty('page');
+      expect(callArgs).not.toHaveProperty('per_page');
+    });
+  });
+
+  describe('similar_patients i18n keys', () => {
+    it('resolves similar_patients.* and toast.existing_client_assigned.* in es and en', () => {
+      const lang = component['lang'] as LanguageService;
+      const keys = [
+        'similar_patients.title',
+        'similar_patients.subtitle',
+        'similar_patients.new_profile_option',
+        'similar_patients.cancel',
+        'similar_patients.accept',
+        'toast.existing_client_assigned.summary',
+        'toast.existing_client_assigned.detail',
+      ];
+
+      for (const locale of ['es', 'en'] as const) {
+        lang.setLang(locale);
+        for (const key of keys) {
+          expect(lang.t(key)).toBeTruthy();
+          expect(lang.t(key)).not.toBe(key);
+        }
+      }
     });
   });
 });
