@@ -3,11 +3,13 @@ import {
   Component,
   inject,
   OnInit,
+  OnDestroy,
   signal,
   computed,
   Input,
   Output,
   EventEmitter,
+  ViewChild,
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -37,8 +39,10 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { RutDirective } from '@shared/validators/rut.directive';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject, of } from 'rxjs';
+import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
 import { SkeletonModule } from 'primeng/skeleton';
+import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
 
 /** Service or ServicePack tagged with _isPack by loadFormData() — never sent to the API. */
 type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
@@ -67,7 +71,7 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
   templateUrl: './booking-form-dialog.component.html',
   styleUrls: ['./booking-form-dialog.component.scss'],
 })
-export class BookingFormDialogComponent implements OnInit {
+export class BookingFormDialogComponent implements OnInit, OnDestroy {
   readonly currencyConfig = CURRENCY_CONFIG;
 
   private apiService     = inject(ApiService);
@@ -92,6 +96,18 @@ export class BookingFormDialogComponent implements OnInit {
   showServicePanel  = false;
   showPatientPanel  = false;
   savingService     = signal(false);
+
+  // ── Similar-patients pre-check (duplicate detection) ────────────────────────
+  similarClients       = signal<Client[]>([]);
+  showSimilarDialog    = signal(false);
+  selectedClientOption = signal<number | 'new'>('new');
+  precheckPending      = signal(false);
+
+  private precheckTrigger$ = new Subject<string>();
+  private destroy$         = new Subject<void>();
+  private saveInProgress   = false;
+
+  @ViewChild('patientForm') patientForm?: NgForm;
 
   formData: BookingFormData = this.getEmptyForm();
 
@@ -185,7 +201,22 @@ export class BookingFormDialogComponent implements OnInit {
   );
   dialogTitle = computed(() => this.lang.t(this.isEdit() ? 'booking_form.title.edit' : 'booking_form.title.create'));
 
-  ngOnInit() { /* datos cargados al abrir, no al montar */ }
+  ngOnInit() {
+    this.precheckTrigger$.pipe(
+      debounceTime(400),
+      switchMap(term =>
+        this.apiService.getClients({ search: term }).pipe(
+          catchError(() => of([] as Client[])),
+        ),
+      ),
+      takeUntil(this.destroy$),
+    ).subscribe(candidates => this.onPrecheckResult(candidates));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   // ── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -293,6 +324,11 @@ export class BookingFormDialogComponent implements OnInit {
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
     this.repeatAfterChecked = false;
     this.repeatUntilChecked = false;
+    this.similarClients.set([]);
+    this.showSimilarDialog.set(false);
+    this.selectedClientOption.set('new');
+    this.precheckPending.set(false);
+    this.saveInProgress = false;
   }
 
   onClose() {
@@ -433,9 +469,14 @@ export class BookingFormDialogComponent implements OnInit {
   }
 
   saveClient(form?: NgForm) {
+    if (this.precheckPending()) return;
+    this.saveInProgress = true;
     if (form) {
       form.form.markAllAsTouched();
-      if (form.invalid) return;
+      if (form.invalid) {
+        this.saveInProgress = false;
+        return;
+      }
     }
     this.apiService
       .createClient({
@@ -458,6 +499,7 @@ export class BookingFormDialogComponent implements OnInit {
           this.loadFormData();
         },
         error: (err) => {
+          this.saveInProgress = false;
           this.httpError.handle(err, 'crear cliente');
         },
       });
@@ -490,11 +532,101 @@ export class BookingFormDialogComponent implements OnInit {
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
     this.showServicePanel = false;
     this.showPatientPanel = true;
+    this.saveInProgress = false;
+    this.precheckPending.set(false);
+    this.similarClients.set([]);
   }
 
   closePatientPanel(): void {
     this.showPatientPanel = false;
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
+    this.saveInProgress = false;
+    this.precheckPending.set(false);
+  }
+
+  // ── Similar-patients pre-check (duplicate detection) ────────────────────────
+
+  /** Proxy so `p-radioButton`'s template-driven `[(ngModel)]` can bind to the signal. */
+  get selectedClientOptionValue(): number | 'new' {
+    return this.selectedClientOption();
+  }
+  set selectedClientOptionValue(value: number | 'new') {
+    this.selectedClientOption.set(value);
+  }
+
+  /** Proxy so `p-dialog`'s `[(visible)]` can bind to the signal. */
+  get showSimilarDialogValue(): boolean {
+    return this.showSimilarDialog();
+  }
+  set showSimilarDialogValue(value: boolean) {
+    this.showSimilarDialog.set(value);
+  }
+
+  /**
+   * Triggers a debounced similarity pre-check for the given contact value.
+   * No-ops if the patient-creation panel isn't open, or if the value doesn't
+   * meet the per-kind eligibility gate (email: >=5 chars, phone: >=6 digits).
+   */
+  onContactBlur(value: string, kind: 'email' | 'phone'): void {
+    if (!this.showPatientPanel) return;
+
+    const trimmed = (value ?? '').trim();
+    if (!trimmed) return;
+
+    const eligible = kind === 'email'
+      ? trimmed.length >= 5
+      : stripDigits(trimmed).length >= 6;
+
+    if (!eligible) return;
+
+    this.precheckPending.set(true);
+    this.precheckTrigger$.next(trimmed);
+  }
+
+  onPhoneChanged(value: string): void {
+    this.onContactBlur(value, 'phone');
+  }
+
+  onPrecheckResult(candidates: Client[]): void {
+    this.precheckPending.set(false);
+    if (this.saveInProgress) return;
+
+    const matches = matchSimilarClients(candidates, this.newClient);
+    const merged  = dedupeById([...this.similarClients(), ...matches]);
+
+    this.similarClients.set(merged);
+    this.showSimilarDialog.set(merged.length > 0);
+    if (merged.length) this.selectedClientOption.set('new');
+  }
+
+  onSimilarCancel(): void {
+    this.showSimilarDialog.set(false);
+    this.similarClients.set([]);
+    this.selectedClientOption.set('new');
+  }
+
+  onSimilarAccept(): void {
+    const option = this.selectedClientOption();
+    this.showSimilarDialog.set(false);
+
+    if (option === 'new') {
+      this.similarClients.set([]);
+      this.precheckPending.set(false);
+      this.saveClient(this.patientForm);
+      return;
+    }
+
+    this.formData.client_id = option;
+    this.showPatientPanel = false;
+    this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
+    this.similarClients.set([]);
+    this.saveInProgress = false;
+
+    this.messageService.add({
+      severity: 'success',
+      summary: this.lang.t('toast.existing_client_assigned.summary'),
+      detail:  this.lang.t('toast.existing_client_assigned.detail'),
+    });
   }
 
   saveNewService(): void {

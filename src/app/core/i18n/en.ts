@@ -27,6 +27,10 @@ export const EN: Record<string, string> = {
   'toast.client_created.detail': 'The new client has been registered successfully',
   'toast.service_created.summary': 'Service created',
 
+  // Toast — similar patients picker
+  'toast.existing_client_assigned.summary': 'Patient assigned',
+  'toast.existing_client_assigned.detail': 'The existing patient was assigned to the booking',
+
   // Toast — validation
   'toast.patient_required.summary': 'Patient required',
   'toast.patient_required.detail': 'Please select or add a patient before saving.',
@@ -289,6 +293,13 @@ export const EN: Record<string, string> = {
   'patient.rut_placeholder': '12.345.678-9',
   'patient.error.rut_invalid': 'Invalid RUT',
   'patient.btn.save': 'Save patient',
+
+  // Similar patients picker
+  'similar_patients.title': 'Similar patients found!',
+  'similar_patients.subtitle': 'Select an existing patient or assign to a new profile.',
+  'similar_patients.new_profile_option': 'Assign to a new profile',
+  'similar_patients.cancel': 'Cancel',
+  'similar_patients.accept': 'Accept',
 
   // Booking dialog (legacy)
   'booking_dlg.title.create': 'New Booking',
