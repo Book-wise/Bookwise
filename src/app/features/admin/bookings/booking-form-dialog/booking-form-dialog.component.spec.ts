@@ -82,6 +82,19 @@ describe('BookingFormDialogComponent', () => {
       expect(component.newClient).toEqual({ first_name: '', last_name: '', email: '', phone: '', rut: '' });
       expect(component.showPatientPanel).toBe(false);
     });
+
+    it('clears a stale similar-patients picker left open from a previous booking', () => {
+      component.similarClients.set([makeClient({ id: 7 })]);
+      component.showSimilarDialog.set(true);
+      component.selectedClientOption.set(7);
+
+      // resetForm is private; exercise it via the public onClose() entrypoint
+      component.onClose();
+
+      expect(component.similarClients()).toEqual([]);
+      expect(component.showSimilarDialog()).toBe(false);
+      expect(component.selectedClientOption()).toBe('new');
+    });
   });
 
   describe('rutValidator()', () => {
@@ -514,7 +527,7 @@ describe('BookingFormDialogComponent', () => {
     beforeEach(() => { vi.useFakeTimers(); });
     afterEach(() => { vi.useRealTimers(); });
 
-    it('clicking save before debounce elapses proceeds immediately and discards the pending result', async () => {
+    it('clicking save while a pre-check is pending is blocked until it resolves', async () => {
       const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
       apiService.getClients.mockClear();
       apiService.createClient.mockClear();
@@ -526,15 +539,16 @@ describe('BookingFormDialogComponent', () => {
       component.showPatientPanel = true;
       component.newClient = { first_name: 'Pend', last_name: 'Ing', email: 'pending@test.com', phone: '', rut: '' };
 
-      (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('pending@test.com');
+      component.onContactBlur('pending@test.com', 'email');
+      expect(component.precheckPending()).toBe(true);
 
       component.saveClient();
-
-      expect(apiService.createClient).toHaveBeenCalledTimes(1);
+      expect(apiService.createClient).not.toHaveBeenCalled();
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(component.showSimilarDialog()).toBe(false);
+      expect(component.precheckPending()).toBe(false);
+      expect(component.showSimilarDialog()).toBe(true);
     });
 
     it('an invalid-form save attempt does not block a later legitimate pre-check result', async () => {

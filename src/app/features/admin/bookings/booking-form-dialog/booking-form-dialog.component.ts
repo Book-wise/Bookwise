@@ -40,7 +40,7 @@ import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.
 import { RutDirective } from '@shared/validators/rut.directive';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { forkJoin, Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, takeUntil } from 'rxjs/operators';
+import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
 import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
 
@@ -101,6 +101,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   similarClients       = signal<Client[]>([]);
   showSimilarDialog    = signal(false);
   selectedClientOption = signal<number | 'new'>('new');
+  precheckPending      = signal(false);
 
   private precheckTrigger$ = new Subject<string>();
   private destroy$         = new Subject<void>();
@@ -203,7 +204,6 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.precheckTrigger$.pipe(
       debounceTime(400),
-      distinctUntilChanged(),
       switchMap(term =>
         this.apiService.getClients({ search: term }).pipe(
           catchError(() => of([] as Client[])),
@@ -324,6 +324,11 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
     this.repeatAfterChecked = false;
     this.repeatUntilChecked = false;
+    this.similarClients.set([]);
+    this.showSimilarDialog.set(false);
+    this.selectedClientOption.set('new');
+    this.precheckPending.set(false);
+    this.saveInProgress = false;
   }
 
   onClose() {
@@ -464,6 +469,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   }
 
   saveClient(form?: NgForm) {
+    if (this.precheckPending()) return;
     this.saveInProgress = true;
     if (form) {
       form.form.markAllAsTouched();
@@ -527,6 +533,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.showServicePanel = false;
     this.showPatientPanel = true;
     this.saveInProgress = false;
+    this.precheckPending.set(false);
     this.similarClients.set([]);
   }
 
@@ -534,6 +541,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.showPatientPanel = false;
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
     this.saveInProgress = false;
+    this.precheckPending.set(false);
   }
 
   // ── Similar-patients pre-check (duplicate detection) ────────────────────────
@@ -571,6 +579,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
     if (!eligible) return;
 
+    this.precheckPending.set(true);
     this.precheckTrigger$.next(trimmed);
   }
 
@@ -579,6 +588,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   }
 
   onPrecheckResult(candidates: Client[]): void {
+    this.precheckPending.set(false);
     if (this.saveInProgress) return;
 
     const matches = matchSimilarClients(candidates, this.newClient);
@@ -601,6 +611,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
     if (option === 'new') {
       this.similarClients.set([]);
+      this.precheckPending.set(false);
       this.saveClient(this.patientForm);
       return;
     }

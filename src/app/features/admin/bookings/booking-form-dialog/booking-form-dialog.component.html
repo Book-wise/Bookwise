@@ -380,7 +380,7 @@
 
     <div class="service-panel-actions">
       <p-button [label]="lang.t('common.back')" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closePatientPanel()" />
-      <p-button [label]="lang.t('patient.btn.save')" icon="pi pi-check" (onClick)="saveClient(patientForm)" />
+      <p-button [label]="lang.t('patient.btn.save')" icon="pi pi-check" [loading]="precheckPending()" [disabled]="precheckPending()" (onClick)="saveClient(patientForm)" />
     </div>
   </div>
 
