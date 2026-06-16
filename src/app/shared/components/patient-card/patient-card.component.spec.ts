@@ -321,13 +321,13 @@ describe('PatientCardComponent', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      const emitted: void[] = [];
-      const sub = component.editRequested.subscribe(() => emitted.push());
+      let callCount = 0;
+      const sub = component.editRequested.subscribe(() => callCount++);
 
       const btn = fixture.debugElement.query(By.css('[data-testid="pc-edit"]'));
       (btn.nativeElement as HTMLButtonElement).click();
 
-      expect(emitted).toHaveLength(1);
+      expect(callCount).toBe(1);
       sub.unsubscribe();
     });
   });
@@ -336,10 +336,10 @@ describe('PatientCardComponent', () => {
 
   describe('onEditClick()', () => {
     it('emits editRequested when called directly', () => {
-      const emitted: void[] = [];
-      const sub = component.editRequested.subscribe(() => emitted.push());
+      let callCount = 0;
+      const sub = component.editRequested.subscribe(() => callCount++);
       component.onEditClick();
-      expect(emitted).toHaveLength(1);
+      expect(callCount).toBe(1);
       sub.unsubscribe();
     });
   });
