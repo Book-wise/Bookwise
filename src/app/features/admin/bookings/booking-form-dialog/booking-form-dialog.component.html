@@ -128,7 +128,8 @@
           [filterPlaceholder]="lang.t('common.search')"
           showClear="true"
           class="w-full"
-          (onFilter)="onClientFilter()">
+          (onFilter)="onClientFilter()"
+          (onChange)="onClientChange()">
           <ng-template pTemplate="item" let-client>
             <div class="client-option">
               <span class="client-name">{{ client.first_name }} {{ client.last_name }}</span>
@@ -146,6 +147,13 @@
         </p-button>
       </div>
     </div>
+
+    @if (selectedClient()) {
+      <bw-patient-card
+        [client]="selectedClient()!"
+        [showNotifications]="false"
+        [showEdit]="false" />
+    }
 
     <!-- Sede -->
     <div class="field">

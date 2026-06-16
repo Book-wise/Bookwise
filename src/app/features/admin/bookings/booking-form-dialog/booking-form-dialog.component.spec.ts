@@ -25,6 +25,10 @@ describe('BookingFormDialogComponent', () => {
       getProviders: vi.fn().mockReturnValue(of([])),
       getLocations: vi.fn().mockReturnValue(of([])),
       createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })),
+      // Required by bw-patient-card when rendered inside the form
+      getClientPacks: vi.fn().mockReturnValue(of([])),
+      getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
+      getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
     };
 
     const dataCacheMock = {
@@ -623,6 +627,119 @@ describe('BookingFormDialogComponent', () => {
           expect(lang.t(key)).not.toBe(key);
         }
       }
+    });
+  });
+
+  describe('patient card integration', () => {
+    it('selectedClientId() is null by default', () => {
+      expect(component.selectedClientId()).toBeNull();
+    });
+
+    it('selectedClient() returns null when no clients are loaded', () => {
+      expect(component.selectedClient()).toBeNull();
+    });
+
+    it('onClientChange() updates selectedClientId signal from formData.client_id', () => {
+      component.clients.set([makeClient({ id: 42 })]);
+      component.formData.client_id = 42;
+
+      component.onClientChange();
+
+      expect(component.selectedClientId()).toBe(42);
+    });
+
+    it('selectedClient() returns the matching Client object after onClientChange()', () => {
+      const client = makeClient({ id: 7, first_name: 'Juan', last_name: 'Pérez' });
+      component.clients.set([client]);
+      component.formData.client_id = 7;
+
+      component.onClientChange();
+
+      expect(component.selectedClient()).toEqual(client);
+    });
+
+    it('selectedClient() returns null when clients list does not include the id', () => {
+      component.clients.set([makeClient({ id: 1 })]);
+      component.formData.client_id = 999;
+
+      component.onClientChange();
+
+      expect(component.selectedClient()).toBeNull();
+    });
+
+    it('onClientChange() with falsy client_id sets selectedClientId to null', () => {
+      component.clients.set([makeClient({ id: 5 })]);
+      component.formData.client_id = 5;
+      component.onClientChange();
+      expect(component.selectedClientId()).toBe(5);
+
+      component.formData.client_id = 0;
+      component.onClientChange();
+
+      expect(component.selectedClientId()).toBeNull();
+    });
+
+    it('dialogTitle() returns "Reserva de Juan Pérez" when selectedClient() is non-null', () => {
+      const client = makeClient({ id: 3, first_name: 'Juan', last_name: 'Pérez' });
+      component.clients.set([client]);
+      component.formData.client_id = 3;
+      component.onClientChange();
+
+      expect(component.dialogTitle()).toBe(component['lang'].t('booking_form.title.for_client', { name: 'Juan Pérez' }));
+    });
+
+    it('dialogTitle() returns create title when selectedClient() is null and not editing', () => {
+      component.isEdit.set(false);
+      // No client selected (default)
+      expect(component.dialogTitle()).toBe(component['lang'].t('booking_form.title.create'));
+    });
+
+    it('dialogTitle() returns edit title when selectedClient() is null and in edit mode', () => {
+      component.isEdit.set(true);
+      // No client selected
+      expect(component.dialogTitle()).toBe(component['lang'].t('booking_form.title.edit'));
+    });
+
+    it('bw-patient-card is absent from DOM when no client is selected', async () => {
+      component.visible = true;
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const card = fixture.debugElement.query(By.css('bw-patient-card'));
+      expect(card).toBeNull();
+    });
+
+    it('bw-patient-card appears when a valid client is selected via onClientChange()', async () => {
+      component.visible = true;
+      const client = makeClient({ id: 42 });
+      component.clients.set([client]);
+      component.formData.client_id = 42;
+      component.onClientChange();
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const card = fixture.debugElement.query(By.css('bw-patient-card'));
+      expect(card).not.toBeNull();
+    });
+
+    it('bw-patient-card is hidden again after onClientChange(0)', async () => {
+      component.visible = true;
+      const client = makeClient({ id: 42 });
+      component.clients.set([client]);
+      component.formData.client_id = 42;
+      component.onClientChange();
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.formData.client_id = 0;
+      component.onClientChange();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const card = fixture.debugElement.query(By.css('bw-patient-card'));
+      expect(card).toBeNull();
     });
   });
 });

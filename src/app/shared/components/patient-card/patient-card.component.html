@@ -1,0 +1,304 @@
+<section class="bw-pc">
+  <!-- ── Avatar + Name row ────────────────────────────────────────────────────── -->
+  <div class="bw-pc__row">
+    <div class="bw-pc__left">
+      <div class="bw-pc__avatar">{{ initials() }}</div>
+      <div class="bw-pc__info">
+        <span class="bw-pc__name">{{ client().first_name }} {{ client().last_name }}</span>
+        <div class="bw-pc__meta">
+          @if (client().email) {
+            <span><i class="pi pi-envelope"></i> {{ client().email }}</span>
+          }
+          @if (client().phone) {
+            <span><i class="pi pi-mobile"></i> {{ client().phone }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="bw-pc__actions">
+      @if (client().phone) {
+        <a [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" class="bw-pc__wa-link">
+          <p-button
+            icon="pi pi-whatsapp"
+            severity="success"
+            variant="text"
+            [rounded]="true"
+            size="small"
+          />
+        </a>
+      }
+      @if (showEdit()) {
+        <button
+          type="button"
+          class="bw-pc__edit-btn"
+          data-testid="pc-edit"
+          (click)="onEditClick()"
+          aria-label="Edit patient"
+        >
+          <i class="pi pi-pencil"></i>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Contact warning ──────────────────────────────────────────────────────── -->
+  @if (hasContactWarning()) {
+    <div class="bw-pc__warning" role="alert" data-testid="pc-warning">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ lang.t('patient_card.warning.contact_missing') }}</span>
+    </div>
+  }
+
+  <!-- ── Tab area ─────────────────────────────────────────────────────────────── -->
+  @if (activeTab() === null) {
+    <nav class="bw-pc__tabs">
+      <button
+        type="button"
+        class="bw-pc__tab"
+        [class.bw-pc__tab--active]="activeTab() === 'planes'"
+        (click)="selectTab('planes')"
+        data-testid="tab-planes"
+      >
+        {{ lang.t('patient_card.tab.plans') }}
+        @if (plansCount() > 0) {
+          <span class="bw-pc__badge">{{ plansCount() }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="bw-pc__tab"
+        [class.bw-pc__tab--active]="activeTab() === 'sesiones'"
+        (click)="selectTab('sesiones')"
+        data-testid="tab-sesiones"
+      >
+        {{ lang.t('patient_card.tab.sessions') }}
+        @if (sessionsCount() > 0) {
+          <span class="bw-pc__badge">{{ sessionsCount() }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="bw-pc__tab"
+        [class.bw-pc__tab--active]="activeTab() === 'prepago'"
+        (click)="selectTab('prepago')"
+        data-testid="tab-prepago"
+      >
+        {{ lang.t('patient_card.tab.prepaid') }}
+        @if (prepaidCount() !== null && prepaidCount()! > 0) {
+          <span class="bw-pc__badge">{{ prepaidCount() }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="bw-pc__tab"
+        [class.bw-pc__tab--active]="activeTab() === 'recientes'"
+        (click)="selectTab('recientes')"
+        data-testid="tab-recientes"
+      >
+        {{ lang.t('patient_card.tab.recent') }}
+        @if (recentCount() !== null && recentCount()! > 0) {
+          <span class="bw-pc__badge">{{ recentCount() }}</span>
+        }
+      </button>
+    </nav>
+  } @else {
+    <!-- ── Panel view ────────────────────────────────────────────────────────── -->
+    <div class="bw-pc__panel bw-pc__panel--enter">
+      <button type="button" class="bw-pc__back" (click)="backToTabs()">
+        <i class="pi pi-arrow-left"></i>
+        {{ lang.t('patient_card.back') }}
+      </button>
+
+      @switch (activeTab()) {
+
+        @case ('planes') {
+          @if (packsLoading()) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+            </div>
+          } @else if (packs().length === 0) {
+            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.plans') }}</p>
+          } @else {
+            <ul class="bw-pc__pack-list">
+              @for (pack of packs(); track pack.id) {
+                <li class="bw-pc__pack-item">
+                  <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? '—' }}</div>
+                  <div class="bw-pc__pack-progress">
+                    <span>{{ pack.used_sessions }} / {{ pack.total_sessions }} {{ lang.t('patient_card.sessions_label') }}</span>
+                    <span class="bw-pc__pack-remaining">{{ pack.remaining_sessions }} restantes</span>
+                  </div>
+                  <span
+                    class="bw-pc__pack-status"
+                    [class.bw-pc__pack-status--active]="pack.status === 'active'"
+                    [class.bw-pc__pack-status--used]="pack.status === 'used'"
+                    [class.bw-pc__pack-status--expired]="pack.status === 'expired'"
+                  >{{ pack.status }}</span>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+        @case ('sesiones') {
+          @if (packsLoading()) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+            </div>
+          } @else if (activePacks().length === 0) {
+            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.sessions') }}</p>
+          } @else {
+            <ul class="bw-pc__pack-list">
+              @for (pack of activePacks(); track pack.id) {
+                <li class="bw-pc__pack-item">
+                  <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? '—' }}</div>
+                  <div class="bw-pc__pack-progress">
+                    <span>{{ pack.used_sessions }} {{ lang.t('patient_card.used_label') }} / {{ pack.total_sessions }} {{ lang.t('patient_card.sessions_label') }}</span>
+                    <span class="bw-pc__pack-remaining">{{ pack.remaining_sessions }} restantes</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+        @case ('prepago') {
+          @if (salesLoading()) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+            </div>
+          } @else if (sales().length === 0) {
+            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.prepaid') }}</p>
+          } @else {
+            <ul class="bw-pc__sale-list">
+              @for (sale of sales(); track sale.id) {
+                <li class="bw-pc__sale-item">
+                  <div class="bw-pc__sale-row">
+                    <span class="bw-pc__sale-label">Total</span>
+                    <span class="bw-pc__sale-amount">{{ sale.total | currency:'CLP':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <div class="bw-pc__sale-row">
+                    <span class="bw-pc__sale-label">Pagado</span>
+                    <span class="bw-pc__sale-amount">{{ sale.paid_amount | currency:'CLP':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <span
+                    class="bw-pc__sale-status"
+                    [class.bw-pc__sale-status--paid]="sale.payment_status === 'paid'"
+                    [class.bw-pc__sale-status--partial]="sale.payment_status === 'partial'"
+                    [class.bw-pc__sale-status--unpaid]="sale.payment_status === 'unpaid'"
+                  >{{ sale.payment_status }}</span>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+        @case ('recientes') {
+          @if (recentLoading()) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
+            </div>
+          } @else if (recent().length === 0) {
+            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.recent') }}</p>
+          } @else {
+            <ul class="bw-pc__booking-list">
+              @for (booking of recent(); track booking.id) {
+                <li class="bw-pc__booking-item">
+                  <div class="bw-pc__booking-row">
+                    <span class="bw-pc__booking-service">{{ booking.service?.name ?? '—' }}</span>
+                    <span
+                      class="bw-pc__booking-status-dot"
+                      [style.background]="STATUS_COLOR_MAP[booking.status_id]"
+                    ></span>
+                  </div>
+                  <span class="bw-pc__booking-time">{{ booking.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+      }
+    </div>
+  }
+
+  <!-- ── Notifications collapsible ────────────────────────────────────────────── -->
+  @if (showNotifications()) {
+    <div class="bw-pc__notif">
+      <button type="button" class="bw-pc__notif-header" (click)="toggleNotif()">
+        <span class="bw-pc__notif-title">{{ lang.t('patient_card.notif.title') }}</span>
+        <i
+          class="pi"
+          [class.pi-chevron-down]="!notifOpen()"
+          [class.pi-chevron-up]="notifOpen()"
+        ></i>
+      </button>
+
+      @if (!notifOpen()) {
+        <p class="bw-pc__notif-subtitle">{{ lang.t('patient_card.notif.subtitle') }}</p>
+      }
+
+      @if (notifOpen()) {
+        <div class="bw-pc__notif-table">
+          <div class="bw-pc__notif-row bw-pc__notif-row--head">
+            <span>{{ lang.t('patient_card.notif.type_col') }}</span>
+            <span>{{ lang.t('patient_card.notif.email_col') }}</span>
+            <span>{{ lang.t('patient_card.notif.wa_col') }}</span>
+          </div>
+          <div class="bw-pc__notif-row">
+            <div class="bw-pc__notif-type">
+              <span>{{ lang.t('patient_card.notif.booking_notif') }}</span>
+              <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.immediate') }}</span>
+              <button
+                type="button"
+                class="bw-pc__notif-info-btn"
+                (click)="citaInfoPop.toggle($event)"
+              >
+                <i class="pi pi-question-circle"></i>
+              </button>
+            </div>
+            <p-checkbox
+              [ngModel]="notifCitaEmail()"
+              (ngModelChange)="notifCitaEmail.set($event)"
+              [binary]="true"
+            />
+            <p-checkbox
+              [ngModel]="notifCitaWa()"
+              (ngModelChange)="notifCitaWa.set($event)"
+              [binary]="true"
+            />
+          </div>
+          <div class="bw-pc__notif-row">
+            <div class="bw-pc__notif-type">
+              <span>{{ lang.t('patient_card.notif.reminder') }}</span>
+              <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.scheduled') }}</span>
+            </div>
+            <p-checkbox
+              [ngModel]="reminderEmail()"
+              (ngModelChange)="reminderEmail.set($event)"
+              [binary]="true"
+            />
+            <p-checkbox
+              [ngModel]="reminderWa()"
+              (ngModelChange)="reminderWa.set($event)"
+              [binary]="true"
+            />
+          </div>
+        </div>
+      }
+    </div>
+
+    <p-popover #citaInfoPop>
+      <p class="bw-pc__notif-popover">
+        {{ lang.t('patient_card.notif.popover_text') }}
+      </p>
+    </p-popover>
+  }
+</section>

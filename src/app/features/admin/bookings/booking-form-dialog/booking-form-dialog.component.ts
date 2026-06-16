@@ -43,6 +43,7 @@ import { forkJoin, Subject, of } from 'rxjs';
 import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
 import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
+import { PatientCardComponent } from '@shared/components/patient-card';
 
 /** Service or ServicePack tagged with _isPack by loadFormData() — never sent to the API. */
 type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
@@ -67,6 +68,7 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
     PhoneInputComponent,
     RutDirective,
     SkeletonModule,
+    PatientCardComponent,
   ],
   templateUrl: './booking-form-dialog.component.html',
   styleUrls: ['./booking-form-dialog.component.scss'],
@@ -121,6 +123,12 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   services = signal<(Service | ServicePack)[]>([]);
   providers = signal<Provider[]>([]);
   locations = signal<Location[]>([]);
+
+  // ── Selected-client reactive mirror (signal + computed) ────────────────────
+  readonly selectedClientId = signal<number | null>(null);
+  readonly selectedClient   = computed(() =>
+    this.clients().find(c => c.id === this.selectedClientId()) ?? null
+  );
 
   onSuccessCallback?: () => void;
   selectedServiceKey = '';
@@ -199,7 +207,13 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   repeatTypeOptions = computed(() =>
     REPEAT_TYPE_OPTIONS.map(o => ({ label: this.lang.t(o.labelKey), value: o.value }))
   );
-  dialogTitle = computed(() => this.lang.t(this.isEdit() ? 'booking_form.title.edit' : 'booking_form.title.create'));
+  dialogTitle = computed(() => {
+    const client = this.selectedClient();
+    if (client) {
+      return this.lang.t('booking_form.title.for_client', { name: `${client.first_name} ${client.last_name}` });
+    }
+    return this.lang.t(this.isEdit() ? 'booking_form.title.edit' : 'booking_form.title.create');
+  });
 
   ngOnInit() {
     this.precheckTrigger$.pipe(
@@ -302,6 +316,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
         notes:            booking.notes || '',
       };
       this._pendingServiceId = packId ?? serviceId;
+      this.selectedClientId.set(this.formData.client_id || null);
     } else {
       if (initialDate) this.formData.start_time = initialDate;
       if (locationId)  this.formData.location_id = locationId;
@@ -315,6 +330,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   private resetForm() {
     this.formData = this.getEmptyForm();
+    this.selectedClientId.set(null);
     this.selectedServiceKey = '';
     this._pendingServiceId = 0;
     this.isEdit.set(false);
@@ -402,6 +418,10 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   }
 
   onClientFilter(): void {}
+
+  onClientChange(): void {
+    this.selectedClientId.set(this.formData.client_id || null);
+  }
 
   // ── Save ────────────────────────────────────────────────────────────────────
 
@@ -495,6 +515,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
           });
           this.showPatientPanel = false;
           this.formData.client_id = client.id;
+          this.selectedClientId.set(client.id);
           this.dataCache.invalidateCacheEntries(CACHE_KEYS.CLIENTS);
           this.loadFormData();
         },
@@ -617,6 +638,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     }
 
     this.formData.client_id = option;
+    this.selectedClientId.set(option);
     this.showPatientPanel = false;
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
     this.similarClients.set([]);

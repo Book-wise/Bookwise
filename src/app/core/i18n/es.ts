@@ -233,6 +233,7 @@ export const ES: Record<string, string> = {
   // Booking form dialog — main
   'booking_form.title.create': 'Nueva Reserva',
   'booking_form.title.edit': 'Editar Reserva',
+  'booking_form.title.for_client': 'Reserva de {{name}}',
   'booking_form.repeat_btn': 'Repetir',
   'booking_form.repeat_active': 'Repetición activa',
   'booking_form.patient': 'Paciente',
@@ -300,6 +301,30 @@ export const ES: Record<string, string> = {
   'similar_patients.new_profile_option': 'Asignar a un nuevo perfil',
   'similar_patients.cancel': 'Cancelar',
   'similar_patients.accept': 'Aceptar',
+
+  // Patient card
+  'patient_card.warning.contact_missing': 'Falta email o teléfono del paciente',
+  'patient_card.tab.plans':    'Planes',
+  'patient_card.tab.sessions': 'Sesiones',
+  'patient_card.tab.prepaid':  'Pre-pagado',
+  'patient_card.tab.recent':   'Recientes',
+  'patient_card.back':         'Volver',
+  'patient_card.empty.plans':    'Sin planes activos',
+  'patient_card.empty.sessions': 'Sin sesiones registradas',
+  'patient_card.empty.prepaid':  'Sin pagos anticipados',
+  'patient_card.empty.recent':   'Sin reservas recientes',
+  'patient_card.notif.title':    'Notificaciones automáticas de cita y recordatorios',
+  'patient_card.notif.subtitle': 'Vía Email y WhatsApp',
+  'patient_card.notif.type_col':         'Tipo de mensajería',
+  'patient_card.notif.email_col':        'Email',
+  'patient_card.notif.wa_col':           'WhatsApp',
+  'patient_card.notif.booking_notif':    'Notificaciones de cita',
+  'patient_card.notif.reminder':         'Recordatorio',
+  'patient_card.notif.immediate':        'Inmediato',
+  'patient_card.notif.scheduled':        'Programado',
+  'patient_card.notif.popover_text':     'Por email se notifica creación/edición/cancelación. Por WhatsApp solo la creación.',
+  'patient_card.sessions_label': 'sesiones',
+  'patient_card.used_label':     'usadas',
 
   // Booking dialog (legacy)
   'booking_dlg.title.create': 'Nueva Reserva',
