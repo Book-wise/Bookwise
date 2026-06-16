@@ -16,11 +16,12 @@ import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { BookingUpdateService } from '@services/booking-update.service';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
+import { PatientCardComponent } from '@shared/components/patient-card/patient-card.component';
 
 @Component({
   selector: 'bw-reserva-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, DatePickerModule, TextareaModule, PanelModule, InputTextModule, CheckboxModule, PopoverModule, PhoneInputComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, DatePickerModule, TextareaModule, PanelModule, InputTextModule, CheckboxModule, PopoverModule, PhoneInputComponent, PatientCardComponent],
   templateUrl: './reserva-tab.component.html',
   styleUrl: './reserva-tab.component.scss',
 })
@@ -55,14 +56,6 @@ export class ReservaTabComponent {
   readonly reqOpen        = signal(true);
   readonly addOpen        = signal(true);
 
-  // ── Notifications state ───────────────────────────────────────────────────────
-
-  readonly notifOpen      = signal(false);
-  readonly notifCitaEmail = signal(false);
-  readonly notifCitaWa    = signal(false);
-  readonly reminderEmail  = signal(false);
-  readonly reminderWa     = signal(false);
-
   // ── Options ───────────────────────────────────────────────────────────────────
 
   readonly hours   = Array.from({ length: 24 }, (_, i) => ({ label: i.toString().padStart(2, '0'), value: i }));
@@ -93,16 +86,6 @@ export class ReservaTabComponent {
   readonly serviceDisabled = computed(() => {
     const p = this.booking().payment;
     return !!p && Object.keys(p as object).length > 0;
-  });
-
-  readonly clientInitials = computed(() => {
-    const c = this.booking().client;
-    return `${c?.first_name?.[0] ?? ''}${c?.last_name?.[0] ?? ''}`.toUpperCase() || '?';
-  });
-
-  readonly whatsappHref = computed(() => {
-    const phone = this.booking().client?.phone ?? '';
-    return `https://wa.me/${phone.replace('+', '').replace(/\s/g, '')}`;
   });
 
   // ── Init ──────────────────────────────────────────────────────────────────────
@@ -160,6 +143,10 @@ export class ReservaTabComponent {
   }
 
   // ── Client edit ───────────────────────────────────────────────────────────────
+
+  onEditRequested(): void {
+    this.startEditClient();
+  }
 
   startEditClient(): void {
     const c = this.booking().client;

@@ -34,121 +34,12 @@
 
   <!-- ── Cliente ───────────────────────────────────────────────────────────────── -->
   @if (!editingClient()) {
-    <div class="rf-card rf-client">
-      <!-- client info row -->
-      <div class="rf-client__row">
-        <div class="rf-client__left">
-          <div class="rf-avatar">{{ clientInitials() }}</div>
-          <div class="rf-client__info">
-            <span class="rf-client__name">
-              {{ booking().client?.first_name }} {{ booking().client?.last_name }}
-            </span>
-            <div class="rf-client__meta">
-              @if (booking().client?.email) {
-                <span><i class="pi pi-envelope"></i> {{ booking().client!.email }}</span>
-              }
-              @if (booking().client?.phone) {
-                <span><i class="pi pi-mobile"></i> {{ booking().client!.phone }}</span>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div class="rf-client__actions">
-          @if (booking().client?.phone) {
-            <a [href]="whatsappHref()" target="_blank" rel="noopener noreferrer" class="rf-wa-link">
-              <p-button
-                icon="pi pi-whatsapp"
-                severity="success"
-                variant="text"
-                [rounded]="true"
-                size="small"
-              />
-            </a>
-          }
-          <p-button
-            icon="pi pi-pencil"
-            variant="text"
-            severity="secondary"
-            [rounded]="true"
-            size="small"
-            (onClick)="startEditClient()"
-          />
-        </div>
-      </div>
-
-      <!-- notifications section -->
-      <div class="rf-notif">
-        <button type="button" class="rf-notif__header" (click)="notifOpen.set(!notifOpen())">
-          <span class="rf-notif__title">Notificaciones automáticas de cita y recordatorios</span>
-          <i
-            class="pi"
-            [class.pi-chevron-down]="!notifOpen()"
-            [class.pi-chevron-up]="notifOpen()"
-          ></i>
-        </button>
-
-        @if (!notifOpen()) {
-          <p class="rf-notif__subtitle">Vía Email y WhatsApp</p>
-        }
-
-        @if (notifOpen()) {
-          <div class="rf-notif__table">
-            <div class="rf-notif__row rf-notif__row--head">
-              <span>Tipo de mensajería</span>
-              <span>Email</span>
-              <span>Whatsapp</span>
-            </div>
-            <div class="rf-notif__row">
-              <div class="rf-notif__type">
-                <span>Notificaciones de cita</span>
-                <span class="rf-notif__tag">Inmediato</span>
-                <button
-                  type="button"
-                  class="rf-notif__info-btn"
-                  (click)="citaInfoPop.toggle($event)"
-                >
-                  <i class="pi pi-question-circle"></i>
-                </button>
-              </div>
-              <p-checkbox
-                [ngModel]="notifCitaEmail()"
-                (ngModelChange)="notifCitaEmail.set($event)"
-                [binary]="true"
-              />
-              <p-checkbox
-                [ngModel]="notifCitaWa()"
-                (ngModelChange)="notifCitaWa.set($event)"
-                [binary]="true"
-              />
-            </div>
-            <div class="rf-notif__row">
-              <div class="rf-notif__type">
-                <span>Recordatorio</span>
-                <span class="rf-notif__tag">Programado</span>
-              </div>
-              <p-checkbox
-                [ngModel]="reminderEmail()"
-                (ngModelChange)="reminderEmail.set($event)"
-                [binary]="true"
-              />
-              <p-checkbox
-                [ngModel]="reminderWa()"
-                (ngModelChange)="reminderWa.set($event)"
-                [binary]="true"
-              />
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-
-    <p-popover #citaInfoPop>
-      <p class="rf-notif__popover-text">
-        Por <strong>email</strong> se notifica la creación, edición y cancelación de la cita. Por
-        <strong>WhatsApp</strong> sólo se notifica la creación de la cita.
-      </p>
-    </p-popover>
+    <bw-patient-card
+      [client]="booking().client!"
+      [showNotifications]="true"
+      [showEdit]="true"
+      (editRequested)="onEditRequested()"
+    />
   } @else {
     <div class="rf-card rf-client-edit">
       <p class="rce-title">Editando información</p>
