@@ -233,6 +233,7 @@ export const ES: Record<string, string> = {
   // Booking form dialog — main
   'booking_form.title.create': 'Nueva Reserva',
   'booking_form.title.edit': 'Editar Reserva',
+  'booking_form.title.for_client': 'Reserva de {{name}}',
   'booking_form.repeat_btn': 'Repetir',
   'booking_form.repeat_active': 'Repetición activa',
   'booking_form.patient': 'Paciente',
