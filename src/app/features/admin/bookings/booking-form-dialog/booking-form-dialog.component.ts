@@ -27,19 +27,19 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Booking, Client, Service, ServicePack, Location, Provider, CreateBooking, BookingRepeat } from '@models';
+import { Booking, Client, Service, ServicePack, Provider, CreateBooking, BookingRepeat } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
-import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { LanguageService } from '@services/language.service';
 import { BookingUpdateService } from '@services/booking-update.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { RutDirective } from '@shared/validators/rut.directive';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
-import { forkJoin, Subject, of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
 import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
@@ -80,9 +80,11 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   private httpError      = inject(HttpErrorService);
   private messageService = inject(MessageService);
   private cdr            = inject(ChangeDetectorRef);
-  private dataCache      = inject(DataCacheService);
   readonly lang          = inject(LanguageService);
   private bookingUpdate  = inject(BookingUpdateService);
+
+  /** ReferenceStore: fuente única de datos maestros */
+  private refStore       = inject(ReferenceStore);
 
   @Input() initialDate?: Date;
   @Input() lockedProviderId: number | null = null;
@@ -91,13 +93,17 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   visible     = false;
   saving           = signal(false);
-  loadingData      = signal(false);
-  loadingProviders = signal(false);
+  providersLoading = signal(false);
   isEdit      = signal(false);
   showRepeatDialog  = false;
   showServicePanel  = false;
   showPatientPanel  = false;
   savingService     = signal(false);
+
+  /** Skeleton visible hasta que el store tenga datos Y los providers estén cargados */
+  readonly loadingData = computed(() =>
+    !this.refStore.allLoaded() || this.providersLoading(),
+  );
 
   // ── Similar-patients pre-check (duplicate detection) ────────────────────────
   similarClients       = signal<Client[]>([]);
@@ -119,10 +125,16 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   repeatAfterChecked = false;
   repeatUntilChecked = false;
 
-  clients = signal<Client[]>([]);
-  services = signal<(Service | ServicePack)[]>([]);
-  providers = signal<Provider[]>([]);
-  locations = signal<Location[]>([]);
+  // ── Datos desde ReferenceStore ──────────────────────────────────────────────
+  readonly clients   = this.refStore.clients;
+  readonly providers = signal<Provider[]>([]);  // location-filtered, se llena manualmente
+  readonly locations = this.refStore.locations;
+
+  /** Servicios + packs unificados (packs llevan flag _isPack) */
+  readonly services = computed<(Service | ServicePack)[]>(() => [
+    ...this.refStore.services(),
+    ...this.refStore.packs().map(p => ({ ...p, _isPack: true })),
+  ]);
 
   // ── Selected-client reactive mirror (signal + computed) ────────────────────
   readonly selectedClientId = signal<number | null>(null);
@@ -258,39 +270,38 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     };
   }
 
+  /**
+   * Carga los providers filtrados por location actual.
+   * El resto de datos maestros (clients, services, packs, locations)
+   * viene reactivamente desde ReferenceStore.
+   */
+  private loadProviders(): void {
+    this.providersLoading.set(true);
+    this.apiService
+      .getProviders(
+        this.formData.location_id
+          ? { location_id: this.formData.location_id }
+          : undefined,
+      )
+      .subscribe({
+        next: (data) => {
+          this.providers.set(data);
+          this.providersLoading.set(false);
+          if (this._pendingServiceId) {
+            this.selectedServiceKey = this.resolveServiceKey(this._pendingServiceId);
+            this._pendingServiceId = 0;
+          }
+        },
+        error: (err) => {
+          this.httpError.handle(err, 'cargar profesionales');
+          this.providersLoading.set(false);
+        },
+      });
+  }
+
+  /** Punto de entrada único para cargar datos al abrir el diálogo */
   loadFormData(): void {
-    this.loadingData.set(true);
-    this.loadingProviders.set(true);
-    forkJoin({
-      clients:   this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.apiService.getClients({ per_page: 100 }), CACHE_TTL.CLIENTS),
-      services:  this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.apiService.getServices(),                 CACHE_TTL.SERVICES),
-      packs:     this.dataCache.getOrFetchResource(CACHE_KEYS.PACKS,     () => this.apiService.getPacks(),                    CACHE_TTL.PACKS),
-      providers: this.apiService.getProviders(
-        this.formData.location_id ? { location_id: this.formData.location_id } : undefined
-      ),
-      locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.apiService.getLocations(),                CACHE_TTL.LOCATIONS),
-    }).subscribe({
-      next: ({ clients, services, packs, providers, locations }) => {
-        this.clients.set(clients);
-        this.services.set([
-          ...services,
-          ...(packs.data ?? []).map(p => ({ ...p, _isPack: true })),
-        ]);
-        this.providers.set(providers);
-        this.locations.set(locations);
-        if (this._pendingServiceId) {
-          this.selectedServiceKey = this.resolveServiceKey(this._pendingServiceId);
-          this._pendingServiceId = 0;
-        }
-        this.loadingData.set(false);
-        this.loadingProviders.set(false);
-      },
-      error: (err) => {
-        this.httpError.handle(err, 'cargar datos del formulario');
-        this.loadingData.set(false);
-        this.loadingProviders.set(false);
-      },
-    });
+    this.loadProviders();
   }
 
   openNew(booking?: Booking, initialDate?: Date, locationId?: number | null) {
@@ -410,11 +421,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   onLocationChange(): void {
     this.formData.provider_id = null;
-    this.loadingProviders.set(true);
-    this.apiService.getProviders({ location_id: this.formData.location_id }).subscribe({
-      next: (data) => { this.providers.set(data); this.loadingProviders.set(false); },
-      error: (err) => { this.httpError.handle(err, 'cargar profesionales'); this.loadingProviders.set(false); },
-    });
+    this.loadProviders();
   }
 
   onClientFilter(): void {}
@@ -516,7 +523,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
           this.showPatientPanel = false;
           this.formData.client_id = client.id;
           this.selectedClientId.set(client.id);
-          this.dataCache.invalidateCacheEntries(CACHE_KEYS.CLIENTS);
+          this.refStore.invalidateClients();
           this.loadFormData();
         },
         error: (err) => {
@@ -657,7 +664,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.apiService.createService(this.newService).subscribe({
       next: (service) => {
         this.messageService.add({ severity: 'success', summary: this.lang.t('toast.service_created.summary'), detail: service.name, life: 3000 });
-        this.dataCache.invalidateCacheEntries(CACHE_KEYS.SERVICES);
+        this.refStore.invalidateServices();
         this.savingService.set(false);
         this.showServicePanel = false;
         this.loadFormData();

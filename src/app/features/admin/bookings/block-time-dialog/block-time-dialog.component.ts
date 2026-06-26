@@ -14,10 +14,8 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constants/repeat-options';
-import { Location, Provider, CreateBlockedSlot, BlockedSlot } from '@models';
-import { forkJoin } from 'rxjs';
-import { BlockConflict, BlockConflictResponse } from '@models';
-import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
+import { Location, Provider, CreateBlockedSlot, BlockedSlot, BlockConflict, BlockConflictResponse } from '@models';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { LanguageService } from '@services/language.service';
 
 const BLOCK_BULK_THRESHOLD = 5;
@@ -44,9 +42,11 @@ const BLOCK_BULK_THRESHOLD = 5;
 export class BlockTimeDialogComponent implements OnInit {
   private messageService = inject(MessageService);
   private api        = inject(ApiService);
-  private dataCache  = inject(DataCacheService);
   private httpError  = inject(HttpErrorService);
   readonly lang      = inject(LanguageService);
+
+  /** ReferenceStore: datos maestros */
+  private refStore   = inject(ReferenceStore);
 
   @Input() lockedProviderId: number | null = null;
   @Input() lockedLocationId: number | null = null;
@@ -56,13 +56,15 @@ export class BlockTimeDialogComponent implements OnInit {
   editMode    = false;
   editingSlotId: number | null = null;
   saving      = signal(false);
-  loading     = signal(false);
   reason      = '';
+
+  /** Skeleton visible hasta que el store cargue */
+  readonly loading = computed(() => !this.refStore.allLoaded());
 
   // ── Scope (location/provider) ────────────────────────────────────────────
   scope = signal<'location' | 'provider'>('location');
-  locations = signal<Location[]>([]);
-  providers = signal<Provider[]>([]);
+  readonly locations = this.refStore.locations;
+  readonly providers = this.refStore.providers;
   
   locationId: number | null = null;
   providerId: number | null = null;
@@ -117,19 +119,9 @@ export class BlockTimeDialogComponent implements OnInit {
   // Lifecycle
   ngOnInit(): void { /* datos cargados al abrir, no al montar */ }
 
+  /** Los datos vienen reactivamente desde ReferenceStore */
   private loadFormData(): void {
-    this.loading.set(true);
-    forkJoin({
-      locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(), CACHE_TTL.LOCATIONS),
-      providers: this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(), CACHE_TTL.PROVIDERS),
-    }).subscribe({
-      next: ({ locations, providers }) => {
-        this.locations.set(locations);
-        this.providers.set(providers);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    // No-op: el store ya carga todo en onInit
   }
 
   onScopeChange(): void {

@@ -8,7 +8,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { SkeletonModule } from 'primeng/skeleton';
-import { forkJoin } from 'rxjs';
+import { of } from 'rxjs';
 import { ToastService } from '@shared/components/toast-modal/toast.service';
 import {
   AvailabilityService,
@@ -17,7 +17,7 @@ import {
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
-import { Location } from '@models';
+import { ReferenceStore } from '@core/stores/reference.store';
 
 const DAYS_OF_WEEK = [
   { label: 'Domingo', value: 0 },
@@ -54,7 +54,8 @@ export class ProviderAvailabilityComponent implements OnInit {
   private auth = inject(AuthService);
 
   loading = signal(true);
-  locations = signal<Location[]>([]);
+  /** Locations desde ReferenceStore */
+  readonly locations = inject(ReferenceStore).locations;
   availabilitySlots = signal<ProviderAvailabilitySlot[]>([]);
   saving = signal(false);
   showAddDialog = false;
@@ -76,14 +77,13 @@ export class ProviderAvailabilityComponent implements OnInit {
       this.newSlot.provider_id = providerId;
     }
 
-    forkJoin({
-      locations:    this.api.getLocations(),
-      availability: providerId
-        ? this.availabilityService.getProviderAvailability(providerId)
-        : Promise.resolve([]),
-    }).subscribe({
-      next: ({ locations, availability }) => {
-        this.locations.set(locations);
+    // Locations vienen reactivamente desde ReferenceStore
+    const availability$ = providerId
+      ? this.availabilityService.getProviderAvailability(providerId)
+      : of([] as ProviderAvailabilitySlot[]);
+
+    availability$.subscribe({
+      next: (availability) => {
         this.availabilitySlots.set(availability as ProviderAvailabilitySlot[]);
         this.loading.set(false);
       },

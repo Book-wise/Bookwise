@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { SkeletonModule } from 'primeng/skeleton';
-import { forkJoin } from 'rxjs';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
-import { Location, Provider } from '@models';
+import { ReferenceStore } from '@core/stores/reference.store';
 
 interface ChartDataset { data: number[]; backgroundColor?: string | string[]; borderColor?: string; fill?: boolean; tension?: number; label?: string }
 interface DashboardChartData { labels: string[]; datasets: ChartDataset[] }
@@ -32,11 +31,16 @@ export class AdminDashboardComponent implements OnInit {
   private httpError = inject(HttpErrorService);
   private auth      = inject(AuthService);
 
-  loading        = signal(true);
-  locations      = signal<Location[]>([]);
-  providers      = signal<Provider[]>([]);
-  todayBookings  = signal(0);
-  pendingBookings = signal(0);
+  /** ReferenceStore: datos maestros reactivos */
+  private refStore  = inject(ReferenceStore);
+
+  loading         = signal(true);
+  todayBookings   = signal(0);
+  pendingBookings  = signal(0);
+
+  /** Datos desde ReferenceStore */
+  readonly locations = this.refStore.locations;
+  readonly providers = this.refStore.providers;
 
   readonly userName = computed(() => this.auth.user()?.name ?? 'Usuario');
 
@@ -64,14 +68,9 @@ export class AdminDashboardComponent implements OnInit {
 
   loadData(): void {
     this.loading.set(true);
-    forkJoin({
-      locations: this.api.getLocations(),
-      providers: this.api.getProviders(),
-      bookings:  this.api.getBookings({ per_page: 100 }),
-    }).subscribe({
-      next: ({ locations, providers, bookings }) => {
-        this.locations.set(locations);
-        this.providers.set(providers);
+    // Providers y locations vienen reactivamente desde ReferenceStore
+    this.api.getBookings({ per_page: 100 }).subscribe({
+      next: (bookings) => {
         const list = bookings.data ?? [];
         const today = new Date().toISOString().split('T')[0];
         this.todayBookings.set(list.filter(b => b.start_time.startsWith(today)).length);
