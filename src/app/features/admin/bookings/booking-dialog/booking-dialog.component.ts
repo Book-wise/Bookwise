@@ -12,15 +12,14 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Booking, Client, Service, Provider, Location, CreateBooking } from '@models';
+import { Booking, Client, Service, Provider, CreateBooking } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
-import { DataCacheService, CACHE_KEYS, CACHE_TTL } from '@services/data-cache.service';
 import { BookingUpdateService } from '@services/booking-update.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
 import { CURRENCY_CONFIG, formatCLP } from '@shared/config/currency.config';
-import { forkJoin } from 'rxjs';
 
 export interface BookingFormData {
   id?: number;
@@ -60,21 +59,25 @@ export class BookingDialogComponent implements OnInit {
 
   private api           = inject(ApiService);
   private httpError     = inject(HttpErrorService);
-  private dataCache     = inject(DataCacheService);
   private messageService = inject(MessageService);
   readonly lang         = inject(LanguageService);
   private bookingUpdate = inject(BookingUpdateService);
 
+  /** ReferenceStore: datos maestros */
+  private refStore      = inject(ReferenceStore);
+
   visible = false;
   saving = signal(false);
-  loading = signal(false);
   isEdit = signal(false);
 
-  // Options
-  clients = signal<Client[]>([]);
-  services = signal<Service[]>([]);
-  providers = signal<Provider[]>([]);
-  locations = signal<Location[]>([]);
+  /** Skeleton visible hasta que el store cargue */
+  readonly loading = computed(() => !this.refStore.allLoaded());
+
+  // ── Datos desde ReferenceStore ──────────────────────────────────
+  readonly clients   = this.refStore.clients;
+  readonly services  = this.refStore.services;
+  readonly providers = this.refStore.providers;
+  readonly locations = this.refStore.locations;
   private readonly BD_STATUS_KEYS = [
     { key: 'bd.status.1', value: 1 },
     { key: 'bd.status.2', value: 2 },
@@ -139,25 +142,9 @@ export class BookingDialogComponent implements OnInit {
     };
   }
 
+  /** Los datos vienen reactivamente desde ReferenceStore */
   loadFormData(): void {
-    this.loading.set(true);
-    forkJoin({
-      clients:   this.dataCache.getOrFetchResource(CACHE_KEYS.CLIENTS,   () => this.api.getClients({ per_page: 500 }), CACHE_TTL.CLIENTS),
-      services:  this.dataCache.getOrFetchResource(CACHE_KEYS.SERVICES,  () => this.api.getServices(),                 CACHE_TTL.SERVICES),
-      providers: this.dataCache.getOrFetchResource(CACHE_KEYS.PROVIDERS, () => this.api.getProviders(),                CACHE_TTL.PROVIDERS),
-      locations: this.dataCache.getOrFetchResource(CACHE_KEYS.LOCATIONS, () => this.api.getLocations(),                CACHE_TTL.LOCATIONS),
-    }).subscribe({
-      next: ({ clients, services, providers, locations }) => {
-        this.clients.set(clients);
-        this.services.set(services);
-        this.providers.set(providers);
-        this.locations.set(locations);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-      },
-    });
+    // No-op: el store ya carga todo en onInit
   }
 
   openNew(booking?: Booking) {

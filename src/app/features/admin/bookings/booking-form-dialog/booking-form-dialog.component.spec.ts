@@ -4,7 +4,8 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { BookingFormDialogComponent } from './booking-form-dialog.component';
 import { ApiService } from '@services/api.service';
-import { DataCacheService } from '@services/data-cache.service';
+import { signal } from '@angular/core';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { BookingUpdateService } from '@services/booking-update.service';
@@ -16,6 +17,11 @@ import type { Client } from '@models';
 describe('BookingFormDialogComponent', () => {
   let component: BookingFormDialogComponent;
   let fixture: ComponentFixture<BookingFormDialogComponent>;
+
+  /** Helper para setear señales del store mock (el tipo Signal<T> del SignalStore es readonly para TS) */
+  function setRefSignal<T>(signal: import('@angular/core').Signal<T>, value: T) {
+    (signal as unknown as import('@angular/core').WritableSignal<T>).set(value);
+  }
 
   beforeEach(async () => {
     const apiServiceMock = {
@@ -31,9 +37,14 @@ describe('BookingFormDialogComponent', () => {
       getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
     };
 
-    const dataCacheMock = {
-      getOrFetchResource: vi.fn((_key: string, fetchFn: () => unknown) => fetchFn()),
-      invalidateCacheEntries: vi.fn(),
+    const refStoreMock = {
+      clients: signal([] as Client[]),
+      locations: signal([]),
+      services: signal([]),
+      packs: signal([]),
+      allLoaded: () => true,
+      invalidateClients: vi.fn(),
+      invalidateServices: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -41,7 +52,7 @@ describe('BookingFormDialogComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         { provide: ApiService, useValue: apiServiceMock },
-        { provide: DataCacheService, useValue: dataCacheMock },
+        { provide: ReferenceStore, useValue: refStoreMock },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         { provide: BookingUpdateService, useValue: { notify: vi.fn() } },
         { provide: MessageService, useValue: { add: vi.fn() } },
@@ -640,7 +651,7 @@ describe('BookingFormDialogComponent', () => {
     });
 
     it('onClientChange() updates selectedClientId signal from formData.client_id', () => {
-      component.clients.set([makeClient({ id: 42 })]);
+      setRefSignal(component.clients, [makeClient({ id: 42 })]);
       component.formData.client_id = 42;
 
       component.onClientChange();
@@ -650,7 +661,7 @@ describe('BookingFormDialogComponent', () => {
 
     it('selectedClient() returns the matching Client object after onClientChange()', () => {
       const client = makeClient({ id: 7, first_name: 'Juan', last_name: 'Pérez' });
-      component.clients.set([client]);
+      setRefSignal(component.clients, [client]);
       component.formData.client_id = 7;
 
       component.onClientChange();
@@ -659,7 +670,7 @@ describe('BookingFormDialogComponent', () => {
     });
 
     it('selectedClient() returns null when clients list does not include the id', () => {
-      component.clients.set([makeClient({ id: 1 })]);
+      setRefSignal(component.clients, [makeClient({ id: 1 })]);
       component.formData.client_id = 999;
 
       component.onClientChange();
@@ -668,7 +679,7 @@ describe('BookingFormDialogComponent', () => {
     });
 
     it('onClientChange() with falsy client_id sets selectedClientId to null', () => {
-      component.clients.set([makeClient({ id: 5 })]);
+      setRefSignal(component.clients, [makeClient({ id: 5 })]);
       component.formData.client_id = 5;
       component.onClientChange();
       expect(component.selectedClientId()).toBe(5);
@@ -681,7 +692,7 @@ describe('BookingFormDialogComponent', () => {
 
     it('dialogTitle() returns "Reserva de Juan Pérez" when selectedClient() is non-null', () => {
       const client = makeClient({ id: 3, first_name: 'Juan', last_name: 'Pérez' });
-      component.clients.set([client]);
+      setRefSignal(component.clients, [client]);
       component.formData.client_id = 3;
       component.onClientChange();
 
@@ -712,7 +723,7 @@ describe('BookingFormDialogComponent', () => {
     it('bw-patient-card appears when a valid client is selected via onClientChange()', async () => {
       component.visible = true;
       const client = makeClient({ id: 42 });
-      component.clients.set([client]);
+      setRefSignal(component.clients, [client]);
       component.formData.client_id = 42;
       component.onClientChange();
 
@@ -726,7 +737,7 @@ describe('BookingFormDialogComponent', () => {
     it('bw-patient-card is hidden again after onClientChange(0)', async () => {
       component.visible = true;
       const client = makeClient({ id: 42 });
-      component.clients.set([client]);
+      setRefSignal(component.clients, [client]);
       component.formData.client_id = 42;
       component.onClientChange();
 

@@ -178,7 +178,7 @@
           [(ngModel)]="formData.provider_id"
           [placeholder]="lang.t('booking_form.provider_placeholder')"
           [showClear]="true"
-          [loading]="loadingProviders()"
+          [loading]="providersLoading()"
           class="w-full">
         </p-select>
       </div>
