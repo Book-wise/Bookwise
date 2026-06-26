@@ -35,6 +35,7 @@ import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-di
 import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { forkJoin } from 'rxjs';
 import {
   Calendar, CalendarOptions, EventClickArg, DateSelectArg,
@@ -88,6 +89,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly lang         = inject(LanguageService);
   private bookingUpdate = inject(BookingUpdateService);
   private destroyRef    = inject(DestroyRef);
+  private refStore      = inject(ReferenceStore);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
 
