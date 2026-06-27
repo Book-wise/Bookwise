@@ -331,7 +331,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
         if (response.conflicts?.length) {
           response.conflicts!.forEach((c: BlockConflict) => {
             const providerName = `${c.provider.first_name} ${c.provider.last_name}`;
-            const conflictTime = new Date(c.conflict.start_time).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+            const conflictTime = new Date(c.conflict.start_time).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit' });
             const detail = c.conflict.type === 'booking'
               ? this.lang.t('toast.block_conflict.booking', { service: c.conflict.service ?? '', client: c.conflict.client ?? '', time: conflictTime })
               : this.lang.t('toast.block_conflict.blocked', { time: conflictTime });
@@ -403,7 +403,20 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       return;
     }
     this.saving.set(true);
-    const fmt = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19);
+    const fmt = (d: Date) => {
+      const parts = new Intl.DateTimeFormat('es-CL', {
+        timeZone: 'America/Santiago',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).formatToParts(d);
+      const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+      return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
+    };
     this.api.updateBlockedSlot(this.editingSlotId, {
       start_time: fmt(this.startDate()),
       end_time:   fmt(this.endDate()),
