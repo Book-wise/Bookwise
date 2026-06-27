@@ -272,8 +272,10 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
         dateClick: (info) => this.ngZone.run(() => {
           this.removeSlotPreview();
 
-          const start = info.date;
+          // info.dateStr is ISO8601 with CLT offset; parse for correct absolute timestamps.
+          // Keep info.date (stripped) for preview rendering — FullCalendar renders by local wall clock.
           const previewMs = this.getPreviewDuration();
+          const start = new Date(info.dateStr);
           const end = new Date(start.getTime() + previewMs);
 
           this.selectedDate = start;
@@ -289,8 +291,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
           this.ngZone.runOutsideAngular(() => {
             this.calendar!.addEvent({
               id: this.SLOT_PREVIEW_ID,
-              start,
-              end,
+              start: info.date,
+              end: new Date(info.date.getTime() + previewMs),
               classNames: ['bw-slot-preview'],
               editable: false,
             });
@@ -518,6 +520,10 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private handleEventClick(clickInfo: EventClickArg): void {
+    // Dismiss tooltip on click — same-element click is not "outside" for PrimeNG dismissable
+    this.eventTooltip?.hide();
+    this.hoveredBooking.set(null);
+
     if (clickInfo.event.id === this.SLOT_PREVIEW_ID) return;
     if (clickInfo.event.extendedProps['isBlocked']) {
       const slot = clickInfo.event.extendedProps['blockedSlot'];
@@ -546,8 +552,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private handleDateSelect(selectInfo: DateSelectArg): void {
-    this.selectedDate = selectInfo.start;
-    this.selectedEndDate = selectInfo.end;
+    this.selectedDate = new Date(selectInfo.startStr);
+    this.selectedEndDate = selectInfo.endStr ? new Date(selectInfo.endStr) : null;
     if (selectInfo.jsEvent) {
       this.slotMenuPosition = { x: selectInfo.jsEvent.clientX, y: selectInfo.jsEvent.clientY };
       this.showSlotMenu.set(true);
