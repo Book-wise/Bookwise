@@ -621,6 +621,17 @@ body.dark-theme {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.detail-sep {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+.detail-rut {
+  font-size: 0.875rem !important;
+  color: var(--text-color-secondary) !important;
 }
 
 .whatsapp-link {

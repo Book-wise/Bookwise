@@ -32,7 +32,7 @@ import { BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-sta
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { BookingUpdateService } from '@services/booking-update.service';
+
 import { HttpErrorService } from '@services/http-error.service';
 import {
   Calendar, CalendarOptions, EventClickArg, DateSelectArg,
@@ -73,7 +73,6 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   private ngZone         = inject(NgZone);
   readonly lang          = inject(LanguageService);
   readonly store         = inject(BookingStore);
-  private bookingUpdate  = inject(BookingUpdateService);
   private httpError      = inject(HttpErrorService);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
@@ -113,7 +112,6 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   isMobile = signal(false);
 
-  selectedBooking = signal<Booking | null>(null);
   showEventDialog = signal(false);
 
   calendarOptions: CalendarOptions = {
@@ -172,23 +170,16 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     });
 
     // Watch store state to manage loading visual and refresh calendar
+    // Auto-refetches FullCalendar whenever eventsForCalendar changes
     effect(() => {
       this.store.eventsForCalendar(); // track reactivity
       const loading = this.store.anyLoading();
 
       if (!this.calendar) return;
 
-      // When a store async load completes, hide skeleton and refetch calendar
-      if (!loading && this.refreshScheduled) {
-        this.refreshScheduled = false;
-        this.ngZone.run(() => {
-          this.loading.set(false);
-          this.calendar!.refetchEvents();
-        });
-      }
-
-      if (loading) {
-        this.refreshScheduled = true;
+      if (!loading) {
+        this.loading.set(false);
+        this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
       }
     });
 
@@ -224,7 +215,6 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnInit(): void {
     this.checkViewport();
-    this.bookingUpdate.updated$.subscribe(() => this.onBookingSaved());
   }
 
   ngAfterViewInit(): void {
@@ -532,12 +522,12 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       return;
     }
     const booking = clickInfo.event.extendedProps['booking'] as Booking;
-    this.selectedBooking.set(booking);
+    this.store.setSelectedBookingId(booking.id);
     this.showEventDialog.set(true);
   }
 
   editBooking(): void {
-    const booking = this.selectedBooking();
+    const booking = this.store.selectedBooking();
     if (!booking) return;
     this.showEventDialog.set(false);
     setTimeout(() => {
@@ -581,7 +571,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   closeDialog(): void {
     this.showEventDialog.set(false);
-    this.selectedBooking.set(null);
+    this.store.setSelectedBookingId(null);
   }
 
   getStatusSeverity(

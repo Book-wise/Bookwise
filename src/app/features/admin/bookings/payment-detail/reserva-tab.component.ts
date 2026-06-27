@@ -1,8 +1,8 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs';
+import { switchMap, of } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -12,9 +12,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PopoverModule } from 'primeng/popover';
 import { Booking } from '@models';
+import { BookingStore } from '@core/stores/booking.store';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
-import { BookingUpdateService } from '@services/booking-update.service';
+import { MessageService } from 'primeng/api';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { PatientCardComponent } from '@shared/components/patient-card/patient-card.component';
 
@@ -26,13 +27,12 @@ import { PatientCardComponent } from '@shared/components/patient-card/patient-ca
   styleUrl: './reserva-tab.component.scss',
 })
 export class ReservaTabComponent {
-  private readonly api           = inject(ApiService);
-  private readonly httpError     = inject(HttpErrorService);
-  private readonly bookingUpdate = inject(BookingUpdateService);
+  private readonly api            = inject(ApiService);
+  private readonly httpError      = inject(HttpErrorService);
+  private readonly messageService = inject(MessageService);
+  readonly store          = inject(BookingStore);
 
-  readonly booking        = input.required<Booking>();
-  readonly statusId       = input<number>(0);
-  readonly bookingUpdated = output<Booking>();
+  readonly statusId = input<number>(0);
 
   // ── Form state ────────────────────────────────────────────────────────────────
 
@@ -66,10 +66,11 @@ export class ReservaTabComponent {
   // ── Remote data ───────────────────────────────────────────────────────────────
 
   readonly providers = toSignal(
-    toObservable(this.booking).pipe(
-      switchMap(b => this.api.getProviders({
-        location_id: b.location_id ?? b.location?.id,
-      }))
+    toObservable(this.store.selectedBooking).pipe(
+      switchMap(b => {
+        if (!b) return of([]);
+        return this.api.getProviders({ location_id: b.location_id ?? b.location?.id });
+      }),
     ),
     { initialValue: [] as any[] }
   );
@@ -84,23 +85,13 @@ export class ReservaTabComponent {
   // ── Derived ───────────────────────────────────────────────────────────────────
 
   readonly serviceDisabled = computed(() => {
-    const p = this.booking().payment;
+    const booking = this.store.selectedBooking();
+    if (!booking) return false;
+    const p = booking.payment;
     return !!p && Object.keys(p as object).length > 0;
   });
 
   // ── CLT helpers ───────────────────────────────────────────────────────────────
-
-  private cltParts(date: Date): { year: string; month: string; day: string } {
-    const parts = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour12: false,
-    }).formatToParts(date);
-    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
-    return { year: get('year'), month: get('month'), day: get('day') };
-  }
 
   private cltTime(date: Date): { hour: number; minute: number } {
     const f = new Intl.DateTimeFormat('es-CL', {
@@ -116,20 +107,30 @@ export class ReservaTabComponent {
   }
 
   private fmtCLT(date: Date, hour: number, minute: number): string {
-    const d = this.cltParts(date);
-    return `${d.year}-${d.month}-${d.day} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────────
 
   constructor() {
+    // Only populate form fields when a NEW booking is selected (id changes).
+    // selectedBooking() is read via untracked so mergeBooking/refreshBooking
+    // after save does NOT re-trigger this effect and overwrite user edits.
     effect(() => {
-      const b = this.booking();
+      const id = this.store.selectedBookingId();
+      if (id === null) return;
+      const b = untracked(() => this.store.selectedBooking());
+      if (!b) return;
+
       const start = new Date(b.start_time);
       const end   = new Date(b.end_time);
-      this.selectedDate.set(start);
       const st = this.cltTime(start);
       const et = this.cltTime(end);
+
+      this.selectedDate.set(start);
       this.startHour.set(st.hour);
       this.startMinute.set(st.minute);
       this.endHour.set(et.hour);
@@ -141,8 +142,9 @@ export class ReservaTabComponent {
 
   // ── Save ──────────────────────────────────────────────────────────────────────
 
-  save(): void {
-    const b    = this.booking();
+  saveBookingTime(): void {
+    const b    = this.store.selectedBooking();
+    if (!b) return;
     const date = this.selectedDate();
 
     this.saving.set(true);
@@ -157,8 +159,13 @@ export class ReservaTabComponent {
         this.api.getBooking(b.id).subscribe({
           next: (refreshed) => {
             this.saving.set(false);
-            this.bookingUpdated.emit(refreshed);
-            this.bookingUpdate.notify(refreshed);
+            this.store.mergeBooking(refreshed);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Reserva actualizada',
+              detail: 'Los cambios se guardaron correctamente.',
+              life: 3000,
+            });
           },
           error: () => this.saving.set(false),
         });
@@ -177,7 +184,8 @@ export class ReservaTabComponent {
   }
 
   startEditClient(): void {
-    const c = this.booking().client;
+    const booking = this.store.selectedBooking();
+    const c = booking?.client;
     this.editFirstName.set(c?.first_name ?? '');
     this.editLastName.set(c?.last_name ?? '');
     this.editEmail.set(c?.email ?? '');
@@ -191,9 +199,10 @@ export class ReservaTabComponent {
     this.editingClient.set(false);
   }
 
-  saveClient(): void {
-    const clientId = this.booking().client?.id;
-    if (!clientId) return;
+  savePatientData(): void {
+    const booking = this.store.selectedBooking();
+    const clientId = booking?.client?.id;
+    if (!clientId || !booking) return;
 
     this.savingClient.set(true);
     this.api.updateClient(clientId, {
@@ -203,12 +212,11 @@ export class ReservaTabComponent {
       phone:      this.editPhone() || undefined,
     }).subscribe({
       next: () => {
-        this.api.getBooking(this.booking().id).subscribe({
+        this.api.getBooking(booking.id).subscribe({
           next: (refreshed) => {
             this.savingClient.set(false);
             this.editingClient.set(false);
-            this.bookingUpdated.emit(refreshed);
-            this.bookingUpdate.notify(refreshed);
+            this.store.mergeBooking(refreshed);
           },
           error: () => this.savingClient.set(false),
         });

@@ -82,6 +82,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeAdminUser());
@@ -115,6 +116,14 @@ describe('BookingStore', () => {
     it('eventsForCalendar is empty', () => {
       expect(store.eventsForCalendar()).toEqual([]);
     });
+
+    it('selectedBookingId is null initially', () => {
+      expect(store.selectedBookingId()).toBeNull();
+    });
+
+    it('selectedBooking is null initially', () => {
+      expect(store.selectedBooking()).toBeNull();
+    });
   });
 
   // ── Role scoping ───────────────────────────────────────────────────
@@ -128,6 +137,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeProviderUser());
@@ -145,12 +155,97 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(null);
       createStore();
 
       expect(store.filters().scopeProviderId).toBeNull();
+    });
+  });
+
+  // ── Selected booking ─────────────────────────────────────────────
+
+  describe('selected booking', () => {
+    const booking1 = makeBooking({ id: 1 });
+    const booking2 = makeBooking({ id: 2 });
+
+    beforeEach(() => {
+      api = {
+        getBookings: vi.fn().mockReturnValue(of({ data: [booking1, booking2] })),
+        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
+        createBooking: vi.fn(),
+        updateBooking: vi.fn(),
+        cancelBooking: vi.fn(),
+        createBlockedSlot: vi.fn(),
+        deleteBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
+      };
+      authUser = signal(makeAdminUser());
+      createStore();
+      store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
+    });
+
+    it('selectBooking sets selectedBookingId and selectedBooking returns the booking', () => {
+      store.selectBooking(booking1);
+      expect(store.selectedBookingId()).toBe(1);
+      const selected1 = store.selectedBooking();
+      expect(selected1).not.toBeNull();
+      expect(selected1!.id).toBe(1);
+      expect(selected1!.client!.first_name).toBe('Ana');
+    });
+
+    it('setSelectedBookingId updates selectedBookingId', () => {
+      store.setSelectedBookingId(2);
+      expect(store.selectedBookingId()).toBe(2);
+      const selected2 = store.selectedBooking();
+      expect(selected2).not.toBeNull();
+      expect(selected2!.id).toBe(2);
+    });
+
+    it('setSelectedBookingId(null) clears selection', () => {
+      store.selectBooking(booking1);
+      store.setSelectedBookingId(null);
+      expect(store.selectedBookingId()).toBeNull();
+      expect(store.selectedBooking()).toBeNull();
+    });
+
+    it('selectedBooking returns null for non-existent id', () => {
+      store.setSelectedBookingId(999);
+      expect(store.selectedBooking()).toBeNull();
+    });
+
+    it('mergeBooking replaces a booking in the array', () => {
+      store.selectBooking(booking1);
+      const updated = makeBooking({ id: 1, start_time: '2026-06-28T14:00:00Z', client: { id: 10, first_name: 'Maria', last_name: 'López', email: 'maria@test.com', active: true } });
+      store.mergeBooking(updated);
+
+      expect(store.bookings()).toHaveLength(2);
+      expect(store.bookings()[0].start_time).toBe('2026-06-28T14:00:00Z');
+      const selected = store.selectedBooking();
+      expect(selected).not.toBeNull();
+      expect(selected!.client!.first_name).toBe('Maria');
+    });
+
+    it('mergeBooking does not affect other bookings', () => {
+      store.selectBooking(booking2);
+      const updated = makeBooking({ id: 1, start_time: '2026-06-28T14:00:00Z' });
+      store.mergeBooking(updated);
+
+      expect(store.selectedBooking()?.start_time).toBe(booking2.start_time);
+    });
+
+    it('refreshBooking re-fetches and merges', () => {
+      const refreshed = makeBooking({ id: 1, notes: 'Refreshed note' });
+      api.getBooking.mockReturnValue(of(refreshed));
+      store.selectBooking(booking1);
+
+      store.refreshBooking(1);
+
+      expect(api.getBooking).toHaveBeenCalledWith(1);
+      // optimistic: booked was updated via merge
+      expect(store.bookings().find(b => b.id === 1)?.notes).toBe('Refreshed note');
     });
   });
 
@@ -169,6 +264,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeAdminUser());
@@ -225,6 +321,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeAdminUser());
@@ -259,6 +356,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeAdminUser());
@@ -292,6 +390,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeAdminUser());
@@ -390,6 +489,7 @@ describe('BookingStore', () => {
         updateBooking: vi.fn(),
         cancelBooking: vi.fn(),
         createBlockedSlot: vi.fn(),
+        getBooking: vi.fn(),
         deleteBlockedSlot: vi.fn(),
       };
       authUser = signal(makeAdminUser());

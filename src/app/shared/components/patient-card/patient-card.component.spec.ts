@@ -3,6 +3,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { PatientCardComponent } from './patient-card.component';
+import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { ApiService } from '@services/api.service';
 import { LanguageService } from '@services/language.service';
 import type { Client, ClientPack, Booking, Sale } from '@models';
@@ -76,6 +77,7 @@ describe('PatientCardComponent', () => {
       imports: [PatientCardComponent],
       providers: [
         provideZonelessChangeDetection(),
+        ClientDetailStore,
         { provide: ApiService, useValue: apiServiceMock },
         LanguageService,
       ],
@@ -190,10 +192,10 @@ describe('PatientCardComponent', () => {
     });
   });
 
-  // ── lazy load ────────────────────────────────────────────────────────────────
+  // ── lazy load via store ──────────────────────────────────────────────────────
 
   describe('lazy load — sales (prepago tab)', () => {
-    it('selectTab("prepago") triggers api.getSales with client_id', () => {
+    it('selectTab("prepago") triggers api.getSales via store', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 42 }));
       apiServiceMock.getSales.mockReturnValue(of({ data: [makeSale()], meta: {} }));
       apiServiceMock.getSales.mockClear();
@@ -216,19 +218,19 @@ describe('PatientCardComponent', () => {
       expect(apiServiceMock.getSales).not.toHaveBeenCalled();
     });
 
-    it('populates sales() signal from response.data', () => {
+    it('populates store sales state from response.data', () => {
       const sale = makeSale({ id: 99 });
       apiServiceMock.getSales.mockReturnValue(of({ data: [sale], meta: {} }));
 
       component.selectTab('prepago');
 
-      expect(component.sales()).toHaveLength(1);
-      expect(component.sales()[0].id).toBe(99);
+      expect(component.detailStore.sales().data).toHaveLength(1);
+      expect(component.detailStore.sales().data[0].id).toBe(99);
     });
   });
 
   describe('lazy load — recent bookings (recientes tab)', () => {
-    it('selectTab("recientes") triggers api.getBookings with client_id and per_page 10', () => {
+    it('selectTab("recientes") triggers api.getBookings via store', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 7 }));
       apiServiceMock.getBookings.mockReturnValue(of({ data: [], meta: {} }));
       apiServiceMock.getBookings.mockClear();
@@ -251,47 +253,52 @@ describe('PatientCardComponent', () => {
       expect(apiServiceMock.getBookings).not.toHaveBeenCalled();
     });
 
-    it('populates recent() signal from response.data', () => {
+    it('populates store recent state from response.data', () => {
       const booking = makeBooking({ id: 55 });
       apiServiceMock.getBookings.mockReturnValue(of({ data: [booking], meta: {} }));
 
       component.selectTab('recientes');
 
-      expect(component.recent()).toHaveLength(1);
-      expect(component.recent()[0].id).toBe(55);
+      expect(component.detailStore.recent().data).toHaveLength(1);
+      expect(component.detailStore.recent().data[0].id).toBe(55);
     });
   });
 
   // ── badge counts ──────────────────────────────────────────────────────────────
 
   describe('badge counts', () => {
-    it('plansCount() counts only active packs', () => {
+    it('plansCount() counts only active packs when loaded via store', () => {
       apiServiceMock.getClientPacks.mockReturnValue(of([
         makePack({ id: 1, status: 'active' }),
         makePack({ id: 2, status: 'active' }),
         makePack({ id: 3, status: 'expired' }),
       ]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
-      // trigger ngOnInit to load packs
-      fixture.detectChanges();
+
+      component.selectTab('planes');
+
       expect(component.plansCount()).toBe(2);
     });
 
-    it('sessionsCount() sums used_sessions of active packs', () => {
+    it('sessionsCount() sums used_sessions of active packs via store', () => {
       apiServiceMock.getClientPacks.mockReturnValue(of([
         makePack({ id: 1, status: 'active', used_sessions: 3 }),
         makePack({ id: 2, status: 'active', used_sessions: 5 }),
         makePack({ id: 3, status: 'expired', used_sessions: 10 }),
       ]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
-      fixture.detectChanges();
+
+      component.selectTab('planes');
+
       expect(component.sessionsCount()).toBe(8);
     });
 
     it('plansCount() and sessionsCount() return 0 when packs are empty', () => {
       apiServiceMock.getClientPacks.mockReturnValue(of([]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
-      fixture.detectChanges();
+
+      component.selectTab('planes');
+
       expect(component.plansCount()).toBe(0);
       expect(component.sessionsCount()).toBe(0);
     });

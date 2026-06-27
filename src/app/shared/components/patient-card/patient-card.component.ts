@@ -1,13 +1,13 @@
-import { Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PopoverModule } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
-import { Client, ClientPack, Sale, Booking } from '@models';
-import { ApiService } from '@services/api.service';
+import { Client } from '@models';
 import { LanguageService } from '@services/language.service';
+import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { STATUS_COLOR_MAP } from '@features/admin/bookings/constants/booking-statuses';
 
 export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
@@ -19,8 +19,8 @@ export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
   templateUrl: './patient-card.component.html',
   styleUrl: './patient-card.component.scss',
 })
-export class PatientCardComponent implements OnInit {
-  private readonly api = inject(ApiService);
+export class PatientCardComponent {
+  readonly detailStore = inject(ClientDetailStore);
   readonly lang = inject(LanguageService);
 
   // expose to template
@@ -48,24 +48,6 @@ export class PatientCardComponent implements OnInit {
   readonly reminderEmail   = signal(false);
   readonly reminderWa      = signal(false);
 
-  // ── Packs data (eager) ────────────────────────────────────────────────────────
-
-  readonly packs        = signal<ClientPack[]>([]);
-  readonly packsLoading = signal(false);
-  readonly packsLoaded  = signal(false);
-
-  // ── Sales data (lazy) ─────────────────────────────────────────────────────────
-
-  readonly sales        = signal<Sale[]>([]);
-  readonly salesLoading = signal(false);
-  readonly salesLoaded  = signal(false);
-
-  // ── Recent bookings data (lazy) ───────────────────────────────────────────────
-
-  readonly recent        = signal<Booking[]>([]);
-  readonly recentLoading = signal(false);
-  readonly recentLoaded  = signal(false);
-
   // ── Computed: identity ────────────────────────────────────────────────────────
 
   readonly initials = computed(() => {
@@ -83,58 +65,44 @@ export class PatientCardComponent implements OnInit {
     return !c.email || !c.phone;
   });
 
-  // ── Computed: badge counts ────────────────────────────────────────────────────
+  // ── Computed: badge counts (from store) ──────────────────────────────────────
 
   readonly plansCount = computed(() =>
-    this.packs().filter(p => p.status === 'active').length
+    this.detailStore.packs().data.filter(p => p.status === 'active').length
   );
 
   readonly sessionsCount = computed(() =>
-    this.packs()
+    this.detailStore.packs().data
       .filter(p => p.status === 'active')
       .reduce((sum, p) => sum + (p.used_sessions ?? 0), 0)
   );
 
   readonly prepaidCount = computed(() =>
-    this.salesLoaded() ? this.sales().length : null
+    this.detailStore.sales().loaded ? this.detailStore.sales().data.length : null
   );
 
   readonly recentCount = computed(() =>
-    this.recentLoaded() ? this.recent().length : null
+    this.detailStore.recent().loaded ? this.detailStore.recent().data.length : null
   );
 
-  // ── Derived: active packs for Sesiones tab ────────────────────────────────────
+  // ── Derived: active packs for Sesiones tab (from store) ──────────────────────
 
   readonly activePacks = computed(() =>
-    this.packs().filter(p => p.status === 'active')
+    this.detailStore.packs().data.filter(p => p.status === 'active')
   );
-
-  // ── Init ──────────────────────────────────────────────────────────────────────
-
-  constructor() {
-    // React to client changes by reloading packs
-    effect(() => {
-      const clientId = this.client().id;
-      if (clientId) {
-        this.resetData();
-        this.loadPacks(clientId);
-      }
-    });
-  }
-
-  ngOnInit(): void {
-    // packs loaded via effect in constructor
-  }
 
   // ── Methods ───────────────────────────────────────────────────────────────────
 
   selectTab(tab: PatientTab): void {
     this.activeTab.set(tab);
-    if (tab === 'prepago' && !this.salesLoaded()) {
-      this.loadSales(this.client().id);
+    if (tab === 'planes' && !this.detailStore.packs().loaded) {
+      this.detailStore.loadPacks(this.client().id);
     }
-    if (tab === 'recientes' && !this.recentLoaded()) {
-      this.loadRecent(this.client().id);
+    if (tab === 'prepago' && !this.detailStore.sales().loaded) {
+      this.detailStore.loadSales(this.client().id);
+    }
+    if (tab === 'recientes' && !this.detailStore.recent().loaded) {
+      this.detailStore.loadRecent(this.client().id);
     }
   }
 
@@ -148,62 +116,5 @@ export class PatientCardComponent implements OnInit {
 
   onEditClick(): void {
     this.editRequested.emit();
-  }
-
-  // ── Private loaders ───────────────────────────────────────────────────────────
-
-  private resetData(): void {
-    this.packs.set([]);
-    this.packsLoaded.set(false);
-    this.sales.set([]);
-    this.salesLoaded.set(false);
-    this.recent.set([]);
-    this.recentLoaded.set(false);
-    this.activeTab.set(null);
-  }
-
-  private loadPacks(clientId: number): void {
-    this.packsLoading.set(true);
-    this.api.getClientPacks(clientId).subscribe({
-      next: data => {
-        this.packs.set(data);
-        this.packsLoading.set(false);
-        this.packsLoaded.set(true);
-      },
-      error: () => {
-        this.packsLoading.set(false);
-        this.packsLoaded.set(true);
-      },
-    });
-  }
-
-  private loadSales(clientId: number): void {
-    this.salesLoading.set(true);
-    this.api.getSales({ client_id: clientId }).subscribe({
-      next: res => {
-        this.sales.set(res.data);
-        this.salesLoading.set(false);
-        this.salesLoaded.set(true);
-      },
-      error: () => {
-        this.salesLoading.set(false);
-        this.salesLoaded.set(true);
-      },
-    });
-  }
-
-  private loadRecent(clientId: number): void {
-    this.recentLoading.set(true);
-    this.api.getBookings({ client_id: clientId, per_page: 10 }).subscribe({
-      next: res => {
-        this.recent.set(res.data);
-        this.recentLoading.set(false);
-        this.recentLoaded.set(true);
-      },
-      error: () => {
-        this.recentLoading.set(false);
-        this.recentLoaded.set(true);
-      },
-    });
   }
 }

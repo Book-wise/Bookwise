@@ -116,16 +116,16 @@
       @switch (activeTab()) {
 
         @case ('planes') {
-          @if (packsLoading()) {
+          @if (detailStore.packs().loading) {
             <div class="bw-pc__skeleton-list">
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
             </div>
-          } @else if (packs().length === 0) {
+          } @else if (detailStore.packs().data.length === 0) {
             <p class="bw-pc__empty">{{ lang.t('patient_card.empty.plans') }}</p>
           } @else {
             <ul class="bw-pc__pack-list">
-              @for (pack of packs(); track pack.id) {
+              @for (pack of detailStore.packs().data; track pack.id) {
                 <li class="bw-pc__pack-item">
                   <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? '—' }}</div>
                   <div class="bw-pc__pack-progress">
@@ -145,7 +145,7 @@
         }
 
         @case ('sesiones') {
-          @if (packsLoading()) {
+          @if (detailStore.packs().loading) {
             <div class="bw-pc__skeleton-list">
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
@@ -168,16 +168,16 @@
         }
 
         @case ('prepago') {
-          @if (salesLoading()) {
+          @if (detailStore.sales().loading) {
             <div class="bw-pc__skeleton-list">
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
             </div>
-          } @else if (sales().length === 0) {
+          } @else if (detailStore.sales().data.length === 0) {
             <p class="bw-pc__empty">{{ lang.t('patient_card.empty.prepaid') }}</p>
           } @else {
             <ul class="bw-pc__sale-list">
-              @for (sale of sales(); track sale.id) {
+              @for (sale of detailStore.sales().data; track sale.id) {
                 <li class="bw-pc__sale-item">
                   <div class="bw-pc__sale-row">
                     <span class="bw-pc__sale-label">Total</span>
@@ -200,16 +200,16 @@
         }
 
         @case ('recientes') {
-          @if (recentLoading()) {
+          @if (detailStore.recent().loading) {
             <div class="bw-pc__skeleton-list">
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
               <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
             </div>
-          } @else if (recent().length === 0) {
+          } @else if (detailStore.recent().data.length === 0) {
             <p class="bw-pc__empty">{{ lang.t('patient_card.empty.recent') }}</p>
           } @else {
             <ul class="bw-pc__booking-list">
-              @for (booking of recent(); track booking.id) {
+              @for (booking of detailStore.recent().data; track booking.id) {
                 <li class="bw-pc__booking-item">
                   <div class="bw-pc__booking-row">
                     <span class="bw-pc__booking-service">{{ booking.service?.name ?? '—' }}</span>

@@ -203,19 +203,18 @@
   [draggable]="false"
   [resizable]="false"
 >
-  @if (selectedBooking(); as booking) {
+  @if (store.selectedBooking(); as booking) {
     <div class="event-details">
       <div class="detail-row detail-row--full">
         <span class="label">Cliente</span>
-        <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
-      </div>
-
-      @if (booking.client?.rut) {
-        <div class="detail-row">
-          <span class="label">RUT</span>
-          <span class="value">{{ booking.client!.rut }}</span>
+        <div class="detail-inline">
+          <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
+          @if (booking.client?.rut) {
+            <span class="detail-sep">·</span>
+            <span class="value detail-rut">{{ booking.client!.rut }}</span>
+          }
         </div>
-      }
+      </div>
 
       @if (booking.pack_session) {
         <div class="detail-row">
@@ -304,7 +303,7 @@
 
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
-    @if (selectedBooking()?.payment_status !== 'paid') {
+    @if (store.selectedBooking()?.payment_status !== 'paid') {
       <p-button
         label="Abonar"
         icon="pi pi-plus"
@@ -314,8 +313,8 @@
       />
     }
     @if (
-      selectedBooking()?.payment_status === 'partial' ||
-      selectedBooking()?.payment_status === 'paid'
+      store.selectedBooking()?.payment_status === 'partial' ||
+      store.selectedBooking()?.payment_status === 'paid'
     ) {
       <p-button
         label="Ver pago"

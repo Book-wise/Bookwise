@@ -35,7 +35,7 @@
   <!-- ── Cliente ───────────────────────────────────────────────────────────────── -->
   @if (!editingClient()) {
     <bw-patient-card
-      [client]="booking().client!"
+      [client]="store.selectedBooking()!.client!"
       [showNotifications]="true"
       [showEdit]="true"
       (editRequested)="onEditRequested()"
@@ -116,7 +116,7 @@
           size="small"
           [loading]="savingClient()"
           [disabled]="!editFirstName() || !editLastName()"
-          (onClick)="saveClient()"
+          (onClick)="savePatientData()"
         />
       </div>
     </div>
@@ -152,9 +152,9 @@
       <div class="rf-field-row">
         <p-select
           [options]="[
-            { label: booking().service?.name ?? 'Sin servicio', value: booking().service_id },
+            { label: store.selectedBooking()?.service?.name ?? 'Sin servicio', value: store.selectedBooking()?.service_id },
           ]"
-          [ngModel]="booking().service_id"
+          [ngModel]="store.selectedBooking()?.service_id"
           [disabled]="true"
           [appendTo]="'body'"
           class="rf-select rf-select--locked"
@@ -194,7 +194,7 @@
       icon="pi pi-check"
       size="small"
       [loading]="saving()"
-      (onClick)="save()"
+      (onClick)="saveBookingTime()"
     />
   </div>
 </div>

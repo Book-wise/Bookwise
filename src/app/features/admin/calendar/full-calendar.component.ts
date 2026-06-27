@@ -34,7 +34,7 @@ import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { BookingUpdateService } from '@services/booking-update.service';
+
 import { HttpErrorService } from '@services/http-error.service';
 import {
   Calendar, CalendarOptions, EventClickArg, DateSelectArg,
@@ -78,7 +78,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private ngZone         = inject(NgZone);
   readonly lang          = inject(LanguageService);
   readonly store         = inject(BookingStore);
-  private bookingUpdate  = inject(BookingUpdateService);
   private httpError      = inject(HttpErrorService);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
@@ -182,7 +181,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
 
-  selectedBooking = signal<Booking | null>(null);
   showEventDialog = signal(false);
 
   constructor() {
@@ -192,23 +190,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     // Watch store state to manage loading visual and refresh calendar
+    // Auto-refetches FullCalendar whenever eventsForCalendar changes (new load, mutation, mergeBooking)
     effect(() => {
       this.store.eventsForCalendar(); // track reactivity
       const loading = this.store.anyLoading();
 
       if (!this.calendar) return;
 
-      // When a store async load completes, hide skeleton and refetch calendar
-      if (!loading && this.refreshScheduled) {
-        this.refreshScheduled = false;
-        this.ngZone.run(() => {
-          this.loading.set(false);
-          this.calendar!.refetchEvents();
-        });
-      }
-
-      if (loading) {
-        this.refreshScheduled = true;
+      if (!loading) {
+        this.loading.set(false);
+        this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
       }
     });
 
@@ -245,7 +236,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
-    this.bookingUpdate.updated$.subscribe(() => this.onBookingSaved());
   }
 
   ngAfterViewInit(): void {
@@ -612,26 +602,23 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     const booking = clickInfo.event.extendedProps['booking'] as Booking;
-    this.selectedBooking.set(booking);
+    this.store.setSelectedBookingId(booking.id);
     this.showEventDialog.set(true);
   }
 
   editBooking(): void {
-    const booking = this.selectedBooking();
+    const booking = this.store.selectedBooking();
     if (!booking) return;
     this.showEventDialog.set(false);
     setTimeout(() => this.paymentDialog.open(booking, 'reserva'), 100);
   }
 
+  /** Triggered by auxiliary dialogs (new-booking, block-time) that mutate data outside the store */
   onBookingSaved(): void {
     this.refreshScheduled = true;
     if (this.calendar) {
       this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
     }
-  }
-
-  onBookingCancelled(): void {
-    this.onBookingSaved();
   }
 
   private handleDateSelect(selectInfo: DateSelectArg): void {
@@ -674,18 +661,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   closeDialog(): void {
     this.showEventDialog.set(false);
-    this.selectedBooking.set(null);
+    this.store.setSelectedBookingId(null);
   }
 
   openPaymentDetail(scrollToTxn = false): void {
-    const booking = this.selectedBooking();
+    const booking = this.store.selectedBooking();
     if (!booking) return;
     this.showEventDialog.set(false);
     setTimeout(() => this.paymentDialog.open(booking, 'pago', scrollToTxn), 100);
   }
 
   onBackToDetail(booking: Booking): void {
-    this.selectedBooking.set(booking);
+    this.store.setSelectedBookingId(booking.id);
     setTimeout(() => this.showEventDialog.set(true), 100);
   }
 

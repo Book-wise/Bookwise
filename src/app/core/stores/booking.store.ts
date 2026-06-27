@@ -52,6 +52,7 @@ interface BookingStoreState {
   filters: FilterState;
   dateFrom: string;
   dateTo: string;
+  selectedBookingId: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +116,7 @@ const initialState: BookingStoreState = {
   filters: initialFilters,
   dateFrom: '',
   dateTo: '',
+  selectedBookingId: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -174,6 +176,12 @@ export const BookingStore = signalStore(
     ),
 
     isProviderRole: computed(() => store.filters().scopeProviderId !== null),
+
+    selectedBooking: computed(() => {
+      const id = store.selectedBookingId();
+      if (id === null) return null;
+      return store.bookings().find(b => b.id === id) ?? null;
+    }),
   })),
 
   // ── Methods ────────────────────────────────────────────────────
@@ -476,6 +484,29 @@ export const BookingStore = signalStore(
       ),
     );
 
+    // ── Refresh a single booking by re-fetching from API ──────────
+    const refreshBooking = rxMethod<number>(
+      pipe(
+        switchMap((id) =>
+          api.getBooking(id).pipe(
+            tap({
+              next: (booking) => {
+                patchState(store, {
+                  bookings: store.bookings().map(b => b.id === booking.id ? booking : b),
+                });
+              },
+              error: (err: Error) => {
+                patchState(store, {
+                  error: { ...store.error(), mutation: err.message ?? 'Error al refrescar reserva' },
+                });
+              },
+            }),
+            catchError(() => of(undefined)),
+          ),
+        ),
+      ),
+    );
+
     return {
       // Loaders
       loadEvents,
@@ -487,12 +518,28 @@ export const BookingStore = signalStore(
         refetchTrigger$.next();
       },
 
+      // Selection
+      selectBooking(booking: Booking): void {
+        patchState(store, { selectedBookingId: booking.id });
+      },
+      setSelectedBookingId(id: number | null): void {
+        patchState(store, { selectedBookingId: id });
+      },
+      mergeBooking(updated: Booking): void {
+        patchState(store, {
+          bookings: store.bookings().map(b => b.id === updated.id ? updated : b),
+        });
+      },
+
       // Mutations
       createBooking,
       updateBooking,
       deleteBooking,
       blockSlot,
       unblockSlot,
+
+      // Refresh
+      refreshBooking,
     };
   }),
 

@@ -2,6 +2,7 @@
   [visible]="visible()"
   (visibleChange)="visible.set($event)"
   [modal]="true"
+  [focusOnShow]="false"
   [style]="{ width: '820px', maxWidth: '97vw' }"
   [draggable]="false"
   [resizable]="false"
@@ -9,15 +10,15 @@
   [pt]="{ root: { class: 'bw-payment-dialog' } }"
 >
   <ng-template pTemplate="header">
-    @if (booking()) {
+    @if (store.selectedBooking(); as booking) {
 
       <!-- ── Desktop: título + tag + tabs ────────────────────────────── -->
       <div class="booking-dialog-header bw-desktop-header">
         <div class="booking-dialog-title-row">
           <span class="booking-dialog-title">
-            {{ booking()!.client?.first_name }} {{ booking()!.client?.last_name }}
+            {{ booking.client?.first_name }} {{ booking.client?.last_name }}
           </span>
-          <p-tag [value]="booking()!.service?.name || ''" severity="secondary" class="booking-service-tag" />
+          <p-tag [value]="booking.service?.name || ''" severity="secondary" class="booking-service-tag" />
           <p-select
             [options]="statusOptions"
             [ngModel]="selectedStatusId()"
@@ -69,7 +70,7 @@
 
   <!-- ── Panel content — driven by activeTab() signal ──────────────────── -->
   @if (visible()) {
-    @if (booking(); as booking) {
+    @if (store.selectedBooking(); as booking) {
 
       <!-- Estado (mobile only — in header on desktop) -->
       <div class="bw-status-mobile">
@@ -101,7 +102,7 @@
 
         @case ('reserva') {
           <div class="tab-content">
-            <bw-reserva-tab [booking]="booking" [statusId]="selectedStatusId()" (bookingUpdated)="onBookingUpdated($event)" />
+            <bw-reserva-tab [statusId]="selectedStatusId()" />
           </div>
         }
 

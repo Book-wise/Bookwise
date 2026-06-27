@@ -6,6 +6,7 @@ import { BookingFormDialogComponent } from './booking-form-dialog.component';
 import { ApiService } from '@services/api.service';
 import { signal } from '@angular/core';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
 
@@ -53,6 +54,7 @@ describe('BookingFormDialogComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ApiService, useValue: apiServiceMock },
         { provide: ReferenceStore, useValue: refStoreMock },
+        ClientDetailStore,
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         { provide: MessageService, useValue: { add: vi.fn() } },
         LanguageService,

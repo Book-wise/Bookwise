@@ -137,7 +137,7 @@
   [draggable]="false"
   [resizable]="false"
 >
-  @if (selectedBooking(); as booking) {
+  @if (store.selectedBooking(); as booking) {
     <div class="event-details">
       <div class="detail-row">
         <span class="label">Cliente:</span>

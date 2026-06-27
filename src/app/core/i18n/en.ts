@@ -81,6 +81,7 @@ export const EN: Record<string, string> = {
   'biz.client_not_found':           'Client not found',
   'biz.already_inactive':           'Already inactive',
   'biz.pack_not_active':            'Pack not active',
+  'biz.past_booking':               'Past date/time',
   'biz.no_sessions_remaining':      'No sessions remaining',
   'biz.validation_error':           'Validation error',
 
@@ -101,6 +102,7 @@ export const EN: Record<string, string> = {
   'biz.client_not_found.detail':           'Client profile not found.',
   'biz.already_inactive.detail':           'This record is already inactive.',
   'biz.pack_not_active.detail':            'The pack is not currently active.',
+  'biz.past_booking.detail':               'Cannot move a booking to the past.',
   'biz.no_sessions_remaining.detail':      'The pack has no sessions remaining.',
   'biz.validation_error.detail':           'End time must be after start time.',
 

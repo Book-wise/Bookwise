@@ -9,10 +9,11 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { Booking } from '@models';
+import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
-import { BookingUpdateService } from '@services/booking-update.service';
+import { BookingStore } from '@core/stores/booking.store';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { PaymentTabComponent } from './payment-tab.component';
 import { ReservaTabComponent } from './reserva-tab.component';
@@ -23,6 +24,7 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
   selector: 'bw-payment-detail-dialog',
   standalone: true,
   imports: [CommonModule, FormsModule, DialogModule, ButtonModule, TagModule, TabsModule, SkeletonModule, SelectModule, PaymentTabComponent, ReservaTabComponent],
+  providers: [ClientDetailStore],
   templateUrl: './payment-detail-dialog.component.html',
   styleUrl: './payment-detail-dialog.component.scss',
 })
@@ -31,10 +33,9 @@ export class PaymentDetailDialogComponent {
   private httpError      = inject(HttpErrorService);
   private messageService = inject(MessageService);
   readonly lang          = inject(LanguageService);
-  private bookingUpdate  = inject(BookingUpdateService);
+  readonly store         = inject(BookingStore);
 
   visible           = signal(false);
-  booking           = signal<Booking | null>(null);
   activeTab         = signal<BookingTab>('pago');
   scrollToTxn       = signal(false);
   selectedStatusId  = signal<number>(0);
@@ -57,7 +58,7 @@ export class PaymentDetailDialogComponent {
   );
 
   readonly statusSeverity = computed(() => {
-    const name = this.booking()?.status?.name?.toLowerCase();
+    const name = this.store.selectedBooking()?.status?.name?.toLowerCase();
     if (!name) return undefined as any;
     if (name.includes('confirm'))  return 'success';
     if (name.includes('cancel'))   return 'danger';
@@ -67,7 +68,7 @@ export class PaymentDetailDialogComponent {
   });
 
   open(booking: Booking, tab: BookingTab = 'pago', scrollToTxn = false): void {
-    this.booking.set(booking);
+    this.store.selectBooking(booking);
     this.activeTab.set(tab);
     this.scrollToTxn.set(scrollToTxn);
     this.selectedStatusId.set(booking.status_id ?? 0);
@@ -78,13 +79,8 @@ export class PaymentDetailDialogComponent {
     if (value !== undefined) this.activeTab.set(value as BookingTab);
   }
 
-  onBookingUpdated(updated: Booking): void {
-    this.booking.set(updated);
-    this.selectedStatusId.set(updated.status_id ?? 0);
-  }
-
   onStatusChange(newStatusId: number): void {
-    const booking = this.booking();
+    const booking = this.store.selectedBooking();
     if (!booking?.id) return;
 
     const previousId = this.selectedStatusId();
@@ -92,11 +88,8 @@ export class PaymentDetailDialogComponent {
 
     this.api.updateBooking(booking.id, { status_id: newStatusId }).subscribe({
       next: (updated) => {
-        const current = this.booking();
-        if (current) {
-          this.booking.set({ ...current, status_id: updated.status_id, status: updated.status });
-          this.bookingUpdate.notify({ ...current, status_id: updated.status_id, status: updated.status });
-        }
+        // Merge updated booking back into store
+        this.store.mergeBooking(updated);
         this.messageService.add({
           severity: 'success',
           summary: this.lang.t('toast.booking_updated.summary'),
@@ -111,17 +104,22 @@ export class PaymentDetailDialogComponent {
     });
   }
 
+  private _skipCloseCleanup = false;
+
   goBack(): void {
-    const booking = this.booking();
+    this._skipCloseCleanup = true;
+    const booking = this.store.selectedBooking();
     this.visible.set(false);
-    this.booking.set(null);
     this.scrollToTxn.set(false);
     if (booking) this.backToDetail.emit(booking);
   }
 
   close(): void {
     this.visible.set(false);
-    this.booking.set(null);
-    this.scrollToTxn.set(false);
+    if (!this._skipCloseCleanup) {
+      this.store.setSelectedBookingId(null);
+      this.scrollToTxn.set(false);
+    }
+    this._skipCloseCleanup = false;
   }
 }
