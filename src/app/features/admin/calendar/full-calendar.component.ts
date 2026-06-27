@@ -12,9 +12,7 @@ import {
   AfterViewInit,
   HostListener,
   NgZone,
-  DestroyRef,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -27,18 +25,17 @@ import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '@services/api.service';
-import { HttpErrorService } from '@services/http-error.service';
-import { BookingUpdateService } from '@services/booking-update.service';
 import { Booking, BlockedSlot, Location, Provider } from '@models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { PaymentDetailDialogComponent } from '../bookings/payment-detail/payment-detail-dialog.component';
-import { STATUS_COLOR_MAP, BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
+import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
-import { ReferenceStore } from '@core/stores/reference.store';
-import { forkJoin } from 'rxjs';
+import { BookingStore } from '@core/stores/booking.store';
+import { BookingUpdateService } from '@services/booking-update.service';
+import { HttpErrorService } from '@services/http-error.service';
 import {
   Calendar, CalendarOptions, EventClickArg, DateSelectArg,
   EventContentArg, EventInput, EventSourceFuncArg, EventDropArg,
@@ -49,19 +46,6 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
-
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  backgroundColor?: string;
-  borderColor?: string;
-  textColor?: string;
-  classNames?: string[];
-  extendedProps?: Record<string, unknown>;
-}
 
 @Component({
   selector: 'bw-full-calendar',
@@ -88,16 +72,24 @@ interface CalendarEvent {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api           = inject(ApiService);
-  private httpError     = inject(HttpErrorService);
+  private api            = inject(ApiService);
   private messageService = inject(MessageService);
-  private ngZone        = inject(NgZone);
-  readonly lang         = inject(LanguageService);
-  private bookingUpdate = inject(BookingUpdateService);
-  private destroyRef    = inject(DestroyRef);
-  private refStore      = inject(ReferenceStore);
+  private ngZone         = inject(NgZone);
+  readonly lang          = inject(LanguageService);
+  readonly store         = inject(BookingStore);
+  private bookingUpdate  = inject(BookingUpdateService);
+  private httpError      = inject(HttpErrorService);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
+  private refreshScheduled = false;
+  private _dragMutPending = false;
+
+  /** Metadata for the pending drag/event-move toast */
+  private _dragToastMeta: {
+    clientName: string; serviceName: string;
+    oldStart: string; newStart: string;
+    meta: string | null;
+  } | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild('eventTooltip') eventTooltip!: Popover;
@@ -109,10 +101,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = signal(true);
   providersLoading = signal(false);
   hoveredBooking = signal<Booking | null>(null);
-  bookings = signal<Booking[]>([]);
   locations = signal<Location[]>([]);
   providers = signal<Provider[]>([]);
 
+  // Local filter state — synced to BookingStore via onFilterChange
   selectedLocationId: number | null = null;
   selectedProviderId: number | null = null;
   selectedStatusIds: number[] = [];
@@ -120,7 +112,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   statusFilterOptions = computed(() =>
     BOOKING_STATUSES.map(s => ({ label: this.lang.t(s.labelKey), value: s.value, color: s.color }))
   );
-  // Track previous location to detect changes
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
   selectedEndDate: Date | null = null;
@@ -139,6 +130,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     slotMinTime: '09:00:00',
     slotMaxTime: '21:00:00',
     locale: this.lang.lang() === 'en' ? 'en' : esLocale,
+    // Timezone fijo para Chile — independiente del browser
+    timeZone: 'America/Santiago',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -177,6 +170,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     },
     // Duración de slots en minutos
     slotDuration: '00:30:00',
+    // Snapping del drag & drop independiente de la grilla visual
+    snapDuration: '00:15:00',
     contentHeight: this.getContentHeight(),
   };
 
@@ -194,14 +189,62 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       void this.lang.lang();
       this.updateCalendarI18n();
     });
+
+    // Watch store state to manage loading visual and refresh calendar
+    effect(() => {
+      this.store.eventsForCalendar(); // track reactivity
+      const loading = this.store.anyLoading();
+
+      if (!this.calendar) return;
+
+      // When a store async load completes, hide skeleton and refetch calendar
+      if (!loading && this.refreshScheduled) {
+        this.refreshScheduled = false;
+        this.ngZone.run(() => {
+          this.loading.set(false);
+          this.calendar!.refetchEvents();
+        });
+      }
+
+      if (loading) {
+        this.refreshScheduled = true;
+      }
+    });
+
+    // Watch mutation completion → success/error toast after drag/event-move
+    effect(() => {
+      const mutLoading = this.store.loading().mutation;
+
+      if (this._dragMutPending && !mutLoading) {
+        this._dragMutPending = false;
+
+        const meta      = this._dragToastMeta;
+        const mutErr    = this.store.error().mutationError;
+
+        if (mutErr) {
+          this.messageService.add(this.httpError.toToastConfig(mutErr));
+        } else if (meta) {
+          this.messageService.add({
+            severity: 'success',
+            summary: meta.clientName,
+            detail: `${meta.serviceName} · ${this.fmtDT(meta.oldStart)} → ${this.fmtDT(meta.newStart)}${meta.meta ? ` · ${meta.meta}` : ''}`,
+            life: 5000,
+          });
+        }
+
+        this._dragToastMeta = null;
+      }
+
+      if (mutLoading) {
+        this._dragMutPending = true;
+      }
+    });
   }
 
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
-    this.bookingUpdate.updated$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.onBookingSaved());
+    this.bookingUpdate.updated$.subscribe(() => this.onBookingSaved());
   }
 
   ngAfterViewInit(): void {
@@ -358,10 +401,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.locations.set(data);
         if (data.length > 0) {
           this.selectedLocationId = data[0].id;
-          this.onLocationChange();
+          this.previousLocationId = data[0].id;
+          this.loadProviders(data[0].id);
+          this.onFilterChange();
         }
       },
-      error: (err) => { this.locations.set([]); this.httpError.handle(err, 'cargar locations'); },
+      error: () => { this.locations.set([]); },
     });
   }
 
@@ -378,85 +423,38 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onLocationChange(): void {
-    // Only reload providers if location actually changed
     if (this.previousLocationId !== this.selectedLocationId) {
       this.previousLocationId = this.selectedLocationId;
-      // Clear provider selection when location changes
       this.selectedProviderId = null;
       this.loadProviders(this.selectedLocationId);
     }
-    // Always refresh calendar when location changes
     this.onFilterChange();
   }
 
   private fetchEventsForCalendar(
     fetchInfo: EventSourceFuncArg,
     successCallback: (events: EventInput[]) => void,
-    failureCallback: (error: Error) => void,
+    _failureCallback: (error: Error) => void,
   ): void {
-    this.ngZone.run(() => this.loading.set(true));
+    this.loading.set(true);
 
     const dateFrom = fetchInfo.startStr.split('T')[0];
     const dateTo   = fetchInfo.endStr.split('T')[0];
 
-    const bookingParams = {
-      date_from:   dateFrom,
-      date_to:     dateTo,
-      per_page:    500,
-      ...(this.selectedLocationId ? { location_id: this.selectedLocationId } : {}),
-      ...(this.selectedProviderId ? { provider_id: this.selectedProviderId } : {}),
-    };
-    const slotParams = {
-      date_from: dateFrom,
-      date_to:   dateTo,
-      ...(this.selectedLocationId ? { location_id: this.selectedLocationId } : {}),
-      ...(this.selectedProviderId ? { provider_id: this.selectedProviderId } : {}),
-    };
+    // Only trigger store load if date range changed or a refresh is pending
+    const storeRange = `[${this.store.dateFrom()}][${this.store.dateTo()}]`;
+    const newRange   = `[${dateFrom}][${dateTo}]`;
 
-    forkJoin({
-      bookingsRes:      this.api.getBookings(bookingParams),
-      blockedSlotsRes:  this.api.getBlockedSlots(slotParams),
-    }).subscribe({
-      next: ({ bookingsRes, blockedSlotsRes }) => {
-        const raw = bookingsRes as unknown as Booking[] | { data: Booking[] };
-        const bookings: Booking[] = Array.isArray(raw) ? raw : (raw.data ?? []);
+    if (storeRange !== newRange || this.refreshScheduled) {
+      this.refreshScheduled = false;
+      this.store.loadEvents({ dateFrom, dateTo });
+      // loading(false) handled by the effect when store load completes
+    } else {
+      // Already have current data — no async load needed
+      this.loading.set(false);
+    }
 
-        const visibleBookings = this.selectedStatusIds.length > 0
-          ? bookings.filter(b => this.selectedStatusIds.includes(b.status_id))
-          : bookings;
-
-        const bookingEvents: CalendarEvent[] = visibleBookings.map((booking) => ({
-          id: booking.id.toString(),
-          title: `${booking.client?.first_name || ''} ${booking.client?.last_name || ''} · ${booking.service?.name || 'Servicio'}`.trim(),
-          start: booking.start_time,
-          end: booking.end_time,
-          backgroundColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
-          borderColor: booking.status?.color ?? STATUS_COLOR_MAP[booking.status_id] ?? this.getStatusColor(booking.status?.name),
-          textColor: '#000',
-          extendedProps: { booking },
-        }));
-
-        const blockedSlots: BlockedSlot[] = blockedSlotsRes?.data ?? [];
-        const blockedEvents: CalendarEvent[] = blockedSlots.map((slot) => ({
-          id: `blocked-${slot.id}`,
-          title: slot.reason || 'Bloqueado',
-          start: slot.start_time,
-          end: slot.end_time,
-          classNames: ['fc-blocked-slot'],
-          extendedProps: { isBlocked: true, blockedSlot: slot },
-        }));
-
-        successCallback([...bookingEvents, ...blockedEvents]);
-        this.ngZone.run(() => {
-          this.bookings.set(bookings);
-          this.loading.set(false);
-        });
-      },
-      error: () => {
-        failureCallback(new Error('Failed to load calendar events'));
-        this.ngZone.run(() => this.loading.set(false));
-      },
-    });
+    successCallback(this.store.eventsForCalendar());
   }
 
   formatTooltipTime(iso: string): string {
@@ -511,14 +509,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
   }
 
-  getStatusColor(statusName?: string): string {
-    // Usar BOOKING_STATUSES para obtener el color
-    const status = BOOKING_STATUSES.find(
-      (s) => s.label.toLowerCase() === statusName?.toLowerCase()
-    );
-    return status?.color || '#6b7280';
-  }
-
   private handleEventMove(info: EventDropArg | EventResizeDoneArg, newStart: string, newEnd: string): void {
     const isBlocked = info.event.extendedProps['isBlocked'];
     const oldStart  = (info.oldEvent?.startStr ?? '') as string;
@@ -530,20 +520,26 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       try { info.revert(); } catch { /* vista ya cambió, ignorar */ }
     };
 
+    // startStr/endStr ya están en CLT con offset (-03:00) por timeZone: 'America/Santiago'
+
     if (isBlocked) {
       const slot = info.event.extendedProps['blockedSlot'] as BlockedSlot | undefined;
       if (!slot) { revert(); return; }
 
       this.api.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
-        next: () => this.messageService.add({
-          severity: 'info',
-          summary: this.lang.t('toast.block_moved.summary'),
-          detail: `${slot.reason || this.lang.t('toast.block_moved.summary')} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
-          life: 5000,
-        }),
+        next: () => {
+          this.messageService.add({
+            severity: 'info',
+            summary: this.lang.t('toast.block_moved.summary'),
+            detail: `${slot.reason || this.lang.t('toast.block_moved.summary')} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
+            life: 5000,
+          });
+          this.refreshScheduled = true;
+          this.store.loadEvents({ dateFrom: this.store.dateFrom(), dateTo: this.store.dateTo() });
+        },
         error: (err) => {
           revert();
-          this.httpError.handle(err, 'mover bloqueo');
+          this.messageService.add(this.httpError.toToastConfig(err));
         },
       });
 
@@ -559,33 +555,40 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         ? `${booking.provider.first_name} ${booking.provider.last_name}`.trim()
         : null;
       const locationName = booking.location?.name ?? null;
-      const meta         = [providerName, locationName].filter(Boolean).join(' · ');
+      const metaStr      = [providerName, locationName].filter(Boolean).join(' · ');
 
-      this.api.updateBooking(booking.id, { start_time: newStart, end_time: safeEnd }).subscribe({
-        next: () => this.messageService.add({
-          severity: 'success',
-          summary: clientName,
-          detail: `${serviceName} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}${meta ? ` · ${meta}` : ''}`,
-          life: 5000,
-        }),
-        error: (err) => {
-          revert();
-          this.httpError.handle(err, clientName);
-        },
-      });
+      this._dragToastMeta = { clientName, serviceName, oldStart, newStart, meta: metaStr };
+      this.refreshScheduled = true;
+      this.store.updateBooking({ id: booking.id, data: { start_time: newStart, end_time: safeEnd } });
     }
   }
 
   private fmtDT(iso: string): string {
     if (!iso) return '—';
-    const d    = new Date(iso);
+    const d = new Date(iso);
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const hh   = String(d.getHours()).padStart(2, '0');
-    const mm   = String(d.getMinutes()).padStart(2, '0');
-    return `${days[d.getDay()]} ${hh}:${mm}`;
+    // Obtener weekday index y hora/minuto en CLT via Intl
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Santiago',
+      weekday: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(d);
+    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '0';
+    const enDays: Record<string, number> = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
+    const dayIdx = enDays[get('weekday')] ?? 0;
+    return `${days[dayIdx]} ${get('hour').padStart(2, '0')}:${get('minute')}`;
   }
 
+  /** Sync local filter state to BookingStore and refresh the calendar. */
   onFilterChange(): void {
+    this.store.setFilters({
+      selectedLocationId: this.selectedLocationId ?? null,
+      selectedProviderId: this.selectedProviderId ?? null,
+      selectedStatusIds: this.selectedStatusIds ?? [],
+    });
+    this.refreshScheduled = true;
     if (this.calendar) {
       this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
     }
@@ -611,6 +614,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onBookingSaved(): void {
+    this.refreshScheduled = true;
     if (this.calendar) {
       this.ngZone.runOutsideAngular(() => this.calendar!.refetchEvents());
     }

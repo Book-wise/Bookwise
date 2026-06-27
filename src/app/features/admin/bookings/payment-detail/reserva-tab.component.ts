@@ -88,6 +88,38 @@ export class ReservaTabComponent {
     return !!p && Object.keys(p as object).length > 0;
   });
 
+  // ── CLT helpers ───────────────────────────────────────────────────────────────
+
+  private cltParts(date: Date): { year: string; month: string; day: string } {
+    const parts = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+    return { year: get('year'), month: get('month'), day: get('day') };
+  }
+
+  private cltTime(date: Date): { hour: number; minute: number } {
+    const f = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    return {
+      hour:   parseInt(f.find(p => p.type === 'hour')?.value ?? '0', 10),
+      minute: parseInt(f.find(p => p.type === 'minute')?.value ?? '0', 10),
+    };
+  }
+
+  private fmtCLT(date: Date, hour: number, minute: number): string {
+    const d = this.cltParts(date);
+    return `${d.year}-${d.month}-${d.day} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────────
 
   constructor() {
@@ -96,10 +128,12 @@ export class ReservaTabComponent {
       const start = new Date(b.start_time);
       const end   = new Date(b.end_time);
       this.selectedDate.set(start);
-      this.startHour.set(start.getHours());
-      this.startMinute.set(start.getMinutes());
-      this.endHour.set(end.getHours());
-      this.endMinute.set(end.getMinutes());
+      const st = this.cltTime(start);
+      const et = this.cltTime(end);
+      this.startHour.set(st.hour);
+      this.startMinute.set(st.minute);
+      this.endHour.set(et.hour);
+      this.endMinute.set(et.minute);
       this.selectedProviderId.set(b.provider_id ?? null);
       this.notes.set(b.notes ?? '');
     });
@@ -111,16 +145,10 @@ export class ReservaTabComponent {
     const b    = this.booking();
     const date = this.selectedDate();
 
-    const start = new Date(date);
-    start.setHours(this.startHour(), this.startMinute(), 0, 0);
-
-    const end = new Date(date);
-    end.setHours(this.endHour(), this.endMinute(), 0, 0);
-
     this.saving.set(true);
     this.api.updateBooking(b.id, {
-      start_time:  start.toISOString(),
-      end_time:    end.toISOString(),
+      start_time:  this.fmtCLT(date, this.startHour(), this.startMinute()),
+      end_time:    this.fmtCLT(date, this.endHour(), this.endMinute()),
       provider_id: this.selectedProviderId() ?? undefined,
       status_id:   this.statusId() || undefined,
       notes:       this.notes() || undefined,

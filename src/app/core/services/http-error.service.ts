@@ -15,6 +15,8 @@ interface ApiErrorBody {
     start_time: string;
     end_time: string;
     type?: 'blocked_slot' | 'booking';
+    client?: { id: number; first_name?: string; last_name?: string };
+    provider?: { id: number; first_name?: string; last_name?: string };
   };
   // amount_exceeds_remaining error — remaining balance
   remaining?: string;
@@ -132,10 +134,20 @@ export class HttpErrorService {
       if (this.lang.has(typedKey)) detail = this.lang.t(typedKey);
     }
 
-    // Append conflict time range (no ID — internal data not relevant to the user)
+    // conflict / slot_collision with full conflict info
     if (body.conflicts_with) {
       const c = body.conflicts_with;
-      detail += ` (${this.fmtTime(c.start_time)} – ${this.fmtTime(c.end_time)})`;
+      const clientName = c.client ? `${c.client.first_name ?? ''} ${c.client.last_name ?? ''}`.trim() : null;
+      const providerName = c.provider ? `${c.provider.first_name ?? ''} ${c.provider.last_name ?? ''}`.trim() : null;
+      const timeRange = `${this.fmtTime(c.start_time)} – ${this.fmtTime(c.end_time)}`;
+
+      if (clientName && providerName) {
+        detail = `${clientName} ya tiene reservado de ${timeRange} con ${providerName}`;
+      } else if (clientName) {
+        detail = `${clientName} ya tiene reservado de ${timeRange}`;
+      } else {
+        detail += ` (${timeRange})`;
+      }
     }
     // Append remaining balance for amount_exceeds_remaining
     if (body.remaining) {
@@ -204,6 +216,15 @@ export class HttpErrorService {
   private fmtTime(iso: string): string {
     if (!iso) return '—';
     const d = new Date(iso);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    // Mostrar siempre en CLT (America/Santiago)
+    const parts = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(d);
+    const hh = parts.find(p => p.type === 'hour')?.value ?? '00';
+    const mm = parts.find(p => p.type === 'minute')?.value ?? '00';
+    return `${hh}:${mm}`;
   }
 }
