@@ -189,6 +189,8 @@
 <bw-booking-form-dialog
   #newBookingDialog
   [lockedProviderId]="lockedProviderId"
+  (onSaved)="onBookingSaved()"
+  (onCancelled)="onBookingSaved()"
 ></bw-booking-form-dialog>
 
 <bw-block-time-dialog

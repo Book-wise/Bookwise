@@ -261,7 +261,20 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     }
     this.saving.set(true);
 
-    const fmt = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19);
+    const fmt = (d: Date) => {
+      const parts = new Intl.DateTimeFormat('es-CL', {
+        timeZone: 'America/Santiago',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).formatToParts(d);
+      const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+      return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
+    };
 
     const body: CreateBlockedSlot = {
       start_time: fmt(this.startDate()),

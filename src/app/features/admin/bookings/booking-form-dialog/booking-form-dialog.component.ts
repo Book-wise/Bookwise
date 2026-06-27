@@ -1,4 +1,4 @@
-import {
+﻿import {
   ChangeDetectorRef,
   Component,
   inject,
@@ -31,7 +31,6 @@ import { Booking, Client, Service, ServicePack, Provider, CreateBooking, Booking
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
-import { BookingUpdateService } from '@services/booking-update.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
@@ -45,7 +44,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
 import { PatientCardComponent } from '@shared/components/patient-card';
 
-/** Service or ServicePack tagged with _isPack by loadFormData() — never sent to the API. */
+/** Service or ServicePack tagged with _isPack by loadFormData() â€” never sent to the API. */
 type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
 
 @Component({
@@ -81,9 +80,8 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private cdr            = inject(ChangeDetectorRef);
   readonly lang          = inject(LanguageService);
-  private bookingUpdate  = inject(BookingUpdateService);
 
-  /** ReferenceStore: fuente única de datos maestros */
+  /** ReferenceStore: fuente Ãºnica de datos maestros */
   private refStore       = inject(ReferenceStore);
 
   @Input() initialDate?: Date;
@@ -100,12 +98,12 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   showPatientPanel  = false;
   savingService     = signal(false);
 
-  /** Skeleton visible hasta que el store tenga datos Y los providers estén cargados */
+  /** Skeleton visible hasta que el store tenga datos Y los providers estÃ©n cargados */
   readonly loadingData = computed(() =>
     !this.refStore.allLoaded() || this.providersLoading(),
   );
 
-  // ── Similar-patients pre-check (duplicate detection) ────────────────────────
+  // â”€â”€ Similar-patients pre-check (duplicate detection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   similarClients       = signal<Client[]>([]);
   showSimilarDialog    = signal(false);
   selectedClientOption = signal<number | 'new'>('new');
@@ -125,7 +123,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   repeatAfterChecked = false;
   repeatUntilChecked = false;
 
-  // ── Datos desde ReferenceStore ──────────────────────────────────────────────
+  // â”€â”€ Datos desde ReferenceStore â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly clients   = this.refStore.clients;
   readonly providers = signal<Provider[]>([]);  // location-filtered, se llena manualmente
   readonly locations = this.refStore.locations;
@@ -136,7 +134,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     ...this.refStore.packs().map(p => ({ ...p, _isPack: true })),
   ]);
 
-  // ── Selected-client reactive mirror (signal + computed) ────────────────────
+  // â”€â”€ Selected-client reactive mirror (signal + computed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly selectedClientId = signal<number | null>(null);
   readonly selectedClient   = computed(() =>
     this.clients().find(c => c.id === this.selectedClientId()) ?? null
@@ -244,7 +242,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ── Lifecycle ───────────────────────────────────────────────────────────────
+  // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private getEmptyForm(): BookingFormData {
     const now = this.initialDate || new Date();
@@ -299,7 +297,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** Punto de entrada único para cargar datos al abrir el diálogo */
+  /** Punto de entrada Ãºnico para cargar datos al abrir el diÃ¡logo */
   loadFormData(): void {
     this.loadProviders();
   }
@@ -363,7 +361,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.resetForm();
   }
 
-  // ── Validation ──────────────────────────────────────────────────────────────
+  // â”€â”€ Validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   isFormValid(): boolean {
     return !!(this.formData.client_id && this.selectedServiceKey && this.formData.start_time);
@@ -373,7 +371,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     return this.formData.repeat_enabled === true;
   }
 
-  // ── Repeat dialog ───────────────────────────────────────────────────────────
+  // â”€â”€ Repeat dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   isDaySelected(dayValue: number): boolean {
     return this.formData.repeat_days?.includes(dayValue) || false;
@@ -399,7 +397,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.showRepeatDialog = false;
   }
 
-  // ── Service change ──────────────────────────────────────────────────────────
+  // â”€â”€ Service change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private resolveServiceKey(serviceId: number): string {
     if (!serviceId) return '';
@@ -430,7 +428,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.selectedClientId.set(this.formData.client_id || null);
   }
 
-  // ── Save ────────────────────────────────────────────────────────────────────
+  // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   onSave() {
     if (!this.formData.client_id) {
@@ -485,7 +483,6 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
         });
         this.visible = false;
         this.saving.set(false);
-        this.bookingUpdate.notify(saved);
         this.onSaved.emit();
       },
       error: (err: HttpErrorResponse) => {
@@ -539,10 +536,21 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   private formatDateTime(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toISOString().replace('T', ' ').substring(0, 19);
+    const parts = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(d);
+    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+    return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
   }
 
-  // ── Service creation panel ───────────────────────────────────────────────────
+  // â”€â”€ Service creation panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   openServicePanel(): void {
     this.newService = { name: '', price: 0, duration_minutes: 60 };
@@ -554,7 +562,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.showServicePanel = false;
   }
 
-  // ── Patient creation panel ──────────────────────────────────────────────────
+  // â”€â”€ Patient creation panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   openPatientPanel(): void {
     this.newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
@@ -572,7 +580,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.precheckPending.set(false);
   }
 
-  // ── Similar-patients pre-check (duplicate detection) ────────────────────────
+  // â”€â”€ Similar-patients pre-check (duplicate detection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /** Proxy so `p-radioButton`'s template-driven `[(ngModel)]` can bind to the signal. */
   get selectedClientOptionValue(): number | 'new' {

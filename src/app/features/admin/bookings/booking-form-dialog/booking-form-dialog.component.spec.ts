@@ -8,7 +8,7 @@ import { signal } from '@angular/core';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
-import { BookingUpdateService } from '@services/booking-update.service';
+
 import { MessageService } from 'primeng/api';
 import { rutValidator } from '@shared/validators/rut.validator';
 import type { NgForm } from '@angular/forms';
@@ -54,7 +54,6 @@ describe('BookingFormDialogComponent', () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: ReferenceStore, useValue: refStoreMock },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
-        { provide: BookingUpdateService, useValue: { notify: vi.fn() } },
         { provide: MessageService, useValue: { add: vi.fn() } },
         LanguageService,
       ],
