@@ -156,13 +156,11 @@
     <!-- Motivo -->
     <div class="field">
       <label>{{ lang.t('block.reason') }}</label>
-      <textarea
-        pTextArea
+      <input
+        pInputText
         [(ngModel)]="reason"
-        rows="2"
         [placeholder]="lang.t('block.reason_placeholder')"
-        class="w-full">
-      </textarea>
+        class="w-full" />
     </div>
 
     <!-- Repetición -->

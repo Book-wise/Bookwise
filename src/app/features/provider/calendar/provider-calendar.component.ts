@@ -43,6 +43,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
+import luxonPlugin from '@fullcalendar/luxon';
 
 @Component({
   selector: 'bw-provider-calendar',
@@ -116,7 +117,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   showEventDialog = signal(false);
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin],
+    plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin, luxonPlugin],
     initialView: 'timeGridWeek',
     slotMinTime: '09:00:00',
     slotMaxTime: '21:00:00',

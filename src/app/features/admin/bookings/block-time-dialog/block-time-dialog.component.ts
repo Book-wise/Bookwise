@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
-import { TextareaModule } from 'primeng/textarea';
+import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -29,7 +29,7 @@ const BLOCK_BULK_THRESHOLD = 5;
     DialogModule,
     ButtonModule,
     DatePickerModule,
-    TextareaModule,
+    InputTextModule,
     CheckboxModule,
     SelectModule,
     InputNumberModule,
