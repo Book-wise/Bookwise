@@ -186,16 +186,40 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   }
 
   private fmt(d: Date): string {
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const parts = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(d);
+    const hh = parts.find(p => p.type === 'hour')?.value ?? '00';
+    const mm = parts.find(p => p.type === 'minute')?.value ?? '00';
+    return `${hh}:${mm}`;
   }
 
   private applyTime(base: Date, event: Event): Date {
     const val = (event.target as HTMLInputElement).value;
     if (!val) return base;
     const [h, m] = val.split(':').map(Number);
-    const d = new Date(base);
-    d.setHours(h, m, 0, 0);
-    return d;
+
+    // Obtener fecha en CLT
+    const parts = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour12: false,
+    }).formatToParts(base);
+    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+
+    // Obtener offset CLT (GMT-04:00 o GMT-03:00) para construir ISO parseable
+    const tzParts = new Intl.DateTimeFormat('es-CL', {
+      timeZone: 'America/Santiago',
+      timeZoneName: 'longOffset',
+    }).formatToParts(base);
+    const offset = (tzParts.find(p => p.type === 'timeZoneName')?.value ?? 'GMT-04:00').replace('GMT', '');
+
+    return new Date(`${get('year')}-${get('month')}-${get('day')}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00${offset}`);
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────────
