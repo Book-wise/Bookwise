@@ -6,6 +6,7 @@
   [draggable]="false"
   [resizable]="false"
   (onHide)="onClose()"
+  [pt]="{ footer: { style: { paddingTop: '1.25rem' } } }"
 >
   @if (loading()) {
     <div class="bd-skeleton bw-sk-card">

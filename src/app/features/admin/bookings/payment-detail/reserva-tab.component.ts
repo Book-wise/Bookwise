@@ -13,6 +13,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { PopoverModule } from 'primeng/popover';
 import { Booking } from '@models';
 import { BookingStore } from '@core/stores/booking.store';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { MessageService } from 'primeng/api';
@@ -30,6 +31,7 @@ export class ReservaTabComponent {
   private readonly api            = inject(ApiService);
   private readonly httpError      = inject(HttpErrorService);
   private readonly messageService = inject(MessageService);
+  private readonly refStore       = inject(ReferenceStore);
   readonly store          = inject(BookingStore);
 
   readonly statusId = input<number>(0);
@@ -214,9 +216,16 @@ export class ReservaTabComponent {
       next: () => {
         this.api.getBooking(booking.id).subscribe({
           next: (refreshed) => {
-            this.savingClient.set(false);
-            this.editingClient.set(false);
             this.store.mergeBooking(refreshed);
+            this.refStore.invalidateClients();
+            this.editingClient.set(false);
+            this.savingClient.set(false);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Paciente actualizado',
+              detail: 'Los cambios se guardaron correctamente.',
+              life: 3000,
+            });
           },
           error: () => this.savingClient.set(false),
         });

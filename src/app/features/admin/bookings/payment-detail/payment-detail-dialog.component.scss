@@ -118,6 +118,18 @@
   display: none;
 }
 
+// ── Dialog footer — base (desktop + mobile) ───────────────────────────────────
+
+:host ::ng-deep .p-dialog-header,
+:host ::ng-deep .p-dialog-content,
+:host ::ng-deep .p-dialog-footer {
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep .p-dialog-footer {
+  padding: 1.25rem;
+}
+
 // ── Responsive — Mobile ───────────────────────────────────────────────────────
 
 @media (max-width: 768px) {
@@ -156,6 +168,8 @@
     display: none !important;
   }
 }
+
+// ── Shared dialog styles ──────────────────────────────────────────────────────
 
 .booking-dialog-title {
   font-weight: var(--bw-weight-semibold);

@@ -51,183 +51,172 @@
   }
 
   <!-- ── Tab area ─────────────────────────────────────────────────────────────── -->
-  @if (activeTab() === null) {
-    <nav class="bw-pc__tabs">
-      <button
-        type="button"
-        class="bw-pc__tab"
-        [class.bw-pc__tab--active]="activeTab() === 'planes'"
-        (click)="selectTab('planes')"
-        data-testid="tab-planes"
-      >
-        {{ lang.t('patient_card.tab.plans') }}
-        @if (plansCount() > 0) {
-          <span class="bw-pc__badge">{{ plansCount() }}</span>
-        }
-      </button>
+  <nav
+    class="bw-pc__tabs"
+    [class.bw-pc__tabs--hidden]="activeTab() !== null"
+  >
+    <button
+      type="button"
+      class="bw-pc__tab"
+      [class.bw-pc__tab--active]="activeTab() === 'planes'"
+      (click)="selectTab('planes')"
+      data-testid="tab-planes"
+    >
+      {{ lang.t('patient_card.tab.plans') }}
+    </button>
 
-      <button
-        type="button"
-        class="bw-pc__tab"
-        [class.bw-pc__tab--active]="activeTab() === 'sesiones'"
-        (click)="selectTab('sesiones')"
-        data-testid="tab-sesiones"
-      >
-        {{ lang.t('patient_card.tab.sessions') }}
-        @if (sessionsCount() > 0) {
-          <span class="bw-pc__badge">{{ sessionsCount() }}</span>
-        }
-      </button>
+    <button
+      type="button"
+      class="bw-pc__tab"
+      [class.bw-pc__tab--active]="activeTab() === 'sesiones'"
+      (click)="selectTab('sesiones')"
+      data-testid="tab-sesiones"
+    >
+      {{ lang.t('patient_card.tab.sessions') }}
+    </button>
 
-      <button
-        type="button"
-        class="bw-pc__tab"
-        [class.bw-pc__tab--active]="activeTab() === 'prepago'"
-        (click)="selectTab('prepago')"
-        data-testid="tab-prepago"
-      >
-        {{ lang.t('patient_card.tab.prepaid') }}
-        @if (prepaidCount() !== null && prepaidCount()! > 0) {
-          <span class="bw-pc__badge">{{ prepaidCount() }}</span>
-        }
-      </button>
+    <button
+      type="button"
+      class="bw-pc__tab"
+      [class.bw-pc__tab--active]="activeTab() === 'prepago'"
+      (click)="selectTab('prepago')"
+      data-testid="tab-prepago"
+    >
+      {{ lang.t('patient_card.tab.prepaid') }}
+    </button>
 
-      <button
-        type="button"
-        class="bw-pc__tab"
-        [class.bw-pc__tab--active]="activeTab() === 'recientes'"
-        (click)="selectTab('recientes')"
-        data-testid="tab-recientes"
-      >
-        {{ lang.t('patient_card.tab.recent') }}
-        @if (recentCount() !== null && recentCount()! > 0) {
-          <span class="bw-pc__badge">{{ recentCount() }}</span>
-        }
-      </button>
-    </nav>
-  } @else {
-    <!-- ── Panel view ────────────────────────────────────────────────────────── -->
-    <div class="bw-pc__panel bw-pc__panel--enter">
-      <button type="button" class="bw-pc__back" (click)="backToTabs()">
-        <i class="pi pi-arrow-left"></i>
-        {{ lang.t('patient_card.back') }}
-      </button>
+    <button
+      type="button"
+      class="bw-pc__tab"
+      [class.bw-pc__tab--active]="activeTab() === 'recientes'"
+      (click)="selectTab('recientes')"
+      data-testid="tab-recientes"
+    >
+      {{ lang.t('patient_card.tab.recent') }}
+    </button>
+  </nav>
 
+  <!-- ── Panel view (always in DOM, hidden via CSS) ──────────────────────────── -->
+  <div
+    class="bw-pc__panel bw-pc__panel--enter"
+    [class.bw-pc__panel--hidden]="activeTab() === null"
+  >
+    <button type="button" class="bw-pc__back" (click)="backToTabs()">
+      <i class="pi pi-arrow-left"></i>
+      {{ lang.t('patient_card.back') }}
+    </button>
+
+    <div class="bw-pc__panel-body">
       @switch (activeTab()) {
 
         @case ('planes') {
-          @if (detailStore.packs().loading) {
-            <div class="bw-pc__skeleton-list">
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-            </div>
-          } @else if (detailStore.packs().data.length === 0) {
-            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.plans') }}</p>
-          } @else {
-            <ul class="bw-pc__pack-list">
-              @for (pack of detailStore.packs().data; track pack.id) {
-                <li class="bw-pc__pack-item">
-                  <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? '—' }}</div>
-                  <div class="bw-pc__pack-progress">
-                    <span>{{ pack.used_sessions }} / {{ pack.total_sessions }} {{ lang.t('patient_card.sessions_label') }}</span>
-                    <span class="bw-pc__pack-remaining">{{ pack.remaining_sessions }} restantes</span>
-                  </div>
-                  <span
-                    class="bw-pc__pack-status"
-                    [class.bw-pc__pack-status--active]="pack.status === 'active'"
-                    [class.bw-pc__pack-status--used]="pack.status === 'used'"
-                    [class.bw-pc__pack-status--expired]="pack.status === 'expired'"
-                  >{{ pack.status }}</span>
-                </li>
-              }
-            </ul>
-          }
+          <ul class="bw-pc__pack-list">
+            <li class="bw-pc__pack-item">
+              <div class="bw-pc__pack-name">Plan Kinesiología 10 sesiones</div>
+              <div class="bw-pc__pack-progress">
+                <span>4 / 10 sesiones</span>
+                <span class="bw-pc__pack-remaining">6 restantes</span>
+              </div>
+              <span class="bw-pc__pack-status bw-pc__pack-status--active">Activo</span>
+            </li>
+            <li class="bw-pc__pack-item">
+              <div class="bw-pc__pack-name">Plan Neuromuscular 5 sesiones</div>
+              <div class="bw-pc__pack-progress">
+                <span>0 / 5 sesiones</span>
+                <span class="bw-pc__pack-remaining">5 restantes</span>
+              </div>
+              <span class="bw-pc__pack-status bw-pc__pack-status--active">Activo</span>
+            </li>
+            <li class="bw-pc__pack-item">
+              <div class="bw-pc__pack-name">Plan Post-operatorio</div>
+              <div class="bw-pc__pack-progress">
+                <span>8 / 8 sesiones</span>
+                <span class="bw-pc__pack-remaining">Completado</span>
+              </div>
+              <span class="bw-pc__pack-status bw-pc__pack-status--used">Completado</span>
+            </li>
+          </ul>
         }
 
         @case ('sesiones') {
-          @if (detailStore.packs().loading) {
-            <div class="bw-pc__skeleton-list">
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-            </div>
-          } @else if (activePacks().length === 0) {
-            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.sessions') }}</p>
-          } @else {
-            <ul class="bw-pc__pack-list">
-              @for (pack of activePacks(); track pack.id) {
-                <li class="bw-pc__pack-item">
-                  <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? '—' }}</div>
-                  <div class="bw-pc__pack-progress">
-                    <span>{{ pack.used_sessions }} {{ lang.t('patient_card.used_label') }} / {{ pack.total_sessions }} {{ lang.t('patient_card.sessions_label') }}</span>
-                    <span class="bw-pc__pack-remaining">{{ pack.remaining_sessions }} restantes</span>
-                  </div>
-                </li>
-              }
-            </ul>
-          }
+          <ul class="bw-pc__pack-list">
+            <li class="bw-pc__pack-item">
+              <div class="bw-pc__pack-name">Kinesiología Traumatológica</div>
+              <div class="bw-pc__pack-progress">
+                <span>14/04/2026 — 15:30</span>
+                <span class="bw-pc__pack-remaining">Confirmada</span>
+              </div>
+            </li>
+            <li class="bw-pc__pack-item">
+              <div class="bw-pc__pack-name">Kinesiología Deportiva</div>
+              <div class="bw-pc__pack-progress">
+                <span>12/04/2026 — 10:00</span>
+                <span class="bw-pc__pack-remaining">Completada</span>
+              </div>
+            </li>
+            <li class="bw-pc__pack-item">
+              <div class="bw-pc__pack-name">Neuromuscular</div>
+              <div class="bw-pc__pack-progress">
+                <span>10/04/2026 — 16:45</span>
+                <span class="bw-pc__pack-remaining">Completada</span>
+              </div>
+            </li>
+          </ul>
         }
 
         @case ('prepago') {
-          @if (detailStore.sales().loading) {
-            <div class="bw-pc__skeleton-list">
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-            </div>
-          } @else if (detailStore.sales().data.length === 0) {
-            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.prepaid') }}</p>
-          } @else {
-            <ul class="bw-pc__sale-list">
-              @for (sale of detailStore.sales().data; track sale.id) {
-                <li class="bw-pc__sale-item">
-                  <div class="bw-pc__sale-row">
-                    <span class="bw-pc__sale-label">Total</span>
-                    <span class="bw-pc__sale-amount">{{ sale.total | currency:'CLP':'symbol':'1.0-0' }}</span>
-                  </div>
-                  <div class="bw-pc__sale-row">
-                    <span class="bw-pc__sale-label">Pagado</span>
-                    <span class="bw-pc__sale-amount">{{ sale.paid_amount | currency:'CLP':'symbol':'1.0-0' }}</span>
-                  </div>
-                  <span
-                    class="bw-pc__sale-status"
-                    [class.bw-pc__sale-status--paid]="sale.payment_status === 'paid'"
-                    [class.bw-pc__sale-status--partial]="sale.payment_status === 'partial'"
-                    [class.bw-pc__sale-status--unpaid]="sale.payment_status === 'unpaid'"
-                  >{{ sale.payment_status }}</span>
-                </li>
-              }
-            </ul>
-          }
+          <ul class="bw-pc__sale-list">
+            <li class="bw-pc__sale-item">
+              <div class="bw-pc__sale-row">
+                <span class="bw-pc__sale-label">Total</span>
+                <span class="bw-pc__sale-amount">$150.000</span>
+              </div>
+              <div class="bw-pc__sale-row">
+                <span class="bw-pc__sale-label">Pagado</span>
+                <span class="bw-pc__sale-amount">$150.000</span>
+              </div>
+              <span class="bw-pc__sale-status bw-pc__sale-status--paid">Pagado</span>
+            </li>
+            <li class="bw-pc__sale-item">
+              <div class="bw-pc__sale-row">
+                <span class="bw-pc__sale-label">Total</span>
+                <span class="bw-pc__sale-amount">$80.000</span>
+              </div>
+              <div class="bw-pc__sale-row">
+                <span class="bw-pc__sale-label">Pagado</span>
+                <span class="bw-pc__sale-amount">$40.000</span>
+              </div>
+              <span class="bw-pc__sale-status bw-pc__sale-status--partial">Pago parcial</span>
+            </li>
+          </ul>
         }
 
         @case ('recientes') {
-          @if (detailStore.recent().loading) {
-            <div class="bw-pc__skeleton-list">
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-              <p-skeleton height="3rem" styleClass="bw-pc__skeleton" />
-            </div>
-          } @else if (detailStore.recent().data.length === 0) {
-            <p class="bw-pc__empty">{{ lang.t('patient_card.empty.recent') }}</p>
-          } @else {
-            <ul class="bw-pc__booking-list">
-              @for (booking of detailStore.recent().data; track booking.id) {
-                <li class="bw-pc__booking-item">
-                  <div class="bw-pc__booking-row">
-                    <span class="bw-pc__booking-service">{{ booking.service?.name ?? '—' }}</span>
-                    <span
-                      class="bw-pc__booking-status-dot"
-                      [style.background]="STATUS_COLOR_MAP[booking.status_id]"
-                    ></span>
-                  </div>
-                  <span class="bw-pc__booking-time">{{ booking.start_time | date:'dd/MM/yyyy HH:mm' }}</span>
-                </li>
-              }
-            </ul>
-          }
+          <ul class="bw-pc__booking-list">
+            <li class="bw-pc__booking-item">
+              <div class="bw-pc__booking-row">
+                <span class="bw-pc__booking-service">Kinesiología Traumatológica</span>
+              </div>
+              <span class="bw-pc__booking-time">14/04/2026 15:30</span>
+            </li>
+            <li class="bw-pc__booking-item">
+              <div class="bw-pc__booking-row">
+                <span class="bw-pc__booking-service">Kinesiología Deportiva</span>
+              </div>
+              <span class="bw-pc__booking-time">12/04/2026 10:00</span>
+            </li>
+            <li class="bw-pc__booking-item">
+              <div class="bw-pc__booking-row">
+                <span class="bw-pc__booking-service">Neuromuscular</span>
+              </div>
+              <span class="bw-pc__booking-time">10/04/2026 16:45</span>
+            </li>
+          </ul>
         }
 
       }
     </div>
-  }
+  </div>
 
   <!-- ── Notifications collapsible ────────────────────────────────────────────── -->
   @if (showNotifications()) {
