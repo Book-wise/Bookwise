@@ -13,4 +13,5 @@ describe('App', () => {
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
+  // Title rendering test removed: `App` now renders only the router outlet.
 });

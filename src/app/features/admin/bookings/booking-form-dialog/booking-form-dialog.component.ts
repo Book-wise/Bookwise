@@ -40,6 +40,7 @@ import { RutDirective } from '@shared/validators/rut.directive';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { Subject, of } from 'rxjs';
 import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
+import { SimilarPatientsService } from '../similar-patients.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
 import { PatientCardComponent } from '@shared/components/patient-card';
@@ -83,6 +84,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   /** ReferenceStore: fuente Ãºnica de datos maestros */
   private refStore       = inject(ReferenceStore);
+  private similarService = inject(SimilarPatientsService);
 
   @Input() initialDate?: Date;
   @Input() lockedProviderId: number | null = null;
@@ -229,7 +231,12 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.precheckTrigger$.pipe(
       debounceTime(400),
       switchMap(term =>
-        this.apiService.getClients({ search: term }).pipe(
+        this.similarService.precheck(term, {
+          first_name: this.newClient.first_name,
+          last_name: this.newClient.last_name,
+          email: this.newClient.email,
+          phone: this.newClient.phone,
+        }).pipe(
           catchError(() => of([] as Client[])),
         ),
       ),
