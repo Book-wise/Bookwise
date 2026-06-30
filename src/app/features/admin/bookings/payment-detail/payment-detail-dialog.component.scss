@@ -130,6 +130,17 @@
   padding: 1.25rem;
 }
 
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  &__delete {
+    margin-right: auto;
+  }
+}
+
 // ── Responsive — Mobile ───────────────────────────────────────────────────────
 
 @media (max-width: 768px) {
