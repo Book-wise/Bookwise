@@ -34,6 +34,7 @@ export interface SaleDetail {
   remaining_amount: number;
   status: 'paid' | 'partial' | 'unpaid';
   payment_method?: string | null;
+  wc_order_id?: number | null;
   client_name: string;
   items: SaleItem[];
   transactions: SaleTransaction[];
@@ -180,6 +181,10 @@ export class PaymentTabComponent {
     ).paid_at;
   });
 
+  readonly isOnline = computed((): boolean =>
+    !!this.vm().sale?.wc_order_id
+  );
+
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   openAbonoForm(remaining: number): void {
@@ -231,6 +236,7 @@ export class PaymentTabComponent {
       remaining_amount: Number(data.remaining_amount),
       status:           data.payment_status,
       payment_method:   data.payment_method ?? null,
+      wc_order_id:      data.wc_order_id ?? null,
       client_name:      data.client
         ? `${data.client.first_name} ${data.client.last_name}`
         : `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim(),

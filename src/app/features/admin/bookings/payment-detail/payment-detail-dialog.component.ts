@@ -57,6 +57,8 @@ export class PaymentDetailDialogComponent {
     this.TABS.find(t => t.value === this.activeTab())?.label ?? ''
   );
 
+  readonly booking = computed(() => this.store.selectedBooking());
+
   readonly statusSeverity = computed(() => {
     const name = this.store.selectedBooking()?.status?.name?.toLowerCase();
     if (!name) return undefined as any;
@@ -102,6 +104,29 @@ export class PaymentDetailDialogComponent {
         this.httpError.handle(err, 'actualizar estado');
       },
     });
+  }
+
+  deleteBooking(): void {
+    const booking = this.booking();
+    if (!booking?.id) return;
+
+    const confirmed = confirm(
+      `¿Eliminar la reserva de ${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}?\n` +
+      'Los pagos registrados no se verán afectados.'
+    );
+    if (!confirmed) return;
+
+    this.store.deleteBooking(booking.id);
+
+    // Show confirmation toast
+    this.messageService.add({
+      severity: 'success',
+      summary: this.lang.t('toast.booking_cancelled.summary'),
+      detail:  this.lang.t('toast.booking_cancelled.detail'),
+      life: 3000,
+    });
+
+    this.close();
   }
 
   private _skipCloseCleanup = false;

@@ -195,6 +195,18 @@
   }
 
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" severity="secondary" [outlined]="true" (onClick)="close()" />
+    <div class="dialog-footer">
+      @if (booking(); as b) {
+        <p-button
+          label="Eliminar reserva"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          (onClick)="deleteBooking()"
+          class="dialog-footer__delete"
+        />
+      }
+      <p-button label="Cerrar" severity="secondary" [outlined]="true" (onClick)="close()" />
+    </div>
   </ng-template>
 </p-dialog>
