@@ -26,6 +26,7 @@ const FIELD_LABELS_ES: Record<string, string> = {
   'start time': 'la hora de inicio',
   'end time': 'la hora de fin',
   'paid at': 'la fecha de pago',
+  now: 'la fecha y hora actual',
   date: 'la fecha',
   duration: 'la duración',
   'custom duration minutes': 'la duración personalizada',
