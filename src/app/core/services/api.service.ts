@@ -161,7 +161,7 @@ export class ApiService {
   }
 
   getBooking(id: number): Observable<Booking> {
-    return this.http.get<Booking>(`${this.baseUrl}/bookings/${id}`);
+    return this.http.get<{ data: Booking }>(`${this.baseUrl}/bookings/${id}`).pipe(map(r => r.data));
   }
 
   createBooking(booking: CreateBooking): Observable<Booking> {

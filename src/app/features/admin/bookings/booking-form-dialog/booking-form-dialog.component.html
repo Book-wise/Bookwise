@@ -6,7 +6,12 @@
   [contentStyle]="{'overflow-y': 'auto', 'max-height': '65vh'}"
   [draggable]="false"
   [resizable]="false"
-  (onHide)="onClose()">
+  (onHide)="onClose()"
+  [pt]="{
+    header: { style: { boxShadow: '0 6px 10px -6px rgba(0,0,0,0.08)' } },
+    content: { style: { boxShadow: 'inset 0 -18px 14px -14px rgba(0,0,0,0.07)' } },
+    footer: { style: { paddingTop: '1.25rem' } }
+  }">
 
   <ng-template pTemplate="header">
     <div class="dialog-header-row">
@@ -210,7 +215,7 @@
     </div>
 
     <!-- Información adicional -->
-    <p-accordion>
+    <p-accordion [pt]="{ root: { style: { marginTop: '0' } } }">
       <p-accordion-panel value="0">
         <p-accordion-header>{{ lang.t('booking_form.additional_info') }}</p-accordion-header>
         <p-accordion-content>
@@ -319,7 +324,7 @@
         }
       </div>
 
-      <p-accordion value="0">
+      <p-accordion [pt]="{ root: { style: { marginTop: '0' } } }" value="0">
         <p-accordion-panel value="0">
           <p-accordion-header>{{ lang.t('booking_form.additional_info') }}</p-accordion-header>
           <p-accordion-content>
@@ -422,7 +427,8 @@
   [header]="lang.t('similar_patients.title')"
   [style]="{width: '480px'}"
   [draggable]="false"
-  [resizable]="false">
+  [resizable]="false"
+  [pt]="{ footer: { style: { paddingTop: '1.25rem' } } }">
 
   <p class="similar-subtitle">{{ lang.t('similar_patients.subtitle') }}</p>
 
@@ -475,7 +481,8 @@
   [style]="{width: '480px'}"
   [contentStyle]="{'overflow': 'visible'}"
   [draggable]="false"
-  [resizable]="false">
+  [resizable]="false"
+  [pt]="{ footer: { style: { paddingTop: '1.25rem' } } }">
 
   <div class="repeat-content">
 

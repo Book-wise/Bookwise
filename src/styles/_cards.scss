@@ -1,0 +1,41 @@
+// ============================================
+// Bookwise Card System
+// ============================================
+//
+// Use `.bw-card` as the base for all card surfaces.
+// Variants: --header, --active, --elevated, --signature
+//
+// Example:
+//   <div class="bw-card bw-card--signature">
+//     ...
+//   </div>
+
+.bw-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+
+  // ── Brand signature: left accent border ──────────────────────────────────
+  &--signature {
+    border-left: 3px solid var(--bw-300);
+  }
+
+  // ── Header-style card (highlighted, tinted background) ───────────────────
+  &--header {
+    background: var(--bw-50, #f0f6ff);
+    border-color: var(--bw-100, #dbeafe);
+    border-left: 3px solid var(--bw-300, #046af4);
+    box-shadow: none;
+  }
+
+  // ── Active / selected state ─────────────────────────────────────────────
+  &--active {
+    box-shadow: 0 0 0 2px var(--bw-300, #046af4);
+  }
+
+  // ── Elevated / shadow card ──────────────────────────────────────────────
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+}

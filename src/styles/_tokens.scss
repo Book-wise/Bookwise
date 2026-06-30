@@ -138,4 +138,9 @@
   --z-backdrop: 300;
   --z-drawer:   400;
   --z-topbar:   500;
+
+  // ── Shadows ─────────────────────────────────────────────────────────────
+  --bw-shadow-card:           0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --bw-dialog-header-shadow:  0 6px 10px -6px rgba(0, 0, 0, 0.08);
+  --bw-dialog-content-shadow: inset 0 -18px 14px -14px rgba(0, 0, 0, 0.07);
 }

@@ -6,7 +6,7 @@
 }
 
 .block-dialog-title {
-  font-size: 1.125rem;
+  font-size: var(--bw-font-title);
   font-weight: 600;
   color: var(--text-heading);
 }
@@ -193,9 +193,9 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #374151;
+  border: 1px solid var(--surface-border, #d1d5db);
+  background: var(--surface-card, white);
+  color: var(--text-color, #374151);
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
@@ -206,13 +206,13 @@
   justify-content: center;
 
   &:hover {
-    border-color: #9333ea;
-    color: #9333ea;
+    border-color: var(--bw-300);
+    color: var(--bw-300);
   }
 
   &.active {
-    background: #9333ea;
-    border-color: #9333ea;
+    background: var(--bw-300);
+    border-color: var(--bw-300);
     color: white;
   }
 }

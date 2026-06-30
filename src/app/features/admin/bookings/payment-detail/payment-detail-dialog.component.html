@@ -7,7 +7,10 @@
   [draggable]="false"
   [resizable]="false"
   (onHide)="close()"
-  [pt]="{ root: { class: 'bw-payment-dialog' } }"
+  [pt]="{
+    root: { class: 'bw-payment-dialog' },
+    footer: { style: { padding: '1.25rem' } }
+  }"
 >
   <ng-template pTemplate="header">
     @if (store.selectedBooking(); as booking) {
