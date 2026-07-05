@@ -151,6 +151,8 @@ export interface Booking {
   notes?: string | null;
   internal_notes?: string | null;
   wc_order_id?: number | null;
+  created_via?: 'admin_calendar' | 'agent' | 'online_webhook' | null;
+  last_modified_via?: 'admin_calendar' | 'agent' | null;
   created_at?: string;
   updated_at?: string;
 }

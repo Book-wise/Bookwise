@@ -44,6 +44,8 @@ export interface Booking {
   notes?: string;
   internal_notes?: string | null;
   wc_order_id?: number | null;
+  created_via?: 'admin_calendar' | 'agent' | 'online_webhook' | null;
+  last_modified_via?: 'admin_calendar' | 'agent' | null;
   created_at?: string;
   // Status — both id and object returned
   status_id: number;
