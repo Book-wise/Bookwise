@@ -17,6 +17,7 @@ import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
+import { PAYMENT_METHOD_OPTIONS } from '../constants/payment-methods';
 
 export interface SaleItem {
   name: string;
@@ -138,13 +139,7 @@ export class PaymentTabComponent {
   readonly abonoNotes    = signal('');
   readonly abonoSaving   = signal(false);
 
-  readonly paymentMethods = [
-    { label: 'Efectivo',      value: 'efectivo' },
-    { label: 'Transferencia', value: 'transferencia' },
-    { label: 'Débito',        value: 'débito' },
-    { label: 'Crédito',       value: 'crédito' },
-    { label: 'Otro',          value: 'otro' },
-  ];
+  readonly paymentMethods = PAYMENT_METHOD_OPTIONS;
 
   // ── Misc state ────────────────────────────────────────────────────────────────
 

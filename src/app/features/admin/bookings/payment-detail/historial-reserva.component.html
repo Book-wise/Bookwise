@@ -1,0 +1,52 @@
+<div class="hr-list">
+  @if (loading()) {
+    <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
+    <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
+    <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
+  } @else if (bookings().length === 0) {
+    <div class="hr-empty">
+      <i class="pi pi-calendar-plus hr-empty__icon"></i>
+      <p class="hr-empty__text">Sin reservas anteriores para este paciente.</p>
+    </div>
+  }
+
+  @for (booking of bookings(); track booking.id) {
+    <div class="hr-card">
+      <div class="hr-card__top">
+        <span class="hr-card__service">{{ booking.service?.name ?? '—' }}</span>
+        <p-tag
+          [value]="booking.status?.name ?? ''"
+          [style]="{ background: booking.status?.color }"
+        />
+      </div>
+
+      <div class="hr-card__body">
+        <div class="hr-card__row">
+          <i class="pi pi-calendar"></i>
+          <span>Fecha: {{ booking.start_time | date:'dd/MM/yyyy - HH:mm' }}</span>
+        </div>
+        <div class="hr-card__row">
+          <i class="pi pi-clock"></i>
+          <span>Reserva: {{ booking.created_at | date:'dd/MM/yyyy - HH:mm' }}</span>
+        </div>
+        <div class="hr-card__row">
+          <i class="pi pi-cog"></i>
+          <span>Acción: {{ actionLabel(booking) }}</span>
+        </div>
+        <div class="hr-card__row">
+          <i class="pi pi-user"></i>
+          <span>{{ booking.client?.email ?? '—' }}</span>
+        </div>
+        <div class="hr-card__row">
+          <i class="pi pi-building"></i>
+          <span>
+            {{ booking.provider?.first_name ?? '' }} {{ booking.provider?.last_name ?? '' }}
+            @if (booking.location?.name) {
+              - {{ booking.location?.name }}
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,286 @@
+// ── List ────────────────────────────────────────────────────────────────────────
+
+.hpg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.hpg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary);
+
+  &__icon { font-size: 2.5rem; opacity: 0.35; }
+  &__text { margin: 0; font-size: var(--bw-font-table); text-align: center; }
+}
+
+// ── Card ────────────────────────────────────────────────────────────────────────
+
+.hpg-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__date {
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+  }
+
+  &__icon {
+    font-size: var(--bw-font-table);
+    color: var(--bw-300, #046af4);
+  }
+
+  &__amount {
+    font-size: var(--bw-font-subtotal);
+    font-weight: var(--bw-weight-bold);
+    color: var(--text-color);
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--surface-border);
+  }
+
+  &__link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-semibold);
+    color: var(--bw-300, #046af4);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.15s;
+
+    &:hover { background: var(--bw-50, #f0f6ff); }
+  }
+}
+
+// ── Detail view ─────────────────────────────────────────────────────────────────
+
+.hpg-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.hpg-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--bw-300, #046af4);
+  padding: 0.375rem 0;
+  transition: color 0.15s;
+
+  &:hover { color: var(--bw-400, #0358cc); }
+}
+
+.hpg-detail-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  &--header {
+    background: var(--bw-50, #f0f6ff);
+    border-color: var(--bw-100, #dbeafe);
+    border-left: 3px solid var(--bw-300, #046af4);
+  }
+}
+
+.hpg-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hpg-online-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: var(--bw-weight-semibold);
+  color: var(--blue-600, #2563eb);
+  background: var(--blue-50, #eff6ff);
+  border: 1px solid var(--blue-200, #bfdbfe);
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
+  white-space: nowrap;
+
+  i { font-size: 0.65rem; }
+}
+
+.hpg-detail-amounts {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.hpg-paid-amount {
+  font-size: var(--bw-font-subtotal);
+  font-weight: var(--bw-weight-bold);
+  color: var(--text-color);
+}
+
+.hpg-remaining {
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--orange-600);
+  background: var(--orange-50);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.hpg-section-label {
+  font-size: var(--bw-font-overline);
+  font-weight: var(--bw-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--bw-tracking-overline);
+  color: var(--text-color-secondary);
+  margin-bottom: 0.15rem;
+}
+
+// ── Items table ─────────────────────────────────────────────────────────────────
+
+.hpg-items-table {
+  table { min-width: 260px; }
+
+  td {
+    font-size: var(--bw-font-table);
+    border: none !important;
+  }
+}
+
+.hpg-item {
+  &__name {
+    color: var(--text-color);
+    width: 100%;
+  }
+
+  &__desc {
+    display: block;
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+    margin-top: 0.1rem;
+  }
+
+  &__price {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+// ── Transactions table ──────────────────────────────────────────────────────────
+
+.hpg-txn-table {
+  table { min-width: 360px; }
+
+  th {
+    font-size: var(--bw-font-overline);
+    font-weight: var(--bw-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+    padding: 0.5rem 0.75rem !important;
+    border: none !important;
+  }
+
+  td {
+    white-space: nowrap;
+    font-size: var(--bw-font-table);
+    border: none !important;
+  }
+}
+
+.hpg-txn {
+  &__time {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+  }
+
+  &__date {
+    color: var(--text-color-secondary);
+  }
+
+  &__method {
+    color: var(--text-color-secondary);
+  }
+
+  &__amount {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+    text-align: right;
+  }
+
+  &__empty {
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+    text-align: center;
+    padding: 1rem !important;
+  }
+}
+
+// ── Skeleton ────────────────────────────────────────────────────────────────────
+
+.hpg-sk-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1.5rem 1.125rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.hpg-skeleton {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.hpg-sk-gap {
+  height: 0.75rem;
+}

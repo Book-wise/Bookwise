@@ -61,6 +61,10 @@ export interface Booking {
   pack_session?: BookingPackSession | null;
 }
 
+export interface ApiResponse<T> {
+  data: T;
+}
+
 export interface BookingClient {
   id: number;
   first_name: string;

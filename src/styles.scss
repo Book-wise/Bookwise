@@ -314,6 +314,12 @@ input.p-inputtext {
   }
 }
 
+// ── p-select overlay z-index ────────────────────────────────────────────────
+// Ensure the overlay renders above PrimeNG dialog modal masks
+.p-select-overlay {
+  z-index: 9999 !important;
+}
+
 // ── Skeleton global ───────────────────────────────────────────────────────────
 
 @keyframes bw-skeleton-shimmer {

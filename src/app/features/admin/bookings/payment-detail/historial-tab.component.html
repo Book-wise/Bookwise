@@ -1,0 +1,30 @@
+<div class="historial-form">
+  <div class="historial-card">
+    <nav class="historial-nav">
+      @for (opt of viewOptions(); track opt.value) {
+        <button
+          type="button"
+          class="historial-nav__btn"
+          [class.historial-nav__btn--active]="selectedView() === opt.value"
+          (click)="selectedView.set(opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    </nav>
+  </div>
+
+  <div class="historial-card">
+    @switch (selectedView()) {
+      @case ('paciente') {
+        <bw-historial-paciente />
+      }
+      @case ('pagos') {
+        <bw-historial-pagos />
+      }
+      @case ('reserva') {
+        <bw-historial-reserva />
+      }
+    }
+  </div>
+</div>

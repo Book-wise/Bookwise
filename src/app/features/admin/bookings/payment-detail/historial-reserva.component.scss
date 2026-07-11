@@ -1,0 +1,73 @@
+.hr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.hr-sk-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1.5rem 1.125rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.hr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary);
+
+  &__icon { font-size: 2.5rem; opacity: 0.35; }
+  &__text { margin: 0; font-size: var(--bw-font-table); text-align: center; }
+}
+
+// ── Card ────────────────────────────────────────────────────────────────────────
+
+.hr-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__service {
+    font-size: var(--bw-font-body);
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: var(--bw-font-table);
+      color: var(--bw-300, #046af4);
+      width: 1rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+  }
+}

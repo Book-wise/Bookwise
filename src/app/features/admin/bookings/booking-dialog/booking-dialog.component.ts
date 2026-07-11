@@ -19,6 +19,8 @@ import { ReferenceStore } from '@core/stores/reference.store';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
 import { CURRENCY_CONFIG, formatCLP } from '@shared/config/currency.config';
+import { map } from 'rxjs';
+import { BookingStore } from '@core/stores/booking.store';
 
 export interface BookingFormData {
   id?: number;
@@ -56,13 +58,14 @@ export interface BookingFormData {
 export class BookingDialogComponent implements OnInit {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private api           = inject(ApiService);
-  private httpError     = inject(HttpErrorService);
+  private api = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
-  readonly lang         = inject(LanguageService);
+  readonly lang = inject(LanguageService);
+  private readonly store = inject(BookingStore);
 
   /** ReferenceStore: datos maestros */
-  private refStore      = inject(ReferenceStore);
+  private refStore = inject(ReferenceStore);
 
   visible = false;
   saving = signal(false);
@@ -72,8 +75,8 @@ export class BookingDialogComponent implements OnInit {
   readonly loading = computed(() => !this.refStore.allLoaded());
 
   // ── Datos desde ReferenceStore ──────────────────────────────────
-  readonly clients   = this.refStore.clients;
-  readonly services  = this.refStore.services;
+  readonly clients = this.refStore.clients;
+  readonly services = this.refStore.services;
   readonly providers = this.refStore.providers;
   readonly locations = this.refStore.locations;
   private readonly BD_STATUS_KEYS = [
@@ -120,10 +123,12 @@ export class BookingDialogComponent implements OnInit {
   );
 
   statusOptions = computed(() =>
-    this.BD_STATUS_KEYS.map(s => ({ label: this.lang.t(s.key), value: s.value }))
+    this.BD_STATUS_KEYS.map((s) => ({ label: this.lang.t(s.key), value: s.value })),
   );
 
-  ngOnInit() { /* datos cargados al abrir, no al montar */ }
+  ngOnInit() {
+    /* datos cargados al abrir, no al montar */
+  }
 
   private getEmptyForm(): BookingFormData {
     return {
@@ -153,17 +158,19 @@ export class BookingDialogComponent implements OnInit {
     if (booking) {
       this.isEdit.set(true);
       this.formData = {
-        id:               booking.id,
-        client_id:        booking.client_id ?? booking.client?.id ?? 0,
-        service_id:       booking.pack_session?.service_pack_id ? 0 : (booking.service_id ?? booking.service?.id ?? 0),
-        service_pack_id:  booking.pack_session?.service_pack_id ?? null,
-        provider_id:      booking.provider_id ?? booking.provider?.id ?? 0,
-        location_id:      booking.location_id ?? booking.location?.id ?? 0,
-        status_id:        booking.status_id,
-        start_time:       new Date(booking.start_time),
+        id: booking.id,
+        client_id: booking.client_id ?? booking.client?.id ?? 0,
+        service_id: booking.pack_session?.service_pack_id
+          ? 0
+          : (booking.service_id ?? booking.service?.id ?? 0),
+        service_pack_id: booking.pack_session?.service_pack_id ?? null,
+        provider_id: booking.provider_id ?? booking.provider?.id ?? 0,
+        location_id: booking.location_id ?? booking.location?.id ?? 0,
+        status_id: booking.status_id,
+        start_time: new Date(booking.start_time),
         duration_minutes: booking.custom_duration_minutes || 60,
-        price:            Number(booking.price) || 0,
-        notes:            booking.notes || '',
+        price: Number(booking.price) || 0,
+        notes: booking.notes || '',
       };
     } else {
       this.formData = this.getEmptyForm();
@@ -220,31 +227,40 @@ export class BookingDialogComponent implements OnInit {
     this.errors = {};
 
     const bookingData: CreateBooking = {
-      client_id:               this.formData.client_id,
-      provider_id:             this.formData.provider_id || undefined,
-      location_id:             this.formData.location_id,
-      status_id:               this.formData.status_id,
-      start_time:              this.formatDateTime(this.formData.start_time),
+      client_id: this.formData.client_id,
+      provider_id: this.formData.provider_id || undefined,
+      location_id: this.formData.location_id,
+      status_id: this.formData.status_id,
+      start_time: this.formatDateTime(this.formData.start_time),
       custom_duration_minutes: this.formData.duration_minutes || undefined,
-      notes:                   this.formData.notes || undefined,
+      notes: this.formData.notes || undefined,
     };
     if (this.formData.service_pack_id) {
       bookingData.service_pack_id = this.formData.service_pack_id;
     } else {
       bookingData.service_id = this.formData.service_id;
-      bookingData.price      = this.formData.price;
+      bookingData.price = this.formData.price;
     }
 
     const request = this.isEdit()
-      ? this.api.updateBooking(this.formData.id!, bookingData)
+      ? this.api.updateBooking(this.formData.id!, bookingData).pipe(
+          map((res) => res.data), // <-- Transforma ApiResponse<Booking> en Booking limpio
+        )
       : this.api.createBooking(bookingData);
 
     request.subscribe({
       next: (saved: Booking) => {
+        // 🔥 MUY IMPORTANTE: Inyectamos el cambio en tu Store global aquí mismo
+        // para que FullCalendar se entere del cambio de color de inmediato
+        this.store.mergeBooking(saved);
         this.messageService.add({
           severity: 'success',
-          summary: this.lang.t(this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary'),
-          detail:  this.lang.t(this.isEdit() ? 'toast.booking_updated.detail'  : 'toast.booking_created.detail'),
+          summary: this.lang.t(
+            this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary',
+          ),
+          detail: this.lang.t(
+            this.isEdit() ? 'toast.booking_updated.detail' : 'toast.booking_created.detail',
+          ),
         });
         this.visible = false;
         this.saving.set(false);
@@ -267,7 +283,7 @@ export class BookingDialogComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: this.lang.t('toast.booking_cancelled.summary'),
-          detail:  this.lang.t('toast.booking_cancelled.detail'),
+          detail: this.lang.t('toast.booking_cancelled.detail'),
         });
         this.visible = false;
         this.saving.set(false);
@@ -296,7 +312,7 @@ export class BookingDialogComponent implements OnInit {
       second: '2-digit',
       hour12: false,
     }).formatToParts(d);
-    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00';
     return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
   }
 }

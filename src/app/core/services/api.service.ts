@@ -28,6 +28,7 @@ import {
   CreateTransactionResponse,
   TransactionListResponse,
   DeleteTransactionResponse,
+  ApiResponse,
 } from '@models';
 
 @Injectable({
@@ -55,7 +56,11 @@ export class ApiService {
     return this.http.get<Service>(`${this.baseUrl}/services/${id}`);
   }
 
-  createService(payload: { name: string; price: number; duration_minutes: number }): Observable<Service> {
+  createService(payload: {
+    name: string;
+    price: number;
+    duration_minutes: number;
+  }): Observable<Service> {
     return this.http.post<Service>(`${this.baseUrl}/services`, payload);
   }
 
@@ -87,21 +92,50 @@ export class ApiService {
   }
 
   // Blocked slots
-  getBlockedSlots(params: { date_from: string; date_to: string; location_id?: number; provider_id?: number }): Observable<{ data: BlockedSlot[] }> {
+  getBlockedSlots(params: {
+    date_from: string;
+    date_to: string;
+    location_id?: number;
+    provider_id?: number;
+  }): Observable<{ data: BlockedSlot[] }> {
     let httpParams = new HttpParams();
-    Object.entries(params).forEach(([k, v]) => { if (v != null) httpParams = httpParams.set(k, String(v)); });
-    return this.http.get<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, { params: httpParams });
+    Object.entries(params).forEach(([k, v]) => {
+      if (v != null) httpParams = httpParams.set(k, String(v));
+    });
+    return this.http.get<{ data: BlockedSlot[] }>(`${this.baseUrl}/blocked-slots`, {
+      params: httpParams,
+    });
   }
 
   createBlockedSlot(body: {
-    start_time: string; end_time: string;
-    reason?: string; scope?: 'all'; provider_id?: number | null; location_id?: number | null;
-    repeat?: { type: string; interval: number; days?: number[]; end_type: string; count?: number; until?: string };
+    start_time: string;
+    end_time: string;
+    reason?: string;
+    scope?: 'all';
+    provider_id?: number | null;
+    location_id?: number | null;
+    repeat?: {
+      type: string;
+      interval: number;
+      days?: number[];
+      end_type: string;
+      count?: number;
+      until?: string;
+    };
   }): Observable<Partial<BlockConflictResponse>> {
     return this.http.post<Partial<BlockConflictResponse>>(`${this.baseUrl}/blocked-slots`, body);
   }
 
-  updateBlockedSlot(id: number, body: { start_time: string; end_time: string; reason?: string; provider_id?: number | null; location_id?: number | null }): Observable<BlockedSlot> {
+  updateBlockedSlot(
+    id: number,
+    body: {
+      start_time: string;
+      end_time: string;
+      reason?: string;
+      provider_id?: number | null;
+      location_id?: number | null;
+    },
+  ): Observable<BlockedSlot> {
     return this.http.patch<BlockedSlot>(`${this.baseUrl}/blocked-slots/${id}`, body);
   }
 
@@ -161,15 +195,17 @@ export class ApiService {
   }
 
   getBooking(id: number): Observable<Booking> {
-    return this.http.get<{ data: Booking }>(`${this.baseUrl}/bookings/${id}`).pipe(map(r => r.data));
+    return this.http
+      .get<{ data: Booking }>(`${this.baseUrl}/bookings/${id}`)
+      .pipe(map((r) => r.data));
   }
 
   createBooking(booking: CreateBooking): Observable<Booking> {
     return this.http.post<Booking>(`${this.baseUrl}/bookings`, booking);
   }
 
-  updateBooking(id: number, booking: UpdateBooking): Observable<Booking> {
-    return this.http.patch<Booking>(`${this.baseUrl}/bookings/${id}`, booking);
+  updateBooking(id: number, booking: UpdateBooking): Observable<ApiResponse<Booking>> {
+    return this.http.patch<ApiResponse<Booking>>(`${this.baseUrl}/bookings/${id}`, booking);
   }
 
   cancelBooking(id: number): Observable<Booking> {
@@ -251,12 +287,20 @@ export class ApiService {
     return this.http.get<TransactionListResponse>(`${this.baseUrl}/sales/${saleId}/transactions`);
   }
 
-  createTransaction(saleId: number, body: CreateTransactionRequest): Observable<CreateTransactionResponse> {
-    return this.http.post<CreateTransactionResponse>(`${this.baseUrl}/sales/${saleId}/transactions`, body);
+  createTransaction(
+    saleId: number,
+    body: CreateTransactionRequest,
+  ): Observable<CreateTransactionResponse> {
+    return this.http.post<CreateTransactionResponse>(
+      `${this.baseUrl}/sales/${saleId}/transactions`,
+      body,
+    );
   }
 
   deleteTransaction(saleId: number, transactionId: number): Observable<DeleteTransactionResponse> {
-    return this.http.delete<DeleteTransactionResponse>(`${this.baseUrl}/sales/${saleId}/transactions/${transactionId}`);
+    return this.http.delete<DeleteTransactionResponse>(
+      `${this.baseUrl}/sales/${saleId}/transactions/${transactionId}`,
+    );
   }
 
   // Client Packs

@@ -1,0 +1,45 @@
+.historial-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.historial-card {
+  background: var(--surface-0, #ffffff);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.historial-nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.historial-nav__btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--p-content-border-color, #d1d5db);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--p-content-hover-background, #f3f4f6);
+    color: var(--p-text-color, #111827);
+  }
+
+  &--active {
+    background: var(--p-primary-color, #3b82f6);
+    border-color: var(--p-primary-color, #3b82f6);
+    color: #fff;
+
+    &:hover {
+      background: var(--p-primary-hover-color, #2563eb);
+    }
+  }
+}

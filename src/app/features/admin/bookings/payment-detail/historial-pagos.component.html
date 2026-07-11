@@ -1,0 +1,156 @@
+@switch (mode()) {
+
+  @case ('list') {
+    <div class="hpg-list">
+      @if (salesLoading()) {
+        <div class="hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+        <div class="hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+        <div class="hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+      } @else if (sales().length === 0) {
+        <div class="hpg-empty">
+          <i class="pi pi-wallet hpg-empty__icon"></i>
+          <p class="hpg-empty__text">Sin pagos registrados para este paciente.</p>
+        </div>
+      } @else {
+        @for (sale of sales(); track sale.id) {
+          <div class="hpg-card">
+            <div class="hpg-card__header">
+              <span class="hpg-card__date">
+                {{ lastTransactionDate(sale) | date:'EEEE, d MMMM yyyy - HH:mm' }}
+              </span>
+              <p-tag
+                [value]="saleStatusLabel(sale.payment_status)"
+                [severity]="saleStatusSeverity(sale.payment_status)"
+              />
+            </div>
+
+            <div class="hpg-card__body">
+              <div class="hpg-card__row">
+                <i class="pi pi-building hpg-card__icon"></i>
+                <span>{{ providerLabel(sale) }}</span>
+              </div>
+            </div>
+
+            <div class="hpg-card__amount">
+              {{ sale.paid_amount | bwCurrency }}
+            </div>
+
+            <div class="hpg-card__footer">
+              <button class="hpg-card__link" (click)="selectedSaleId.set(sale.id)">
+                Ver más detalles
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  @case ('loading') {
+    <div class="hpg-detail">
+      <div class="hpg-skeleton">
+        <p-skeleton width="120px" height="0.875rem" />
+        <div class="hpg-sk-gap"></div>
+        <p-skeleton width="100%" height="3rem" borderRadius="6px" />
+        <div class="hpg-sk-gap"></div>
+        <p-skeleton width="100%" height="5rem" borderRadius="6px" />
+      </div>
+    </div>
+  }
+
+  @case ('detail') {
+    @let sale = selectedSale()!;
+
+    <div class="hpg-detail">
+      <!-- Back button -->
+      <button class="hpg-back-btn" (click)="goBack()">
+        <i class="pi pi-arrow-left"></i>
+        Volver a historial
+      </button>
+
+      <!-- Header card -->
+      <div class="hpg-detail-card hpg-detail-card--header">
+        <div class="hpg-detail-header">
+          <p-tag
+            [value]="saleStatusLabel(sale.payment_status)"
+            [severity]="saleStatusSeverity(sale.payment_status)"
+          />
+          @if (sale.wc_order_id) {
+            <span class="hpg-online-badge">
+              <i class="pi pi-globe"></i>
+              Online
+            </span>
+          }
+        </div>
+
+        <div class="hpg-detail-amounts">
+          <span class="hpg-paid-amount">{{ sale.paid_amount | bwCurrency }}</span>
+          @if (toNumber(sale.remaining_amount) > 0) {
+            <span class="hpg-remaining">
+              Por pagar: {{ sale.remaining_amount | bwCurrency }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Items table -->
+      <div class="hpg-detail-card">
+        <span class="hpg-section-label">Detalle</span>
+        <p-table
+          [value]="items(sale)"
+          [stripedRows]="true"
+          [scrollable]="true"
+          size="small"
+          class="hpg-items-table"
+        >
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td class="hpg-item__name">
+                {{ item.name }}
+                @if (item.description) {
+                  <span class="hpg-item__desc">{{ item.description }}</span>
+                }
+              </td>
+              <td class="hpg-item__price">{{ item.total | bwCurrency }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Transactions table -->
+      <div class="hpg-detail-card">
+        <span class="hpg-section-label">Transacciones</span>
+        <p-table
+          [value]="sale.transactions"
+          [stripedRows]="true"
+          [scrollable]="true"
+          size="small"
+          class="hpg-txn-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Hora</th>
+              <th>Fecha</th>
+              <th>Método</th>
+              <th>Monto</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-txn>
+            <tr>
+              <td class="hpg-txn__time">{{ txn.paid_at | date:'HH:mm' }}</td>
+              <td class="hpg-txn__date">{{ txn.paid_at | date:'dd/MM/yy' }}</td>
+              <td class="hpg-txn__method">{{ txn.payment_method }}</td>
+              <td class="hpg-txn__amount">{{ txn.amount | bwCurrency }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="hpg-txn__empty">Sin transacciones registradas.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+}

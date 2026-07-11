@@ -27,7 +27,15 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Booking, Client, Service, ServicePack, Provider, CreateBooking, BookingRepeat } from '@models';
+import {
+  Booking,
+  Client,
+  Service,
+  ServicePack,
+  Provider,
+  CreateBooking,
+  BookingRepeat,
+} from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
@@ -39,7 +47,7 @@ import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.
 import { RutDirective } from '@shared/validators/rut.directive';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { Subject, of } from 'rxjs';
-import { debounceTime, switchMap, catchError, takeUntil } from 'rxjs/operators';
+import { debounceTime, switchMap, catchError, takeUntil, map } from 'rxjs/operators';
 import { SimilarPatientsService } from '../similar-patients.service';
 import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
@@ -76,14 +84,14 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
 export class BookingFormDialogComponent implements OnInit, OnDestroy {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private apiService     = inject(ApiService);
-  private httpError      = inject(HttpErrorService);
+  private apiService = inject(ApiService);
+  private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
-  private cdr            = inject(ChangeDetectorRef);
-  readonly lang          = inject(LanguageService);
+  private cdr = inject(ChangeDetectorRef);
+  readonly lang = inject(LanguageService);
 
   /** ReferenceStore: fuente Ãºnica de datos maestros */
-  private refStore       = inject(ReferenceStore);
+  private refStore = inject(ReferenceStore);
   private similarService = inject(SimilarPatientsService);
 
   @Input() initialDate?: Date;
@@ -91,64 +99,66 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   @Output() onSaved = new EventEmitter<void>();
   @Output() onCancelled = new EventEmitter<void>();
 
-  visible     = false;
-  saving           = signal(false);
+  visible = false;
+  saving = signal(false);
   providersLoading = signal(false);
-  isEdit      = signal(false);
-  showRepeatDialog  = false;
-  showServicePanel  = false;
-  showPatientPanel  = false;
-  savingService     = signal(false);
+  isEdit = signal(false);
+  showRepeatDialog = false;
+  showServicePanel = false;
+  showPatientPanel = false;
+  savingService = signal(false);
 
   /** Skeleton visible hasta que el store tenga datos Y los providers estÃ©n cargados */
-  readonly loadingData = computed(() =>
-    !this.refStore.allLoaded() || this.providersLoading(),
-  );
+  readonly loadingData = computed(() => !this.refStore.allLoaded() || this.providersLoading());
 
   // â”€â”€ Similar-patients pre-check (duplicate detection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  similarClients       = signal<Client[]>([]);
-  showSimilarDialog    = signal(false);
+  similarClients = signal<Client[]>([]);
+  showSimilarDialog = signal(false);
   selectedClientOption = signal<number | 'new'>('new');
-  precheckPending      = signal(false);
+  precheckPending = signal(false);
 
   private precheckTrigger$ = new Subject<string>();
-  private destroy$         = new Subject<void>();
-  private saveInProgress   = false;
+  private destroy$ = new Subject<void>();
+  private saveInProgress = false;
 
   @ViewChild('patientForm') patientForm?: NgForm;
 
   formData: BookingFormData = this.getEmptyForm();
 
-  newClient  = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
+  newClient = { first_name: '', last_name: '', email: '', phone: '', rut: '' };
   newService = { name: '', price: 0, duration_minutes: 60 };
 
   repeatAfterChecked = false;
   repeatUntilChecked = false;
 
-  // â”€â”€ Datos desde ReferenceStore â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  readonly clients   = this.refStore.clients;
-  readonly providers = signal<Provider[]>([]);  // location-filtered, se llena manualmente
+  // Datos desde ReferenceStore
+  readonly clients = this.refStore.clients;
+  readonly providers = signal<Provider[]>([]); // location-filtered, se llena manualmente
   readonly locations = this.refStore.locations;
 
   /** Servicios + packs unificados (packs llevan flag _isPack) */
   readonly services = computed<(Service | ServicePack)[]>(() => [
     ...this.refStore.services(),
-    ...this.refStore.packs().map(p => ({ ...p, _isPack: true })),
+    ...this.refStore.packs().map((p) => ({ ...p, _isPack: true })),
   ]);
 
   // â”€â”€ Selected-client reactive mirror (signal + computed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly selectedClientId = signal<number | null>(null);
-  readonly selectedClient   = computed(() =>
-    this.clients().find(c => c.id === this.selectedClientId()) ?? null
+  readonly selectedClient = computed(
+    () => this.clients().find((c) => c.id === this.selectedClientId()) ?? null,
   );
 
   onSuccessCallback?: () => void;
   selectedServiceKey = '';
   private _pendingServiceId = 0;
 
-  readonly hours   = Array.from({ length: 24 }, (_, i) => ({ label: i.toString().padStart(2, '0'), value: i }));
-  readonly minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(m => ({
-    label: m.toString().padStart(2, '0'), value: m,
+  readonly hours = Array.from({ length: 24 }, (_, i) => ({
+    label: i.toString().padStart(2, '0'),
+    value: i,
+  }));
+  readonly minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => ({
+    label: m.toString().padStart(2, '0'),
+    value: m,
   }));
 
   get mobileHour(): number {
@@ -211,37 +221,41 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
 
   statusOptions = computed(() =>
-    BOOKING_STATUSES.map(s => ({ ...s, label: this.lang.t(s.labelKey) }))
+    BOOKING_STATUSES.map((s) => ({ ...s, label: this.lang.t(s.labelKey) })),
   );
   daysOfWeek = computed(() =>
-    DAYS_OF_WEEK.map(d => ({ label: this.lang.t(d.labelKey), value: d.value }))
+    DAYS_OF_WEEK.map((d) => ({ label: this.lang.t(d.labelKey), value: d.value })),
   );
   repeatTypeOptions = computed(() =>
-    REPEAT_TYPE_OPTIONS.map(o => ({ label: this.lang.t(o.labelKey), value: o.value }))
+    REPEAT_TYPE_OPTIONS.map((o) => ({ label: this.lang.t(o.labelKey), value: o.value })),
   );
   dialogTitle = computed(() => {
     const client = this.selectedClient();
     if (client) {
-      return this.lang.t('booking_form.title.for_client', { name: `${client.first_name} ${client.last_name}` });
+      return this.lang.t('booking_form.title.for_client', {
+        name: `${client.first_name} ${client.last_name}`,
+      });
     }
     return this.lang.t(this.isEdit() ? 'booking_form.title.edit' : 'booking_form.title.create');
   });
 
   ngOnInit() {
-    this.precheckTrigger$.pipe(
-      debounceTime(400),
-      switchMap(term =>
-        this.similarService.precheck(term, {
-          first_name: this.newClient.first_name,
-          last_name: this.newClient.last_name,
-          email: this.newClient.email,
-          phone: this.newClient.phone,
-        }).pipe(
-          catchError(() => of([] as Client[])),
+    this.precheckTrigger$
+      .pipe(
+        debounceTime(400),
+        switchMap((term) =>
+          this.similarService
+            .precheck(term, {
+              first_name: this.newClient.first_name,
+              last_name: this.newClient.last_name,
+              email: this.newClient.email,
+              phone: this.newClient.phone,
+            })
+            .pipe(catchError(() => of([] as Client[]))),
         ),
-      ),
-      takeUntil(this.destroy$),
-    ).subscribe(candidates => this.onPrecheckResult(candidates));
+        takeUntil(this.destroy$),
+      )
+      .subscribe((candidates) => this.onPrecheckResult(candidates));
   }
 
   ngOnDestroy(): void {
@@ -284,9 +298,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.providersLoading.set(true);
     this.apiService
       .getProviders(
-        this.formData.location_id
-          ? { location_id: this.formData.location_id }
-          : undefined,
+        this.formData.location_id ? { location_id: this.formData.location_id } : undefined,
       )
       .subscribe({
         next: (data) => {
@@ -315,27 +327,27 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     if (booking) {
       this.isEdit.set(true);
       const startDate = new Date(booking.start_time);
-      const packId    = booking.pack_session?.service_pack_id ?? null;
+      const packId = booking.pack_session?.service_pack_id ?? null;
       const serviceId = packId ? 0 : (booking.service_id ?? booking.service?.id ?? 0);
       this.formData = {
         ...this.getEmptyForm(),
-        id:               booking.id,
-        client_id:        booking.client_id ?? booking.client?.id ?? 0,
-        service_id:       serviceId,
-        service_pack_id:  packId,
-        provider_id:      this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
-        location_id:      booking.location_id ?? booking.location?.id ?? 1,
-        status_id:        booking.status_id,
-        start_time:       startDate,
+        id: booking.id,
+        client_id: booking.client_id ?? booking.client?.id ?? 0,
+        service_id: serviceId,
+        service_pack_id: packId,
+        provider_id: this.lockedProviderId ?? booking.provider_id ?? booking.provider?.id ?? null,
+        location_id: booking.location_id ?? booking.location?.id ?? 1,
+        status_id: booking.status_id,
+        start_time: startDate,
         duration_minutes: booking.custom_duration_minutes || 60,
-        price:            Number(booking.price) || 0,
-        notes:            booking.notes || '',
+        price: Number(booking.price) || 0,
+        notes: booking.notes || '',
       };
       this._pendingServiceId = packId ?? serviceId;
       this.selectedClientId.set(this.formData.client_id || null);
     } else {
       if (initialDate) this.formData.start_time = initialDate;
-      if (locationId)  this.formData.location_id = locationId;
+      if (locationId) this.formData.location_id = locationId;
       if (this.lockedProviderId) this.formData.provider_id = this.lockedProviderId;
     }
 
@@ -409,18 +421,18 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   private resolveServiceKey(serviceId: number): string {
     if (!serviceId) return '';
     const opts = this.serviceOptions();
-    if (opts.find(o => o.value === `pack_${serviceId}`)) return `pack_${serviceId}`;
+    if (opts.find((o) => o.value === `pack_${serviceId}`)) return `pack_${serviceId}`;
     return `svc_${serviceId}`;
   }
 
   onServiceChange() {
-    const option = this.serviceOptions().find(o => o.value === this.selectedServiceKey);
+    const option = this.serviceOptions().find((o) => o.value === this.selectedServiceKey);
     if (option) {
       const isPack = this.selectedServiceKey.startsWith('pack_');
-      this.formData.service_id      = isPack ? 0 : option._id;
+      this.formData.service_id = isPack ? 0 : option._id;
       this.formData.service_pack_id = isPack ? option._id : null;
       this.formData.duration_minutes = option.duration_minutes;
-      this.formData.price            = Number(option.price) || 0;
+      this.formData.price = Number(option.price) || 0;
     }
   }
 
@@ -439,7 +451,12 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   onSave() {
     if (!this.formData.client_id) {
-      this.messageService.add({ severity: 'warn', summary: this.lang.t('toast.patient_required.summary'), detail: this.lang.t('toast.patient_required.detail'), life: 4000 });
+      this.messageService.add({
+        severity: 'warn',
+        summary: this.lang.t('toast.patient_required.summary'),
+        detail: this.lang.t('toast.patient_required.detail'),
+        life: 4000,
+      });
       return;
     }
     if (!this.isFormValid()) return;
@@ -448,45 +465,53 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     const startDate = new Date(this.formData.start_time);
 
     const bookingData: CreateBooking = {
-      client_id:               this.formData.client_id,
-      provider_id:             this.formData.provider_id || undefined,
-      location_id:             this.formData.location_id,
-      status_id:               this.formData.status_id,
-      start_time:              this.formatDateTime(startDate),
+      client_id: this.formData.client_id,
+      provider_id: this.formData.provider_id || undefined,
+      location_id: this.formData.location_id,
+      status_id: this.formData.status_id,
+      start_time: this.formatDateTime(startDate),
       custom_duration_minutes: this.formData.duration_minutes || undefined,
-      notes:                   this.formData.notes || undefined,
+      notes: this.formData.notes || undefined,
     };
 
     if (this.formData.service_pack_id) {
       bookingData.service_pack_id = this.formData.service_pack_id;
     } else {
       bookingData.service_id = this.formData.service_id;
-      bookingData.price      = this.formData.price;
+      bookingData.price = this.formData.price;
     }
 
     if (this.formData.repeat_enabled) {
       const repeat: BookingRepeat = {
-        enabled:  true,
-        type:     this.formData.repeat_type,
-        days:     this.formData.repeat_days,
+        enabled: true,
+        type: this.formData.repeat_type,
+        days: this.formData.repeat_days,
         interval: this.formData.repeat_interval,
         end_type: this.formData.repeat_end_type,
-        count:    this.formData.repeat_count,
-        until:    this.formData.repeat_until ? this.formatDateTime(this.formData.repeat_until) : undefined,
+        count: this.formData.repeat_count,
+        until: this.formData.repeat_until
+          ? this.formatDateTime(this.formData.repeat_until)
+          : undefined,
       };
       bookingData.repeat = repeat;
     }
 
     const request = this.isEdit()
-      ? this.apiService.updateBooking(this.formData.id!, bookingData)
+      ? this.apiService.updateBooking(this.formData.id!, bookingData).pipe(
+          map((res) => res.data), // <-- Transforma ApiResponse<Booking> en Booking limpio
+        )
       : this.apiService.createBooking(bookingData);
 
     request.subscribe({
       next: (saved: Booking) => {
         this.messageService.add({
           severity: 'success',
-          summary: this.lang.t(this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary'),
-          detail:  this.lang.t(this.isEdit() ? 'toast.booking_updated.detail'  : 'toast.booking_created.detail'),
+          summary: this.lang.t(
+            this.isEdit() ? 'toast.booking_updated.summary' : 'toast.booking_created.summary',
+          ),
+          detail: this.lang.t(
+            this.isEdit() ? 'toast.booking_updated.detail' : 'toast.booking_created.detail',
+          ),
         });
         this.visible = false;
         this.saving.set(false);
@@ -522,7 +547,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'success',
             summary: this.lang.t('toast.client_created.summary'),
-            detail:  this.lang.t('toast.client_created.detail'),
+            detail: this.lang.t('toast.client_created.detail'),
           });
           this.showPatientPanel = false;
           this.formData.client_id = client.id;
@@ -553,7 +578,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       second: '2-digit',
       hour12: false,
     }).formatToParts(d);
-    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00';
     return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
   }
 
@@ -616,9 +641,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     const trimmed = (value ?? '').trim();
     if (!trimmed) return;
 
-    const eligible = kind === 'email'
-      ? trimmed.length >= 5
-      : stripDigits(trimmed).length >= 6;
+    const eligible = kind === 'email' ? trimmed.length >= 5 : stripDigits(trimmed).length >= 6;
 
     if (!eligible) return;
 
@@ -635,7 +658,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     if (this.saveInProgress) return;
 
     const matches = matchSimilarClients(candidates, this.newClient);
-    const merged  = dedupeById([...this.similarClients(), ...matches]);
+    const merged = dedupeById([...this.similarClients(), ...matches]);
 
     this.similarClients.set(merged);
     this.showSimilarDialog.set(merged.length > 0);
@@ -669,7 +692,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: this.lang.t('toast.existing_client_assigned.summary'),
-      detail:  this.lang.t('toast.existing_client_assigned.detail'),
+      detail: this.lang.t('toast.existing_client_assigned.detail'),
     });
   }
 
@@ -678,7 +701,12 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.savingService.set(true);
     this.apiService.createService(this.newService).subscribe({
       next: (service) => {
-        this.messageService.add({ severity: 'success', summary: this.lang.t('toast.service_created.summary'), detail: service.name, life: 3000 });
+        this.messageService.add({
+          severity: 'success',
+          summary: this.lang.t('toast.service_created.summary'),
+          detail: service.name,
+          life: 3000,
+        });
         this.refStore.invalidateServices();
         this.savingService.set(false);
         this.showServicePanel = false;
