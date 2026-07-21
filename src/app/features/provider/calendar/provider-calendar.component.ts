@@ -24,6 +24,7 @@ import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '@services/api.service';
+import { TimezoneService } from '@services/timezone.service';
 import { AuthService } from '@services/auth.service';
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
@@ -74,6 +75,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly lang          = inject(LanguageService);
   readonly store         = inject(BookingStore);
   private httpError      = inject(HttpErrorService);
+  private tzService      = inject(TimezoneService);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -120,8 +122,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     slotMinTime: '09:00:00',
     slotMaxTime: '21:00:00',
     locale: this.lang.lang() === 'en' ? 'en' : esLocale,
-    // Timezone fijo para Chile — independiente del browser
-    timeZone: 'America/Santiago',
+    // Timezone desde servicio centralizado
+    timeZone: this.tzService.activeTimezone(),
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -167,6 +169,14 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     effect(() => {
       void this.lang.lang();
       this.updateCalendarI18n();
+    });
+
+    // Sync FullCalendar timezone when it changes
+    effect(() => {
+      const tz = this.tzService.activeTimezone();
+      if (this.calendar) {
+        this.ngZone.runOutsideAngular(() => this.calendar!.setOption('timeZone', tz));
+      }
     });
 
     // Watch store state to manage loading visual and refresh calendar
@@ -266,7 +276,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
           // info.dateStr is ISO8601 with CLT offset; parse for correct absolute timestamps.
           // Keep info.date (stripped) for preview rendering — FullCalendar renders by local wall clock.
           const previewMs = this.getPreviewDuration();
-          const start = new Date(info.dateStr);
+          const start = this.tzService.parseDate(info.dateStr);
           const end = new Date(start.getTime() + previewMs);
 
           this.selectedDate = start;
@@ -392,13 +402,11 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   formatTooltipTime(iso: string): string {
-    const d = new Date(iso);
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return this.tzService.formatTime(iso);
   }
 
   private fmt(iso: string): string {
-    const d = new Date(iso);
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return this.tzService.formatTime(iso);
   }
 
   private getPreviewDuration(): number {
@@ -480,21 +488,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private fmtDT(iso: string): string {
-    if (!iso) return '—';
-    const d = new Date(iso);
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    // Obtener weekday index y hora/minuto en CLT via Intl
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Santiago',
-      weekday: 'short',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(d);
-    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '0';
-    const enDays: Record<string, number> = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
-    const dayIdx = enDays[get('weekday')] ?? 0;
-    return `${days[dayIdx]} ${get('hour').padStart(2, '0')}:${get('minute')}`;
+    return this.tzService.formatDT(iso);
   }
 
   onFilterChange(): void {
@@ -543,8 +537,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private handleDateSelect(selectInfo: DateSelectArg): void {
-    this.selectedDate = new Date(selectInfo.startStr);
-    this.selectedEndDate = selectInfo.endStr ? new Date(selectInfo.endStr) : null;
+    this.selectedDate = this.tzService.parseDate(selectInfo.startStr);
+    this.selectedEndDate = selectInfo.endStr ? this.tzService.parseDate(selectInfo.endStr) : null;
     if (selectInfo.jsEvent) {
       this.slotMenuPosition = { x: selectInfo.jsEvent.clientX, y: selectInfo.jsEvent.clientY };
       this.showSlotMenu.set(true);

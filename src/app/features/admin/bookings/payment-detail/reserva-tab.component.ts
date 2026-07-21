@@ -16,6 +16,7 @@ import { BookingStore } from '@core/stores/booking.store';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { TimezoneService } from '@services/timezone.service';
 import { MessageService } from 'primeng/api';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { PatientCardComponent } from '@shared/components/patient-card/patient-card.component';
@@ -32,6 +33,7 @@ export class ReservaTabComponent {
   private readonly httpError      = inject(HttpErrorService);
   private readonly messageService = inject(MessageService);
   private readonly refStore       = inject(ReferenceStore);
+  private readonly tzService      = inject(TimezoneService);
   readonly store          = inject(BookingStore);
 
   readonly statusId = input<number>(0);
@@ -96,23 +98,11 @@ export class ReservaTabComponent {
   // ── CLT helpers ───────────────────────────────────────────────────────────────
 
   private cltTime(date: Date): { hour: number; minute: number } {
-    const f = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(date);
-    return {
-      hour:   parseInt(f.find(p => p.type === 'hour')?.value ?? '0', 10),
-      minute: parseInt(f.find(p => p.type === 'minute')?.value ?? '0', 10),
-    };
+    return this.tzService.getTimeParts(date);
   }
 
   private fmtCLT(date: Date, hour: number, minute: number): string {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+    return `${this.tzService.formatDateTime(date).split(' ')[0]} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────────

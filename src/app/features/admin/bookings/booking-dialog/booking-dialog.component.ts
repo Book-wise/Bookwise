@@ -15,6 +15,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Booking, Client, Service, Provider, CreateBooking } from '@models';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { TimezoneService } from '@services/timezone.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
@@ -63,6 +64,7 @@ export class BookingDialogComponent implements OnInit {
   private messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
   private readonly store = inject(BookingStore);
+  private tzService = inject(TimezoneService);
 
   /** ReferenceStore: datos maestros */
   private refStore = inject(ReferenceStore);
@@ -301,18 +303,6 @@ export class BookingDialogComponent implements OnInit {
   }
 
   private formatDateTime(date: Date | string): string {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    const parts = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).formatToParts(d);
-    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00';
-    return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
+    return this.tzService.formatDateTime(date);
   }
 }
