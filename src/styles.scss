@@ -4,6 +4,9 @@
 
 @use 'styles/tokens';
 @use 'styles/cards';
+@use 'styles/full-calendar';
+@use 'styles/provider-calendar';
+@use 'styles/patient-card';
 @import 'intl-tel-input/dist/css/intlTelInput.css';
 
 // Importar fuentes desde assets

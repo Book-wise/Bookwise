@@ -4,7 +4,7 @@
   @media (max-width: 768px) {
     padding: 0;
 
-    ::ng-deep .p-card {
+    .p-card {
       border-radius: 0;
       box-shadow: none;
     }
@@ -47,8 +47,8 @@
     flex-wrap: wrap;
     justify-content: center;
 
-    :host ::ng-deep .p-select,
-    :host ::ng-deep .p-multiselect {
+    .p-select,
+    .p-multiselect {
       min-width: 200px;
     }
 
@@ -56,8 +56,8 @@
       width: 100%;
       flex-direction: column;
 
-      :host ::ng-deep .p-select,
-      :host ::ng-deep .p-multiselect {
+      .p-select,
+      .p-multiselect {
         width: 100%;
         min-width: unset;
       }
@@ -216,31 +216,31 @@
 }
 
 // Status filter option — rendered inside PrimeNG overlay (outside component scope)
-::ng-deep .bw-status-filter-option {
+.bw-status-filter-option {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-::ng-deep .bw-status-filter-dot {
+.bw-status-filter-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-// FullCalendar global styles - fuera de :host para mejor especificidad
-::ng-deep .fc {
+// FullCalendar global styles - fuera de para mejor especificidad
+.fc {
   font-family: 'Roboto', sans-serif !important;
 }
 
-::ng-deep .fc .fc-toolbar-title {
+.fc .fc-toolbar-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: #1f2937;
 }
 
-::ng-deep .fc .fc-button {
+.fc .fc-button {
   font-weight: 500;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -248,13 +248,13 @@
   font-size: 0.875rem;
 }
 
-::ng-deep .fc .fc-daygrid-day-number {
+.fc .fc-daygrid-day-number {
   padding: 0.5rem;
   font-weight: 500;
   color: #374151;
 }
 
-::ng-deep .fc .fc-col-header-cell-cushion {
+.fc .fc-col-header-cell-cushion {
   color: #6b7280;
   font-weight: 600;
   text-transform: uppercase;
@@ -262,7 +262,7 @@
   letter-spacing: 0.05em;
 }
 
-::ng-deep .fc .fc-event {
+.fc .fc-event {
   cursor: pointer;
   color: #000 !important;
   border-radius: 4px;
@@ -271,14 +271,14 @@
   overflow: hidden;
 }
 
-::ng-deep .fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview) {
+.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview) {
   border-left-width: 3px !important;
   border-left-style: solid !important;
 }
 
 // ── Payment indicator inside event ───────────────────────────────────────────
 
-::ng-deep .fc .ev-inner {
+.fc .ev-inner {
   display: flex;
   align-items: stretch;
   width: 100%;
@@ -288,7 +288,7 @@
   padding: 2px 4px 2px 0;
 }
 
-::ng-deep .fc .ev-pay-badge {
+.fc .ev-pay-badge {
   width: 10%;
   min-width: 10px;
   max-width: 18px;
@@ -311,7 +311,7 @@
   }
 }
 
-::ng-deep .fc .ev-title {
+.fc .ev-title {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -320,29 +320,29 @@
   align-self: center;
 }
 
-::ng-deep .fc .fc-event-title {
+.fc .fc-event-title {
   font-weight: 500;
 }
 
-::ng-deep .fc .fc-day-today {
+.fc .fc-day-today {
   background-color: rgba(59, 130, 246, 0.1) !important;
 }
 
-::ng-deep .fc .fc-timegrid-slot {
+.fc .fc-timegrid-slot {
   height: 1.25rem;
 }
 
-::ng-deep .fc .fc-timegrid-slot-label-cushion {
+.fc .fc-timegrid-slot-label-cushion {
   color: #6b7280;
   font-size: 0.75rem;
 }
 
 // Slot hover - muestra fondo rosa suave con bordes interlineados
-::ng-deep .fc .fc-timegrid-slot:hover {
+.fc .fc-timegrid-slot:hover {
   background-color: rgba(236, 72, 153, 0.1);
 }
 
-::ng-deep .fc .fc-timegrid-slot:hover::after {
+.fc .fc-timegrid-slot:hover::after {
   content: '';
   position: absolute;
   left: 0;
@@ -354,11 +354,11 @@
 }
 
 // Slot seleccionado - highlighted
-::ng-deep .fc .fc-timegrid-slot.fc-slot-selected {
+.fc .fc-timegrid-slot.fc-slot-selected {
   background-color: rgba(236, 72, 153, 0.15) !important;
 }
 
-::ng-deep .fc .fc-timegrid-slot.fc-slot-selected::after {
+.fc .fc-timegrid-slot.fc-slot-selected::after {
   content: '';
   position: absolute;
   left: 0;
@@ -370,30 +370,30 @@
 }
 
 // Time labels en formato 24h
-::ng-deep .fc .fc-timegrid-axis-cushion {
+.fc .fc-timegrid-axis-cushion {
   font-size: 0.75rem;
   color: #6b7280;
 }
 
-::ng-deep .fc .fc-timegrid-slot-label {
+.fc .fc-timegrid-slot-label {
   font-size: 0.75rem;
 }
 
-::ng-deep .fc .fc-day-max-events {
+.fc .fc-day-max-events {
   font-weight: 500;
   color: #6b7280;
 }
 
 // Custom toolbar buttons — ocultos en desktop, visibles solo en ≤425px
-::ng-deep .fc-bwNewBooking-button,
-::ng-deep .fc-bwBlockTime-button {
+.fc-bwNewBooking-button,
+.fc-bwBlockTime-button {
   display: none !important;
 }
 
 @media (max-width: 425px) {
   // touch-action: manipulation elimina el delay de doble-tap en iOS/Android
-  ::ng-deep .fc-bwNewBooking-button,
-  ::ng-deep .fc-bwBlockTime-button {
+  .fc-bwNewBooking-button,
+  .fc-bwBlockTime-button {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
@@ -411,7 +411,7 @@
       box-shadow 0.2s;
   }
 
-  ::ng-deep .fc-bwNewBooking-button {
+  .fc-bwNewBooking-button {
     background: var(--p-button-primary-background) !important;
     border-color: var(--p-button-primary-border-color) !important;
     color: var(--p-button-primary-color) !important;
@@ -427,7 +427,7 @@
     }
   }
 
-  ::ng-deep .fc-bwBlockTime-button {
+  .fc-bwBlockTime-button {
     background: var(--p-button-secondary-background) !important;
     border-color: var(--p-button-secondary-border-color) !important;
     color: var(--p-button-secondary-color) !important;
@@ -449,14 +449,14 @@
 }
 
 @media (max-width: 374px) {
-  ::ng-deep .fc-bwNewBooking-button,
-  ::ng-deep .fc-bwBlockTime-button {
+  .fc-bwNewBooking-button,
+  .fc-bwBlockTime-button {
     padding: 0.25rem 0.5rem !important;
     font-size: 0.6875rem !important;
     margin: 0.125rem 0.25rem !important;
   }
 
-  ::ng-deep .fc {
+  .fc {
     .fc-toolbar-title {
       font-size: 0.875rem !important;
     }
@@ -475,7 +475,7 @@
 
 // Responsive styles (≤768px)
 @media (max-width: 768px) {
-  ::ng-deep .fc {
+  .fc {
     // Toolbar
     .fc-toolbar {
       flex-direction: column !important;
@@ -534,7 +534,7 @@
 
 // Dark mode para FullCalendar
 body.dark-theme {
-  ::ng-deep .fc {
+  .fc {
     --fc-border-color: #374151;
     --fc-page-bg-color: #16213e;
     --fc-neutral-bg-color: #1a1a2e;
@@ -641,7 +641,7 @@ body.dark-theme {
 
 // ── Event hover tooltip ───────────────────────────────────────────────────────
 
-::ng-deep .event-tooltip-panel {
+.event-tooltip-panel {
   .p-overlaypanel-content {
     padding: 0.75rem 1rem;
   }
@@ -691,7 +691,7 @@ body.dark-theme {
 
 // ── Blocked slot events ───────────────────────────────────────────────────────
 
-::ng-deep .fc-blocked-slot {
+.fc-blocked-slot {
   background: repeating-linear-gradient(
     -45deg,
     #9ca3af 0px,
@@ -733,17 +733,17 @@ body.dark-theme {
 
 // ── Now indicator ────────────────────────────────────────────────────────────
 
-::ng-deep .fc .fc-timegrid-now-indicator-line {
+.fc .fc-timegrid-now-indicator-line {
   border-color: #ef4444;
   border-width: 2px;
 }
 
-::ng-deep .fc .fc-timegrid-now-indicator-arrow {
+.fc .fc-timegrid-now-indicator-arrow {
   border-top-color: #ef4444;
   border-bottom-color: #ef4444;
 }
 
-::ng-deep .fc .fc-timegrid-now-indicator-arrow[data-now]::after {
+.fc .fc-timegrid-now-indicator-arrow[data-now]::after {
   content: attr(data-now);
   position: absolute;
   left: -2px;
@@ -762,7 +762,7 @@ body.dark-theme {
 
 // ── Slot preview event (bloque temporal al clickear un slot) ─────────────────
 
-::ng-deep .fc .fc-event.bw-slot-preview {
+.fc .fc-event.bw-slot-preview {
   background: rgba(4, 106, 244, 0.1) !important;
   border: 2px dashed rgba(4, 106, 244, 0.5) !important;
   border-radius: 4px !important;
@@ -771,7 +771,7 @@ body.dark-theme {
   pointer-events: none;
 }
 
-::ng-deep .fc .fc-event.bw-slot-preview .bw-slot-preview-inner {
+.fc .fc-event.bw-slot-preview .bw-slot-preview-inner {
   height: 100%;
 }
 

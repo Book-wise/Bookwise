@@ -17,7 +17,6 @@ export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
   standalone: true,
   imports: [CommonModule, FormsModule, ButtonModule, CheckboxModule, PopoverModule, SkeletonModule],
   templateUrl: './patient-card.component.html',
-  styleUrl: './patient-card.component.scss',
 })
 export class PatientCardComponent {
   readonly detailStore = inject(ClientDetailStore);

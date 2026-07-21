@@ -63,7 +63,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     BwCurrencyPipe,
   ],
   templateUrl: './provider-calendar.component.html',
-  styleUrls: ['./provider-calendar.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewInit {

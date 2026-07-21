@@ -69,7 +69,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     BwCurrencyPipe,
   ],
   templateUrl: './full-calendar.component.html',
-  styleUrls: ['./full-calendar.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
