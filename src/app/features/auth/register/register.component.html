@@ -97,13 +97,15 @@
         <p-message severity="error" class="w-full">{{ error() }}</p-message>
       }
 
+      <p-message severity="warn" class="w-full">El registro público no está disponible actualmente.</p-message>
+
       <p-button
         type="submit"
-        label="Crear cuenta"
+        label="Registro no disponible"
         icon="pi pi-user-plus"
         class="w-full"
         [loading]="loading()"
-        [disabled]="registerForm.invalid || formData.password !== formData.password_confirmation" />
+        [disabled]="true" />
 
     </form>
 

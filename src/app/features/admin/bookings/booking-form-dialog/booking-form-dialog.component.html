@@ -277,7 +277,7 @@
 
     <div class="service-panel-actions">
       <p-button [label]="lang.t('common.back')" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="closeServicePanel()" />
-      <p-button [label]="lang.t('booking_form.btn.save_service')" icon="pi pi-check" [loading]="savingService()" (onClick)="saveNewService()" />
+      <p-button label="Creación no disponible" icon="pi pi-check" [disabled]="true" />
     </div>
   </div>
 

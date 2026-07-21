@@ -7,10 +7,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { ApiService } from '@services/api.service';
-import { AuthService } from '@services/auth.service';
-import { LanguageService } from '@services/language.service';
-import { translateValidationMessage } from '@i18n/validation-translator';
 import { RegisterData } from '@models';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 
@@ -31,10 +27,6 @@ import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
-  private api = inject(ApiService);
-  private auth = inject(AuthService);
-  private lang = inject(LanguageService);
-
   loading = signal(false);
   error = signal<string | null>(null);
 
@@ -66,23 +58,7 @@ export class RegisterComponent {
     }
     if (!this.isFormValid()) return;
 
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.api.register(this.formData).subscribe({
-      next: ({ token, user }) => {
-        this.auth.login(token, user);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        const apiErrors = err.error?.errors as Record<string, string[]> | undefined;
-        const lang = this.lang.lang();
-        const msg = apiErrors
-          ? Object.values(apiErrors).flat().map((m) => translateValidationMessage(m, lang)).join(' ')
-          : this.lang.t('auth.register_error');
-        this.error.set(msg);
-      },
-    });
+    this.loading.set(false);
+    this.error.set('El registro público no está disponible actualmente.');
   }
 }
