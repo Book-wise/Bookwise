@@ -56,7 +56,7 @@ describe('ReferenceStore', () => {
         getLocations: vi.fn().mockReturnValue(of([])),
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
-        getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getPacks: vi.fn().mockReturnValue(of([])),
       };
       createStore();
     });
@@ -96,7 +96,7 @@ describe('ReferenceStore', () => {
         getLocations: vi.fn().mockReturnValue(of([makeLocation()])),
         getServices: vi.fn().mockReturnValue(of([makeService()])),
         getProviders: vi.fn().mockReturnValue(of([makeProvider()])),
-        getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })),
+        getPacks: vi.fn().mockReturnValue(of([makePack()])),
       };
       createStore();
     });
@@ -140,7 +140,7 @@ describe('ReferenceStore', () => {
         getLocations: vi.fn().mockReturnValue(of([])),
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
-        getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getPacks: vi.fn().mockReturnValue(of([])),
       };
       createStore();
     });
@@ -173,7 +173,7 @@ describe('ReferenceStore', () => {
         getLocations: vi.fn().mockReturnValue(of([makeLocation()])),
         getServices: vi.fn().mockReturnValue(of([makeService()])),
         getProviders: vi.fn().mockReturnValue(of([makeProvider()])),
-        getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })),
+        getPacks: vi.fn().mockReturnValue(of([makePack()])),
       };
       createStore();
     });
@@ -237,7 +237,7 @@ describe('ReferenceStore', () => {
         getLocations: vi.fn().mockReturnValue(of([])),
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
-        getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getPacks: vi.fn().mockReturnValue(of([])),
       };
       createStore();
     });
@@ -279,7 +279,7 @@ describe('ReferenceStore', () => {
         getLocations: vi.fn().mockReturnValue(of([])),
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
-        getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getPacks: vi.fn().mockReturnValue(of([])),
       };
       createStore();
     });

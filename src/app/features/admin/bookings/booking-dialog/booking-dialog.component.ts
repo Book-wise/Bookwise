@@ -19,7 +19,6 @@ import { ReferenceStore } from '@core/stores/reference.store';
 import { ApiErrorResponse } from '../interfaces/booking-form-data.interface';
 import { LanguageService } from '@services/language.service';
 import { CURRENCY_CONFIG, formatCLP } from '@shared/config/currency.config';
-import { map } from 'rxjs';
 import { BookingStore } from '@core/stores/booking.store';
 
 export interface BookingFormData {
@@ -243,9 +242,7 @@ export class BookingDialogComponent implements OnInit {
     }
 
     const request = this.isEdit()
-      ? this.api.updateBooking(this.formData.id!, bookingData).pipe(
-          map((res) => res.data), // <-- Transforma ApiResponse<Booking> en Booking limpio
-        )
+      ? this.api.updateBooking(this.formData.id!, bookingData)
       : this.api.createBooking(bookingData);
 
     request.subscribe({

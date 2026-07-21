@@ -497,9 +497,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     }
 
     const request = this.isEdit()
-      ? this.apiService.updateBooking(this.formData.id!, bookingData).pipe(
-          map((res) => res.data), // <-- Transforma ApiResponse<Booking> en Booking limpio
-        )
+      ? this.apiService.updateBooking(this.formData.id!, bookingData)
       : this.apiService.createBooking(bookingData);
 
     request.subscribe({
@@ -697,25 +695,10 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   }
 
   saveNewService(): void {
-    if (!this.newService.name || !this.newService.duration_minutes) return;
-    this.savingService.set(true);
-    this.apiService.createService(this.newService).subscribe({
-      next: (service) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: this.lang.t('toast.service_created.summary'),
-          detail: service.name,
-          life: 3000,
-        });
-        this.refStore.invalidateServices();
-        this.savingService.set(false);
-        this.showServicePanel = false;
-        this.loadFormData();
-      },
-      error: (err) => {
-        this.httpError.handle(err, 'crear servicio');
-        this.savingService.set(false);
-      },
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Creación no disponible',
+      detail: 'La API actual no expone creación de servicios.',
     });
   }
 }

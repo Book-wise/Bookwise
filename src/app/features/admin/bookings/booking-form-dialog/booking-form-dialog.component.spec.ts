@@ -28,7 +28,7 @@ describe('BookingFormDialogComponent', () => {
     const apiServiceMock = {
       getClients: vi.fn().mockReturnValue(of([])),
       getServices: vi.fn().mockReturnValue(of([])),
-      getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+      getPacks: vi.fn().mockReturnValue(of([])),
       getProviders: vi.fn().mockReturnValue(of([])),
       getLocations: vi.fn().mockReturnValue(of([])),
       createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })),

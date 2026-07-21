@@ -1,6 +1,6 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of, map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import {
   Location,
@@ -14,10 +14,8 @@ import {
   Sale,
   AvailableSlot,
   PaginatedResponse,
-  ApiError,
   AuthResponse,
   LoginCredentials,
-  RegisterData,
   CreateBooking,
   UpdateBooking,
   BlockConflictResponse,
@@ -28,7 +26,10 @@ import {
   CreateTransactionResponse,
   TransactionListResponse,
   DeleteTransactionResponse,
-  ApiResponse,
+  ResourceResponse,
+  ResourceCollectionResponse,
+  unwrapResource,
+  unwrapCollection,
 } from '@models';
 
 @Injectable({
@@ -41,35 +42,39 @@ export class ApiService {
   // Endpoints públicos (sin autenticación)
 
   getLocations(): Observable<Location[]> {
-    return this.http.get<Location[]>(`${this.baseUrl}/locations`);
+    return this.http
+      .get<ResourceCollectionResponse<Location>>(`${this.baseUrl}/locations`)
+      .pipe(map(unwrapCollection));
   }
 
   getLocation(id: number): Observable<Location> {
-    return this.http.get<Location>(`${this.baseUrl}/locations/${id}`);
+    return this.http
+      .get<ResourceResponse<Location>>(`${this.baseUrl}/locations/${id}`)
+      .pipe(map(unwrapResource));
   }
 
   getServices(): Observable<Service[]> {
-    return this.http.get<Service[]>(`${this.baseUrl}/services`);
+    return this.http
+      .get<ResourceCollectionResponse<Service>>(`${this.baseUrl}/services`)
+      .pipe(map(unwrapCollection));
   }
 
   getService(id: number): Observable<Service> {
-    return this.http.get<Service>(`${this.baseUrl}/services/${id}`);
+    return this.http
+      .get<ResourceResponse<Service>>(`${this.baseUrl}/services/${id}`)
+      .pipe(map(unwrapResource));
   }
 
-  createService(payload: {
-    name: string;
-    price: number;
-    duration_minutes: number;
-  }): Observable<Service> {
-    return this.http.post<Service>(`${this.baseUrl}/services`, payload);
-  }
-
-  getPacks(): Observable<PaginatedResponse<ServicePack>> {
-    return this.http.get<PaginatedResponse<ServicePack>>(`${this.baseUrl}/packs`);
+  getPacks(): Observable<ServicePack[]> {
+    return this.http
+      .get<ResourceCollectionResponse<ServicePack>>(`${this.baseUrl}/packs`)
+      .pipe(map(unwrapCollection));
   }
 
   getPack(id: number): Observable<ServicePack> {
-    return this.http.get<ServicePack>(`${this.baseUrl}/packs/${id}`);
+    return this.http
+      .get<ResourceResponse<ServicePack>>(`${this.baseUrl}/packs/${id}`)
+      .pipe(map(unwrapResource));
   }
 
   getAvailableSlots(params: {
@@ -84,11 +89,20 @@ export class ApiService {
     if (params.provider_id)
       httpParams = httpParams.set('provider_id', params.provider_id.toString());
     if (params.service_id) httpParams = httpParams.set('service_id', params.service_id.toString());
-    if (params.date) httpParams = httpParams.set('date', params.date);
+    if (params.date) httpParams = httpParams.set('start_date', params.date);
 
-    return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, {
-      params: httpParams,
-    });
+    return this.http
+      .get<ResourceCollectionResponse<{ start: string; end: string; duration_minutes: number; provider_id: number | null }>>(
+        `${this.baseUrl}/available_slots`, { params: httpParams },
+      )
+      .pipe(map(({ data }) => data.map((slot) => ({
+        location_id: params.location_id ?? 0,
+        provider_id: slot.provider_id ?? params.provider_id ?? 0,
+        service_id: params.service_id ?? 0,
+        start_time: slot.start,
+        end_time: slot.end,
+        duration_minutes: slot.duration_minutes,
+      }))));
   }
 
   // Blocked slots
@@ -152,10 +166,6 @@ export class ApiService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, credentials);
   }
 
-  register(data: RegisterData): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, data);
-  }
-
   // Endpoints autenticados
 
   // Providers
@@ -163,11 +173,15 @@ export class ApiService {
     let httpParams = new HttpParams();
     if (params?.location_id)
       httpParams = httpParams.set('location_id', params.location_id.toString());
-    return this.http.get<Provider[]>(`${this.baseUrl}/providers`, { params: httpParams });
+    return this.http
+      .get<ResourceCollectionResponse<Provider>>(`${this.baseUrl}/providers`, { params: httpParams })
+      .pipe(map(unwrapCollection));
   }
 
   getProvider(id: number): Observable<Provider> {
-    return this.http.get<Provider>(`${this.baseUrl}/providers/${id}`);
+    return this.http
+      .get<ResourceResponse<Provider>>(`${this.baseUrl}/providers/${id}`)
+      .pipe(map(unwrapResource));
   }
 
   // Bookings
@@ -196,29 +210,35 @@ export class ApiService {
 
   getBooking(id: number): Observable<Booking> {
     return this.http
-      .get<{ data: Booking }>(`${this.baseUrl}/bookings/${id}`)
-      .pipe(map((r) => r.data));
+      .get<ResourceResponse<Booking>>(`${this.baseUrl}/bookings/${id}`)
+      .pipe(map(unwrapResource));
   }
 
   createBooking(booking: CreateBooking): Observable<Booking> {
-    return this.http.post<Booking>(`${this.baseUrl}/bookings`, booking);
+    return this.http
+      .post<ResourceResponse<Booking>>(`${this.baseUrl}/bookings`, booking)
+      .pipe(map(unwrapResource));
   }
 
-  updateBooking(id: number, booking: UpdateBooking): Observable<ApiResponse<Booking>> {
-    return this.http.patch<ApiResponse<Booking>>(`${this.baseUrl}/bookings/${id}`, booking);
+  updateBooking(id: number, booking: UpdateBooking): Observable<Booking> {
+    return this.http
+      .patch<ResourceResponse<Booking>>(`${this.baseUrl}/bookings/${id}`, booking)
+      .pipe(map(unwrapResource));
   }
 
   cancelBooking(id: number): Observable<Booking> {
-    return this.http.patch<Booking>(`${this.baseUrl}/bookings/${id}/cancel`, {});
+    return this.http
+      .patch<ResourceResponse<Booking>>(`${this.baseUrl}/bookings/${id}/cancel`, {})
+      .pipe(map(unwrapResource));
   }
 
   // Clients
-  getClients(params?: {
+  getClientsPage(params?: {
     location_id?: number;
     search?: string;
     page?: number;
     per_page?: number;
-  }): Observable<Client[]> {
+  }): Observable<PaginatedResponse<Client>> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -227,25 +247,44 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<Client[]>(`${this.baseUrl}/clients`, {
-      params: httpParams,
-    });
+    return this.http.get<PaginatedResponse<Client>>(`${this.baseUrl}/clients`, { params: httpParams });
+  }
+
+  /**
+   * Convenience view for selectors that do not render pagination. The paginated
+   * response remains available through getClientsPage() for list UIs.
+   */
+  getClients(params?: {
+    location_id?: number;
+    search?: string;
+    page?: number;
+    per_page?: number;
+  }): Observable<Client[]> {
+    return this.getClientsPage(params).pipe(map(unwrapCollection));
   }
 
   getClient(id: number): Observable<Client> {
-    return this.http.get<Client>(`${this.baseUrl}/clients/${id}`);
+    return this.http
+      .get<ResourceResponse<Client>>(`${this.baseUrl}/clients/${id}`)
+      .pipe(map(unwrapResource));
   }
 
   createClient(client: Partial<Client>): Observable<Client> {
-    return this.http.post<Client>(`${this.baseUrl}/clients`, client);
+    return this.http
+      .post<ResourceResponse<Client>>(`${this.baseUrl}/clients`, client)
+      .pipe(map(unwrapResource));
   }
 
   updateClient(id: number, data: Partial<Client>): Observable<Client> {
-    return this.http.patch<Client>(`${this.baseUrl}/clients/${id}`, data);
+    return this.http
+      .patch<ResourceResponse<Client>>(`${this.baseUrl}/clients/${id}`, data)
+      .pipe(map(unwrapResource));
   }
 
   getClientPacks(clientId: number): Observable<ClientPack[]> {
-    return this.http.get<ClientPack[]>(`${this.baseUrl}/clients/${clientId}/packs`);
+    return this.http
+      .get<ResourceCollectionResponse<ClientPack>>(`${this.baseUrl}/clients/${clientId}/packs`)
+      .pipe(map(unwrapCollection));
   }
 
   // Sales
@@ -307,7 +346,7 @@ export class ApiService {
   getClientPacksList(params?: {
     client_id?: number;
     status?: string;
-  }): Observable<PaginatedResponse<ClientPack>> {
+  }): Observable<ClientPack[]> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -316,14 +355,16 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<ClientPack>>(`${this.baseUrl}/client-packs`, {
-      params: httpParams,
-    });
+    return this.http
+      .get<ResourceCollectionResponse<ClientPack>>(`${this.baseUrl}/client-packs`, { params: httpParams })
+      .pipe(map(unwrapCollection));
   }
 
   useClientPack(clientPackId: number, bookingId: number): Observable<ClientPack> {
-    return this.http.patch<ClientPack>(`${this.baseUrl}/client-packs/${clientPackId}/use`, {
-      booking_id: bookingId,
-    });
+    return this.http
+      .patch<ResourceResponse<ClientPack>>(`${this.baseUrl}/client-packs/${clientPackId}/use`, {
+        booking_id: bookingId,
+      })
+      .pipe(map(unwrapResource));
   }
 }

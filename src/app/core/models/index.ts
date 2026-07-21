@@ -7,6 +7,7 @@ export * from './requests/sales';
 // Re-export responses
 export * from './responses/bookings';
 export * from './responses/sales';
+export * from './api-response';
 
 export interface Location {
   id: number;

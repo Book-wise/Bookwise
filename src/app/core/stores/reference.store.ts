@@ -187,7 +187,6 @@ export const ReferenceStore = signalStore(
         ),
         switchMap(() =>
           api.getPacks().pipe(
-            map((res) => res.data),
             tap({
               next: (packs) =>
                 patchState(store, { packs, loading: { ...store.loading(), packs: false }, loaded: { ...store.loaded(), packs: true } }),

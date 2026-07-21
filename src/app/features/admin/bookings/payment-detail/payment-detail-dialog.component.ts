@@ -130,13 +130,8 @@ export class PaymentDetailDialogComponent {
     const previousId = this.selectedStatusId();
     this.selectedStatusId.set(newStatusId);
 
-    // Tipamos la respuesta como 'any' o creas una interfaz contenedora
     this.api.updateBooking(booking.id, { status_id: newStatusId }).subscribe({
-      next: (response: any) => {
-        // 🔥 EL CAMBIO CRÍTICO: Extraemos la reserva real desde .data
-        const updatedBooking = response.data as Booking;
-
-        // Ahora el Store sí recibirá el objeto con el id correcto y sus nuevos colores
+      next: (updatedBooking: Booking) => {
         this.store.mergeBooking(updatedBooking);
 
         this.messageService.add({
