@@ -23,11 +23,11 @@
       <div class="hr-card__body">
         <div class="hr-card__row">
           <i class="pi pi-calendar"></i>
-          <span>Fecha: {{ booking.start_time | date:'dd/MM/yyyy - HH:mm' }}</span>
+          <span>Fecha: {{ formatDateTime(booking.start_time) }}</span>
         </div>
         <div class="hr-card__row">
           <i class="pi pi-clock"></i>
-          <span>Reserva: {{ booking.created_at | date:'dd/MM/yyyy - HH:mm' }}</span>
+          <span>Reserva: {{ formatCreatedAt(booking.created_at) }}</span>
         </div>
         <div class="hr-card__row">
           <i class="pi pi-cog"></i>

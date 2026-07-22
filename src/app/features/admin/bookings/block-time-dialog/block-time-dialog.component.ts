@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { TimezoneService } from '@services/timezone.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -17,6 +18,7 @@ import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS, END_TYPE_OPTIONS } from '../constant
 import { Location, Provider, CreateBlockedSlot, BlockedSlot, BlockConflict, BlockConflictResponse } from '@models';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { LanguageService } from '@services/language.service';
+import { DateTime } from 'luxon';
 
 const BLOCK_BULK_THRESHOLD = 5;
 
@@ -44,6 +46,7 @@ export class BlockTimeDialogComponent implements OnInit {
   private api        = inject(ApiService);
   private httpError  = inject(HttpErrorService);
   readonly lang      = inject(LanguageService);
+  private tzService  = inject(TimezoneService);
 
   /** ReferenceStore: datos maestros */
   private refStore   = inject(ReferenceStore);
@@ -186,40 +189,11 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   }
 
   private fmt(d: Date): string {
-    const parts = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(d);
-    const hh = parts.find(p => p.type === 'hour')?.value ?? '00';
-    const mm = parts.find(p => p.type === 'minute')?.value ?? '00';
-    return `${hh}:${mm}`;
+    return DateTime.fromJSDate(d).setZone(this.tzService.activeTimezone()).toFormat('HH:mm');
   }
 
   private applyTime(base: Date, event: Event): Date {
-    const val = (event.target as HTMLInputElement).value;
-    if (!val) return base;
-    const [h, m] = val.split(':').map(Number);
-
-    // Obtener fecha en CLT
-    const parts = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour12: false,
-    }).formatToParts(base);
-    const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
-
-    // Obtener offset CLT (GMT-04:00 o GMT-03:00) para construir ISO parseable
-    const tzParts = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      timeZoneName: 'longOffset',
-    }).formatToParts(base);
-    const offset = (tzParts.find(p => p.type === 'timeZoneName')?.value ?? 'GMT-04:00').replace('GMT', '');
-
-    return new Date(`${get('year')}-${get('month')}-${get('day')}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00${offset}`);
+    return this.tzService.applyTime(base, event);
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -285,24 +259,11 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     }
     this.saving.set(true);
 
-    const fmt = (d: Date) => {
-      const parts = new Intl.DateTimeFormat('es-CL', {
-        timeZone: 'America/Santiago',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      }).formatToParts(d);
-      const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
-      return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
-    };
+    const fmtDt = (d: Date) => this.tzService.formatDateTime(d);
 
     const body: CreateBlockedSlot = {
-      start_time: fmt(this.startDate()),
-      end_time:   fmt(this.endDate()),
+      start_time: fmtDt(this.startDate()),
+      end_time:   fmtDt(this.endDate()),
       reason:     this.reason || undefined,
       location_id: this.locationId ?? undefined,
     };
@@ -321,7 +282,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
         end_type: this.repeatEndType(),
         count: this.repeatEndType() === 'after' ? this.repeatCount() : undefined,
         until: this.repeatEndType() === 'until' && this.repeatUntil()
-          ? fmt(this.repeatUntil()!)
+          ? fmtDt(this.repeatUntil()!)
           : undefined,
       };
     }
@@ -331,7 +292,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
         if (response.conflicts?.length) {
           response.conflicts!.forEach((c: BlockConflict) => {
             const providerName = `${c.provider.first_name} ${c.provider.last_name}`;
-            const conflictTime = new Date(c.conflict.start_time).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit' });
+            const conflictTime = this.tzService.formatTime(c.conflict.start_time);
             const detail = c.conflict.type === 'booking'
               ? this.lang.t('toast.block_conflict.booking', { service: c.conflict.service ?? '', client: c.conflict.client ?? '', time: conflictTime })
               : this.lang.t('toast.block_conflict.blocked', { time: conflictTime });
@@ -403,23 +364,10 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       return;
     }
     this.saving.set(true);
-    const fmt = (d: Date) => {
-      const parts = new Intl.DateTimeFormat('es-CL', {
-        timeZone: 'America/Santiago',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      }).formatToParts(d);
-      const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
-      return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
-    };
+    const fmtDt = (d: Date) => this.tzService.formatDateTime(d);
     this.api.updateBlockedSlot(this.editingSlotId, {
-      start_time: fmt(this.startDate()),
-      end_time:   fmt(this.endDate()),
+      start_time: fmtDt(this.startDate()),
+      end_time:   fmtDt(this.endDate()),
       reason:     this.reason || undefined,
       location_id: this.locationId ?? null,
       provider_id: this.scope() === 'provider' ? (this.providerId ?? null) : null,
