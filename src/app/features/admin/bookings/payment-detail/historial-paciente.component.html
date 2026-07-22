@@ -35,7 +35,7 @@
       </ng-template>
       <ng-template pTemplate="body" let-item>
         <tr>
-          <td class="hp-cell--date">{{ item.start_time | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="hp-cell--date">{{ formatCardDate(item.start_time) }}</td>
           <td>{{ item.service?.name ?? '—' }}</td>
           <td>{{ providerLabel(item) }}</td>
         </tr>

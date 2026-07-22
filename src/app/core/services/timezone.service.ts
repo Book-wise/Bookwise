@@ -75,6 +75,12 @@ export class TimezoneService {
     return { hour: dt.hour, minute: dt.minute };
   }
 
+  /** Format an ISO string as 'dd/MM/yyyy - HH:mm' in the active timezone (for historial cards) */
+  formatCardDate(iso: string): string {
+    if (!iso) return '—';
+    return DateTime.fromISO(iso, { zone: this.activeTimezone() }).toFormat('dd/MM/yyyy - HH:mm');
+  }
+
   /** Apply time (HH:mm) to a base Date, preserving the active timezone interpretation */
   applyTime(base: Date, eventOrValue: Event | string): Date {
     const val = typeof eventOrValue === 'string' ? eventOrValue : (eventOrValue.target as HTMLInputElement).value;

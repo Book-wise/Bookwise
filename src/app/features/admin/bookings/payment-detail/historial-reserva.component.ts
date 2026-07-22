@@ -4,6 +4,7 @@ import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Booking } from '@models';
 import { HistorialStore } from '@core/stores/historial.store';
+import { TimezoneService } from '@services/timezone.service';
 
 @Component({
   selector: 'bw-historial-reserva',
@@ -14,9 +15,18 @@ import { HistorialStore } from '@core/stores/historial.store';
 })
 export class HistorialReservaComponent {
   private readonly historialStore = inject(HistorialStore);
+  private readonly tzService      = inject(TimezoneService);
 
   readonly loading  = this.historialStore.loading;
   readonly bookings = this.historialStore.bookings;
+
+  formatDateTime(iso: string): string {
+    return this.tzService.formatCardDate(iso);
+  }
+
+  formatCreatedAt(iso: string | undefined): string {
+    return iso ? this.tzService.formatCardDate(iso) : '—';
+  }
 
   actionLabel(booking: Booking): string {
     const via = booking.last_modified_via && booking.last_modified_via !== booking.created_via

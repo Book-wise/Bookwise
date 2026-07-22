@@ -1,24 +1,29 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { TabsModule } from 'primeng/tabs';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Booking } from '@models';
 import { HistorialStore } from '@core/stores/historial.store';
+import { TimezoneService } from '@services/timezone.service';
 
 @Component({
   selector: 'bw-historial-paciente',
   standalone: true,
   imports: [CommonModule, TabsModule, TableModule, SkeletonModule],
-  providers: [DatePipe],
   templateUrl: './historial-paciente.component.html',
   styleUrl: './historial-paciente.component.scss',
 })
 export class HistorialPacienteComponent {
   private readonly historialStore = inject(HistorialStore);
+  private readonly tzService      = inject(TimezoneService);
 
   readonly loading    = this.historialStore.loading;
   readonly rawBookings = this.historialStore.bookings;
+
+  formatCardDate(iso: string): string {
+    return this.tzService.formatCardDate(iso);
+  }
 
   readonly activeSubTab = signal<'atenciones' | 'creaciones'>('atenciones');
 
