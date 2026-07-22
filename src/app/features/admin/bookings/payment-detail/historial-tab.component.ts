@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, effect } from '@angular/core';
+import { Component, computed, inject, input, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Booking } from '@models';
 import { HistorialStore } from '@core/stores/historial.store';
@@ -25,12 +25,18 @@ export class HistorialTabComponent {
     { label: 'Historial de reserva',  value: 'reserva' },
   ]);
 
-  /** Load historial data when the booking (and thus client) changes. */
+  /** Refresh historial data when the booking input reference changes
+   *  (parent replaces the object after edit — status change, time edit).
+   *  Uses refreshForClient which bypasses the loadedClients cache. */
   constructor() {
     effect(() => {
-      const clientId = this.booking().client?.id;
+      const booking = this.booking();
+      const clientId = booking.client?.id;
       if (clientId) {
-        this.historialStore.loadForClient(clientId);
+        // Force re-fetch whenever booking reference changes (status edit, time edit).
+        // Wrapped in untracked to prevent tracking historial store signals
+        // read internally by refreshForClient, which would create an infinite loop.
+        untracked(() => this.historialStore.refreshForClient(clientId));
       }
     });
   }

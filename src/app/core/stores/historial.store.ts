@@ -102,6 +102,37 @@ export const HistorialStore = signalStore(
       ),
     ),
 
+    /** Force-refetch for a specific client (bypasses cache, no activeClientId guard). */
+    refreshForClient(clientId: number): void {
+      if (!clientId) return;
+
+      patchState(store, {
+        activeClientId: clientId,
+        loadedClients: { ...store.loadedClients(), [clientId]: false },
+        loading: true,
+      });
+
+      forkJoin({
+        bookings: api.getBookings({ client_id: clientId, per_page: 50 }).pipe(
+          map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Booking[]),
+          catchError(() => of([] as Booking[])),
+        ),
+        sales: api.getSales({ client_id: clientId, per_page: 50 }).pipe(
+          map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Sale[]),
+          catchError(() => of([] as Sale[])),
+        ),
+      }).subscribe({
+        next: ({ bookings, sales }) => {
+          patchState(store, {
+            bookings,
+            sales,
+            loading: false,
+            loadedClients: { ...store.loadedClients(), [clientId]: true },
+          });
+        },
+      });
+    },
+
     /** Force-refetch for the active client (bypasses cache). */
     refresh(): void {
       const id = store.activeClientId();

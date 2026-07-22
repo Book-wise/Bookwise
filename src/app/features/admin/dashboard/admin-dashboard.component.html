@@ -1,6 +1,7 @@
 <div class="dashboard">
   <h1>Dashboard Administrador</h1>
   <p class="welcome">Bienvenido, {{ userName() }}</p>
+  <p class="date-range">{{ dateRangeText() }}</p>
 
   @if (loading()) {
     <div class="stats-grid">

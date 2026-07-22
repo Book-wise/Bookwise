@@ -27,6 +27,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DateTime } from 'luxon';
 import {
   Booking,
   Client,
@@ -39,6 +40,7 @@ import {
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { TimezoneService } from '@services/timezone.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
@@ -89,6 +91,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private cdr = inject(ChangeDetectorRef);
   readonly lang = inject(LanguageService);
+  private tzService = inject(TimezoneService);
 
   /** ReferenceStore: fuente Ãºnica de datos maestros */
   private refStore = inject(ReferenceStore);
@@ -162,21 +165,25 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   }));
 
   get mobileHour(): number {
-    return this.formData.start_time?.getHours() ?? 9;
+    return this.formData.start_time
+      ? this.tzService.getHourInZone(this.formData.start_time)
+      : 9;
   }
   set mobileHour(h: number) {
-    const d = new Date(this.formData.start_time || new Date());
-    d.setHours(h, d.getMinutes(), 0, 0);
-    this.formData.start_time = d;
+    const base = this.formData.start_time || new Date();
+    const dt = DateTime.fromJSDate(base).setZone(this.tzService.activeTimezone());
+    this.formData.start_time = dt.set({ hour: h, minute: dt.minute, second: 0, millisecond: 0 }).toJSDate();
   }
 
   get mobileMinute(): number {
-    return this.formData.start_time?.getMinutes() ?? 0;
+    return this.formData.start_time
+      ? this.tzService.getMinuteInZone(this.formData.start_time)
+      : 0;
   }
   set mobileMinute(m: number) {
-    const d = new Date(this.formData.start_time || new Date());
-    d.setMinutes(m, 0, 0);
-    this.formData.start_time = d;
+    const base = this.formData.start_time || new Date();
+    const dt = DateTime.fromJSDate(base).setZone(this.tzService.activeTimezone());
+    this.formData.start_time = dt.set({ minute: m, second: 0, millisecond: 0 }).toJSDate();
   }
 
   intervalLabel(): string {
@@ -567,19 +574,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   }
 
   private formatDateTime(date: Date | string): string {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    const parts = new Intl.DateTimeFormat('es-CL', {
-      timeZone: 'America/Santiago',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).formatToParts(d);
-    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00';
-    return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
+    return this.tzService.formatDateTime(date);
   }
 
   // â”€â”€ Service creation panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
