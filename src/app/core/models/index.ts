@@ -8,12 +8,30 @@ export * from './requests/sales';
 export * from './responses/bookings';
 export * from './responses/sales';
 
+export interface Locality {
+  id: number;
+  name: string;
+}
+
+export interface Region extends Locality {
+  timezone: string;
+}
+
+export interface LocationComuna extends Locality {}
+
 export interface Location {
   id: number;
   name: string;
   address: string;
   city: string;
+  region_id?: number;
+  region?: Region;
+  comuna_id?: number;
+  comuna?: LocationComuna;
   timezone: string;
+  codigo_postal?: string;
+  opening_time?: string;
+  closing_time?: string;
   active: boolean;
   created_at?: string;
   updated_at?: string;
