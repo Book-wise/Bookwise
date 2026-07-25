@@ -1,50 +1,101 @@
-<p-card header="Locations">
+<p-card header="Sucursales">
+  <ng-template pTemplate="icons">
+    <p-button icon="pi pi-plus" label="Nueva" (onClick)="openCreate()" />
+  </ng-template>
+
   @if (loading()) {
     <div class="list-skeleton">
       @for (row of [1,2,3,4,5]; track row) {
         <div class="list-sk-row bw-sk-card">
-          <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
-          <p-skeleton width="20%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="14%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
-          <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="40px" height="1rem" borderRadius="4px" />
+          <p-skeleton width="20%" height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%" height="1rem" borderRadius="4px" />
+          <p-skeleton width="14%" height="1rem" borderRadius="4px" />
+          <p-skeleton width="15%" height="1.5rem" borderRadius="12px" />
+          <p-skeleton width="70px" height="1rem" borderRadius="4px" />
         </div>
       }
     </div>
   } @else {
-  <p-table [value]="locations()" [tableStyle]="{'min-width': '50rem'}">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Dirección</th>
-        <th>Ciudad</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-location>
-      <tr>
-        <td>{{ location.id }}</td>
-        <td>{{ location.name }}</td>
-        <td>{{ location.address }}</td>
-        <td>{{ location.city }}</td>
-        <td>
-          <p-tag [value]="location.active ? 'Activo' : 'Inactivo'"
-                 [severity]="location.active ? 'success' : 'danger'"></p-tag>
-        </td>
-        <td>
-          <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar"></p-button>
-          <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver"></p-button>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="6" class="text-center">No se encontraron locations</td>
-      </tr>
-    </ng-template>
-  </p-table>
+    <p-table [value]="locations()" [tableStyle]="{ 'min-width': '50rem' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Ciudad</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-location>
+        <tr>
+          <td>{{ location.id }}</td>
+          <td>{{ location.name }}</td>
+          <td>{{ location.address }}</td>
+          <td>{{ location.city }}</td>
+          <td>
+            <div class="status-cell">
+              <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />
+              <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
+            </div>
+          </td>
+          <td>
+            <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(location)" />
+            <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(location)" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6" class="text-center">No se encontraron sucursales</td></tr>
+      </ng-template>
+    </p-table>
   }
 </p-card>
+
+<bw-location-dialog
+  [visible]="dialogVisible()"
+  [mode]="dialogMode()"
+  [location]="selectedLocation()"
+  (closed)="onDialogClosed()"
+  (saved)="onDialogSaved()"
+  (editRequested)="onEditRequested()"
+/>
+
+<p-dialog
+  [(visible)]="conflictDialogVisible"
+  [modal]="true"
+  [style]="{ width: '540px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cancelDeactivate()"
+  [pt]="{ footer: { style: { paddingTop: '1.25rem' } } }"
+>
+  <ng-template pTemplate="header">
+    <div class="location-dialog-header">
+      <span class="location-dialog-title">Desactivar sucursal</span>
+    </div>
+  </ng-template>
+
+  @if (conflictData(); as data) {
+    <div class="conflict-content">
+      <div class="conflict-warning">⚠️ {{ data.message }}</div>
+      <p-table [value]="data.affects.bookings">
+        <ng-template pTemplate="header">
+          <tr><th>#</th><th>Fecha</th><th>Hora</th><th>Profesional</th></tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-booking>
+          <tr><td>{{ booking.id }}</td><td>{{ booking.date }}</td><td>{{ booking.time }}</td><td>{{ booking.provider_name }}</td></tr>
+        </ng-template>
+      </p-table>
+      <p class="conflict-question">¿Desea continuar? Las reservas se verán afectadas.</p>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cancelDeactivate()" />
+      <p-button label="Sí, desactivar" icon="pi pi-ban" severity="danger" (onClick)="confirmDeactivate()" />
+    </div>
+  </ng-template>
+</p-dialog>
