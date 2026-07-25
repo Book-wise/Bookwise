@@ -4,6 +4,8 @@ import { Observable, catchError, of, map } from 'rxjs';
 import { environment } from '@env/environment';
 import {
   Location,
+  Region,
+  LocationComuna,
   Provider,
   Service,
   ServicePack,
@@ -46,6 +48,22 @@ export class ApiService {
 
   getLocation(id: number): Observable<Location> {
     return this.http.get<Location>(`${this.baseUrl}/locations/${id}`);
+  }
+
+  createLocation(data: Partial<Location>): Observable<{ message: string; data: Location }> {
+    return this.http.post<{ message: string; data: Location }>(`${this.baseUrl}/locations`, data);
+  }
+
+  updateLocation(id: number, data: Partial<Location>): Observable<{ message: string; data: Location }> {
+    return this.http.patch<{ message: string; data: Location }>(`${this.baseUrl}/locations/${id}`, data);
+  }
+
+  getRegions(): Observable<{ data: Region[] }> {
+    return this.http.get<{ data: Region[] }>(`${this.baseUrl}/regions`);
+  }
+
+  getComunas(regionId: number): Observable<{ data: LocationComuna[] }> {
+    return this.http.get<{ data: LocationComuna[] }>(`${this.baseUrl}/regions/${regionId}/comunas`);
   }
 
   getServices(): Observable<Service[]> {
