@@ -59,7 +59,7 @@
       </div>
       <div class="field">
         <label>Código Postal</label>
-        <input pInputText [ngModel]="codigoPostal()" (ngModelChange)="codigoPostal.set($event)" [disabled]="isView()" placeholder="7500000" class="w-full" />
+        <input pInputText [ngModel]="codigoPostal()" (ngModelChange)="onCodigoPostalChange($event)" [disabled]="isView()" placeholder="7500000" class="w-full" />
       </div>
     </div>
 

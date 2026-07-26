@@ -134,6 +134,10 @@ export class LocationDialogComponent {
     this.comunaId.set(null);
   }
 
+  onCodigoPostalChange(value: string): void {
+    this.codigoPostal.set(value.replace(/\D/g, ''));
+  }
+
   switchToEdit(): void {
     this.editRequested.emit();
   }
