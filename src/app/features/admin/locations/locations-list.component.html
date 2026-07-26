@@ -18,39 +18,77 @@
       }
     </div>
   } @else {
-    <p-table [value]="locations()" [tableStyle]="{ 'min-width': '50rem' }">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Dirección</th>
-          <th>Ciudad</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-location>
-        <tr>
-          <td>{{ location.id }}</td>
-          <td>{{ location.name }}</td>
-          <td>{{ location.address }}</td>
-          <td>{{ location.city }}</td>
-          <td>
-            <div class="status-cell">
-              <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />
-              <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
+    <!-- ── Desktop table ── -->
+    <div class="locations-table-view">
+      <p-table [value]="locations()">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Dirección</th>
+            <th>Ciudad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-location>
+          <tr>
+            <td>{{ location.id }}</td>
+            <td>{{ location.name }}</td>
+            <td>{{ location.address }}</td>
+            <td>{{ location.city }}</td>
+            <td>
+              <div class="status-cell">
+                <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />
+                <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
+              </div>
+            </td>
+            <td>
+              <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(location)" />
+              <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(location)" />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center">No se encontraron sucursales</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- ── Mobile cards ── -->
+    <div class="locations-cards-view">
+      @for (location of locations(); track location.id) {
+        <div class="loc-card">
+          <div class="loc-card__header">
+            <span class="loc-card__name">{{ location.name }}</span>
+            <span class="loc-card__id">#{{ location.id }}</span>
+          </div>
+
+          <div class="loc-card__body">
+            <div class="loc-card__row">
+              <span class="loc-card__label">Dirección</span>
+              <span class="loc-card__value">{{ location.address }}{{ location.city ? ', ' + location.city : '' }}</span>
             </div>
-          </td>
-          <td>
-            <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(location)" />
-            <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(location)" />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr><td colspan="6" class="text-center">No se encontraron sucursales</td></tr>
-      </ng-template>
-    </p-table>
+
+            <div class="loc-card__status-row">
+              <span class="loc-card__label">Estado</span>
+              <div class="status-cell">
+                <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />
+                <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
+              </div>
+            </div>
+          </div>
+
+          <div class="loc-card__actions">
+            <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(location)" />
+            <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(location)" />
+          </div>
+        </div>
+      }
+      @empty {
+        <div class="text-center">No se encontraron sucursales</div>
+      }
+    </div>
   }
 </p-card>
 

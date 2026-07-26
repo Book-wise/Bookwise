@@ -63,3 +63,81 @@
   color: var(--text-color);
   margin: 0;
 }
+
+// ── Table vs Cards (responsive) ──────────────────────────────────────
+
+.locations-table-view {
+  display: block;
+}
+
+.locations-cards-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .locations-table-view { display: none; }
+  .locations-cards-view { display: flex; flex-direction: column; gap: 0.75rem; }
+}
+
+// ── Card styles ──────────────────────────────────────────────────────
+
+.loc-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.loc-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loc-card__name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-color);
+}
+
+.loc-card__id {
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+.loc-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.loc-card__row,
+.loc-card__status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loc-card__label {
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+  flex-shrink: 0;
+}
+
+.loc-card__value {
+  font-size: 0.875rem;
+  color: var(--text-color);
+  text-align: right;
+}
+
+.loc-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--surface-border);
+}
