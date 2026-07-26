@@ -14,28 +14,28 @@
     </div>
   </ng-template>
 
-  <div class="location-form">
+  <div class="location-form" [formGroup]="form">
     <div class="field">
       <label>Nombre *</label>
-      <input pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" [disabled]="isView()" placeholder="Sucursal Santiago Centro" class="w-full" />
+      <input pInputText formControlName="name" [disabled]="isView()" placeholder="Sucursal Santiago Centro" class="w-full" />
     </div>
 
     <div class="field">
       <label>Dirección *</label>
-      <input pInputText [ngModel]="address()" (ngModelChange)="address.set($event)" [disabled]="isView()" placeholder="Av. Providencia 1234" class="w-full" />
+      <input pInputText formControlName="address" [disabled]="isView()" placeholder="Av. Providencia 1234" class="w-full" />
     </div>
 
     <div class="field-row">
       <div class="field">
         <label>Ciudad *</label>
-        <input pInputText [ngModel]="city()" (ngModelChange)="city.set($event)" [disabled]="isView()" placeholder="Santiago" class="w-full" />
+        <input pInputText formControlName="city" [disabled]="isView()" placeholder="Santiago" class="w-full" />
       </div>
       <div class="field">
         <label>Región *</label>
         <p-select
+          formControlName="regionId"
           [options]="regionOptions()"
-          [ngModel]="regionId()"
-          (ngModelChange)="regionId.set($event); onRegionChange()"
+          (onChange)="onRegionChange()"
           [disabled]="isView()"
           placeholder="Seleccionar..."
           [appendTo]="'body'"
@@ -48,18 +48,17 @@
       <div class="field">
         <label>Comuna</label>
         <p-select
+          formControlName="comunaId"
           [options]="comunaOptions()"
-          [ngModel]="comunaId()"
-          (ngModelChange)="comunaId.set($event)"
-          [disabled]="isView() || !regionId()"
-          [placeholder]="regionId() ? 'Seleccionar...' : 'Primero seleccione región'"
+          [disabled]="isView() || !form.controls.regionId.value"
+          [placeholder]="form.controls.regionId.value ? 'Seleccionar...' : 'Primero seleccione región'"
           [appendTo]="'body'"
           class="w-full"
         />
       </div>
       <div class="field">
         <label>Código Postal</label>
-        <input pInputText [ngModel]="codigoPostal()" (ngModelChange)="onCodigoPostalChange($event)" [disabled]="isView()" placeholder="7500000" class="w-full" />
+        <input pInputText formControlName="codigoPostal" (input)="onCodigoPostalInput($event)" [disabled]="isView()" placeholder="7500000" class="w-full" />
       </div>
     </div>
 
@@ -67,8 +66,7 @@
       <div class="field">
         <label>Apertura</label>
         <p-datepicker
-          [ngModel]="openingTime()"
-          (ngModelChange)="openingTime.set($event)"
+          formControlName="openingTime"
           [disabled]="isView()"
           timeOnly="true"
           hourFormat="24"
@@ -79,8 +77,7 @@
       <div class="field">
         <label>Cierre</label>
         <p-datepicker
-          [ngModel]="closingTime()"
-          (ngModelChange)="closingTime.set($event)"
+          formControlName="closingTime"
           [disabled]="isView()"
           timeOnly="true"
           hourFormat="24"
@@ -93,8 +90,8 @@
     <div class="field">
       <label>Activa</label>
       <div class="toggle-row">
-        <p-toggleswitch [ngModel]="active()" (ngModelChange)="active.set($event)" [disabled]="isView()" />
-        <span class="toggle-label" [class.active]="active()">{{ active() ? 'Sí, está activa' : 'No, está inactiva' }}</span>
+        <p-toggleswitch formControlName="active" [disabled]="isView()" />
+        <span class="toggle-label" [class.active]="form.controls.active.value">{{ form.controls.active.value ? 'Sí, está activa' : 'No, está inactiva' }}</span>
       </div>
     </div>
 
