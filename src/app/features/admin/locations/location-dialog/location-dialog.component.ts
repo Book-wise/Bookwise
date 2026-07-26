@@ -122,12 +122,12 @@ export class LocationDialogComponent {
     return d;
   }
 
-  /** Format Date to "HH:mm" string for the API (drops seconds) */
+  /** Format Date to "HH:mm:ss" string for the API */
   private formatTimeToString(date: Date | null): string | undefined {
     if (!date) return undefined;
     const hh = String(date.getHours()).padStart(2, '0');
     const mm = String(date.getMinutes()).padStart(2, '0');
-    return `${hh}:${mm}`;
+    return `${hh}:${mm}:00`;
   }
 
   onRegionChange(): void {
