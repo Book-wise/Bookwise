@@ -1,5 +1,11 @@
 .text-center { text-align: center; }
 
+.locations-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
 .list-skeleton {
   display: flex;
   flex-direction: column;

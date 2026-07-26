@@ -1,7 +1,8 @@
+<div class="locations-toolbar">
+  <p-button icon="pi pi-plus" label="Nueva sucursal" (onClick)="openCreate()" />
+</div>
+
 <p-card header="Sucursales">
-  <ng-template pTemplate="icons">
-    <p-button icon="pi pi-plus" label="Nueva" (onClick)="openCreate()" />
-  </ng-template>
 
   @if (loading()) {
     <div class="list-skeleton">
