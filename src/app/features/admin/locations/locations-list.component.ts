@@ -15,6 +15,18 @@ import { ReferenceStore } from '@core/stores/reference.store';
 import { Location } from '@models';
 import { LocationDialogComponent, DialogMode } from './location-dialog/location-dialog.component';
 
+interface ConflictBooking {
+  id: number;
+  date: string;
+  time: string;
+  provider_name: string;
+}
+
+interface ConflictData {
+  message: string;
+  affects: { bookings: ConflictBooking[] };
+}
+
 @Component({
   selector: 'bw-locations-list',
   standalone: true,
@@ -41,7 +53,7 @@ export class LocationsListComponent implements OnInit {
   selectedLocation = signal<Location | null>(null);
 
   conflictDialogVisible = signal(false);
-  conflictData = signal<{ message: string; affects: { bookings: any[] } } | null>(null);
+  conflictData = signal<ConflictData | null>(null);
   pendingToggleLocation = signal<Location | null>(null);
 
   ngOnInit(): void { this.loadLocations(); }
@@ -103,7 +115,7 @@ export class LocationsListComponent implements OnInit {
     this.conflictDialogVisible.set(false);
     this.toggling.update((set) => new Set(set).add(location.id));
 
-    this.api.updateLocation(location.id, { active: false, force: true } as any).subscribe({
+    this.api.updateLocation(location.id, { active: false, force: true }).subscribe({
       next: (res) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(location.id); return s; });
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });

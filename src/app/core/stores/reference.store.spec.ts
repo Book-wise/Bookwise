@@ -3,7 +3,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { ReferenceStore } from './reference.store';
 import { ApiService } from '@services/api.service';
-import type { Client, Location, Provider, Service, ServicePack } from '@models';
+import type { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -27,6 +27,14 @@ function makeService(overrides: Partial<Service> = {}): Service {
 
 function makePack(overrides: Partial<ServicePack> = {}): ServicePack {
   return { id: 1, name: 'Pack 10 sesiones', price: 200000, total_sessions: 10, ...overrides } as ServicePack;
+}
+
+function makeRegion(overrides: Partial<Region> = {}): Region {
+  return { id: 7, name: 'Metropolitana', ...overrides } as Region;
+}
+
+function makeComuna(overrides: Partial<LocationComuna> = {}): LocationComuna {
+  return { id: 86, name: 'Santiago', region_id: 7, ...overrides } as LocationComuna;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,6 +65,8 @@ describe('ReferenceStore', () => {
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
         getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getRegions: vi.fn().mockReturnValue(of({ data: [] })),
+        getComunas: vi.fn().mockReturnValue(of({ data: [] })),
       };
       createStore();
     });
@@ -84,6 +94,7 @@ describe('ReferenceStore', () => {
       expect(err.providers).toBeNull();
       expect(err.services).toBeNull();
       expect(err.packs).toBeNull();
+      expect(err.regions).toBeNull();
     });
   });
 
@@ -97,6 +108,8 @@ describe('ReferenceStore', () => {
         getServices: vi.fn().mockReturnValue(of([makeService()])),
         getProviders: vi.fn().mockReturnValue(of([makeProvider()])),
         getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })),
+        getRegions: vi.fn().mockReturnValue(of({ data: [makeRegion()] })),
+        getComunas: vi.fn().mockReturnValue(of({ data: [makeComuna()] })),
       };
       createStore();
     });
@@ -122,12 +135,13 @@ describe('ReferenceStore', () => {
       expect(store.packs()).toHaveLength(1);
     });
 
-    it('calls all 5 API methods on init', () => {
+    it('calls all API methods on init', () => {
       expect(api.getClients).toHaveBeenCalledTimes(1);
       expect(api.getLocations).toHaveBeenCalledTimes(1);
       expect(api.getServices).toHaveBeenCalledTimes(1);
       expect(api.getProviders).toHaveBeenCalledTimes(1);
       expect(api.getPacks).toHaveBeenCalledTimes(1);
+      expect(api.getRegions).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -141,6 +155,8 @@ describe('ReferenceStore', () => {
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
         getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getRegions: vi.fn().mockReturnValue(of({ data: [] })),
+        getComunas: vi.fn().mockReturnValue(of({ data: [] })),
       };
       createStore();
     });
@@ -174,6 +190,8 @@ describe('ReferenceStore', () => {
         getServices: vi.fn().mockReturnValue(of([makeService()])),
         getProviders: vi.fn().mockReturnValue(of([makeProvider()])),
         getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })),
+        getRegions: vi.fn().mockReturnValue(of({ data: [makeRegion()] })),
+        getComunas: vi.fn().mockReturnValue(of({ data: [makeComuna()] })),
       };
       createStore();
     });
@@ -215,6 +233,7 @@ describe('ReferenceStore', () => {
       expect(api.getServices).toHaveBeenCalledTimes(2);
       expect(api.getProviders).toHaveBeenCalledTimes(2);
       expect(api.getPacks).toHaveBeenCalledTimes(2);
+      expect(api.getRegions).toHaveBeenCalledTimes(2);
     });
 
     it('refetched data replaces existing data', () => {
@@ -238,6 +257,8 @@ describe('ReferenceStore', () => {
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
         getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getRegions: vi.fn().mockReturnValue(of({ data: [] })),
+        getComunas: vi.fn().mockReturnValue(of({ data: [] })),
       };
       createStore();
     });
@@ -280,6 +301,8 @@ describe('ReferenceStore', () => {
         getServices: vi.fn().mockReturnValue(of([])),
         getProviders: vi.fn().mockReturnValue(of([])),
         getPacks: vi.fn().mockReturnValue(of({ data: [] })),
+        getRegions: vi.fn().mockReturnValue(of({ data: [] })),
+        getComunas: vi.fn().mockReturnValue(of({ data: [] })),
       };
       createStore();
     });

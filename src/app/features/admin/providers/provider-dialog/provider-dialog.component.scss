@@ -1,20 +1,20 @@
-.location-dialog-header {
+.provider-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex: 1;
 }
 
-.location-dialog-title {
+.provider-dialog-title {
   font-size: var(--bw-font-title);
   font-weight: var(--bw-weight-semibold);
   color: var(--text-heading);
 }
 
-.location-form {
+.provider-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .field {

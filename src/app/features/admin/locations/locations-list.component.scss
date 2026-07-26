@@ -35,7 +35,7 @@
 
 .location-dialog-title {
   font-size: var(--bw-font-title);
-  font-weight: 600;
+  font-weight: var(--bw-weight-semibold);
   color: var(--text-heading);
 }
 
@@ -53,13 +53,13 @@
 }
 
 .conflict-warning {
-  font-size: 0.9375rem;
+  font-size: var(--bw-font-body);
   color: var(--text-color);
-  font-weight: 500;
+  font-weight: var(--bw-weight-medium);
 }
 
 .conflict-question {
-  font-size: 0.9375rem;
+  font-size: var(--bw-font-body);
   color: var(--text-color);
   margin: 0;
 }

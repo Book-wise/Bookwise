@@ -5,15 +5,43 @@
 <p-card header="Sucursales">
 
   @if (loading()) {
-    <div class="list-skeleton">
+    <!-- ── Desktop skeleton ── -->
+    <div class="locations-table-view">
+      <div class="list-skeleton">
+        @for (row of [1,2,3,4,5]; track row) {
+          <div class="list-sk-row bw-sk-card">
+            <p-skeleton width="40px" height="1rem" borderRadius="4px" />
+            <p-skeleton width="20%" height="1rem" borderRadius="4px" />
+            <p-skeleton width="22%" height="1rem" borderRadius="4px" />
+            <p-skeleton width="14%" height="1rem" borderRadius="4px" />
+            <p-skeleton width="15%" height="1.5rem" borderRadius="12px" />
+            <p-skeleton width="70px" height="1rem" borderRadius="4px" />
+          </div>
+        }
+      </div>
+    </div>
+    <!-- ── Mobile skeleton ── -->
+    <div class="locations-cards-view">
       @for (row of [1,2,3,4,5]; track row) {
-        <div class="list-sk-row bw-sk-card">
-          <p-skeleton width="40px" height="1rem" borderRadius="4px" />
-          <p-skeleton width="20%" height="1rem" borderRadius="4px" />
-          <p-skeleton width="22%" height="1rem" borderRadius="4px" />
-          <p-skeleton width="14%" height="1rem" borderRadius="4px" />
-          <p-skeleton width="15%" height="1.5rem" borderRadius="12px" />
-          <p-skeleton width="70px" height="1rem" borderRadius="4px" />
+        <div class="bw-card bw-card--elevated loc-card">
+          <div class="loc-card__header">
+            <p-skeleton width="60%" height="1.1rem" borderRadius="4px" />
+            <p-skeleton width="50px" height="0.9rem" borderRadius="4px" />
+          </div>
+          <div class="loc-card__body">
+            <div class="loc-card__row">
+              <p-skeleton width="30%" height="0.9rem" borderRadius="4px" />
+              <p-skeleton width="55%" height="0.9rem" borderRadius="4px" />
+            </div>
+            <div class="loc-card__row">
+              <p-skeleton width="25%" height="0.9rem" borderRadius="4px" />
+              <p-skeleton width="100px" height="1.5rem" borderRadius="12px" />
+            </div>
+          </div>
+          <div class="loc-card__actions skeleton-actions">
+            <p-skeleton width="70px" height="2rem" borderRadius="6px" />
+            <p-skeleton width="70px" height="2rem" borderRadius="6px" />
+          </div>
         </div>
       }
     </div>

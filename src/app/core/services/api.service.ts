@@ -54,7 +54,7 @@ export class ApiService {
     return this.http.post<{ message: string; data: Location }>(`${this.baseUrl}/locations`, data);
   }
 
-  updateLocation(id: number, data: Partial<Location>): Observable<{ message: string; data: Location }> {
+  updateLocation(id: number, data: Partial<Location> & { force?: boolean }): Observable<{ message: string; data: Location }> {
     return this.http.patch<{ message: string; data: Location }>(`${this.baseUrl}/locations/${id}`, data);
   }
 
@@ -186,6 +186,14 @@ export class ApiService {
 
   getProvider(id: number): Observable<Provider> {
     return this.http.get<Provider>(`${this.baseUrl}/providers/${id}`);
+  }
+
+  createProvider(data: Partial<Provider>): Observable<{ message: string; data: Provider }> {
+    return this.http.post<{ message: string; data: Provider }>(`${this.baseUrl}/providers`, data);
+  }
+
+  updateProvider(id: number, data: Partial<Provider>): Observable<{ message: string; data: Provider }> {
+    return this.http.patch<{ message: string; data: Provider }>(`${this.baseUrl}/providers/${id}`, data);
   }
 
   // Bookings

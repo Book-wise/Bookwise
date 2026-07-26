@@ -1,59 +1,214 @@
-<p-card header="Profesionales">
-  @if (loading()) {
-    <div class="list-skeleton">
+@if (loading()) {
+  <p-card header="Profesionales">
+    <!-- ── Desktop skeleton ── -->
+    <div class="providers-table-view">
+      <div class="list-skeleton">
+        @for (row of [1,2,3,4,5]; track row) {
+          <div class="list-sk-row bw-sk-card">
+            <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
+            <p-skeleton width="20%"   height="1rem" borderRadius="4px" />
+            <p-skeleton width="20%"   height="1rem" borderRadius="4px" />
+            <p-skeleton width="12%"   height="1rem" borderRadius="4px" />
+            <p-skeleton width="15%"   height="1rem" borderRadius="4px" />
+            <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
+            <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+          </div>
+        }
+      </div>
+    </div>
+    <!-- ── Mobile skeleton ── -->
+    <div class="providers-cards-view">
       @for (row of [1,2,3,4,5]; track row) {
-        <div class="list-sk-row bw-sk-card">
-          <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
-          <p-skeleton width="20%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="20%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="12%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="15%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
-          <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+        <div class="bw-card bw-card--elevated prov-card">
+          <div class="prov-card__header">
+            <p-skeleton width="55%" height="1.1rem" borderRadius="4px" />
+          </div>
+          <div class="prov-card__body">
+            <div class="prov-card__row">
+              <p-skeleton width="30%" height="0.9rem" borderRadius="4px" />
+              <p-skeleton width="50%" height="0.9rem" borderRadius="4px" />
+            </div>
+            <div class="prov-card__row">
+              <p-skeleton width="35%" height="0.9rem" borderRadius="4px" />
+              <p-skeleton width="40%" height="0.9rem" borderRadius="4px" />
+            </div>
+            <div class="prov-card__row">
+              <p-skeleton width="40%" height="0.9rem" borderRadius="4px" />
+              <p-skeleton width="80px" height="1.5rem" borderRadius="12px" />
+            </div>
+          </div>
+          <div class="prov-card__actions skeleton-actions">
+            <p-skeleton width="90px" height="2rem" borderRadius="6px" />
+            <p-skeleton width="90px" height="2rem" borderRadius="6px" />
+          </div>
         </div>
       }
     </div>
-  } @else {
-  <p-table [value]="providers()" [tableStyle]="{'min-width': '50rem'}">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Email</th>
-        <th>Teléfono</th>
-        <th>Locations</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-provider>
-      <tr>
-        <td>{{ provider.id }}</td>
-        <td>{{ provider.first_name }} {{ provider.last_name }}</td>
-        <td>{{ provider.email }}</td>
-        <td>{{ provider.phone }}</td>
-        <td>
-          @if (provider.location) {
-            {{ provider.location.name }}
-          } @else {
-            <span class="text-muted">Sin asignar</span>
+  </p-card>
+} @else {
+  <p-card header="Profesionales">
+    <!-- ── Filter bar ── -->
+    <div class="providers-filter-bar">
+      <span class="p-input-icon-left providers-search">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Buscar profesional…"
+          class="p-inputtext-sm"
+        />
+      </span>
+
+      @if (filterLocations().length > 0 || hasUnassigned()) {
+        <div class="filter-chips">
+          @for (loc of filterLocations(); track loc.id) {
+            <div
+              class="filter-chip"
+              [class.filter-chip--checked]="selectedLocationIds().has(loc.id)"
+              [style.--chip-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'"
+            >
+              <span class="filter-chip__dot" [style.background]="locationColorMap().get(loc.id) ?? 'var(--text-color-secondary)'"></span>
+              <p-checkbox
+                [ngModel]="selectedLocationIds().has(loc.id)"
+                (ngModelChange)="toggleLocation(loc.id)"
+                [binary]="true"
+                [inputId]="'loc-filter-' + loc.id"
+              />
+              <label [for]="'loc-filter-' + loc.id">{{ loc.name }}</label>
+            </div>
           }
-        </td>
-        <td>
-          <p-tag [value]="provider.active ? 'Activo' : 'Inactivo'" 
-                 [severity]="provider.active ? 'success' : 'danger'"></p-tag>
-        </td>
-        <td>
-          <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar"></p-button>
-          <p-button icon="pi pi-calendar" class="p-button-text" pTooltip="Ver Agenda"></p-button>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="7" class="text-center">No se encontraron profesionales</td>
-      </tr>
-    </ng-template>
-  </p-table>
-  }
-</p-card>
+          @if (hasUnassigned()) {
+            <div
+              class="filter-chip"
+              [class.filter-chip--checked]="selectedLocationIds().has(-1)"
+              style="--chip-color: var(--surface-border)"
+            >
+              <span class="filter-chip__dot" style="background: var(--text-color-secondary)"></span>
+              <p-checkbox
+                [ngModel]="selectedLocationIds().has(-1)"
+                (ngModelChange)="toggleLocation(-1)"
+                [binary]="true"
+                inputId="loc-filter-unassigned"
+              />
+              <label for="loc-filter-unassigned">Sin asignar</label>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ── Desktop table ── -->
+    <div class="providers-table-view">
+      <p-table [value]="sortedProviders()" [tableStyle]="{ 'min-width': '50rem' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Sucursal</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-provider>
+          <tr
+            [style.border-left]="'4px solid ' + (locationColorMap().get(provider.location?.id) ?? 'var(--surface-border)')"
+          >
+            <td>{{ provider.first_name }} {{ provider.last_name }}</td>
+            <td>{{ provider.email }}</td>
+            <td>{{ provider.phone }}</td>
+            <td>
+              @if (provider.location; as loc) {
+                <span class="location-badge" [style.--badge-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
+                  {{ loc.name }}
+                </span>
+              } @else {
+                <span class="text-muted">Sin asignar</span>
+              }
+            </td>
+            <td>
+              <p-tag
+                [value]="provider.active ? 'Activo' : 'Inactivo'"
+                [severity]="provider.active ? 'success' : 'danger'"
+              />
+            </td>
+            <td>
+              <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
+              <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
+              <p-button icon="pi pi-calendar" class="p-button-text" pTooltip="Ver Agenda" />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center">No se encontraron profesionales</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- ── Mobile cards ── -->
+    <div class="providers-cards-view">
+      @for (provider of sortedProviders(); track provider.id) {
+        <div
+          class="bw-card bw-card--elevated prov-card"
+          [style.border-left]="'4px solid ' + (locationColorMap().get(provider.location?.id) ?? 'var(--surface-border)')"
+        >
+          <div class="prov-card__header">
+            <span class="prov-card__name">{{ provider.first_name }} {{ provider.last_name }}</span>
+          </div>
+
+          <div class="prov-card__body">
+            <div class="prov-card__row">
+              <span class="prov-card__label">Email</span>
+              <span class="prov-card__value">{{ provider.email }}</span>
+            </div>
+
+            <div class="prov-card__row">
+              <span class="prov-card__label">Teléfono</span>
+              <span class="prov-card__value">{{ provider.phone ?? '—' }}</span>
+            </div>
+
+            <div class="prov-card__row">
+              <span class="prov-card__label">Sucursal</span>
+              @if (provider.location; as loc) {
+                <span class="location-badge" [style.--badge-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
+                  {{ loc.name }}
+                </span>
+              } @else {
+                <span class="prov-card__value">Sin asignar</span>
+              }
+            </div>
+
+            <div class="prov-card__row">
+              <span class="prov-card__label">Estado</span>
+              <p-tag
+                [value]="provider.active ? 'Activo' : 'Inactivo'"
+                [severity]="provider.active ? 'success' : 'danger'"
+              />
+            </div>
+          </div>
+
+          <div class="prov-card__actions">
+            <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(provider)" />
+            <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
+            <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" />
+          </div>
+        </div>
+      } @empty {
+        <div class="text-center">No se encontraron profesionales</div>
+      }
+    </div>
+  </p-card>
+}
+
+<bw-provider-dialog
+  [visible]="dialogVisible()"
+  [mode]="dialogMode()"
+  [provider]="selectedProvider()"
+  (closed)="onDialogClosed()"
+  (saved)="onDialogSaved()"
+  (editRequested)="onEditRequested()"
+/>

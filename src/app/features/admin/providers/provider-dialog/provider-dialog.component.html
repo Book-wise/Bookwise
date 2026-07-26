@@ -1,0 +1,81 @@
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '70vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+  [pt]="{ footer: { style: { paddingTop: '1.25rem' } } }"
+>
+  <ng-template pTemplate="header">
+    <div class="provider-dialog-header">
+      <span class="provider-dialog-title">{{ title() }}</span>
+    </div>
+  </ng-template>
+
+  <div class="provider-form" [formGroup]="form">
+    <div class="field-row">
+      <div class="field">
+        <label>Nombre *</label>
+        <input pInputText formControlName="firstName" [disabled]="isView()" placeholder="Juan" class="w-full" />
+      </div>
+      <div class="field">
+        <label>Apellido *</label>
+        <input pInputText formControlName="lastName" [disabled]="isView()" placeholder="Pérez" class="w-full" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Email *</label>
+      <input pInputText formControlName="email" [disabled]="isView()" placeholder="juan@correo.com" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label>Teléfono</label>
+      <input pInputText formControlName="phone" [disabled]="isView()" placeholder="+56 9 1234 5678" class="w-full" />
+    </div>
+
+    <div class="field">
+      <label>Sucursal</label>
+      <p-select
+        formControlName="locationId"
+        [options]="locationOptions()"
+        [disabled]="isView()"
+        placeholder="Seleccionar sucursal..."
+        [appendTo]="'body'"
+        class="w-full"
+        [showClear]="true"
+      />
+    </div>
+
+    <div class="field">
+      <label>Activo</label>
+      <div class="toggle-row">
+        <p-toggleswitch formControlName="active" [disabled]="isView()" />
+        <span class="toggle-label" [class.active]="form.controls.active.value">
+          {{ form.controls.active.value ? 'Sí, está activo' : 'No, está inactivo' }}
+        </span>
+      </div>
+    </div>
+
+    @if (isView() && provider(); as prov) {
+      <div class="metadata-row">
+        <span class="metadata-label">Creado: {{ prov.created_at | date:'short' }}</span>
+        <span class="metadata-label">Actualizado: {{ prov.updated_at | date:'short' }}</span>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      @if (isView()) {
+        <p-button label="Cerrar" severity="secondary" [outlined]="true" (onClick)="onClose()" />
+        <p-button label="Editar" icon="pi pi-pencil" (onClick)="switchToEdit()" />
+      } @else {
+        <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="onClose()" />
+        <p-button [label]="saveLabel()" icon="pi pi-check" [loading]="saving()" [disabled]="!isFormValid()" (onClick)="onSave()" />
+      }
+    </div>
+  </ng-template>
+</p-dialog>

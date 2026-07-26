@@ -1,5 +1,5 @@
 .text-muted {
-  color: #999;
+  color: var(--text-color-secondary);
 }
 
 .text-center {
@@ -18,4 +18,181 @@
   gap: 1rem;
   padding: 0.75rem 1rem;
   border-radius: 6px;
+}
+
+// ── Filter bar ─────────────────────────────────────────────────────────
+
+.providers-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.providers-search {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(160px, 30%, 260px);
+
+  .pi-search {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding-left: 2.25rem;
+  }
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-ground);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: var(--bw-font-table);
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+
+  // PrimeNG checkbox inherits these when checked
+  --p-checkbox-checked-background: var(--chip-color);
+  --p-checkbox-checked-border-color: var(--chip-color);
+  --p-checkbox-checked-hover-background: var(--chip-color);
+  --p-checkbox-checked-hover-border-color: var(--chip-color);
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  label {
+    cursor: pointer;
+    color: var(--text-color);
+  }
+
+  &--checked {
+    border-color: var(--chip-color, var(--surface-border));
+    background: color-mix(in srgb, var(--chip-color, var(--surface-border)) 12%, var(--surface-ground));
+
+    label {
+      font-weight: var(--bw-weight-semibold, 600);
+    }
+  }
+}
+
+// ── Location badge (table + cards) ────────────────────────────────────
+
+.location-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium, 500);
+  line-height: 1.4;
+  background: color-mix(in srgb, var(--badge-color) 12%, transparent);
+  color: var(--badge-color);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 30%, transparent);
+}
+
+// ── Table vs Cards (responsive) ────────────────────────────────────────
+
+.providers-table-view {
+  display: block;
+}
+
+.providers-cards-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .providers-table-view { display: none; }
+  .providers-cards-view { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .providers-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .providers-search {
+    width: 100%;
+  }
+
+  .filter-chips {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+
+// ── Card styles (brand: uses .bw-card from _cards.scss for surface/base) ──
+
+.prov-card {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prov-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prov-card__name {
+  font-weight: var(--bw-weight-semibold);
+  font-size: var(--bw-font-body);
+  color: var(--text-heading);
+}
+
+.prov-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prov-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prov-card__label {
+  font-size: var(--bw-font-table);
+  color: var(--text-color-secondary);
+  flex-shrink: 0;
+}
+
+.prov-card__value {
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
+  color: var(--text-color);
+  text-align: right;
+}
+
+.prov-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--surface-border);
 }
