@@ -53,8 +53,8 @@ export class LocationDialogComponent {
   regionId = signal<number | null>(null);
   comunaId = signal<number | null>(null);
   codigoPostal = signal('');
-  openingTime = signal<string | null>(null);
-  closingTime = signal<string | null>(null);
+  openingTime = signal<Date | null>(null);
+  closingTime = signal<Date | null>(null);
   active = signal(true);
 
   isView = computed(() => this.internalMode() === 'view');
@@ -94,8 +94,8 @@ export class LocationDialogComponent {
           this.regionId.set(loc.region_id ?? null);
           this.comunaId.set(loc.comuna_id ?? null);
           this.codigoPostal.set(loc.codigo_postal ?? '');
-          this.openingTime.set(loc.opening_time ?? null);
-          this.closingTime.set(loc.closing_time ?? null);
+          this.openingTime.set(this.parseTimeToDate(loc.opening_time));
+          this.closingTime.set(this.parseTimeToDate(loc.closing_time));
           this.active.set(loc.active);
         } else {
           this.name.set('');
@@ -110,6 +110,24 @@ export class LocationDialogComponent {
         }
       });
     });
+  }
+
+  /** Convert "HH:mm" or "HH:mm:ss" string to Date for the time picker */
+  private parseTimeToDate(time: string | null | undefined): Date | null {
+    if (!time) return null;
+    const parts = time.split(':');
+    if (parts.length < 2) return null;
+    const d = new Date(0);
+    d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+    return d;
+  }
+
+  /** Format Date to "HH:mm" string for the API (drops seconds) */
+  private formatTimeToString(date: Date | null): string | undefined {
+    if (!date) return undefined;
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
   }
 
   onRegionChange(): void {
@@ -130,8 +148,8 @@ export class LocationDialogComponent {
       region_id: this.regionId()!,
       comuna_id: this.comunaId() ?? undefined,
       codigo_postal: this.codigoPostal().trim() || undefined,
-      opening_time: this.openingTime() || undefined,
-      closing_time: this.closingTime() || undefined,
+      opening_time: this.formatTimeToString(this.openingTime()),
+      closing_time: this.formatTimeToString(this.closingTime()),
       active: this.active(),
     };
 
