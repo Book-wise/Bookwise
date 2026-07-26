@@ -58,7 +58,7 @@
     <!-- ── Mobile cards ── -->
     <div class="locations-cards-view">
       @for (location of locations(); track location.id) {
-        <div class="loc-card">
+        <div class="bw-card bw-card--elevated loc-card">
           <div class="loc-card__header">
             <span class="loc-card__name">{{ location.name }}</span>
             <span class="loc-card__id">#{{ location.id }}</span>
@@ -66,11 +66,11 @@
 
           <div class="loc-card__body">
             <div class="loc-card__row">
-              <span class="loc-card__label">Dirección</span>
+              <span class="loc-card__label">Ubicación</span>
               <span class="loc-card__value">{{ location.address }}{{ location.city ? ', ' + location.city : '' }}</span>
             </div>
 
-            <div class="loc-card__status-row">
+            <div class="loc-card__row">
               <span class="loc-card__label">Estado</span>
               <div class="status-cell">
                 <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />

@@ -3,7 +3,7 @@
 .locations-toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 0.75rem;
+  margin: 0.5rem 0.5rem 0.75rem 0;
 }
 
 .list-skeleton {
@@ -79,13 +79,10 @@
   .locations-cards-view { display: flex; flex-direction: column; gap: 0.75rem; }
 }
 
-// ── Card styles ──────────────────────────────────────────────────────
+// ── Card styles (brand: uses .bw-card from _cards.scss for surface/base) ──
 
 .loc-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -98,13 +95,13 @@
 }
 
 .loc-card__name {
-  font-weight: 600;
-  font-size: 0.9375rem;
-  color: var(--text-color);
+  font-weight: var(--bw-weight-semibold);
+  font-size: var(--bw-font-body);
+  color: var(--text-heading);
 }
 
 .loc-card__id {
-  font-size: 0.8125rem;
+  font-size: var(--bw-font-caption);
   color: var(--text-color-secondary);
 }
 
@@ -114,8 +111,7 @@
   gap: 0.5rem;
 }
 
-.loc-card__row,
-.loc-card__status-row {
+.loc-card__row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -123,13 +119,14 @@
 }
 
 .loc-card__label {
-  font-size: 0.8125rem;
+  font-size: var(--bw-font-table);
   color: var(--text-color-secondary);
   flex-shrink: 0;
 }
 
 .loc-card__value {
-  font-size: 0.875rem;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
   color: var(--text-color);
   text-align: right;
 }
@@ -138,6 +135,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding-top: 0.25rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--surface-border);
 }
