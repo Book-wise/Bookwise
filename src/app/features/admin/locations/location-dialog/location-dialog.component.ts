@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, untracked, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -7,12 +7,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DatePickerModule } from 'primeng/datepicker';
-import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ReferenceStore } from '@core/stores/reference.store';
-import { Location, Region, LocationComuna } from '@models';
+import { Location } from '@models';
 
 export type DialogMode = 'create' | 'edit' | 'view';
 
@@ -21,13 +20,13 @@ export type DialogMode = 'create' | 'edit' | 'view';
   standalone: true,
   imports: [
     CommonModule, FormsModule, DialogModule, ButtonModule, InputTextModule,
-    SelectModule, ToggleSwitchModule, DatePickerModule, SkeletonModule,
+    SelectModule, ToggleSwitchModule, DatePickerModule,
   ],
   templateUrl: './location-dialog.component.html',
   styleUrls: ['./location-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LocationDialogComponent implements OnInit {
+export class LocationDialogComponent {
   private api = inject(ApiService);
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
@@ -44,10 +43,6 @@ export class LocationDialogComponent implements OnInit {
   editRequested = output<void>();
 
   saving = signal(false);
-  loadingRegions = signal(false);
-  loadingComunas = signal(false);
-  regions = signal<Region[]>([]);
-  comunas = signal<LocationComuna[]>([]);
 
   /** Internal mode allows override from view→edit via switchToEdit(). */
   private internalMode = signal<DialogMode>('create');
@@ -77,8 +72,13 @@ export class LocationDialogComponent implements OnInit {
     this.regionId() !== null
   );
 
-  regionOptions = computed(() => this.regions().map(r => ({ label: r.name, value: r.id })));
-  comunaOptions = computed(() => this.comunas().map(c => ({ label: c.name, value: c.id })));
+  regionOptions = computed(() => this.refStore.regions().map(r => ({ label: r.name, value: r.id })));
+  comunaOptions = computed(() => {
+    const rid = this.regionId();
+    if (rid === null) return [];
+    const comunas = this.refStore.comunasByRegion()[rid];
+    return comunas ? comunas.map(c => ({ label: c.name, value: c.id })) : [];
+  });
 
   constructor() {
     effect(() => {
@@ -92,11 +92,6 @@ export class LocationDialogComponent implements OnInit {
           this.address.set(loc.address);
           this.city.set(loc.city);
           this.regionId.set(loc.region_id ?? null);
-          if (loc.region_id) {
-            this.loadComunas(loc.region_id);
-          } else {
-            this.comunas.set([]);
-          }
           this.comunaId.set(loc.comuna_id ?? null);
           this.codigoPostal.set(loc.codigo_postal ?? '');
           this.openingTime.set(loc.opening_time ?? null);
@@ -108,7 +103,6 @@ export class LocationDialogComponent implements OnInit {
           this.city.set('');
           this.regionId.set(null);
           this.comunaId.set(null);
-          this.comunas.set([]);
           this.codigoPostal.set('');
           this.openingTime.set(null);
           this.closingTime.set(null);
@@ -118,31 +112,8 @@ export class LocationDialogComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.loadRegions();
-  }
-
-  loadRegions(): void {
-    this.loadingRegions.set(true);
-    this.api.getRegions().subscribe({
-      next: (res) => { this.regions.set(res.data); this.loadingRegions.set(false); },
-      error: (err) => { this.loadingRegions.set(false); this.httpError.handle(err, 'cargar regiones'); },
-    });
-  }
-
   onRegionChange(): void {
     this.comunaId.set(null);
-    this.comunas.set([]);
-    const id = this.regionId();
-    if (id !== null) this.loadComunas(id);
-  }
-
-  loadComunas(regionId: number): void {
-    this.loadingComunas.set(true);
-    this.api.getComunas(regionId).subscribe({
-      next: (res) => { this.comunas.set(res.data); this.loadingComunas.set(false); },
-      error: (err) => { this.loadingComunas.set(false); this.httpError.handle(err, 'cargar comunas'); },
-    });
   }
 
   switchToEdit(): void {

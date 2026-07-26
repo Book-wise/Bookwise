@@ -32,38 +32,30 @@
       </div>
       <div class="field">
         <label>Región *</label>
-        @if (loadingRegions()) {
-          <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
-        } @else {
-          <p-select
-            [options]="regionOptions()"
-            [ngModel]="regionId()"
-            (ngModelChange)="regionId.set($event); onRegionChange()"
-            [disabled]="isView()"
-            placeholder="Seleccionar..."
-            [appendTo]="'body'"
-            class="w-full"
-          />
-        }
+        <p-select
+          [options]="regionOptions()"
+          [ngModel]="regionId()"
+          (ngModelChange)="regionId.set($event); onRegionChange()"
+          [disabled]="isView()"
+          placeholder="Seleccionar..."
+          [appendTo]="'body'"
+          class="w-full"
+        />
       </div>
     </div>
 
     <div class="field-row">
       <div class="field">
         <label>Comuna</label>
-        @if (regionId() && loadingComunas()) {
-          <p-skeleton width="100%" height="2.5rem" borderRadius="6px" />
-        } @else {
-          <p-select
-            [options]="comunaOptions()"
-            [ngModel]="comunaId()"
-            (ngModelChange)="comunaId.set($event)"
-            [disabled]="isView() || !regionId()"
-            [placeholder]="regionId() ? 'Seleccionar...' : 'Primero seleccione región'"
-            [appendTo]="'body'"
-            class="w-full"
-          />
-        }
+        <p-select
+          [options]="comunaOptions()"
+          [ngModel]="comunaId()"
+          (ngModelChange)="comunaId.set($event)"
+          [disabled]="isView() || !regionId()"
+          [placeholder]="regionId() ? 'Seleccionar...' : 'Primero seleccione región'"
+          [appendTo]="'body'"
+          class="w-full"
+        />
       </div>
       <div class="field">
         <label>Código Postal</label>
