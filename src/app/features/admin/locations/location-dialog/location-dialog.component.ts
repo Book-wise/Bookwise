@@ -162,7 +162,6 @@ export class LocationDialogComponent {
       next: (res) => {
         this.saving.set(false);
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
-        this.refStore.invalidateLocations();
         this.saved.emit();
       },
       error: (err) => {
