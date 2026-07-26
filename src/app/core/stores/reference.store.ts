@@ -8,15 +8,15 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject, computed } from '@angular/core';
-import { pipe, switchMap, tap, catchError, of, map } from 'rxjs';
+import { pipe, switchMap, tap, catchError, of, map, forkJoin } from 'rxjs';
 import { ApiService } from '@services/api.service';
-import { Client, Location, Provider, Service, ServicePack } from '@models';
+import { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type EntityName = 'clients' | 'locations' | 'providers' | 'services' | 'packs';
+type EntityName = 'clients' | 'locations' | 'providers' | 'services' | 'packs' | 'regions';
 
 interface ReferenceState {
   // Entity arrays (read-only cache)
@@ -25,6 +25,8 @@ interface ReferenceState {
   providers: Provider[];
   services: Service[];
   packs: ServicePack[];
+  regions: Region[];
+  comunasByRegion: Record<number, LocationComuna[]>;
   // Meta-state
   loading: Record<EntityName, boolean>;
   loaded: Record<EntityName, boolean>;
@@ -41,6 +43,7 @@ const initialLoading: Record<EntityName, boolean> = {
   providers: false,
   services: false,
   packs: false,
+  regions: false,
 };
 const initialLoaded: Record<EntityName, boolean> = {
   clients: false,
@@ -48,6 +51,7 @@ const initialLoaded: Record<EntityName, boolean> = {
   providers: false,
   services: false,
   packs: false,
+  regions: false,
 };
 const initialError: Record<EntityName, string | null> = {
   clients: null,
@@ -55,6 +59,7 @@ const initialError: Record<EntityName, string | null> = {
   providers: null,
   services: null,
   packs: null,
+  regions: null,
 };
 
 const initialState: ReferenceState = {
@@ -63,6 +68,8 @@ const initialState: ReferenceState = {
   providers: [],
   services: [],
   packs: [],
+  regions: [],
+  comunasByRegion: {},
   loading: initialLoading,
   loaded: initialLoaded,
   error: initialError,
@@ -200,6 +207,47 @@ export const ReferenceStore = signalStore(
       ),
     );
 
+    const loadRegions = rxMethod<void>(
+      pipe(
+        tap(() =>
+          patchState(store, {
+            loading: { ...store.loading(), regions: true },
+            error: { ...store.error(), regions: null },
+          }),
+        ),
+        switchMap(() =>
+          api.getRegions().pipe(
+            tap({
+              next: (regions) => {
+                patchState(store, { regions: regions.data, loading: { ...store.loading(), regions: false }, loaded: { ...store.loaded(), regions: true } });
+                // After regions load, fetch all comunas
+                loadAllComunas(regions.data);
+              },
+              error: (err) =>
+                patchState(store, { loading: { ...store.loading(), regions: false }, error: { ...store.error(), regions: err.message ?? 'Error al cargar regiones' } }),
+            }),
+            catchError(() => of(undefined)),
+          ),
+        ),
+      ),
+    );
+
+    function loadAllComunas(regions: Region[]): void {
+      if (regions.length === 0) return;
+      forkJoin(regions.map(r =>
+        api.getComunas(r.id).pipe(
+          map(res => ({ regionId: r.id, comunas: res.data })),
+          catchError(() => of({ regionId: r.id, comunas: [] })),
+        ),
+      )).subscribe({
+        next: (results) => {
+          const comunasByRegion: Record<number, LocationComuna[]> = {};
+          results.forEach(r => { comunasByRegion[r.regionId] = r.comunas; });
+          patchState(store, { comunasByRegion });
+        },
+      });
+    }
+
     const loadAll = rxMethod<void>(
       pipe(
         tap(() => {
@@ -208,6 +256,7 @@ export const ReferenceStore = signalStore(
           loadServices();
           loadClients();
           loadPacks();
+          loadRegions();
         }),
       ),
     );
@@ -219,6 +268,7 @@ export const ReferenceStore = signalStore(
       loadServices,
       loadClients,
       loadPacks,
+      loadRegions,
       loadAll,
 
       // Invalidation (usa las closures, no store.method)
@@ -241,6 +291,10 @@ export const ReferenceStore = signalStore(
       invalidatePacks(): void {
         patchState(store, { loaded: { ...store.loaded(), packs: false } });
         loadPacks();
+      },
+      invalidateRegions(): void {
+        patchState(store, { loaded: { ...store.loaded(), regions: false } });
+        loadRegions();
       },
       invalidateAll(): void {
         patchState(store, { loaded: { ...initialLoaded } });
