@@ -122,6 +122,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   showSlotMenu = signal(false);
   slotMenuPosition = { x: 0, y: 0 };
   private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
+  private lastHoverKey = '';
+  private lastHoverTime = 0;
 
   // Signal para detectar viewport
   isMobile = signal(false);
@@ -294,6 +296,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           });
         },
         dateClick: (info) => this.ngZone.run(() => {
+          this.clearHoverSelect();
           this.removeSlotPreview();
 
           // info.dateStr is ISO8601 with CLT offset (e.g. "2026-06-27T13:00:00-04:00")
@@ -332,7 +335,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
                   const rect = el.getBoundingClientRect();
                   this.slotMenuPosition = {
                     x: rect.left + rect.width / 2,
-                    y: rect.top,
+                    y: rect.bottom,
                   };
                 } else {
                   this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
@@ -357,11 +360,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       });
       this.calendar.render();
       this.startNowLabel();
+      this.setupHoverSelect();
     });
   }
 
   ngOnDestroy(): void {
     if (this.nowLabelInterval) clearInterval(this.nowLabelInterval);
+    this.destroyHoverSelect();
     if (this.calendar) this.calendar.destroy();
   }
 
@@ -493,6 +498,151 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   dismissSlotMenu(): void {
     this.showSlotMenu.set(false);
     this.removeSlotPreview();
+  }
+
+  // ── Hover select: usa selectMirror para mostrar ghost preview ─────────
+
+  private hoverEl: HTMLElement | null = null;
+  private hoverBoundMove: (e: Event) => void = () => {};
+  private hoverBoundLeave: (e: Event) => void = () => {};
+
+  private setupHoverSelect(): void {
+    this.hoverEl = this.calendarContainer?.nativeElement ?? null;
+    if (!this.hoverEl) return;
+
+    this.hoverBoundMove = (e: Event) => this.onHoverMove(e as MouseEvent);
+    this.hoverBoundLeave = () => this.clearHoverSelect();
+
+    this.ngZone.runOutsideAngular(() => {
+      this.hoverEl!.addEventListener('mousemove', this.hoverBoundMove);
+      this.hoverEl!.addEventListener('mouseleave', this.hoverBoundLeave);
+    });
+  }
+
+  private destroyHoverSelect(): void {
+    if (!this.hoverEl) return;
+    this.hoverEl.removeEventListener('mousemove', this.hoverBoundMove);
+    this.hoverEl.removeEventListener('mouseleave', this.hoverBoundLeave);
+    this.hoverEl = null;
+  }
+
+  private onHoverMove(event: MouseEvent): void {
+    if (!this.calendar) return;
+    if (!this.calendar.view.type.startsWith('timeGrid')) return;
+
+    // No mostrar mirror sobre eventos existentes
+    const target = event.target as HTMLElement;
+    if (target.closest('.fc-event') || target.closest('.fc-more-link')) {
+      this.clearHoverSelect();
+      return;
+    }
+
+    // Debounce: mínimo 60ms entre actualizaciones del mirror
+    const now = Date.now();
+    if (now - this.lastHoverTime < 60) return;
+
+    const result = this.calcSlotFromMouse(event);
+    if (!result) {
+      this.clearHoverSelect();
+      return;
+    }
+
+    const { slotStart, slotEnd, label } = result;
+
+    // Throttle: no actualizar si el slot no cambió
+    const key = `${slotStart.getTime()}`;
+    if (key === this.lastHoverKey) return;
+    this.lastHoverKey = key;
+    this.lastHoverTime = now;
+
+    this.calendar.select(slotStart, slotEnd);
+
+    // Poner la hora dentro del mirror vía data attribute
+    const mirror = this.calendar.el.querySelector('.fc-event-mirror');
+    if (mirror) {
+      mirror.setAttribute('data-hover-time', label);
+    }
+  }
+
+  private clearHoverSelect(): void {
+    this.lastHoverKey = '';
+    this.lastHoverTime = 0;
+    if (this.calendar) {
+      // Limpiar mirror y etiqueta de hora
+      const mirror = this.calendar.el.querySelector('.fc-event-mirror');
+      if (mirror) {
+        mirror.removeAttribute('data-hover-time');
+      }
+      this.calendar.unselect();
+    }
+  }
+
+  private pad(n: number): string {
+    return String(n).padStart(2, '0');
+  }
+
+  private calcSlotFromMouse(event: MouseEvent): { slotStart: Date; slotEnd: Date; pixelTop: number; dayLeft: number; dayWidth: number; label: string } | null {
+    if (!this.calendar) return null;
+    const container: HTMLElement = this.calendarContainer.nativeElement;
+    const containerRect: DOMRect = container.getBoundingClientRect();
+
+    // Encontrar columna de día por coordenada X
+    const columns: NodeListOf<Element> = container.querySelectorAll('.fc-timegrid-col');
+    let colDateStr = '';
+    let dayLeft = 0;
+    let dayWidth = 0;
+    for (let i = 0; i < columns.length; i++) {
+      const rect: DOMRect = columns[i].getBoundingClientRect();
+      if (event.clientX >= rect.left && event.clientX <= rect.right) {
+        colDateStr = columns[i].getAttribute('data-date') || '';
+        dayLeft = rect.left - containerRect.left;
+        dayWidth = rect.width;
+        break;
+      }
+    }
+    if (!colDateStr) return null;
+
+    // Calcular hora desde coordenada Y contra el eje de slots
+    const slotsContainer: Element | null = container.querySelector('.fc-timegrid-slots');
+    if (!slotsContainer) return null;
+    const slotsRect: DOMRect = slotsContainer.getBoundingClientRect();
+    const relativeY: number = event.clientY - slotsRect.top;
+    if (relativeY < 0) return null;
+
+    // pixelTop: la posición Y del slot dentro del calendario (para el label)
+    const pixelTop: number = slotsRect.top - containerRect.top;
+
+    const slotMinTime: string = (this.calendar.getOption('slotMinTime') as string) || '00:00:00';
+    const slotMaxTime: string = (this.calendar.getOption('slotMaxTime') as string) || '24:00:00';
+    const [minH, minM]: number[] = slotMinTime.split(':').map(Number);
+    const [maxH, maxM]: number[] = slotMaxTime.split(':').map(Number);
+    const minTotal: number = minH * 60 + minM;
+    const maxTotal: number = maxH * 60 + maxM;
+    const rangeMin: number = maxTotal - minTotal;
+    if (rangeMin <= 0) return null;
+
+    const totalHeight: number = slotsRect.height;
+    const fraction: number = relativeY / totalHeight;
+    const snapMin: number = 30;
+    const minutesFromMin: number = Math.round((fraction * rangeMin) / snapMin) * snapMin;
+    const totalMinutes: number = minTotal + minutesFromMin;
+
+    // La hora fraccional para calcular pixelTop exacto del slot snappeado
+    const fractionalHeight = (minutesFromMin / rangeMin) * totalHeight;
+    const slotPixelTop: number = slotsRect.top + fractionalHeight - containerRect.top;
+
+    if (totalMinutes < minTotal || totalMinutes + 60 > maxTotal) return null;
+
+    // Construir ISO sin timezone y usar tzService para interpretarlo en el timezone correcto
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const isoStr = `${colDateStr}T${this.pad(hours)}:${this.pad(minutes)}:00`;
+    const slotStart = this.tzService.parseDate(isoStr);
+    const previewMs = this.getPreviewDuration();
+    const slotEnd = new Date(slotStart.getTime() + previewMs);
+    const label = `${this.pad(hours)}:${this.pad(minutes)}`;
+
+    return { slotStart, slotEnd, pixelTop: slotPixelTop, dayLeft, dayWidth, label };
   }
 
   private buildEventContent(info: EventContentArg): { html: string } {

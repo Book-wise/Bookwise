@@ -344,6 +344,15 @@
     [style.top.px]="slotMenuPosition.y"
     (click)="$event.stopPropagation()"
   >
+    <div class="slot-menu-header">
+      <button
+        class="slot-menu-close"
+        (click)="dismissSlotMenu()"
+        [attr.aria-label]="'Cerrar'"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
     <button
       pButton
       class="slot-menu-item"
