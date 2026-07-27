@@ -8,7 +8,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject, computed } from '@angular/core';
-import { pipe, switchMap, tap, catchError, of, map, forkJoin } from 'rxjs';
+import { pipe, switchMap, tap, catchError, of, map } from 'rxjs';
 import { ApiService } from '@services/api.service';
 import { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
 
@@ -220,8 +220,8 @@ export const ReferenceStore = signalStore(
             tap({
               next: (regions) => {
                 patchState(store, { regions: regions.data, loading: { ...store.loading(), regions: false }, loaded: { ...store.loaded(), regions: true } });
-                // After regions load, fetch all comunas
-                loadAllComunas(regions.data);
+                // Single request for all comunas (replaces N per-region calls)
+                loadAllComunas();
               },
               error: (err) =>
                 patchState(store, { loading: { ...store.loading(), regions: false }, error: { ...store.error(), regions: err.message ?? 'Error al cargar regiones' } }),
@@ -232,19 +232,19 @@ export const ReferenceStore = signalStore(
       ),
     );
 
-    function loadAllComunas(regions: Region[]): void {
-      if (regions.length === 0) return;
-      forkJoin(regions.map(r =>
-        api.getComunas(r.id).pipe(
-          map(res => ({ regionId: r.id, comunas: res.data })),
-          catchError(() => of({ regionId: r.id, comunas: [] })),
-        ),
-      )).subscribe({
-        next: (results) => {
+    function loadAllComunas(): void {
+      api.getAllComunas().subscribe({
+        next: (res) => {
           const comunasByRegion: Record<number, LocationComuna[]> = {};
-          results.forEach(r => { comunasByRegion[r.regionId] = r.comunas; });
+          for (const comuna of res.data) {
+            if (!comunasByRegion[comuna.region_id]) {
+              comunasByRegion[comuna.region_id] = [];
+            }
+            comunasByRegion[comuna.region_id].push(comuna);
+          }
           patchState(store, { comunasByRegion });
         },
+        error: () => { /* comunas are non-critical, fail silently */ },
       });
     }
 
