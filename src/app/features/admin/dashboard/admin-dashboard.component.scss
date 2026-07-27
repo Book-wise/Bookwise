@@ -31,6 +31,12 @@ h1 {
   text-align: center;
 }
 
+// ── Grid items con min-width: 0 para permitir que los charts se encojan ────────
+
+:host ::ng-deep .chart-card {
+  min-width: 0;
+}
+
 :host ::ng-deep .stat-card .p-card-body {
   padding: 1.5rem;
 }
@@ -55,11 +61,71 @@ h1 {
 
 .bw-chart-circular,
 .bw-chart-linear {
+  display: block;
   width: 100%;
 }
 
+.bw-chart-circular {
+  aspect-ratio: 1 / 1;
+}
+
 .bw-chart-linear {
-  height: 280px;
+  height: 35vh;
+  min-height: 220px;
+  max-height: 380px;
+}
+
+// ── Responsive chart containers ────────────────────────────────────────────────
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.chart-container--circular {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.chart-container--linear {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+// ── Card header con filtro ─────────────────────────────────────────────────────
+
+.chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1.25rem 1.25rem 0;
+  box-sizing: border-box;
+}
+
+.chart-card-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.chart-card-header__title {
+  font-size: var(--bw-font-title, 1.25rem);
+  font-weight: var(--bw-weight-semibold, 600);
+  color: var(--text-heading, #333);
+}
+
+.chart-card-header__period {
+  font-size: var(--bw-font-caption, 0.8rem);
+  color: var(--text-color-secondary, #888);
+}
+
+:host ::ng-deep .location-filter-dropdown {
+  min-width: 200px;
 }
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
@@ -99,7 +165,17 @@ h1 {
     gap: 0.75rem;
   }
 
+  .chart-card-header {
+    padding: 0.75rem 0.75rem 0;
+  }
+
+  .chart-container--circular {
+    max-width: 100%;
+  }
+
   .bw-chart-linear {
-    height: 200px;
+    height: 28vh;
+    min-height: 180px;
+    max-height: 280px;
   }
 }

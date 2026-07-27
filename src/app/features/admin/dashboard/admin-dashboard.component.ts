@@ -1,13 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
+import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DateTime } from 'luxon';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import type { Context } from 'chartjs-plugin-datalabels';
 import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
@@ -19,7 +23,9 @@ import { BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-sta
 interface ChartDataset { data: number[]; backgroundColor?: string | string[]; borderColor?: string; fill?: boolean; tension?: number; label?: string }
 interface DashboardChartData { labels: string[]; datasets: ChartDataset[] }
 interface DashboardChartOptions {
-  plugins?:             { legend?: { position?: string } };
+  responsive?:          boolean;
+  resizeDelay?:         number;
+  plugins?:             Record<string, unknown>;
   maintainAspectRatio?: boolean;
   aspectRatio?:         number;
   scales?:              Record<string, unknown>;
@@ -42,6 +48,12 @@ interface DashboardData {
   pendingCount: number;
   locationStats: LocationStat[];
   weeklyStats: DailyStat[];
+  weekBookings: Booking[];
+}
+
+interface LocationOption {
+  label: string;
+  value: number | null;
 }
 
 const CHART_COLORS = ['#046af4', '#0b3d95', '#94a3b8', '#fcd34d', '#86efac', '#fb923c', '#a78bfa', '#ec4899'];
@@ -57,7 +69,7 @@ function normalizeBookings(res: unknown): Booking[] {
   selector: 'bw-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ChartModule, SkeletonModule],
+  imports: [CommonModule, FormsModule, CardModule, ChartModule, SelectModule, SkeletonModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
@@ -76,6 +88,16 @@ export class AdminDashboardComponent {
 
   readonly userName = computed(() => this.auth.user()?.name ?? 'Usuario');
 
+  /** ── Filtro de location ── */
+  readonly selectedLocationId = signal<number | null>(null);
+
+  readonly chartPlugins = [ChartDataLabels];
+
+  readonly locationOptions = computed<LocationOption[]>(() => [
+    { label: 'Todas las sucursales', value: null },
+    ...this.locations().map(l => ({ label: l.name, value: l.id })),
+  ]);
+
   /** ── rango de fechas mostrado (formateado en timezone activo) ── */
   readonly dateRangeText = computed(() => {
     const tz  = this.tzService.activeTimezone();
@@ -84,6 +106,15 @@ export class AdminDashboardComponent {
     const weekFrom = now.startOf('week').toFormat("dd/MM");
     const weekTo   = now.endOf('week').toFormat("dd/MM/yyyy");
     return `Hoy ${today} · Semana del ${weekFrom} al ${weekTo}`;
+  });
+
+  /** Texto de periodo para la card de Citas por Día */
+  readonly weekPeriodText = computed(() => {
+    const tz       = this.tzService.activeTimezone();
+    const now      = DateTime.now().setZone(tz);
+    const weekFrom = now.startOf('week').toFormat("dd/MM");
+    const weekTo   = now.endOf('week').toFormat("dd/MM/yyyy");
+    return `Semana ${weekFrom} → ${weekTo}`;
   });
 
   /** ── rxResource: carga reactiva del dashboard ── */
@@ -110,6 +141,7 @@ export class AdminDashboardComponent {
             pendingCount:  pendingList.length,
             locationStats: this.computeLocationStats(weekList),
             weeklyStats:   this.computeWeeklyStats(weekList),
+            weekBookings:  weekList,
           };
         }),
       );
@@ -117,9 +149,18 @@ export class AdminDashboardComponent {
   });
 
   /** ── señales derivadas para el template ── */
-  readonly loading        = computed(() => this.dashboardStats.isLoading() && !this.dashboardStats.hasValue());
-  readonly todayBookings  = computed(() => this.dashboardStats.value()?.todayCount   ?? 0);
+  readonly loading         = computed(() => this.dashboardStats.isLoading() && !this.dashboardStats.hasValue());
+  readonly todayBookings   = computed(() => this.dashboardStats.value()?.todayCount   ?? 0);
   readonly pendingBookings = computed(() => this.dashboardStats.value()?.pendingCount ?? 0);
+
+  /** Weekly stats filtrados por location */
+  readonly filteredWeeklyStats = computed<DailyStat[]>(() => {
+    const data   = this.dashboardStats.value();
+    const locId  = this.selectedLocationId();
+    if (!data) return [];
+    const filtered = locId ? data.weekBookings.filter(b => b.location?.id === locId) : data.weekBookings;
+    return this.computeWeeklyStats(filtered);
+  });
 
   readonly locationChartData = computed<DashboardChartData | null>(() => {
     const stats = this.dashboardStats.value();
@@ -131,12 +172,12 @@ export class AdminDashboardComponent {
   });
 
   readonly weeklyChartData = computed<DashboardChartData>(() => {
-    const stats = this.dashboardStats.value();
+    const stats = this.filteredWeeklyStats();
     return {
       labels: DAY_LABELS,
       datasets: [{
         label: 'Citas',
-        data: stats?.weeklyStats.map(s => s.count) ?? [0, 0, 0, 0, 0, 0, 0],
+        data: stats.map(s => s.count),
         fill: true,
         borderColor: PRIMARY_COLOR,
         backgroundColor: 'rgba(4, 106, 244, 0.1)',
@@ -145,15 +186,41 @@ export class AdminDashboardComponent {
     };
   });
 
-  /** ── opciones de charts (estáticas) ── */
+  /** ── opciones de charts ── */
   readonly doughnutOptions = signal<DashboardChartOptions>({
+    responsive: true,
+    resizeDelay: 0,
+    maintainAspectRatio: true,
     cutout: '60%',
-    plugins: { legend: { position: 'bottom' } },
+    plugins: {
+      legend: { position: 'bottom' },
+      datalabels: {
+        display: (ctx: Context) => {
+          const data = ctx.dataset.data;
+          const total = (data as number[]).reduce((a: number, b: number) => a + b, 0);
+          return total > 0;
+        },
+        color: '#fff',
+        font: { weight: 'bold' as const, size: 13 },
+        formatter: (_value: number, ctx: Context) => {
+          const data = ctx.dataset.data;
+          const total = (data as number[]).reduce((a: number, b: number) => a + b, 0);
+          const pct = total > 0 ? ((_value / total) * 100).toFixed(0) + '%' : '';
+          return `${_value}\n${pct}`;
+        },
+        textAlign: 'center',
+        offset: 2,
+      },
+    },
   });
 
   readonly lineOptions = signal<DashboardChartOptions>({
-    aspectRatio: 1.6,
-    plugins: { legend: { position: 'bottom' } },
+    responsive: true,
+    resizeDelay: 0,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+    },
     scales: {
       x: { grid: { display: false } },
       y: { beginAtZero: true },

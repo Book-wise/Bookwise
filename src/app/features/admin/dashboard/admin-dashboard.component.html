@@ -47,12 +47,32 @@
   </div>
 
   <div class="charts-row">
-    <p-card header="Citas por Location">
-      <p-chart type="doughnut" [data]="locationChartData()" [options]="doughnutOptions()" class="bw-chart-circular"></p-chart>
+    <p-card header="Citas por Location" styleClass="chart-card">
+      <div class="chart-container chart-container--circular">
+        <p-chart type="doughnut" [data]="locationChartData()" [options]="doughnutOptions()" [plugins]="chartPlugins" class="bw-chart-circular"></p-chart>
+      </div>
     </p-card>
 
-    <p-card header="Citas por Día">
-      <p-chart type="line" [data]="weeklyChartData()" [options]="lineOptions()" class="bw-chart-linear"></p-chart>
+    <p-card styleClass="chart-card">
+      <ng-template pTemplate="header">
+        <div class="chart-card-header">
+          <div class="chart-card-header__left">
+            <span class="chart-card-header__title">Citas por Día</span>
+            <span class="chart-card-header__period">{{ weekPeriodText() }}</span>
+          </div>
+          <p-select
+            [options]="locationOptions()"
+            [(ngModel)]="selectedLocationId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sucursales"
+            styleClass="location-filter-dropdown"
+          />
+        </div>
+      </ng-template>
+      <div class="chart-container chart-container--linear">
+        <p-chart type="line" [data]="weeklyChartData()" [options]="lineOptions()" class="bw-chart-linear"></p-chart>
+      </div>
     </p-card>
   </div>
   }
