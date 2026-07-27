@@ -66,6 +66,10 @@ export class ApiService {
     return this.http.get<{ data: LocationComuna[] }>(`${this.baseUrl}/regions/${regionId}/comunas`);
   }
 
+  getAllComunas(): Observable<{ data: (LocationComuna & { region_id: number })[] }> {
+    return this.http.get<{ data: (LocationComuna & { region_id: number })[] }>(`${this.baseUrl}/comunas`);
+  }
+
   getServices(): Observable<Service[]> {
     return this.http.get<Service[]>(`${this.baseUrl}/services`);
   }
