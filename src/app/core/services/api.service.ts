@@ -33,6 +33,11 @@ import {
   ApiResponse,
 } from '@models';
 
+/**
+ * @deprecated Use domain-specific services (AuthApiService, LocationsApiService,
+ * ProvidersApiService, etc.) instead. This service will be removed after all
+ * consumers are migrated to the corresponding domain API service.
+ */
 @Injectable({
   providedIn: 'root',
 })
