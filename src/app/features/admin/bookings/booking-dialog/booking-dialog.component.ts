@@ -263,6 +263,7 @@ export class BookingDialogComponent implements OnInit {
           detail: this.lang.t(
             this.isEdit() ? 'toast.booking_updated.detail' : 'toast.booking_created.detail',
           ),
+          key: 'global',
         });
         this.visible = false;
         this.saving.set(false);
@@ -286,6 +287,7 @@ export class BookingDialogComponent implements OnInit {
           severity: 'success',
           summary: this.lang.t('toast.booking_cancelled.summary'),
           detail: this.lang.t('toast.booking_cancelled.detail'),
+          key: 'global',
         });
         this.visible = false;
         this.saving.set(false);

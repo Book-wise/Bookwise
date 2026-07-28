@@ -143,6 +143,7 @@ export class PaymentDetailDialogComponent {
           severity: 'success',
           summary: this.lang.t('toast.booking_updated.summary'),
           detail: this.lang.t('toast.booking_updated.detail'),
+          key: 'global',
           life: 3000,
         });
       },
@@ -170,6 +171,7 @@ export class PaymentDetailDialogComponent {
       severity: 'success',
       summary: this.lang.t('toast.booking_cancelled.summary'),
       detail: this.lang.t('toast.booking_cancelled.detail'),
+      key: 'global',
       life: 3000,
     });
 

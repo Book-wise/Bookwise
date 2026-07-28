@@ -63,13 +63,13 @@ export class HttpErrorService {
       if (isOffline) {
         this.showOfflineToast();
       } else {
-        this.messageService.add(this.toToastConfig(err, action));
+        this.messageService.add({ ...this.toToastConfig(err, action), key: 'global' });
       }
     });
   }
 
   /** Utility: returns the toast config without side effects. */
-  toToastConfig(err: HttpErrorResponse, action?: string): ToastConfig {
+  toToastConfig(err: HttpErrorResponse, action?: string): ToastConfig & { key?: string } {
     const body = err.error as ApiErrorBody | null;
 
     // ── 1. Business error — { error: 'conflict', detail: '...' }
@@ -95,6 +95,7 @@ export class HttpErrorService {
       severity: 'error',
       summary:  this.lang.t('toast.offline.summary'),
       detail:   this.lang.t('toast.offline.detail'),
+      key: 'global',
       sticky:   true,
       life:     86_400_000,
     });
@@ -111,6 +112,7 @@ export class HttpErrorService {
       severity: 'success',
       summary:  this.lang.t('toast.reconnected.summary'),
       detail:   this.lang.t('toast.reconnected.detail'),
+      key: 'global',
       life:     4000,
     });
   }

@@ -462,6 +462,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
         severity: 'warn',
         summary: this.lang.t('toast.patient_required.summary'),
         detail: this.lang.t('toast.patient_required.detail'),
+        key: 'global',
         life: 4000,
       });
       return;
@@ -519,6 +520,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
           detail: this.lang.t(
             this.isEdit() ? 'toast.booking_updated.detail' : 'toast.booking_created.detail',
           ),
+          key: 'global',
         });
         this.visible = false;
         this.saving.set(false);
@@ -555,6 +557,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
             severity: 'success',
             summary: this.lang.t('toast.client_created.summary'),
             detail: this.lang.t('toast.client_created.detail'),
+            key: 'global',
           });
           this.showPatientPanel = false;
           this.formData.client_id = client.id;
@@ -688,6 +691,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       severity: 'success',
       summary: this.lang.t('toast.existing_client_assigned.summary'),
       detail: this.lang.t('toast.existing_client_assigned.detail'),
+      key: 'global',
     });
   }
 
@@ -700,6 +704,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
           severity: 'success',
           summary: this.lang.t('toast.service_created.summary'),
           detail: service.name,
+          key: 'global',
           life: 3000,
         });
         this.refStore.invalidateServices();

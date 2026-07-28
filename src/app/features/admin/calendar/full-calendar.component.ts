@@ -87,6 +87,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly store = inject(BookingStore);
   private httpError = inject(HttpErrorService);
   private tzService = inject(TimezoneService);
+  private readonly isTouchDevice = 'ontouchstart' in window;
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -132,6 +133,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Popover for slot selection
   showSlotMenu = signal(false);
+  slotMenuAbove = signal(false);
   slotMenuPosition = { x: 0, y: 0 };
   selectedTimeStr = signal('');
   private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
@@ -169,9 +171,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     snapDuration: '01:00:00',
     dayMaxEvents: true,
     weekends: true,
-    longPressDelay: 300,
-    eventLongPressDelay: 300,
-    selectLongPressDelay: 300,
+    longPressDelay: this.isTouchDevice ? 0 : 150,
+    eventLongPressDelay: this.isTouchDevice ? 0 : 150,
+    selectLongPressDelay: this.isTouchDevice ? 0 : 150,
     events: (
       fetchInfo: EventSourceFuncArg,
       successCallback: (events: EventInput[]) => void,
@@ -241,12 +243,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         const mutErr = this.store.error().mutationError;
 
         if (mutErr) {
-          this.messageService.add(this.httpError.toToastConfig(mutErr));
+          this.messageService.add({ ...this.httpError.toToastConfig(mutErr), key: 'global' });
         } else if (meta) {
           this.messageService.add({
             severity: 'success',
             summary: meta.clientName,
             detail: `${meta.serviceName} · ${this.fmtDT(meta.oldStart)} → ${this.fmtDT(meta.newStart)}${meta.meta ? ` · ${meta.meta}` : ''}`,
+            key: 'global',
             life: 5000,
           });
         }
@@ -504,6 +507,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private setupHoverSelect(): void {
     this.hoverEl = this.calendarContainer?.nativeElement ?? null;
     if (!this.hoverEl) return;
+    // En mobile el hover se activa vía eventos de compatibilidad mousemove
+    // e interfiere con el tap — lo desactivamos completamente.
+    if (this.isTouchDevice) return;
 
     this.hoverBoundMove = (e: Event) => this.onHoverMove(e as MouseEvent);
     this.hoverBoundLeave = () => this.clearHoverSelect();
@@ -669,6 +675,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
             severity: 'info',
             summary: this.lang.t('toast.block_moved.summary'),
             detail: `${slot.reason || this.lang.t('toast.block_moved.summary')} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
+            key: 'global',
             life: 5000,
           });
           this.refreshScheduled = true;
@@ -676,7 +683,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         error: (err) => {
           revert();
-          this.messageService.add(this.httpError.toToastConfig(err));
+          this.messageService.add({ ...this.httpError.toToastConfig(err), key: 'global' });
         },
       });
     } else {
@@ -783,7 +790,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           mirror.appendChild(bar);
 
           const rect = mirror.getBoundingClientRect();
-          this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.bottom };
+          const menuEstimate = 150; // px — altura aprox del menú
+          const belowRoom = window.innerHeight - rect.bottom;
+          if (belowRoom < menuEstimate) {
+            // Sale de la pantalla → mostrar hacia arriba
+            this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.top };
+            this.slotMenuAbove.set(true);
+          } else {
+            this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.bottom };
+            this.slotMenuAbove.set(false);
+          }
         } else {
           this.slotMenuPosition = {
             x: jsEvent.clientX ?? 0,
