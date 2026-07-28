@@ -87,7 +87,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly store = inject(BookingStore);
   private httpError = inject(HttpErrorService);
   private tzService = inject(TimezoneService);
-  private readonly isTouchDevice = 'ontouchstart' in window;
+  private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -243,7 +243,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         const mutErr = this.store.error().mutationError;
 
         if (mutErr) {
-          this.messageService.add({ ...this.httpError.toToastConfig(mutErr), key: 'global' });
+          this.messageService.add(this.httpError.toToastConfig(mutErr));
         } else if (meta) {
           this.messageService.add({
             severity: 'success',
@@ -683,7 +683,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         error: (err) => {
           revert();
-          this.messageService.add({ ...this.httpError.toToastConfig(err), key: 'global' });
+          this.messageService.add(this.httpError.toToastConfig(err));
         },
       });
     } else {
@@ -790,9 +790,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           mirror.appendChild(bar);
 
           const rect = mirror.getBoundingClientRect();
-          const menuEstimate = 150; // px — altura aprox del menú
+          // slot menu: header (~32px) + 3 botones (a ~36px c/u) ≈ 140px → usamos 150 como margen seguro
+          const MENU_HEIGHT_ESTIMATE = 150;
           const belowRoom = window.innerHeight - rect.bottom;
-          if (belowRoom < menuEstimate) {
+          if (belowRoom < MENU_HEIGHT_ESTIMATE) {
             // Sale de la pantalla → mostrar hacia arriba
             this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.top };
             this.slotMenuAbove.set(true);

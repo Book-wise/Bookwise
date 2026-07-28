@@ -63,27 +63,27 @@ export class HttpErrorService {
       if (isOffline) {
         this.showOfflineToast();
       } else {
-        this.messageService.add({ ...this.toToastConfig(err, action), key: 'global' });
+        this.messageService.add(this.toToastConfig(err, action));
       }
     });
   }
 
-  /** Utility: returns the toast config without side effects. */
-  toToastConfig(err: HttpErrorResponse, action?: string): ToastConfig & { key?: string } {
+  /** Utility: returns the toast config without side effects. Always includes key:'global'. */
+  toToastConfig(err: HttpErrorResponse, action?: string): ToastConfig {
     const body = err.error as ApiErrorBody | null;
 
+    let config: ToastConfig;
     // ── 1. Business error — { error: 'conflict', detail: '...' }
     if (body?.error) {
-      return this.bizConfig(body, err.status, action);
-    }
-
+      config = this.bizConfig(body, err.status, action);
     // ── 2. Laravel field validation — { errors: { campo: ['...'] } }
-    if (body?.errors && typeof body.errors === 'object') {
-      return this.validationConfig(body, err.status, action);
-    }
-
+    } else if (body?.errors && typeof body.errors === 'object') {
+      config = this.validationConfig(body, err.status, action);
     // ── 3. Framework / fallback — { message: '...' } or generic
-    return this.frameworkConfig(body, err.status, action);
+    } else {
+      config = this.frameworkConfig(body, err.status, action);
+    }
+    return { ...config, key: 'global' };
   }
 
   // ── Offline ──────────────────────────────────────────────────────────────────

@@ -204,7 +204,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
         const mutErr    = this.store.error().mutationError;
 
         if (mutErr) {
-          this.messageService.add({ ...this.httpError.toToastConfig(mutErr), key: 'global' });
+          this.messageService.add(this.httpError.toToastConfig(mutErr));
         } else if (meta) {
           this.messageService.add({
             severity: 'success',
@@ -472,7 +472,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
         },
         error: (err) => {
           revert();
-          this.messageService.add({ ...this.httpError.toToastConfig(err), key: 'global' });
+          this.messageService.add(this.httpError.toToastConfig(err));
         },
       });
     } else {
