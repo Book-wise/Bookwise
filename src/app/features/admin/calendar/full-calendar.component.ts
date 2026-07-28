@@ -38,8 +38,14 @@ import { BookingStore } from '@core/stores/booking.store';
 
 import { HttpErrorService } from '@services/http-error.service';
 import {
-  Calendar, CalendarOptions, EventClickArg, DateSelectArg,
-  EventContentArg, EventInput, EventSourceFuncArg, EventDropArg,
+  Calendar,
+  CalendarOptions,
+  EventClickArg,
+  DateSelectArg,
+  EventContentArg,
+  EventInput,
+  EventSourceFuncArg,
+  EventDropArg,
 } from '@fullcalendar/core';
 import { EventResizeDoneArg } from '@fullcalendar/interaction';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -74,13 +80,13 @@ import luxonPlugin from '@fullcalendar/luxon';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api            = inject(ApiService);
+  private api = inject(ApiService);
   private messageService = inject(MessageService);
-  private ngZone         = inject(NgZone);
-  readonly lang          = inject(LanguageService);
-  readonly store         = inject(BookingStore);
-  private httpError      = inject(HttpErrorService);
-  private tzService      = inject(TimezoneService);
+  private ngZone = inject(NgZone);
+  readonly lang = inject(LanguageService);
+  readonly store = inject(BookingStore);
+  private httpError = inject(HttpErrorService);
+  private tzService = inject(TimezoneService);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -88,8 +94,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Metadata for the pending drag/event-move toast */
   private _dragToastMeta: {
-    clientName: string; serviceName: string;
-    oldStart: string; newStart: string;
+    clientName: string;
+    serviceName: string;
+    oldStart: string;
+    newStart: string;
     meta: string | null;
   } | null = null;
 
@@ -97,7 +105,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('eventTooltip') eventTooltip!: Popover;
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
-  @ViewChild(BlockTimeDialogComponent)   blockTimeDialog!: BlockTimeDialogComponent;
+  @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
   @ViewChild(PaymentDetailDialogComponent) paymentDialog!: PaymentDetailDialogComponent;
 
   loading = signal(true);
@@ -112,7 +120,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedStatusIds: number[] = [];
 
   statusFilterOptions = computed(() =>
-    BOOKING_STATUSES.map(s => ({ label: this.lang.t(s.labelKey), value: s.value, color: s.color }))
+    BOOKING_STATUSES.map((s) => ({
+      label: this.lang.t(s.labelKey),
+      value: s.value,
+      color: s.color,
+    })),
   );
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
@@ -121,6 +133,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Popover for slot selection
   showSlotMenu = signal(false);
   slotMenuPosition = { x: 0, y: 0 };
+  selectedTimeStr = signal('');
   private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
   private lastHoverKey = '';
   private lastHoverTime = 0;
@@ -144,14 +157,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     buttonText: {
       today: this.lang.t('cal.today'),
       month: this.lang.t('cal.month'),
-      week:  this.lang.t('cal.week'),
-      day:   this.lang.t('cal.day'),
-      list:  this.lang.t('cal.list'),
+      week: this.lang.t('cal.week'),
+      day: this.lang.t('cal.day'),
+      list: this.lang.t('cal.list'),
     },
     nowIndicator: true,
     editable: true,
     selectable: true,
     selectMirror: true,
+    unselectAuto: false,
+    snapDuration: '01:00:00',
     dayMaxEvents: true,
     weekends: true,
     longPressDelay: 300,
@@ -174,8 +189,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     },
     // Duración de slots en minutos
     slotDuration: '00:30:00',
-    // Snapping del drag & drop independiente de la grilla visual
-    snapDuration: '00:15:00',
+    // Snapping: 1h para selección click/drag
+    // (slotDuration 30min es solo la grilla visual)
     contentHeight: this.getContentHeight(),
   };
 
@@ -222,8 +237,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this._dragMutPending && !mutLoading) {
         this._dragMutPending = false;
 
-        const meta      = this._dragToastMeta;
-        const mutErr    = this.store.error().mutationError;
+        const meta = this._dragToastMeta;
+        const mutErr = this.store.error().mutationError;
 
         if (mutErr) {
           this.messageService.add(this.httpError.toToastConfig(mutErr));
@@ -295,58 +310,33 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
             this.hoveredBooking.set(null);
           });
         },
-        dateClick: (info) => this.ngZone.run(() => {
-          this.clearHoverSelect();
-          this.removeSlotPreview();
+        dateClick: (info) =>
+          this.ngZone.run(() => {
+            this.removeSlotPreview();
 
-          // info.dateStr is ISO8601 with CLT offset (e.g. "2026-06-27T13:00:00-04:00")
-          // info.date is a "stripped" Date whose local wall clock matches CLT display
-          // but whose absolute timestamp is NOT adjusted for timezone.
-          // We parse dateStr for correct absolute timestamps (dialogs/formatters need these)
-          // and keep info.date for the preview event (FullCalendar renders by local wall clock).
-          const previewMs = this.getPreviewDuration();
-          const start = this.tzService.parseDate(info.dateStr);
-          const end = new Date(start.getTime() + previewMs);
+            const previewMs = this.getPreviewDuration();
+            const start = this.tzService.parseDate(info.dateStr);
+            const end = new Date(start.getTime() + previewMs);
 
-          this.selectedDate = start;
-          this.selectedEndDate = end;
+            this.selectedDate = start;
+            this.selectedEndDate = end;
 
-          const isTimeGrid = (this.calendar?.view.type ?? '').startsWith('timeGrid');
-          if (!isTimeGrid) {
-            this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
-            this.showSlotMenu.set(true);
-            return;
-          }
+            const isTimeGrid = (this.calendar?.view.type ?? '').startsWith('timeGrid');
+            if (!isTimeGrid) {
+              this.clearHoverSelect();
+              this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
+              this.showSlotMenu.set(true);
+              return;
+            }
 
-          this.ngZone.runOutsideAngular(() => {
-            this.calendar!.addEvent({
-              id: this.SLOT_PREVIEW_ID,
-              start: info.date,
-              end: new Date(info.date.getTime() + previewMs),
-              classNames: ['bw-slot-preview'],
-              editable: false,
-            });
-
-            requestAnimationFrame(() => {
-              this.ngZone.run(() => {
-                const el = this.calendarContainer.nativeElement
-                  .querySelector('.bw-slot-preview');
-                if (el) {
-                  const rect = el.getBoundingClientRect();
-                  this.slotMenuPosition = {
-                    x: rect.left + rect.width / 2,
-                    y: rect.bottom,
-                  };
-                } else {
-                  this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
-                }
-                this.showSlotMenu.set(true);
-              });
-            });
-          });
-        }),
-        eventDrop:   (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
-        eventResize: (info) => this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
+            // timeGrid: snapDuration hace que FC seleccione 1h naturalmente.
+            // handleDateSelect inyecta barra + menú cuando el select dispare.
+            this.selectedTimeStr.set(this.fmt(info.dateStr));
+          }),
+        eventDrop: (info) =>
+          this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
+        eventResize: (info) =>
+          this.ngZone.run(() => this.handleEventMove(info, info.event.startStr, info.event.endStr)),
         customButtons: {
           bwNewBooking: {
             text: this.lang.t('cal.new_booking'),
@@ -377,9 +367,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.calendar!.setOption('buttonText', {
         today: this.lang.t('cal.today'),
         month: this.lang.t('cal.month'),
-        week:  this.lang.t('cal.week'),
-        day:   this.lang.t('cal.day'),
-        list:  this.lang.t('cal.list'),
+        week: this.lang.t('cal.week'),
+        day: this.lang.t('cal.day'),
+        list: this.lang.t('cal.list'),
       });
       this.calendar!.setOption('customButtons', {
         bwNewBooking: {
@@ -402,7 +392,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private updateNowLabel(): void {
     const now = new Date();
     const label = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const arrow = this.calendarContainer?.nativeElement?.querySelector('.fc-timegrid-now-indicator-arrow');
+    const arrow = this.calendarContainer?.nativeElement?.querySelector(
+      '.fc-timegrid-now-indicator-arrow',
+    );
     arrow?.setAttribute('data-now', label);
   }
 
@@ -417,7 +409,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.onFilterChange();
         }
       },
-      error: () => { this.locations.set([]); },
+      error: () => {
+        this.locations.set([]);
+      },
     });
   }
 
@@ -440,7 +434,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.loadProviders(this.selectedLocationId);
 
       // Propagate location timezone to the centralized service
-      const loc = this.locations().find(l => l.id === this.selectedLocationId);
+      const loc = this.locations().find((l) => l.id === this.selectedLocationId);
       if (loc?.timezone) {
         this.tzService.setTimezone(loc.timezone);
       }
@@ -456,11 +450,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loading.set(true);
 
     const dateFrom = fetchInfo.startStr.split('T')[0];
-    const dateTo   = fetchInfo.endStr.split('T')[0];
+    const dateTo = fetchInfo.endStr.split('T')[0];
 
     // Only trigger store load if date range changed or a refresh is pending
     const storeRange = `[${this.store.dateFrom()}][${this.store.dateTo()}]`;
-    const newRange   = `[${dateFrom}][${dateTo}]`;
+    const newRange = `[${dateFrom}][${dateTo}]`;
 
     if (storeRange !== newRange || this.refreshScheduled) {
       this.refreshScheduled = false;
@@ -497,6 +491,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   dismissSlotMenu(): void {
     this.showSlotMenu.set(false);
+    this.clearHoverSelect();
     this.removeSlotPreview();
   }
 
@@ -529,6 +524,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private onHoverMove(event: MouseEvent): void {
     if (!this.calendar) return;
     if (!this.calendar.view.type.startsWith('timeGrid')) return;
+    if (this.showSlotMenu()) return; // No mover mirror mientras el menú está abierto
 
     // No mostrar mirror sobre eventos existentes
     const target = event.target as HTMLElement;
@@ -537,30 +533,63 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Debounce: mínimo 60ms entre actualizaciones del mirror
-    const now = Date.now();
-    if (now - this.lastHoverTime < 60) return;
-
-    const result = this.calcSlotFromMouse(event);
-    if (!result) {
+    // Leer hora desde data-time del slot
+    const slot = target.closest('.fc-timegrid-slot');
+    if (!slot) {
+      this.clearHoverSelect();
+      return;
+    }
+    const timeStr = slot.getAttribute('data-time');
+    if (!timeStr) {
       this.clearHoverSelect();
       return;
     }
 
-    const { slotStart, slotEnd, label } = result;
+    // Obtener fecha desde la columna del día (data-date en .fc-timegrid-col)
+    const col = target.closest('.fc-timegrid-col');
+    let dateStr: string | null = col?.getAttribute('data-date') ?? null;
+    if (!dateStr) {
+      const container: HTMLElement = this.calendarContainer.nativeElement;
+      const cols = container.querySelectorAll<HTMLElement>('.fc-timegrid-col');
+      for (const c of cols) {
+        const rect = c.getBoundingClientRect();
+        if (event.clientX >= rect.left && event.clientX <= rect.right) {
+          dateStr = c.getAttribute('data-date');
+          break;
+        }
+      }
+    }
+    if (!dateStr) {
+      this.clearHoverSelect();
+      return;
+    }
+
+    // Construir fechas
+    const [hStr, mStr] = timeStr.split(':');
+    const hours = parseInt(hStr, 10);
+    const minutes = parseInt(mStr, 10);
+    const isoStr = `${dateStr}T${this.pad(hours)}:${this.pad(minutes)}:00`;
+    const slotStart = this.tzService.parseDate(isoStr);
+    const previewMs = this.getPreviewDuration();
+    const slotEnd = new Date(slotStart.getTime() + previewMs);
 
     // Throttle: no actualizar si el slot no cambió
     const key = `${slotStart.getTime()}`;
     if (key === this.lastHoverKey) return;
     this.lastHoverKey = key;
-    this.lastHoverTime = now;
+    this.lastHoverTime = Date.now();
 
     this.calendar.select(slotStart, slotEnd);
 
-    // Poner la hora dentro del mirror vía data attribute
+    // Inyectar hora en el mirror
+    const label = `${this.pad(hours)}:${this.pad(minutes)}`;
     const mirror = this.calendar.el.querySelector('.fc-event-mirror');
     if (mirror) {
-      mirror.setAttribute('data-hover-time', label);
+      mirror.querySelector('.bw-mirror-bar')?.remove();
+      const bar = document.createElement('div');
+      bar.className = 'bw-mirror-bar';
+      bar.innerHTML = `<span class="bw-mirror-time">${label}</span>`;
+      mirror.appendChild(bar);
     }
   }
 
@@ -568,11 +597,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.lastHoverKey = '';
     this.lastHoverTime = 0;
     if (this.calendar) {
-      // Limpiar mirror y etiqueta de hora
-      const mirror = this.calendar.el.querySelector('.fc-event-mirror');
-      if (mirror) {
-        mirror.removeAttribute('data-hover-time');
-      }
       this.calendar.unselect();
     }
   }
@@ -581,110 +605,63 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return String(n).padStart(2, '0');
   }
 
-  private calcSlotFromMouse(event: MouseEvent): { slotStart: Date; slotEnd: Date; pixelTop: number; dayLeft: number; dayWidth: number; label: string } | null {
-    if (!this.calendar) return null;
-    const container: HTMLElement = this.calendarContainer.nativeElement;
-    const containerRect: DOMRect = container.getBoundingClientRect();
-
-    // Encontrar columna de día por coordenada X
-    const columns: NodeListOf<Element> = container.querySelectorAll('.fc-timegrid-col');
-    let colDateStr = '';
-    let dayLeft = 0;
-    let dayWidth = 0;
-    for (let i = 0; i < columns.length; i++) {
-      const rect: DOMRect = columns[i].getBoundingClientRect();
-      if (event.clientX >= rect.left && event.clientX <= rect.right) {
-        colDateStr = columns[i].getAttribute('data-date') || '';
-        dayLeft = rect.left - containerRect.left;
-        dayWidth = rect.width;
-        break;
-      }
-    }
-    if (!colDateStr) return null;
-
-    // Calcular hora desde coordenada Y contra el eje de slots
-    const slotsContainer: Element | null = container.querySelector('.fc-timegrid-slots');
-    if (!slotsContainer) return null;
-    const slotsRect: DOMRect = slotsContainer.getBoundingClientRect();
-    const relativeY: number = event.clientY - slotsRect.top;
-    if (relativeY < 0) return null;
-
-    // pixelTop: la posición Y del slot dentro del calendario (para el label)
-    const pixelTop: number = slotsRect.top - containerRect.top;
-
-    const slotMinTime: string = (this.calendar.getOption('slotMinTime') as string) || '00:00:00';
-    const slotMaxTime: string = (this.calendar.getOption('slotMaxTime') as string) || '24:00:00';
-    const [minH, minM]: number[] = slotMinTime.split(':').map(Number);
-    const [maxH, maxM]: number[] = slotMaxTime.split(':').map(Number);
-    const minTotal: number = minH * 60 + minM;
-    const maxTotal: number = maxH * 60 + maxM;
-    const rangeMin: number = maxTotal - minTotal;
-    if (rangeMin <= 0) return null;
-
-    const totalHeight: number = slotsRect.height;
-    const fraction: number = relativeY / totalHeight;
-    const snapMin: number = 30;
-    const minutesFromMin: number = Math.round((fraction * rangeMin) / snapMin) * snapMin;
-    const totalMinutes: number = minTotal + minutesFromMin;
-
-    // La hora fraccional para calcular pixelTop exacto del slot snappeado
-    const fractionalHeight = (minutesFromMin / rangeMin) * totalHeight;
-    const slotPixelTop: number = slotsRect.top + fractionalHeight - containerRect.top;
-
-    if (totalMinutes < minTotal || totalMinutes + 60 > maxTotal) return null;
-
-    // Construir ISO sin timezone y usar tzService para interpretarlo en el timezone correcto
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    const isoStr = `${colDateStr}T${this.pad(hours)}:${this.pad(minutes)}:00`;
-    const slotStart = this.tzService.parseDate(isoStr);
-    const previewMs = this.getPreviewDuration();
-    const slotEnd = new Date(slotStart.getTime() + previewMs);
-    const label = `${this.pad(hours)}:${this.pad(minutes)}`;
-
-    return { slotStart, slotEnd, pixelTop: slotPixelTop, dayLeft, dayWidth, label };
-  }
-
   private buildEventContent(info: EventContentArg): { html: string } {
     if (info.event.id === this.SLOT_PREVIEW_ID) {
       return { html: '<div class="bw-slot-preview-inner"></div>' };
     }
     if (info.event.extendedProps['isBlocked']) {
       const reason = info.event.title || 'Bloqueado';
-      const start  = this.fmt(info.event.startStr);
-      const end    = this.fmt(info.event.endStr);
-      return { html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason} · ${start}–${end}</span></div>` };
+      const start = this.fmt(info.event.startStr);
+      const end = this.fmt(info.event.endStr);
+      return {
+        html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason} · ${start}–${end}</span></div>`,
+      };
     }
     const booking: Booking | undefined = info.event.extendedProps['booking'];
     const payment = booking?.payment_status;
-    const title = info.event.title.replace(/[&<>"']/g, (c: string) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c
+    const title = info.event.title.replace(
+      /[&<>"']/g,
+      (c: string) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
     );
 
     const badge =
-      payment === 'paid'    ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>' :
-      payment === 'partial' ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>' :
-      '';
+      payment === 'paid'
+        ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>'
+        : payment === 'partial'
+          ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>'
+          : '';
 
     return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
   }
 
-  private handleEventMove(info: EventDropArg | EventResizeDoneArg, newStart: string, newEnd: string): void {
+  private handleEventMove(
+    info: EventDropArg | EventResizeDoneArg,
+    newStart: string,
+    newEnd: string,
+  ): void {
     const isBlocked = info.event.extendedProps['isBlocked'];
-    const oldStart  = (info.oldEvent?.startStr ?? '') as string;
+    const oldStart = (info.oldEvent?.startStr ?? '') as string;
 
     // Guard: endStr puede ser null en eventos sin duración explícita
     const safeEnd = newEnd || newStart;
 
     const revert = () => {
-      try { info.revert(); } catch { /* vista ya cambió, ignorar */ }
+      try {
+        info.revert();
+      } catch {
+        /* vista ya cambió, ignorar */
+      }
     };
 
     // startStr/endStr ya están en CLT con offset (-03:00) por timeZone: 'America/Santiago'
 
     if (isBlocked) {
       const slot = info.event.extendedProps['blockedSlot'] as BlockedSlot | undefined;
-      if (!slot) { revert(); return; }
+      if (!slot) {
+        revert();
+        return;
+      }
 
       this.api.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
         next: () => {
@@ -702,24 +679,31 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.messageService.add(this.httpError.toToastConfig(err));
         },
       });
-
     } else {
       const booking = info.event.extendedProps['booking'] as Booking | undefined;
-      if (!booking) { revert(); return; }
+      if (!booking) {
+        revert();
+        return;
+      }
 
-      const clientName   = `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim() || 'Cliente';
-      const serviceName  = booking.pack_session
+      const clientName =
+        `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim() ||
+        'Cliente';
+      const serviceName = booking.pack_session
         ? `Pack · sesión ${booking.pack_session.session_number}/${booking.pack_session.total_sessions}`
         : (booking.service?.name ?? 'Servicio');
       const providerName = booking.provider
         ? `${booking.provider.first_name} ${booking.provider.last_name}`.trim()
         : null;
       const locationName = booking.location?.name ?? null;
-      const metaStr      = [providerName, locationName].filter(Boolean).join(' · ');
+      const metaStr = [providerName, locationName].filter(Boolean).join(' · ');
 
       this._dragToastMeta = { clientName, serviceName, oldStart, newStart, meta: metaStr };
       this.refreshScheduled = true;
-      this.store.updateBooking({ id: booking.id, data: { start_time: newStart, end_time: safeEnd } });
+      this.store.updateBooking({
+        id: booking.id,
+        data: { start_time: newStart, end_time: safeEnd },
+      });
     }
   }
 
@@ -772,11 +756,45 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handleDateSelect(selectInfo: DateSelectArg): void {
-    this.selectedDate = this.tzService.parseDate(selectInfo.startStr);
-    this.selectedEndDate = selectInfo.endStr ? this.tzService.parseDate(selectInfo.endStr) : null;
-    // Mostrar el menú de opciones
-    if (selectInfo.jsEvent) {
-      this.slotMenuPosition = { x: selectInfo.jsEvent.clientX, y: selectInfo.jsEvent.clientY };
+    const start = this.tzService.parseDate(selectInfo.startStr);
+    const end = selectInfo.endStr ? this.tzService.parseDate(selectInfo.endStr) : null;
+    this.selectedDate = start;
+    this.selectedEndDate = end;
+
+    const jsEvent = selectInfo.jsEvent;
+    // Solo mostrar menú si la selección fue iniciada por el usuario (click/drag)
+    // Las selecciones programáticas (hover mirror) no tienen jsEvent
+    if (!jsEvent || !this.calendar) return;
+
+    const isTimeGrid = this.calendar.view.type.startsWith('timeGrid');
+    if (isTimeGrid) {
+      // snapDuration:01:00:00 → click/drag ya seleccionan 1h+
+      this.selectedTimeStr.set(this.fmt(selectInfo.startStr));
+
+      // Inyectar barra + menú sobre el mirror
+      requestAnimationFrame(() => {
+        if (!this.calendar) return;
+        const mirror = this.calendar.el.querySelector('.fc-event-mirror');
+        if (mirror) {
+          mirror.querySelector('.bw-mirror-bar')?.remove();
+          const bar = document.createElement('div');
+          bar.className = 'bw-mirror-bar';
+          bar.innerHTML = `<span class="bw-mirror-time">${this.selectedTimeStr()}</span>`;
+          mirror.appendChild(bar);
+
+          const rect = mirror.getBoundingClientRect();
+          this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.bottom };
+        } else {
+          this.slotMenuPosition = {
+            x: jsEvent.clientX ?? 0,
+            y: jsEvent.clientY ?? 0,
+          };
+        }
+        this.showSlotMenu.set(true);
+      });
+    } else {
+      // Vista mensual: menú en posición del mouse
+      this.slotMenuPosition = { x: jsEvent.clientX, y: jsEvent.clientY };
       this.showSlotMenu.set(true);
     }
   }
@@ -793,6 +811,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   openNewBooking(): void {
     this.showSlotMenu.set(false);
+    this.clearHoverSelect();
     this.removeSlotPreview();
     const dateToUse = this.selectedDate || new Date();
     this.newBookingDialog.openNew(undefined, dateToUse, this.selectedLocationId);
@@ -800,6 +819,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   openBlockTime(): void {
     this.showSlotMenu.set(false);
+    this.clearHoverSelect();
     this.removeSlotPreview();
     this.blockTimeDialog.open(
       this.selectedDate || new Date(),
@@ -840,7 +860,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     // Fallback por nombre
     const status = BOOKING_STATUSES.find(
-      (s) => s.label.toLowerCase() === statusName?.toLowerCase()
+      (s) => s.label.toLowerCase() === statusName?.toLowerCase(),
     );
     if (status) {
       return status.severity === 'help' ? 'warn' : status.severity;

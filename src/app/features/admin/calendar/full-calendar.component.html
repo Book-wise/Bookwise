@@ -344,15 +344,8 @@
     [style.top.px]="slotMenuPosition.y"
     (click)="$event.stopPropagation()"
   >
-    <div class="slot-menu-header">
-      <button
-        class="slot-menu-close"
-        (click)="dismissSlotMenu()"
-        [attr.aria-label]="'Cerrar'"
-      >
-        <i class="pi pi-times"></i>
-      </button>
-    </div>
+    <div class="slot-menu-header">{{ selectedTimeStr() }}</div>
+    <span class="slot-menu-sep"></span>
     <button
       pButton
       class="slot-menu-item"
@@ -367,6 +360,16 @@
       [label]="lang.t('slot.block_time')"
       severity="secondary"
       (click)="openBlockTime()"
+    ></button>
+    <span class="slot-menu-sep"></span>
+    <button
+      pButton
+      class="slot-menu-item slot-menu-close"
+      icon="pi pi-times"
+      label="Cerrar"
+      severity="danger"
+      [text]="true"
+      (click)="dismissSlotMenu()"
     ></button>
   </div>
 </div>

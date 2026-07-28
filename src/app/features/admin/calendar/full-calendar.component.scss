@@ -731,36 +731,67 @@ body.dark-theme {
 // ── Mirror en hover (selectMirror + programmatic select) ──────────────────
 // No se necesita highlight de fondo — el mirror solo es suficiente
 
-::ng-deep .fc .fc-event-mirror {
-  opacity: 0.55 !important;
-  background-color: rgba(4, 106, 244, 0.5) !important;
-  border: 2px dashed rgba(4, 106, 244, 0.5) !important;
-  border-radius: 4px !important;
-  pointer-events: none !important;
+// ::ng-deep .fc .fc-event-mirror {
+//   position: relative !important;
+//   opacity: 0.55 !important;
+//   background-color: rgba(4, 106, 244, 0.5) !important;
+//   border: 2px dashed rgba(4, 106, 244, 0.5) !important;
+//   border-radius: 4px !important;
+//   pointer-events: none !important;
+// }
+
+/* 1. EL BLOQUE FANTASMA GENERAL */
+:host ::ng-deep .fc-event-mirror {
+  background-color: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+  position: relative !important;
+  pointer-events: none !important; /* IMPORTANTE: Hace el bloque invisible a los toques */
 }
 
-::ng-deep .fc .fc-event-mirror::after {
-  content: attr(data-hover-time);
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  height: 22px;
-  padding: 0 6px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #1d4ed8;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 3px 3px 0 0;
-  white-space: nowrap;
-  line-height: 1.4;
-  pointer-events: none;
-  z-index: 1;
+/* 2. EL CONTENEDOR PRINCIPAL */
+:host ::ng-deep .hover-mirror-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  pointer-events: none !important; /* El dedo traspasará esta capa */
 }
 
-::ng-deep .fc .fc-event-mirror:not([data-hover-time])::after {
-  content: none !important;
+/* 3. LA ETIQUETA FLOTANTE SUPERIOR */
+:host ::ng-deep .hover-mirror-label {
+  position: absolute !important;
+  top: -14px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+
+  background-color: #3788d8 !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  padding: 3px 8px !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important; /* Evita que la píldora azul bloquee el touch */
+}
+
+/* 4. EL CUERPO DEL PREVIEW */
+:host ::ng-deep .hover-mirror-body {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+
+  background-color: rgba(55, 136, 216, 0.15) !important;
+  border: 2px dashed #3788d8 !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  pointer-events: none !important; /* El dedo traspasará el fondo azul traslúcido */
 }
 
 // ── Slot preview event (bloque temporal al clickear un slot) ─────────────────
@@ -790,8 +821,8 @@ body.dark-theme {
 .slot-menu {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.375rem;
+  gap: 2px;
+  padding: 0.25rem;
   min-width: 180px;
   position: fixed;
   z-index: var(--z-float);
@@ -801,33 +832,33 @@ body.dark-theme {
   transform: translateX(-50%) translateY(6px);
 
   .slot-menu-header {
-    display: flex;
-    justify-content: flex-end;
-    padding: 0;
-    margin: 0;
-
-    .slot-menu-close {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      border-radius: 4px;
-      color: #6b7280;
-
-      &:hover {
-        background: #f3f4f6;
-        color: #374151;
-      }
-    }
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    text-align: center;
   }
 
   .slot-menu-item {
     justify-content: flex-start;
     width: 100%;
     text-align: left;
+    padding: 0.2rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .slot-menu-sep {
+    display: block;
+    height: 1px;
+    background: #e5e7eb;
+    margin: 1px 0;
+  }
+
+  .slot-menu-close {
+    color: #dc2626 !important;
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.06) !important;
+    }
   }
 }
