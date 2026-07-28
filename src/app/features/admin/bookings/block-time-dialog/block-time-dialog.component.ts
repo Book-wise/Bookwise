@@ -254,7 +254,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
 
   block(): void {
     if (this.endBeforeStart()) {
-      this.messageService.add({ severity: 'warn', summary: this.lang.t('error.422'), detail: this.lang.t('block.error.end_before_start'), life: 4000 });
+      this.messageService.add({ severity: 'warn', summary: this.lang.t('error.422'), detail: this.lang.t('block.error.end_before_start'), key: 'global', life: 4000 });
       return;
     }
     this.saving.set(true);
@@ -300,6 +300,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
               severity: 'warn',
               summary: this.lang.t('toast.block_conflict.summary', { name: providerName }),
               detail,
+              key: 'global',
               life: 7000,
             });
           });
@@ -315,7 +316,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
           const summary = provider
             ? this.lang.t('toast.block_created.summary_named', { name: `${provider.first_name} ${provider.last_name}` })
             : this.lang.t('toast.block_created.summary');
-          this.messageService.add({ severity: 'success', summary, detail });
+          this.messageService.add({ severity: 'success', summary, detail, key: 'global' });
         } else if (response.blocked?.length) {
           // `response.blocked` holds blocked-slot IDs, not provider IDs — derive the
           // affected providers from the location roster minus anyone in `conflicts`.
@@ -333,11 +334,12 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
                 location: locationName,
               }),
               detail,
+              key: 'global',
             });
           } else {
             blockedProviders.forEach((provider) => {
               const summary = this.lang.t('toast.block_created.summary_named', { name: `${provider.first_name} ${provider.last_name}` });
-              this.messageService.add({ severity: 'success', summary, detail });
+              this.messageService.add({ severity: 'success', summary, detail, key: 'global' });
             });
           }
         }
@@ -360,7 +362,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
   updateBlock(): void {
     if (!this.editingSlotId) return;
     if (this.endBeforeStart()) {
-      this.messageService.add({ severity: 'warn', summary: this.lang.t('error.422'), detail: this.lang.t('block.error.end_before_start'), life: 4000 });
+      this.messageService.add({ severity: 'warn', summary: this.lang.t('error.422'), detail: this.lang.t('block.error.end_before_start'), key: 'global', life: 4000 });
       return;
     }
     this.saving.set(true);
@@ -373,7 +375,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       provider_id: this.scope() === 'provider' ? (this.providerId ?? null) : null,
     }).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: this.lang.t('toast.block_updated.summary'), detail: this.lang.t('toast.block_updated.detail'), life: 3000 });
+        this.messageService.add({ severity: 'success', summary: this.lang.t('toast.block_updated.summary'), detail: this.lang.t('toast.block_updated.detail'), key: 'global', life: 3000 });
         this.saving.set(false);
         this.visible = false;
         this.onBlocked.emit();
@@ -389,7 +391,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     if (!this.editingSlotId) return;
     this.api.deleteBlockedSlot(this.editingSlotId).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'info', summary: this.lang.t('toast.block_deleted.summary'), life: 3000 });
+        this.messageService.add({ severity: 'info', summary: this.lang.t('toast.block_deleted.summary'), key: 'global', life: 3000 });
         this.visible = false;
         this.onBlocked.emit();
       },

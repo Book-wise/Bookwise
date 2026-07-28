@@ -210,6 +210,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
             severity: 'success',
             summary: meta.clientName,
             detail: `${meta.serviceName} · ${this.fmtDT(meta.oldStart)} → ${this.fmtDT(meta.newStart)}`,
+            key: 'global',
             life: 5000,
           });
         }
@@ -463,6 +464,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
             severity: 'info',
             summary: this.lang.t('toast.block_moved.summary'),
             detail: `${slot.reason || this.lang.t('toast.block_moved.summary')} · ${this.fmtDT(oldStart)} → ${this.fmtDT(newStart)}`,
+            key: 'global',
             life: 5000,
           });
           this.refreshScheduled = true;

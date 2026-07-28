@@ -156,6 +156,7 @@ export class ReservaTabComponent {
               severity: 'success',
               summary: 'Reserva actualizada',
               detail: 'Los cambios se guardaron correctamente.',
+              key: 'global',
               life: 3000,
             });
           },
@@ -214,6 +215,7 @@ export class ReservaTabComponent {
               severity: 'success',
               summary: 'Paciente actualizado',
               detail: 'Los cambios se guardaron correctamente.',
+              key: 'global',
               life: 3000,
             });
           },

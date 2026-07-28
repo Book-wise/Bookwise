@@ -831,6 +831,10 @@ body.dark-theme {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateX(-50%) translateY(6px);
 
+  &.slot-menu--above {
+    transform: translateX(-50%) translateY(-100%) translateY(-6px);
+  }
+
   .slot-menu-header {
     padding: 0.25rem 0.5rem;
     font-size: 0.8125rem;
