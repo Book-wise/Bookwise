@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ApiService } from '@services/api.service';
+import { ServicesApiService } from '@services/api/services-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ServicePack } from '@models';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
@@ -19,7 +19,7 @@ import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
   styleUrls: ['./packs-list.component.scss']
 })
 export class PacksListComponent implements OnInit {
-  private api = inject(ApiService);
+  private servicesApi = inject(ServicesApiService);
   private httpError = inject(HttpErrorService);
   
   packs = signal<ServicePack[]>([]);
@@ -31,7 +31,7 @@ export class PacksListComponent implements OnInit {
 
   loadPacks(): void {
     this.loading.set(true);
-    this.api.getPacks().subscribe({
+    this.servicesApi.getPacks().subscribe({
       next: (response) => {
         this.packs.set(response.data ?? []);
         this.loading.set(false);

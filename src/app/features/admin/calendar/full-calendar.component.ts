@@ -24,7 +24,9 @@ import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '@services/api.service';
+import { LocationsApiService } from '@services/api/locations-api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
+import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
 import { Booking, BlockedSlot, Location, Provider } from '@models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
@@ -80,7 +82,9 @@ import luxonPlugin from '@fullcalendar/luxon';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api = inject(ApiService);
+  private locationsApi = inject(LocationsApiService);
+  private providersApi = inject(ProvidersApiService);
+  private blockedSlotsApi = inject(BlockedSlotsApiService);
   private messageService = inject(MessageService);
   private ngZone = inject(NgZone);
   readonly lang = inject(LanguageService);
@@ -402,7 +406,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadLocations(): void {
-    this.api.getLocations().subscribe({
+    this.locationsApi.getLocations().subscribe({
       next: (data) => {
         this.locations.set(data);
         if (data.length > 0) {
@@ -421,7 +425,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   loadProviders(locationId?: number | null): void {
     this.providersLoading.set(true);
     const params = locationId ? { location_id: locationId } : undefined;
-    this.api.getProviders(params).subscribe({
+    this.providersApi.getProviders(params).subscribe({
       next: (data) => {
         this.providers.set(data);
         this.providersLoading.set(false);
@@ -669,7 +673,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
 
-      this.api.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
+      this.blockedSlotsApi.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
         next: () => {
           this.messageService.add({
             severity: 'info',

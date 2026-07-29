@@ -3,7 +3,10 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { BookingFormDialogComponent } from './booking-form-dialog.component';
-import { ApiService } from '@services/api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
+import { ServicesApiService } from '@services/api/services-api.service';
 import { signal } from '@angular/core';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
@@ -25,18 +28,10 @@ describe('BookingFormDialogComponent', () => {
   }
 
   beforeEach(async () => {
-    const apiServiceMock = {
-      getClients: vi.fn().mockReturnValue(of([])),
-      getServices: vi.fn().mockReturnValue(of([])),
-      getPacks: vi.fn().mockReturnValue(of({ data: [] })),
-      getProviders: vi.fn().mockReturnValue(of([])),
-      getLocations: vi.fn().mockReturnValue(of([])),
-      createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })),
-      // Required by bw-patient-card when rendered inside the form
-      getClientPacks: vi.fn().mockReturnValue(of([])),
-      getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
-      getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
-    };
+    const clientsApi = { getClients: vi.fn().mockReturnValue(of([])), createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })) } as any;
+    const providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
+    const bookingsApi = { updateBooking: vi.fn(), createBooking: vi.fn(), getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
+    const servicesApi = { createService: vi.fn() } as any;
 
     const refStoreMock = {
       clients: signal([] as Client[]),
@@ -52,7 +47,10 @@ describe('BookingFormDialogComponent', () => {
       imports: [BookingFormDialogComponent],
       providers: [
         provideZonelessChangeDetection(),
-        { provide: ApiService, useValue: apiServiceMock },
+        { provide: ClientsApiService, useValue: clientsApi },
+        { provide: ProvidersApiService, useValue: providersApi },
+        { provide: BookingsApiService, useValue: bookingsApi },
+        { provide: ServicesApiService, useValue: servicesApi },
         { provide: ReferenceStore, useValue: refStoreMock },
         ClientDetailStore,
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
@@ -275,16 +273,16 @@ describe('BookingFormDialogComponent', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('completes destroy$ on ngOnDestroy and a late precheckTrigger$ emission does not call getClients', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
 
       component.ngOnInit();
       component.ngOnDestroy();
 
-      apiService.getClients.mockClear();
+      clientsApi.getClients.mockClear();
       (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('ana@test.com');
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).not.toHaveBeenCalled();
+      expect(clientsApi.getClients).not.toHaveBeenCalled();
     });
   });
 
@@ -293,18 +291,18 @@ describe('BookingFormDialogComponent', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('calls getClients with the trigger term 400ms after precheckTrigger$ emits', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       component.ngOnInit();
       (component as unknown as { precheckTrigger$: { next: (v: string) => void } }).precheckTrigger$.next('ana@test.com');
 
-      expect(apiService.getClients).not.toHaveBeenCalled();
+      expect(clientsApi.getClients).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).toHaveBeenCalledTimes(1);
-      expect(apiService.getClients).toHaveBeenCalledWith({ search: 'ana@test.com' });
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
+      expect(clientsApi.getClients).toHaveBeenCalledWith({ search: 'ana@test.com' });
     });
   });
 
@@ -320,9 +318,9 @@ describe('BookingFormDialogComponent', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('calls getClients with trimmed email 400ms after email blur', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       component.newClient.email = '  ana@test.com  ';
       const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
@@ -330,14 +328,14 @@ describe('BookingFormDialogComponent', () => {
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).toHaveBeenCalledTimes(1);
-      expect(apiService.getClients).toHaveBeenCalledWith({ search: 'ana@test.com' });
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
+      expect(clientsApi.getClients).toHaveBeenCalledWith({ search: 'ana@test.com' });
     });
 
     it('does not call getClients for sub-threshold email (<5 chars)', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       component.newClient.email = 'a@b';
       const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
@@ -345,39 +343,39 @@ describe('BookingFormDialogComponent', () => {
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).not.toHaveBeenCalled();
+      expect(clientsApi.getClients).not.toHaveBeenCalled();
     });
 
     it('calls getClients after phone settles via ngModelChange + 400ms', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       const phoneValue = '+56912345678'; // 11 digits after stripping
       component.onPhoneChanged(phoneValue);
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).toHaveBeenCalledTimes(1);
-      expect(apiService.getClients).toHaveBeenCalledWith({ search: phoneValue });
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
+      expect(clientsApi.getClients).toHaveBeenCalledWith({ search: phoneValue });
     });
 
     it('does not call getClients for sub-threshold phone (<6 digits)', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       component.onPhoneChanged('12345'); // 5 digits
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).not.toHaveBeenCalled();
+      expect(clientsApi.getClients).not.toHaveBeenCalled();
     });
 
     it('fires only one getClients for the latest value on rapid re-blur', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       const email = fixture.debugElement.query(By.css('input[name="clientEmail"]')).nativeElement as HTMLInputElement;
 
@@ -391,21 +389,21 @@ describe('BookingFormDialogComponent', () => {
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).toHaveBeenCalledTimes(1);
-      expect(apiService.getClients).toHaveBeenCalledWith({ search: 'ana2@test.com' });
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
+      expect(clientsApi.getClients).toHaveBeenCalledWith({ search: 'ana2@test.com' });
     });
 
     it('no-ops when !showPatientPanel', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       component.showPatientPanel = false;
       component.onContactBlur('ana@test.com', 'email');
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).not.toHaveBeenCalled();
+      expect(clientsApi.getClients).not.toHaveBeenCalled();
     });
   });
 
@@ -450,13 +448,13 @@ describe('BookingFormDialogComponent', () => {
   });
 
   describe('similar-patients picker resolution', () => {
-    let apiService: { createClient: ReturnType<typeof vi.fn>; getClients: ReturnType<typeof vi.fn> };
+    let clientsApi: { createClient: ReturnType<typeof vi.fn>; getClients: ReturnType<typeof vi.fn> };
     let messageService: { add: ReturnType<typeof vi.fn> };
 
     beforeEach(async () => {
-      apiService = TestBed.inject(ApiService) as unknown as typeof apiService;
+      clientsApi = TestBed.inject(ClientsApiService) as unknown as typeof clientsApi;
       messageService = TestBed.inject(MessageService) as unknown as typeof messageService;
-      apiService.createClient.mockClear();
+      clientsApi.createClient.mockClear();
       messageService.add.mockClear();
 
       component.visible = true;
@@ -501,7 +499,7 @@ describe('BookingFormDialogComponent', () => {
       expect(component.formData.client_id).toBe(42);
       expect(component.showPatientPanel).toBe(false);
       expect(component.newClient).toEqual({ first_name: '', last_name: '', email: '', phone: '', rut: '' });
-      expect(apiService.createClient).not.toHaveBeenCalled();
+      expect(clientsApi.createClient).not.toHaveBeenCalled();
       expect(messageService.add).toHaveBeenCalledWith(expect.objectContaining({
         severity: 'success',
         summary: component['lang'].t('toast.existing_client_assigned.summary'),
@@ -533,7 +531,7 @@ describe('BookingFormDialogComponent', () => {
 
       component.onSimilarAccept();
 
-      expect(apiService.createClient).toHaveBeenCalledTimes(1);
+      expect(clientsApi.createClient).toHaveBeenCalledTimes(1);
       expect(component.showSimilarDialog()).toBe(false);
       expect(component.similarClients()).toEqual([]);
     });
@@ -544,12 +542,12 @@ describe('BookingFormDialogComponent', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('clicking save while a pre-check is pending is blocked until it resolves', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.createClient.mockClear();
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.createClient.mockClear();
 
       const candidate = makeClient({ id: 99, email: 'pending@test.com' });
-      apiService.getClients.mockReturnValue(of([candidate]));
+      clientsApi.getClients.mockReturnValue(of([candidate]));
 
       component.ngOnInit();
       component.showPatientPanel = true;
@@ -559,7 +557,7 @@ describe('BookingFormDialogComponent', () => {
       expect(component.precheckPending()).toBe(true);
 
       component.saveClient();
-      expect(apiService.createClient).not.toHaveBeenCalled();
+      expect(clientsApi.createClient).not.toHaveBeenCalled();
 
       await vi.advanceTimersByTimeAsync(400);
 
@@ -568,12 +566,12 @@ describe('BookingFormDialogComponent', () => {
     });
 
     it('an invalid-form save attempt does not block a later legitimate pre-check result', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.createClient.mockClear();
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn>; createClient: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.createClient.mockClear();
 
       const candidate = makeClient({ id: 100, email: 'late@test.com' });
-      apiService.getClients.mockReturnValue(of([candidate]));
+      clientsApi.getClients.mockReturnValue(of([candidate]));
 
       component.ngOnInit();
       component.showPatientPanel = true;
@@ -588,7 +586,7 @@ describe('BookingFormDialogComponent', () => {
 
       component.saveClient(invalidForm);
 
-      expect(apiService.createClient).not.toHaveBeenCalled();
+      expect(clientsApi.createClient).not.toHaveBeenCalled();
       expect((component as unknown as { saveInProgress: boolean }).saveInProgress).toBe(false);
 
       await vi.advanceTimersByTimeAsync(400);
@@ -602,9 +600,9 @@ describe('BookingFormDialogComponent', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('does not issue a paginated getClients call during pre-check', async () => {
-      const apiService = TestBed.inject(ApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
-      apiService.getClients.mockClear();
-      apiService.getClients.mockReturnValue(of([]));
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClients: ReturnType<typeof vi.fn> };
+      clientsApi.getClients.mockClear();
+      clientsApi.getClients.mockReturnValue(of([]));
 
       component.ngOnInit();
       component.showPatientPanel = true;
@@ -612,8 +610,8 @@ describe('BookingFormDialogComponent', () => {
 
       await vi.advanceTimersByTimeAsync(400);
 
-      expect(apiService.getClients).toHaveBeenCalledTimes(1);
-      const [callArgs] = apiService.getClients.mock.calls[0];
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
+      const [callArgs] = clientsApi.getClients.mock.calls[0];
       expect(callArgs).not.toHaveProperty('page');
       expect(callArgs).not.toHaveProperty('per_page');
     });

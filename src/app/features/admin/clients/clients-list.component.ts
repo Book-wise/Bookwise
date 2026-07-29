@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
-import { ApiService } from '@services/api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { Client } from '@models';
 import { debounceTime, Subject } from 'rxjs';
@@ -34,7 +34,7 @@ import { SkeletonModule } from 'primeng/skeleton';
   styleUrls: ['./clients-list.component.scss'],
 })
 export class ClientsListComponent implements OnInit {
-  private api = inject(ApiService);
+  private clientsApi = inject(ClientsApiService);
   private httpError = inject(HttpErrorService);
   private searchSubject = new Subject<void>();
 
@@ -51,7 +51,7 @@ export class ClientsListComponent implements OnInit {
 
   loadClients(): void {
     this.loading.set(true);
-    this.api.getClients({ search: this.searchTerm() || undefined }).subscribe({
+    this.clientsApi.getClients({ search: this.searchTerm() || undefined }).subscribe({
       next: (clients) => {
         this.clients.set(clients);
         this.loading.set(false);

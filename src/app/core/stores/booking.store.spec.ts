@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { BookingStore } from './booking.store';
-import { ApiService } from '@services/api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
+import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { AuthService } from '@services/auth.service';
 import type { Booking, BlockedSlot, User } from '@models';
 
@@ -57,14 +58,16 @@ function makeProviderUser(): User {
 
 describe('BookingStore', () => {
   let store: InstanceType<typeof BookingStore>;
-  let api: any;
+  let bookingsApi: Partial<Record<keyof BookingsApiService, ReturnType<typeof vi.fn>>>;
+  let blockedSlotsApi: Partial<Record<keyof BlockedSlotsApiService, ReturnType<typeof vi.fn>>>;
   let authUser: ReturnType<typeof signal<User | null>>;
 
   function createStore() {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
-        { provide: ApiService, useValue: api },
+        { provide: BookingsApiService, useValue: bookingsApi },
+        { provide: BlockedSlotsApiService, useValue: blockedSlotsApi },
         { provide: AuthService, useValue: { user: authUser.asReadonly() } },
       ],
     });
@@ -75,16 +78,8 @@ describe('BookingStore', () => {
 
   describe('initial state', () => {
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
     });
@@ -130,16 +125,8 @@ describe('BookingStore', () => {
 
   describe('role scoping', () => {
     it('sets scopeProviderId for provider user', () => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeProviderUser());
       createStore();
 
@@ -148,16 +135,8 @@ describe('BookingStore', () => {
     });
 
     it('scopeProviderId is null when user is null', () => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(null);
       createStore();
 
@@ -172,16 +151,8 @@ describe('BookingStore', () => {
     const booking2 = makeBooking({ id: 2 });
 
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [booking1, booking2] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [booking1, booking2] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
       store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
@@ -238,12 +209,12 @@ describe('BookingStore', () => {
 
     it('refreshBooking re-fetches and merges', () => {
       const refreshed = makeBooking({ id: 1, notes: 'Refreshed note' });
-      api.getBooking.mockReturnValue(of(refreshed));
+      bookingsApi.getBooking!.mockReturnValue(of(refreshed));
       store.selectBooking(booking1);
 
       store.refreshBooking(1);
 
-      expect(api.getBooking).toHaveBeenCalledWith(1);
+      expect(bookingsApi.getBooking).toHaveBeenCalledWith(1);
       // optimistic: booked was updated via merge
       expect(store.bookings().find(b => b.id === 1)?.notes).toBe('Refreshed note');
     });
@@ -257,16 +228,8 @@ describe('BookingStore', () => {
     const blocked  = makeBlockedSlot();
 
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [booking1, booking2] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [blocked] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [booking1, booking2] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [blocked] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
     });
@@ -298,7 +261,7 @@ describe('BookingStore', () => {
       const delayed$ = new Promise<{ data: Booking[] }>((resolve) =>
         setTimeout(() => resolve({ data: [] }), 50),
       );
-      api.getBookings.mockReturnValue(delayed$);
+      bookingsApi.getBookings!.mockReturnValue(delayed$);
 
       store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
 
@@ -314,16 +277,8 @@ describe('BookingStore', () => {
     const b3 = makeBooking({ id: 3, status_id: 3 });
 
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [b1, b2, b3] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [b1, b2, b3] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
       store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
@@ -349,16 +304,8 @@ describe('BookingStore', () => {
 
   describe('error handling', () => {
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(throwError(() => new Error('API failure'))),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(throwError(() => new Error('API failure'))), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
     });
@@ -383,23 +330,15 @@ describe('BookingStore', () => {
     const booking = makeBooking({ id: 1, start_time: '2026-06-27T10:00:00Z', end_time: '2026-06-27T11:00:00Z' });
 
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [booking] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [booking] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
       store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
     });
 
     it('updateBooking patches optimistically and keeps changes on success', () => {
-      api.updateBooking.mockReturnValue(of(makeBooking({ id: 1, start_time: '2026-06-27T14:00:00Z', end_time: '2026-06-27T15:00:00Z' })));
+      bookingsApi.updateBooking!.mockReturnValue(of(makeBooking({ id: 1, start_time: '2026-06-27T14:00:00Z', end_time: '2026-06-27T15:00:00Z' })));
 
       store.updateBooking({ id: 1, data: { start_time: '2026-06-27T14:00:00Z', end_time: '2026-06-27T15:00:00Z' } });
 
@@ -407,7 +346,7 @@ describe('BookingStore', () => {
     });
 
     it('updateBooking reverts on API error', () => {
-      api.updateBooking.mockReturnValue(throwError(() => new Error('Update failed')));
+      bookingsApi.updateBooking!.mockReturnValue(throwError(() => new Error('Update failed')));
 
       store.updateBooking({ id: 1, data: { start_time: '2026-06-27T14:00:00Z', end_time: '2026-06-27T15:00:00Z' } });
 
@@ -418,7 +357,7 @@ describe('BookingStore', () => {
 
     it('deleteBooking removes optimistically and restores on error', () => {
       // Make cancelBooking fail
-      api.cancelBooking.mockReturnValue(throwError(() => new Error('Cancel failed')));
+      bookingsApi.cancelBooking!.mockReturnValue(throwError(() => new Error('Cancel failed')));
 
       store.deleteBooking(1);
 
@@ -430,7 +369,7 @@ describe('BookingStore', () => {
 
     it('createBooking adds booking to list on success', () => {
       const newBooking = makeBooking({ id: 5, client: { id: 10, first_name: 'Nuevo', last_name: 'Paciente', email: 'nuevo@test.com', active: true } });
-      api.createBooking.mockReturnValue(of(newBooking));
+      bookingsApi.createBooking!.mockReturnValue(of(newBooking));
 
       store.createBooking({
         start_time: '2026-06-28T10:00:00Z',
@@ -446,7 +385,7 @@ describe('BookingStore', () => {
     });
 
     it('createBooking sets mutation error on failure', () => {
-      api.createBooking.mockReturnValue(throwError(() => new Error('Create failed')));
+      bookingsApi.createBooking!.mockReturnValue(throwError(() => new Error('Create failed')));
 
       store.createBooking({
         start_time: '2026-06-28T10:00:00Z',
@@ -462,12 +401,12 @@ describe('BookingStore', () => {
 
     it('unblockSlot removes optimistically and restores on error', () => {
       // First load a blocked slot
-      api.getBlockedSlots.mockReturnValue(of({ data: [makeBlockedSlot({ id: 99 })] }));
+      blockedSlotsApi.getBlockedSlots!.mockReturnValue(of({ data: [makeBlockedSlot({ id: 99 })] }));
       store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
       expect(store.blockedSlots()).toHaveLength(1);
 
       // Make delete fail
-      api.deleteBlockedSlot.mockReturnValue(throwError(() => new Error('Delete failed')));
+      blockedSlotsApi.deleteBlockedSlot!.mockReturnValue(throwError(() => new Error('Delete failed')));
 
       store.unblockSlot(99);
 
@@ -482,16 +421,8 @@ describe('BookingStore', () => {
 
   describe('filter changes', () => {
     beforeEach(() => {
-      api = {
-        getBookings: vi.fn().mockReturnValue(of({ data: [] })),
-        getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })),
-        createBooking: vi.fn(),
-        updateBooking: vi.fn(),
-        cancelBooking: vi.fn(),
-        createBlockedSlot: vi.fn(),
-        getBooking: vi.fn(),
-        deleteBlockedSlot: vi.fn(),
-      };
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
       authUser = signal(makeAdminUser());
       createStore();
     });

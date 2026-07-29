@@ -9,7 +9,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
-import { ApiService } from '@services/api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location, Provider } from '@models';
@@ -43,7 +43,7 @@ const LOCATION_PALETTE = [
   styleUrls: ['./providers-list.component.scss'],
 })
 export class ProvidersListComponent implements OnInit {
-  private api = inject(ApiService);
+  private providersApi = inject(ProvidersApiService);
   private httpError = inject(HttpErrorService);
   protected refStore = inject(ReferenceStore);
 
@@ -146,7 +146,7 @@ export class ProvidersListComponent implements OnInit {
 
   loadProviders(): void {
     this.loading.set(true);
-    this.api.getProviders().subscribe({
+    this.providersApi.getProviders().subscribe({
       next: (data) => {
         this.providers.set(data);
         this.loading.set(false);

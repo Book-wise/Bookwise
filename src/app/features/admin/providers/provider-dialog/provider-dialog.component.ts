@@ -8,7 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '@services/api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Provider } from '@models';
@@ -27,7 +27,7 @@ export type DialogMode = 'create' | 'edit' | 'view';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProviderDialogComponent {
-  private api = inject(ApiService);
+  private providersApi = inject(ProvidersApiService);
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
@@ -134,8 +134,8 @@ export class ProviderDialogComponent {
 
     this.saving.set(true);
     const obs = this.isCreate()
-      ? this.api.createProvider(payload)
-      : this.api.updateProvider(this.provider()!.id, payload);
+      ? this.providersApi.createProvider(payload)
+      : this.providersApi.updateProvider(this.provider()!.id, payload);
 
     obs.subscribe({
       next: (res) => {

@@ -7,7 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { ApiService } from '@services/api.service';
+import { AuthApiService } from '@services/api/auth-api.service';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { translateValidationMessage } from '@i18n/validation-translator';
@@ -31,7 +31,7 @@ import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
-  private api = inject(ApiService);
+  private authApi = inject(AuthApiService);
   private auth = inject(AuthService);
   private lang = inject(LanguageService);
 
@@ -69,7 +69,7 @@ export class RegisterComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    this.api.register(this.formData).subscribe({
+    this.authApi.register(this.formData).subscribe({
       next: ({ token, user }) => {
         this.auth.login(token, user);
         this.loading.set(false);

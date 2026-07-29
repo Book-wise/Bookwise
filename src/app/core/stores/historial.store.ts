@@ -9,7 +9,8 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap, map, catchError, of, forkJoin } from 'rxjs';
 import { Booking, Sale } from '@models';
-import { ApiService } from '@services/api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
+import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 
 // ---------------------------------------------------------------------------
@@ -57,7 +58,7 @@ export const HistorialStore = signalStore(
     }),
   })),
 
-  withMethods((store, api = inject(ApiService), httpError = inject(HttpErrorService)) => ({
+  withMethods((store, bookingsApi = inject(BookingsApiService), salesApi = inject(SalesApiService), httpError = inject(HttpErrorService)) => ({
     /**
      * Load historial data for a given client.
      * - Cache hit  → no-op (instant return)
@@ -74,14 +75,14 @@ export const HistorialStore = signalStore(
           patchState(store, { loading: true, activeClientId: clientId });
 
           return forkJoin({
-            bookings: api.getBookings({ client_id: clientId, per_page: 50 }).pipe(
+            bookings: bookingsApi.getBookings({ client_id: clientId, per_page: 50 }).pipe(
               map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Booking[]),
               catchError((err) => {
                 httpError.handle(err, 'cargar historial de reservas');
                 return of([] as Booking[]);
               }),
             ),
-            sales: api.getSales({ client_id: clientId, per_page: 50 }).pipe(
+            sales: salesApi.getSales({ client_id: clientId, per_page: 50 }).pipe(
               map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Sale[]),
               catchError((err) => {
                 httpError.handle(err, 'cargar historial de pagos');
@@ -113,11 +114,11 @@ export const HistorialStore = signalStore(
       });
 
       forkJoin({
-        bookings: api.getBookings({ client_id: clientId, per_page: 50 }).pipe(
+        bookings: bookingsApi.getBookings({ client_id: clientId, per_page: 50 }).pipe(
           map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Booking[]),
           catchError(() => of([] as Booking[])),
         ),
-        sales: api.getSales({ client_id: clientId, per_page: 50 }).pipe(
+        sales: salesApi.getSales({ client_id: clientId, per_page: 50 }).pipe(
           map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Sale[]),
           catchError(() => of([] as Sale[])),
         ),
@@ -144,11 +145,11 @@ export const HistorialStore = signalStore(
       });
 
       forkJoin({
-        bookings: api.getBookings({ client_id: id, per_page: 50 }).pipe(
+        bookings: bookingsApi.getBookings({ client_id: id, per_page: 50 }).pipe(
           map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Booking[]),
           catchError(() => of([] as Booking[])),
         ),
-        sales: api.getSales({ client_id: id, per_page: 50 }).pipe(
+        sales: salesApi.getSales({ client_id: id, per_page: 50 }).pipe(
           map((res: any) => (Array.isArray(res) ? res : res.data ?? []) as Sale[]),
           catchError(() => of([] as Sale[])),
         ),
