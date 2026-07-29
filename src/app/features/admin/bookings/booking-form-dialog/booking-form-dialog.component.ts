@@ -37,7 +37,10 @@ import {
   CreateBooking,
   BookingRepeat,
 } from '@models';
-import { ApiService } from '@services/api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
+import { ServicesApiService } from '@services/api/services-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { TimezoneService } from '@services/timezone.service';
@@ -86,7 +89,10 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
 export class BookingFormDialogComponent implements OnInit, OnDestroy {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private apiService = inject(ApiService);
+  private providersApi = inject(ProvidersApiService);
+  private bookingsApi = inject(BookingsApiService);
+  private clientsApi = inject(ClientsApiService);
+  private servicesApi = inject(ServicesApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
   private cdr = inject(ChangeDetectorRef);
@@ -303,7 +309,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
    */
   private loadProviders(): void {
     this.providersLoading.set(true);
-    this.apiService
+    this.providersApi
       .getProviders(
         this.formData.location_id ? { location_id: this.formData.location_id } : undefined,
       )
@@ -505,10 +511,10 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     }
 
     const request = this.isEdit()
-      ? this.apiService.updateBooking(this.formData.id!, bookingData).pipe(
+      ? this.bookingsApi.updateBooking(this.formData.id!, bookingData).pipe(
           map((res) => res.data), // <-- Transforma ApiResponse<Booking> en Booking limpio
         )
-      : this.apiService.createBooking(bookingData);
+      : this.bookingsApi.createBooking(bookingData);
 
     request.subscribe({
       next: (saved: Booking) => {
@@ -543,7 +549,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
         return;
       }
     }
-    this.apiService
+    this.clientsApi
       .createClient({
         first_name: this.newClient.first_name,
         last_name: this.newClient.last_name,
@@ -698,7 +704,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   saveNewService(): void {
     if (!this.newService.name || !this.newService.duration_minutes) return;
     this.savingService.set(true);
-    this.apiService.createService(this.newService).subscribe({
+    this.servicesApi.createService(this.newService).subscribe({
       next: (service) => {
         this.messageService.add({
           severity: 'success',

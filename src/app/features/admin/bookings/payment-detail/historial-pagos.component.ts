@@ -7,7 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Sale, SaleTransaction } from '@models';
-import { ApiService } from '@services/api.service';
+import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { HistorialStore } from '@core/stores/historial.store';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
@@ -30,7 +30,7 @@ type ViewMode = 'list' | 'detail' | 'loading';
   styleUrl: './historial-pagos.component.scss',
 })
 export class HistorialPagosComponent {
-  private readonly api            = inject(ApiService);
+  private readonly salesApi      = inject(SalesApiService);
   private readonly httpError      = inject(HttpErrorService);
   private readonly historialStore = inject(HistorialStore);
 
@@ -45,7 +45,7 @@ export class HistorialPagosComponent {
     toObservable(this.selectedSaleId).pipe(
       switchMap(saleId => {
         if (!saleId) return of(null);
-        return this.api.getSale(saleId).pipe(
+        return this.salesApi.getSale(saleId).pipe(
           map(res => res.data),
           catchError(err => {
             this.httpError.handle(err, 'cargar detalle de venta');

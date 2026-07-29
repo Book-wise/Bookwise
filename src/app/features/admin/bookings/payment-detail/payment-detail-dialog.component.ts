@@ -10,7 +10,7 @@ import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { Booking } from '@models';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
-import { ApiService } from '@services/api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
@@ -42,7 +42,7 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
   styleUrl: './payment-detail-dialog.component.scss',
 })
 export class PaymentDetailDialogComponent {
-  private api = inject(ApiService);
+  private bookingsApi = inject(BookingsApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
@@ -131,7 +131,7 @@ export class PaymentDetailDialogComponent {
     this.selectedStatusId.set(newStatusId);
 
     // Tipamos la respuesta como 'any' o creas una interfaz contenedora
-    this.api.updateBooking(booking.id, { status_id: newStatusId }).subscribe({
+    this.bookingsApi.updateBooking(booking.id, { status_id: newStatusId }).subscribe({
       next: (response: any) => {
         // 🔥 EL CAMBIO CRÍTICO: Extraemos la reserva real desde .data
         const updatedBooking = response.data as Booking;

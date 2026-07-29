@@ -13,7 +13,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { MenuItem } from 'primeng/api';
 import { Booking, BookingPayment, CreateSaleRequest, Sale, SaleTransaction } from '@models';
-import { ApiService } from '@services/api.service';
+import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
@@ -61,7 +61,7 @@ interface SaleVm {
 export class PaymentTabComponent {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private readonly api       = inject(ApiService);
+  private readonly salesApi = inject(SalesApiService);
   private readonly httpError = inject(HttpErrorService);
   private readonly el        = inject(ElementRef);
 
@@ -96,7 +96,7 @@ export class PaymentTabComponent {
         if (!saleId) return of<SaleVm>({ loading: false, sale: null });
         return concat(
           of<SaleVm>({ loading: true, sale: null }),
-          this.api.getSale(saleId).pipe(
+          this.salesApi.getSale(saleId).pipe(
             map(({ data }) => ({
               loading: false,
               sale:    this.buildSaleDetail(data, booking),
@@ -119,7 +119,7 @@ export class PaymentTabComponent {
   initCobro(): void {
     const bookingId = this.booking().id;
     this.cobroLoading.set(true);
-    this.api.createSale({ booking_id: bookingId } as CreateSaleRequest).subscribe({
+    this.salesApi.createSale({ booking_id: bookingId } as CreateSaleRequest).subscribe({
       next: ({ data }) => {
         this.cobroLoading.set(false);
         this.overrideSaleId.set(data.id);
@@ -200,7 +200,7 @@ export class PaymentTabComponent {
     if (!amount || !method) return;
 
     this.abonoSaving.set(true);
-    this.api.createTransaction(saleId, {
+    this.salesApi.createTransaction(saleId, {
       amount,
       payment_method: method,
       notes: this.abonoNotes() || undefined,

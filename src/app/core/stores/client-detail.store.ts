@@ -7,7 +7,9 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject } from '@angular/core';
 import { pipe, switchMap, tap, catchError, of } from 'rxjs';
-import { ApiService } from '@services/api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
+import { SalesApiService } from '@services/api/sales-api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
 import { ClientPack, Sale, Booking } from '@models';
 
 // ---------------------------------------------------------------------------
@@ -47,14 +49,14 @@ const initialState: ClientDetailState = {
 export const ClientDetailStore = signalStore(
   withState(initialState),
 
-  withMethods((store, api = inject(ApiService)) => {
+  withMethods((store, clientsApi = inject(ClientsApiService), salesApi = inject(SalesApiService), bookingsApi = inject(BookingsApiService)) => {
     const loadPacks = rxMethod<number>(
       pipe(
         tap(() => patchState(store, {
           packs: { ...store.packs(), loading: true },
         })),
         switchMap((clientId) =>
-          api.getClientPacks(clientId).pipe(
+          clientsApi.getClientPacks(clientId).pipe(
             tap({
               next: (data) => patchState(store, {
                 packs: { data, loading: false, loaded: true },
@@ -75,7 +77,7 @@ export const ClientDetailStore = signalStore(
           sales: { ...store.sales(), loading: true },
         })),
         switchMap((clientId) =>
-          api.getSales({ client_id: clientId }).pipe(
+          salesApi.getSales({ client_id: clientId }).pipe(
             tap({
               next: (res) => patchState(store, {
                 sales: { data: res.data, loading: false, loaded: true },
@@ -96,7 +98,7 @@ export const ClientDetailStore = signalStore(
           recent: { ...store.recent(), loading: true },
         })),
         switchMap((clientId) =>
-          api.getBookings({ client_id: clientId, per_page: 10 }).pipe(
+          bookingsApi.getBookings({ client_id: clientId, per_page: 10 }).pipe(
             tap({
               next: (res) => patchState(store, {
                 recent: { data: res.data, loading: false, loaded: true },

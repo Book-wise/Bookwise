@@ -9,7 +9,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '@services/api.service';
+import { LocationsApiService } from '@services/api/locations-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location } from '@models';
@@ -39,7 +39,7 @@ interface ConflictData {
   styleUrls: ['./locations-list.component.scss'],
 })
 export class LocationsListComponent implements OnInit {
-  private api = inject(ApiService);
+  private locationsApi = inject(LocationsApiService);
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
@@ -60,7 +60,7 @@ export class LocationsListComponent implements OnInit {
 
   loadLocations(): void {
     this.loading.set(true);
-    this.api.getLocations().subscribe({
+    this.locationsApi.getLocations().subscribe({
       next: (data) => { this.locations.set(data); this.loading.set(false); },
       error: (err) => { this.locations.set([]); this.loading.set(false); this.httpError.handle(err, 'cargar sucursales'); },
     });
@@ -84,7 +84,7 @@ export class LocationsListComponent implements OnInit {
     this.locations.update((list) => list.map((l) => (l.id === id ? { ...l, active: newActive } : l)));
     this.toggling.update((set) => new Set(set).add(id));
 
-    this.api.updateLocation(id, { active: newActive } as Partial<Location>).subscribe({
+    this.locationsApi.updateLocation(id, { active: newActive } as Partial<Location>).subscribe({
       next: (res) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
@@ -115,7 +115,7 @@ export class LocationsListComponent implements OnInit {
     this.conflictDialogVisible.set(false);
     this.toggling.update((set) => new Set(set).add(location.id));
 
-    this.api.updateLocation(location.id, { active: false, force: true }).subscribe({
+    this.locationsApi.updateLocation(location.id, { active: false, force: true }).subscribe({
       next: (res) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(location.id); return s; });
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });

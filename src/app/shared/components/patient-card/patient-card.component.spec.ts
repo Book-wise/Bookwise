@@ -4,7 +4,9 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { PatientCardComponent } from './patient-card.component';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
-import { ApiService } from '@services/api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
+import { SalesApiService } from '@services/api/sales-api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
 import { LanguageService } from '@services/language.service';
 import type { Client, ClientPack, Booking, Sale } from '@models';
 
@@ -60,25 +62,23 @@ function makeBooking(overrides: Partial<Booking> = {}): Booking {
 describe('PatientCardComponent', () => {
   let component: PatientCardComponent;
   let fixture: ComponentFixture<PatientCardComponent>;
-  let apiServiceMock: {
-    getClientPacks: ReturnType<typeof vi.fn>;
-    getSales: ReturnType<typeof vi.fn>;
-    getBookings: ReturnType<typeof vi.fn>;
-  };
+  let clientsApi: Partial<Record<keyof ClientsApiService, ReturnType<typeof vi.fn>>>;
+  let salesApi: Partial<Record<keyof SalesApiService, ReturnType<typeof vi.fn>>>;
+  let bookingsApi: Partial<Record<keyof BookingsApiService, ReturnType<typeof vi.fn>>>;
 
   beforeEach(async () => {
-    apiServiceMock = {
-      getClientPacks: vi.fn().mockReturnValue(of([])),
-      getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
-      getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })),
-    };
+    clientsApi = { getClientPacks: vi.fn().mockReturnValue(of([])) } as any;
+    salesApi = { getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
+    bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
 
     await TestBed.configureTestingModule({
       imports: [PatientCardComponent],
       providers: [
         provideZonelessChangeDetection(),
         ClientDetailStore,
-        { provide: ApiService, useValue: apiServiceMock },
+        { provide: ClientsApiService, useValue: clientsApi },
+        { provide: SalesApiService, useValue: salesApi },
+        { provide: BookingsApiService, useValue: bookingsApi },
         LanguageService,
       ],
     }).compileComponents();
@@ -197,30 +197,30 @@ describe('PatientCardComponent', () => {
   describe('lazy load — sales (prepago tab)', () => {
     it('selectTab("prepago") triggers api.getSales via store', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 42 }));
-      apiServiceMock.getSales.mockReturnValue(of({ data: [makeSale()], meta: {} }));
-      apiServiceMock.getSales.mockClear();
+      salesApi.getSales!.mockReturnValue(of({ data: [makeSale()], meta: {} }));
+      salesApi.getSales!.mockClear();
 
       component.selectTab('prepago');
 
-      expect(apiServiceMock.getSales).toHaveBeenCalledTimes(1);
-      expect(apiServiceMock.getSales).toHaveBeenCalledWith({ client_id: 42 });
+      expect(salesApi.getSales!).toHaveBeenCalledTimes(1);
+      expect(salesApi.getSales!).toHaveBeenCalledWith({ client_id: 42 });
     });
 
     it('does NOT re-fetch getSales when tab is selected a second time', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 42 }));
-      apiServiceMock.getSales.mockReturnValue(of({ data: [], meta: {} }));
+      salesApi.getSales!.mockReturnValue(of({ data: [], meta: {} }));
 
       component.selectTab('prepago');
-      apiServiceMock.getSales.mockClear();
+      salesApi.getSales!.mockClear();
       component.backToTabs();
       component.selectTab('prepago');
 
-      expect(apiServiceMock.getSales).not.toHaveBeenCalled();
+      expect(salesApi.getSales!).not.toHaveBeenCalled();
     });
 
     it('populates store sales state from response.data', () => {
       const sale = makeSale({ id: 99 });
-      apiServiceMock.getSales.mockReturnValue(of({ data: [sale], meta: {} }));
+      salesApi.getSales!.mockReturnValue(of({ data: [sale], meta: {} }));
 
       component.selectTab('prepago');
 
@@ -232,30 +232,30 @@ describe('PatientCardComponent', () => {
   describe('lazy load — recent bookings (recientes tab)', () => {
     it('selectTab("recientes") triggers api.getBookings via store', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 7 }));
-      apiServiceMock.getBookings.mockReturnValue(of({ data: [], meta: {} }));
-      apiServiceMock.getBookings.mockClear();
+      bookingsApi.getBookings!.mockReturnValue(of({ data: [], meta: {} }));
+      bookingsApi.getBookings!.mockClear();
 
       component.selectTab('recientes');
 
-      expect(apiServiceMock.getBookings).toHaveBeenCalledTimes(1);
-      expect(apiServiceMock.getBookings).toHaveBeenCalledWith({ client_id: 7, per_page: 10 });
+      expect(bookingsApi.getBookings!).toHaveBeenCalledTimes(1);
+      expect(bookingsApi.getBookings!).toHaveBeenCalledWith({ client_id: 7, per_page: 10 });
     });
 
     it('does NOT re-fetch getBookings when tab is selected a second time', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 7 }));
-      apiServiceMock.getBookings.mockReturnValue(of({ data: [], meta: {} }));
+      bookingsApi.getBookings!.mockReturnValue(of({ data: [], meta: {} }));
 
       component.selectTab('recientes');
-      apiServiceMock.getBookings.mockClear();
+      bookingsApi.getBookings!.mockClear();
       component.backToTabs();
       component.selectTab('recientes');
 
-      expect(apiServiceMock.getBookings).not.toHaveBeenCalled();
+      expect(bookingsApi.getBookings!).not.toHaveBeenCalled();
     });
 
     it('populates store recent state from response.data', () => {
       const booking = makeBooking({ id: 55 });
-      apiServiceMock.getBookings.mockReturnValue(of({ data: [booking], meta: {} }));
+      bookingsApi.getBookings!.mockReturnValue(of({ data: [booking], meta: {} }));
 
       component.selectTab('recientes');
 
@@ -268,7 +268,7 @@ describe('PatientCardComponent', () => {
 
   describe('badge counts', () => {
     it('plansCount() counts only active packs when loaded via store', () => {
-      apiServiceMock.getClientPacks.mockReturnValue(of([
+      clientsApi.getClientPacks!.mockReturnValue(of([
         makePack({ id: 1, status: 'active' }),
         makePack({ id: 2, status: 'active' }),
         makePack({ id: 3, status: 'expired' }),
@@ -281,7 +281,7 @@ describe('PatientCardComponent', () => {
     });
 
     it('sessionsCount() sums used_sessions of active packs via store', () => {
-      apiServiceMock.getClientPacks.mockReturnValue(of([
+      clientsApi.getClientPacks!.mockReturnValue(of([
         makePack({ id: 1, status: 'active', used_sessions: 3 }),
         makePack({ id: 2, status: 'active', used_sessions: 5 }),
         makePack({ id: 3, status: 'expired', used_sessions: 10 }),
@@ -294,7 +294,7 @@ describe('PatientCardComponent', () => {
     });
 
     it('plansCount() and sessionsCount() return 0 when packs are empty', () => {
-      apiServiceMock.getClientPacks.mockReturnValue(of([]));
+      clientsApi.getClientPacks!.mockReturnValue(of([]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
 
       component.selectTab('planes');

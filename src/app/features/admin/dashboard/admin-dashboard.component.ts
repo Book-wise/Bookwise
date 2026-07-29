@@ -12,7 +12,7 @@ import { map } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import type { Context } from 'chartjs-plugin-datalabels';
-import { ApiService } from '@services/api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
 import { TimezoneService } from '@services/timezone.service';
@@ -74,9 +74,9 @@ function normalizeBookings(res: unknown): Booking[] {
   styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent {
-  private api       = inject(ApiService);
-  private httpError = inject(HttpErrorService);
-  private auth      = inject(AuthService);
+  private bookingsApi = inject(BookingsApiService);
+  private httpError   = inject(HttpErrorService);
+  private auth        = inject(AuthService);
   private tzService = inject(TimezoneService);
 
   /** ReferenceStore: datos maestros reactivos */
@@ -128,9 +128,9 @@ export class AdminDashboardComponent {
       const pendingStatusId = BOOKING_STATUSES.find(s => s.label === 'Pendiente')!.value;
 
       return forkJoin({
-        today:   this.api.getBookings({ date_from: today, date_to: today,       per_page: 200 }),
-        pending: this.api.getBookings({ status_id: pendingStatusId,              per_page: 200 }),
-        week:    this.api.getBookings({ date_from: weekStart, date_to: weekEnd, per_page: 500 }),
+        today:   this.bookingsApi.getBookings({ date_from: today, date_to: today,       per_page: 200 }),
+        pending: this.bookingsApi.getBookings({ status_id: pendingStatusId,              per_page: 200 }),
+        week:    this.bookingsApi.getBookings({ date_from: weekStart, date_to: weekEnd, per_page: 500 }),
       }).pipe(
         map(({ today, pending, week }) => {
           const todayList   = normalizeBookings(today);

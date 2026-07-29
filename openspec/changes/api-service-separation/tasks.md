@@ -30,23 +30,23 @@ Chain strategy: feature-branch-chain
 
 ## Phase 1: Domain Services
 
-- [ ] T-01 Create `build-http-params.ts` — pure `buildHttpParams(obj)`. Test: params object built correctly.
-- [ ] T-02 Create `auth-api.service.ts` — `login`, `register`. Test: HttpTestingController per method.
-- [ ] T-03 Create `locations-api.service.ts` — 7 methods (locations/regions/comunas). Test: HttpTestingController.
-- [ ] T-04 Create `providers-api.service.ts` — 4 methods (providers CRUD). Test: HttpTestingController.
-- [ ] T-05 Create `services-api.service.ts` — 5 methods (services + packs). Test: HttpTestingController.
-- [ ] T-06 Create `clients-api.service.ts` — 7 methods (clients + client-packs). Test: HttpTestingController.
-- [ ] T-07 Create `blocked-slots-api.service.ts` — 5 methods (CRUD + group delete). Test: HttpTestingController.
-- [ ] T-08 Create `bookings-api.service.ts` — bookings + available slots only (6 methods, NO sales). Test: HttpTestingController.
-- [ ] T-09 Create `sales-api.service.ts` — 7 methods (sales + transactions). Per spec, separate from bookings. Test: HttpTestingController.
-- [ ] T-10 Add `@deprecated` JSDoc on `ApiService` class after first domain service created.
+- [x] T-01 Create `build-http-params.ts` — pure `buildHttpParams(obj)`. Test: params object built correctly.
+- [x] T-02 Create `auth-api.service.ts` — `login`, `register`. Test: HttpTestingController per method.
+- [x] T-03 Create `locations-api.service.ts` — 7 methods (locations/regions/comunas). Test: HttpTestingController.
+- [x] T-04 Create `providers-api.service.ts` — 4 methods (providers CRUD). Test: HttpTestingController.
+- [x] T-05 Create `services-api.service.ts` — 5 methods (services + packs). Test: HttpTestingController.
+- [x] T-06 Create `clients-api.service.ts` — 7 methods (clients + client-packs). Test: HttpTestingController.
+- [x] T-07 Create `blocked-slots-api.service.ts` — 5 methods (CRUD + group delete). Test: HttpTestingController.
+- [x] T-08 Create `bookings-api.service.ts` — bookings + available slots only (6 methods, NO sales). Test: HttpTestingController.
+- [x] T-09 Create `sales-api.service.ts` — 7 methods (sales + transactions). Per spec, separate from bookings. Test: HttpTestingController.
+- [x] T-10 Add `@deprecated` JSDoc on `ApiService` class after first domain service created.
 
 ## Phase 2: Store Migrations
 
-- [ ] T-11 Migrate `reference.store.ts` → inject LocationsApiService, ProvidersApiService, ServicesApiService, ClientsApiService. Update spec.
-- [ ] T-12 Migrate `booking.store.ts` → inject BookingsApiService, BlockedSlotsApiService. Update spec.
-- [ ] T-13 Migrate `historial.store.ts` → inject BookingsApiService. Update spec.
-- [ ] T-14 Migrate `client-detail.store.ts` → inject BookingsApiService, ClientsApiService. Update spec.
+- [x] T-11 Migrate `reference.store.ts` → inject LocationsApiService, ProvidersApiService, ServicesApiService, ClientsApiService. Update spec.
+- [x] T-12 Migrate `booking.store.ts` → inject BookingsApiService, BlockedSlotsApiService. Update spec.
+- [x] T-13 Migrate `historial.store.ts` → inject BookingsApiService, SalesApiService. Update spec.
+- [x] T-14 Migrate `client-detail.store.ts` → inject ClientsApiService, SalesApiService, BookingsApiService. Update spec.
 
 ## Phase 3: Component Migrations
 
