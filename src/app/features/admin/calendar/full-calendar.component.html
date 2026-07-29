@@ -310,7 +310,7 @@
         icon="pi pi-plus"
         severity="secondary"
         [outlined]="true"
-        (onClick)="openPaymentDetail(true)"
+        (onClick)="openBookingDetail(true)"
       />
     }
     @if (
@@ -322,14 +322,14 @@
         icon="pi pi-dollar"
         severity="secondary"
         [outlined]="true"
-        (onClick)="openPaymentDetail()"
+        (onClick)="openBookingDetail()"
       />
     }
     <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()" />
   </ng-template>
 </p-dialog>
 
-<bw-payment-detail-dialog #paymentDetailDialog (backToDetail)="onBackToDetail($event)" />
+<bw-booking-detail-dialog #bookingDetailDialog (backToDetail)="onBackToDetail($event)" />
 
 <!-- Booking Dialog para crear/editar -->
 <bw-booking-dialog #bookingDialog></bw-booking-dialog>
