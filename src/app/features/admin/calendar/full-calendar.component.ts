@@ -32,7 +32,7 @@ import { Booking, BlockedSlot, Location, Provider } from '@models';
 import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
-import { PaymentDetailDialogComponent } from '../bookings/payment-detail/payment-detail-dialog.component';
+import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
@@ -74,7 +74,7 @@ import luxonPlugin from '@fullcalendar/luxon';
     BookingFormDialogComponent,
     PopoverModule,
     BlockTimeDialogComponent,
-    PaymentDetailDialogComponent,
+    BookingDetailDialogComponent,
     BwCurrencyPipe,
   ],
   templateUrl: './full-calendar.component.html',
@@ -111,7 +111,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
-  @ViewChild(PaymentDetailDialogComponent) paymentDialog!: PaymentDetailDialogComponent;
+  @ViewChild(BookingDetailDialogComponent) bookingDetailDialog!: BookingDetailDialogComponent;
 
   loading = signal(true);
   providersLoading = signal(false);
@@ -755,7 +755,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const booking = this.store.selectedBooking();
     if (!booking) return;
     this.showEventDialog.set(false);
-    setTimeout(() => this.paymentDialog.open(booking, 'reserva'), 100);
+    setTimeout(() => this.bookingDetailDialog.open(booking, 'reserva'), 100);
   }
 
   /** Triggered by auxiliary dialogs (new-booking, block-time) that mutate data outside the store */
@@ -855,11 +855,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.store.setSelectedBookingId(null);
   }
 
-  openPaymentDetail(scrollToTxn = false): void {
+  openBookingDetail(scrollToTxn = false): void {
     const booking = this.store.selectedBooking();
     if (!booking) return;
     this.showEventDialog.set(false);
-    setTimeout(() => this.paymentDialog.open(booking, 'pago', scrollToTxn), 100);
+    setTimeout(() => this.bookingDetailDialog.open(booking, 'pago', scrollToTxn), 100);
   }
 
   onBackToDetail(booking: Booking): void {
