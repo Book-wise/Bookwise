@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import {
@@ -56,17 +56,8 @@ export class BookingsApiService {
     service_id?: number;
     date?: string;
   }): Observable<AvailableSlot[]> {
-    let httpParams = new HttpParams();
-    if (params.location_id)
-      httpParams = httpParams.set('location_id', params.location_id.toString());
-    if (params.provider_id)
-      httpParams = httpParams.set('provider_id', params.provider_id.toString());
-    if (params.service_id)
-      httpParams = httpParams.set('service_id', params.service_id.toString());
-    if (params.date) httpParams = httpParams.set('date', params.date);
-
     return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, {
-      params: httpParams,
+      params: buildHttpParams(params),
     });
   }
 }
