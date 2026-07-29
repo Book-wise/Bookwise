@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '@services/api.service';
+import { LocationsApiService } from '@services/api/locations-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location } from '@models';
@@ -28,7 +28,7 @@ export type DialogMode = 'create' | 'edit' | 'view';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationDialogComponent {
-  private api = inject(ApiService);
+  private locationsApi = inject(LocationsApiService);
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
@@ -174,8 +174,8 @@ export class LocationDialogComponent {
 
     this.saving.set(true);
     const obs = this.isCreate()
-      ? this.api.createLocation(payload)
-      : this.api.updateLocation(this.location()!.id, payload);
+      ? this.locationsApi.createLocation(payload)
+      : this.locationsApi.updateLocation(this.location()!.id, payload);
 
     obs.subscribe({
       next: (res) => {

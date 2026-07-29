@@ -13,7 +13,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Booking, Client, Service, Provider, CreateBooking } from '@models';
-import { ApiService } from '@services/api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { TimezoneService } from '@services/timezone.service';
 import { ReferenceStore } from '@core/stores/reference.store';
@@ -59,7 +59,7 @@ export interface BookingFormData {
 export class BookingDialogComponent implements OnInit {
   readonly currencyConfig = CURRENCY_CONFIG;
 
-  private api = inject(ApiService);
+  private bookingsApi = inject(BookingsApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
@@ -245,10 +245,10 @@ export class BookingDialogComponent implements OnInit {
     }
 
     const request = this.isEdit()
-      ? this.api.updateBooking(this.formData.id!, bookingData).pipe(
+      ? this.bookingsApi.updateBooking(this.formData.id!, bookingData).pipe(
           map((res) => res.data), // <-- Transforma ApiResponse<Booking> en Booking limpio
         )
-      : this.api.createBooking(bookingData);
+      : this.bookingsApi.createBooking(bookingData);
 
     request.subscribe({
       next: (saved: Booking) => {
@@ -281,7 +281,7 @@ export class BookingDialogComponent implements OnInit {
 
     this.saving.set(true);
 
-    this.api.cancelBooking(this.formData.id!).subscribe({
+    this.bookingsApi.cancelBooking(this.formData.id!).subscribe({
       next: (cancelled: Booking) => {
         this.messageService.add({
           severity: 'success',

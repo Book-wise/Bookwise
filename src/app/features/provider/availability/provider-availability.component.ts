@@ -14,7 +14,6 @@ import {
   AvailabilityService,
   ProviderAvailabilitySlot,
 } from '@services/availability.service';
-import { ApiService } from '@services/api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
 import { ReferenceStore } from '@core/stores/reference.store';
@@ -50,7 +49,6 @@ export class ProviderAvailabilityComponent implements OnInit {
   private toast     = inject(ToastService);
   private httpError = inject(HttpErrorService);
   private availabilityService = inject(AvailabilityService);
-  private api  = inject(ApiService);
   private auth = inject(AuthService);
 
   loading = signal(true);

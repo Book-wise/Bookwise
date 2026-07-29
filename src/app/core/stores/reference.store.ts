@@ -9,7 +9,10 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject, computed } from '@angular/core';
 import { pipe, switchMap, tap, catchError, of, map } from 'rxjs';
-import { ApiService } from '@services/api.service';
+import { LocationsApiService } from '@services/api/locations-api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
+import { ServicesApiService } from '@services/api/services-api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
 import { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
 
 // ---------------------------------------------------------------------------
@@ -92,7 +95,7 @@ export const ReferenceStore = signalStore(
   })),
 
   // ── Methods (load + invalidation en un solo bloque, usando closures) ──
-  withMethods((store, api = inject(ApiService)) => {
+  withMethods((store, locationsApi = inject(LocationsApiService), providersApi = inject(ProvidersApiService), servicesApi = inject(ServicesApiService), clientsApi = inject(ClientsApiService)) => {
     // Los rxMethods se definen como variables locales para que los métodos de
     // invalidación puedan referenciarlos por closure (evita type issues entre
     // withMethods encadenados)
@@ -105,7 +108,7 @@ export const ReferenceStore = signalStore(
           }),
         ),
         switchMap(() =>
-          api.getLocations().pipe(
+          locationsApi.getLocations().pipe(
             tap({
               next: (locations) =>
                 patchState(store, { locations, loading: { ...store.loading(), locations: false }, loaded: { ...store.loaded(), locations: true } }),
@@ -127,7 +130,7 @@ export const ReferenceStore = signalStore(
           }),
         ),
         switchMap(() =>
-          api.getProviders().pipe(
+          providersApi.getProviders().pipe(
             tap({
               next: (providers) =>
                 patchState(store, { providers, loading: { ...store.loading(), providers: false }, loaded: { ...store.loaded(), providers: true } }),
@@ -149,7 +152,7 @@ export const ReferenceStore = signalStore(
           }),
         ),
         switchMap(() =>
-          api.getServices().pipe(
+          servicesApi.getServices().pipe(
             tap({
               next: (services) =>
                 patchState(store, { services, loading: { ...store.loading(), services: false }, loaded: { ...store.loaded(), services: true } }),
@@ -171,7 +174,7 @@ export const ReferenceStore = signalStore(
           }),
         ),
         switchMap(() =>
-          api.getClients().pipe(
+          clientsApi.getClients().pipe(
             tap({
               next: (clients) =>
                 patchState(store, { clients, loading: { ...store.loading(), clients: false }, loaded: { ...store.loaded(), clients: true } }),
@@ -193,7 +196,7 @@ export const ReferenceStore = signalStore(
           }),
         ),
         switchMap(() =>
-          api.getPacks().pipe(
+          servicesApi.getPacks().pipe(
             map((res) => res.data),
             tap({
               next: (packs) =>
@@ -216,7 +219,7 @@ export const ReferenceStore = signalStore(
           }),
         ),
         switchMap(() =>
-          api.getRegions().pipe(
+          locationsApi.getRegions().pipe(
             tap({
               next: (regions) => {
                 patchState(store, { regions: regions.data, loading: { ...store.loading(), regions: false }, loaded: { ...store.loaded(), regions: true } });
@@ -233,7 +236,7 @@ export const ReferenceStore = signalStore(
     );
 
     function loadAllComunas(): void {
-      api.getAllComunas().subscribe({
+      locationsApi.getAllComunas().subscribe({
         next: (res) => {
           const comunasByRegion: Record<number, LocationComuna[]> = {};
           for (const comuna of res.data) {

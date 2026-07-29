@@ -13,7 +13,8 @@ import {
   pipe, switchMap, tap, catchError, of, debounceTime, Subject, forkJoin,
 } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ApiService } from '@services/api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
+import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { AuthService } from '@services/auth.service';
 import {
   Booking, BlockedSlot, CreateBooking, UpdateBooking, CreateBlockedSlot, User,
@@ -185,7 +186,7 @@ export const BookingStore = signalStore(
   })),
 
   // ── Methods ────────────────────────────────────────────────────
-  withMethods((store, api = inject(ApiService), destroyRef = inject(DestroyRef)) => {
+  withMethods((store, bookingsApi = inject(BookingsApiService), blockedSlotsApi = inject(BlockedSlotsApiService), destroyRef = inject(DestroyRef)) => {
     // ── Internal subject for debounced re-fetch after filter change ─
     const refetchTrigger$ = new Subject<void>();
 
@@ -218,8 +219,8 @@ export const BookingStore = signalStore(
         ),
         switchMap(({ dateFrom, dateTo }) =>
           forkJoin({
-            bookingsRes: api.getBookings(buildBookingParams(dateFrom, dateTo)),
-            blockedSlotsRes: api.getBlockedSlots({
+            bookingsRes: bookingsApi.getBookings(buildBookingParams(dateFrom, dateTo)),
+            blockedSlotsRes: blockedSlotsApi.getBlockedSlots({
               date_from: dateFrom,
               date_to: dateTo,
               ...(store.filters().scopeProviderId ?? store.filters().selectedProviderId
@@ -289,7 +290,7 @@ export const BookingStore = signalStore(
           }),
         ),
         switchMap((data) =>
-          api.createBooking(data).pipe(
+          bookingsApi.createBooking(data).pipe(
             tap({
               next: (booking) =>
                 patchState(store, {
@@ -327,7 +328,7 @@ export const BookingStore = signalStore(
           );
           patchState(store, { bookings: next });
 
-          return api.updateBooking(id, data).pipe(
+          return bookingsApi.updateBooking(id, data).pipe(
             tap({
               next: (updated) =>
                 patchState(store, {
@@ -372,9 +373,9 @@ export const BookingStore = signalStore(
           );
           patchState(store, { bookings: next });
 
-          // Note: there's no api.deleteBooking() — use cancelBooking instead.
+          // Note: there's no bookingsApi.deleteBooking() — use cancelBooking instead.
           // We treat cancel as the delete operation since the backend doesn't hard-delete.
-          return api.cancelBooking(id).pipe(
+          return bookingsApi.cancelBooking(id).pipe(
             tap({
               next: () =>
                 patchState(store, {
@@ -403,7 +404,7 @@ export const BookingStore = signalStore(
           }),
         ),
         switchMap((data) =>
-          api.createBlockedSlot(data).pipe(
+          blockedSlotsApi.createBlockedSlot(data).pipe(
             switchMap(() => {
               // Blocked slot created — re-fetch blockedSlots to get canonical list
               const df = store.dateFrom();
@@ -412,7 +413,7 @@ export const BookingStore = signalStore(
                 patchState(store, { loading: { ...store.loading(), mutation: false } });
                 return of(undefined);
               }
-              return api.getBlockedSlots({
+              return blockedSlotsApi.getBlockedSlots({
                 date_from: df, date_to: dt,
                 ...(store.filters().scopeProviderId ?? store.filters().selectedProviderId
                   ? { provider_id: store.filters().scopeProviderId ?? store.filters().selectedProviderId! }
@@ -464,7 +465,7 @@ export const BookingStore = signalStore(
           );
           patchState(store, { blockedSlots: next });
 
-          return api.deleteBlockedSlot(id).pipe(
+          return blockedSlotsApi.deleteBlockedSlot(id).pipe(
             tap({
               next: () =>
                 patchState(store, {
@@ -488,7 +489,7 @@ export const BookingStore = signalStore(
     const refreshBooking = rxMethod<number>(
       pipe(
         switchMap((id) =>
-          api.getBooking(id).pipe(
+          bookingsApi.getBooking(id).pipe(
             tap({
               next: (booking) => {
                 patchState(store, {

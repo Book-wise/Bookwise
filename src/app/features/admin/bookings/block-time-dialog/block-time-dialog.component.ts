@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { ApiService } from '@services/api.service';
+import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { TimezoneService } from '@services/timezone.service';
 import { CommonModule } from '@angular/common';
@@ -43,7 +43,7 @@ const BLOCK_BULK_THRESHOLD = 5;
 })
 export class BlockTimeDialogComponent implements OnInit {
   private messageService = inject(MessageService);
-  private api        = inject(ApiService);
+  private blockedSlotsApi = inject(BlockedSlotsApiService);
   private httpError  = inject(HttpErrorService);
   readonly lang      = inject(LanguageService);
   private tzService  = inject(TimezoneService);
@@ -287,7 +287,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
       };
     }
 
-    this.api.createBlockedSlot(body).subscribe({
+    this.blockedSlotsApi.createBlockedSlot(body).subscribe({
       next: (response: Partial<BlockConflictResponse>) => {
         if (response.conflicts?.length) {
           response.conflicts!.forEach((c: BlockConflict) => {
@@ -367,7 +367,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
     }
     this.saving.set(true);
     const fmtDt = (d: Date) => this.tzService.formatDateTime(d);
-    this.api.updateBlockedSlot(this.editingSlotId, {
+    this.blockedSlotsApi.updateBlockedSlot(this.editingSlotId, {
       start_time: fmtDt(this.startDate()),
       end_time:   fmtDt(this.endDate()),
       reason:     this.reason || undefined,
@@ -389,7 +389,7 @@ get repeatUntilValue(): Date | null { return this.repeatUntil(); }
 
   deleteBlock(): void {
     if (!this.editingSlotId) return;
-    this.api.deleteBlockedSlot(this.editingSlotId).subscribe({
+    this.blockedSlotsApi.deleteBlockedSlot(this.editingSlotId).subscribe({
       next: () => {
         this.messageService.add({ severity: 'info', summary: this.lang.t('toast.block_deleted.summary'), key: 'global', life: 3000 });
         this.visible = false;

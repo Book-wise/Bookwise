@@ -23,7 +23,7 @@ import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
-import { ApiService } from '@services/api.service';
+import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
 import { AuthService } from '@services/auth.service';
 import { Booking, BlockedSlot } from '@models';
@@ -68,7 +68,7 @@ import luxonPlugin from '@fullcalendar/luxon';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
-  private api            = inject(ApiService);
+  private blockedSlotsApi = inject(BlockedSlotsApiService);
   private auth           = inject(AuthService);
   private messageService = inject(MessageService);
   private ngZone         = inject(NgZone);
@@ -458,7 +458,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     if (isBlocked) {
       const slot = info.event.extendedProps['blockedSlot'] as BlockedSlot | undefined;
       if (!slot) { revert(); return; }
-      this.api.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
+      this.blockedSlotsApi.updateBlockedSlot(slot.id, { start_time: newStart, end_time: safeEnd }).subscribe({
         next: () => {
           this.messageService.add({
             severity: 'info',

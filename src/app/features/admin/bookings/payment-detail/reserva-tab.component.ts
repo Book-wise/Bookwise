@@ -14,7 +14,9 @@ import { PopoverModule } from 'primeng/popover';
 import { Booking } from '@models';
 import { BookingStore } from '@core/stores/booking.store';
 import { ReferenceStore } from '@core/stores/reference.store';
-import { ApiService } from '@services/api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
+import { BookingsApiService } from '@services/api/bookings-api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { TimezoneService } from '@services/timezone.service';
 import { MessageService } from 'primeng/api';
@@ -29,7 +31,9 @@ import { PatientCardComponent } from '@shared/components/patient-card/patient-ca
   styleUrl: './reserva-tab.component.scss',
 })
 export class ReservaTabComponent {
-  private readonly api            = inject(ApiService);
+  private readonly providersApi  = inject(ProvidersApiService);
+  private readonly bookingsApi   = inject(BookingsApiService);
+  private readonly clientsApi    = inject(ClientsApiService);
   private readonly httpError      = inject(HttpErrorService);
   private readonly messageService = inject(MessageService);
   private readonly refStore       = inject(ReferenceStore);
@@ -73,7 +77,7 @@ export class ReservaTabComponent {
     toObservable(this.store.selectedBooking).pipe(
       switchMap(b => {
         if (!b) return of([]);
-        return this.api.getProviders({ location_id: b.location_id ?? b.location?.id });
+        return this.providersApi.getProviders({ location_id: b.location_id ?? b.location?.id });
       }),
     ),
     { initialValue: [] as any[] }
@@ -140,7 +144,7 @@ export class ReservaTabComponent {
     const date = this.selectedDate();
 
     this.saving.set(true);
-    this.api.updateBooking(b.id, {
+    this.bookingsApi.updateBooking(b.id, {
       start_time:  this.fmtCLT(date, this.startHour(), this.startMinute()),
       end_time:    this.fmtCLT(date, this.endHour(), this.endMinute()),
       provider_id: this.selectedProviderId() ?? undefined,
@@ -148,7 +152,7 @@ export class ReservaTabComponent {
       notes:       this.notes() || undefined,
     }).subscribe({
       next: () => {
-        this.api.getBooking(b.id).subscribe({
+        this.bookingsApi.getBooking(b.id).subscribe({
           next: (refreshed) => {
             this.saving.set(false);
             this.store.mergeBooking(refreshed);
@@ -198,14 +202,14 @@ export class ReservaTabComponent {
     if (!clientId || !booking) return;
 
     this.savingClient.set(true);
-    this.api.updateClient(clientId, {
+    this.clientsApi.updateClient(clientId, {
       first_name: this.editFirstName(),
       last_name:  this.editLastName(),
       email:      this.editEmail() || undefined,
       phone:      this.editPhone() || undefined,
     }).subscribe({
       next: () => {
-        this.api.getBooking(booking.id).subscribe({
+        this.bookingsApi.getBooking(booking.id).subscribe({
           next: (refreshed) => {
             this.store.mergeBooking(refreshed);
             this.refStore.invalidateClients();
