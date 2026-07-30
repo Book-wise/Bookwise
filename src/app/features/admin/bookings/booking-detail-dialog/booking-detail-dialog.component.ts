@@ -15,14 +15,14 @@ import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
-import { PaymentTabComponent } from './payment-tab.component';
-import { ReservaTabComponent } from './reserva-tab.component';
-import { HistorialTabComponent } from './historial-tab.component';
+import { PaymentTabComponent } from './tabs/payment/payment-tab.component';
+import { ReservaTabComponent } from './tabs/reserva/reserva-tab.component';
+import { HistorialTabComponent } from './tabs/historial/historial-tab.component';
 
 export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';
 
 @Component({
-  selector: 'bw-payment-detail-dialog',
+  selector: 'bw-booking-detail-dialog',
   standalone: true,
   imports: [
     CommonModule,
@@ -38,10 +38,10 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     HistorialTabComponent,
   ],
   providers: [ClientDetailStore],
-  templateUrl: './payment-detail-dialog.component.html',
-  styleUrl: './payment-detail-dialog.component.scss',
+  templateUrl: './booking-detail-dialog.component.html',
+  styleUrl: './booking-detail-dialog.component.scss',
 })
-export class PaymentDetailDialogComponent {
+export class BookingDetailDialogComponent {
   private bookingsApi = inject(BookingsApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);

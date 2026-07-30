@@ -17,7 +17,7 @@ import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
-import { PAYMENT_METHOD_OPTIONS } from '../constants/payment-methods';
+import { PAYMENT_METHOD_OPTIONS } from '../../constants/payment-methods';
 
 export interface SaleItem {
   name: string;
