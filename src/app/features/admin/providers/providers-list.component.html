@@ -121,7 +121,7 @@
             <td>{{ provider.phone }}</td>
             <td>
               @if (provider.location; as loc) {
-                <span class="location-badge" [style.--badge-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
+                <span class="bw-chip" [style.--chip-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
                   {{ loc.name }}
                 </span>
               } @else {
@@ -129,10 +129,9 @@
               }
             </td>
             <td>
-              <p-tag
-                [value]="provider.active ? 'Activo' : 'Inactivo'"
-                [severity]="provider.active ? 'success' : 'danger'"
-              />
+              <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                {{ provider.active ? 'Activo' : 'Inactivo' }}
+              </span>
             </td>
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
@@ -174,7 +173,7 @@
             <div class="prov-card__row">
               <span class="prov-card__label">Sucursal</span>
               @if (provider.location; as loc) {
-                <span class="location-badge" [style.--badge-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
+                <span class="bw-chip" [style.--chip-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
                   {{ loc.name }}
                 </span>
               } @else {
@@ -184,10 +183,9 @@
 
             <div class="prov-card__row">
               <span class="prov-card__label">Estado</span>
-              <p-tag
-                [value]="provider.active ? 'Activo' : 'Inactivo'"
-                [severity]="provider.active ? 'success' : 'danger'"
-              />
+              <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                {{ provider.active ? 'Activo' : 'Inactivo' }}
+              </span>
             </div>
           </div>
 
