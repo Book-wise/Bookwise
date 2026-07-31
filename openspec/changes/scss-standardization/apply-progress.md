@@ -216,3 +216,7 @@ Run `npm start` (dev server) and check in **light + dark theme**, desktop + ≤7
 - Branch `feat/scss-wu4-badges` stacked on `feat/scss-wu3-budget` per feature-branch-chain (PR 4 targets PR 3 branch).
 
 **Next recommended**: `sdd-verify` (covers the whole change incl. WU4 extension).
+
+### Post-verify QA adjustment (contrast)
+
+- **`.bw-chip` darkened**: background `color-mix 12%` → **18%**, border `30%` → **35%`** (`_badges.scss`) — maintainer feedback: chips looked too transparent. Applies globally to every badge (single recipe). Prod build re-verified: zero errors, same 3 baseline warnings.
