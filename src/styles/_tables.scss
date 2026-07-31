@@ -1,0 +1,62 @@
+// ============================================
+// Bookwise — Shared Table Patterns
+// ============================================
+//
+// Extracted verbatim from payment-tab and historial-pagos (zero template change).
+// Card tables share the same base recipe: no borders, dense rows.
+
+// ── Booking detail items / transactions (payment-tab) ────────────────────────
+
+.bw-detail-table {
+  margin-bottom: 0.75rem;
+
+  table { min-width: 260px; }
+
+  td {
+    font-size: var(--bw-font-table);
+    border: none !important;
+  }
+}
+
+.bw-txn-table {
+  margin-bottom: 0.75rem;
+
+  table { min-width: 380px; }
+
+  td {
+    white-space: nowrap;
+    font-size: var(--bw-font-table);
+    border: none !important;
+  }
+}
+
+// ── Historial de pagos — items / transactions ────────────────────────────────
+
+.hpg-items-table {
+  table { min-width: 260px; }
+
+  td {
+    font-size: var(--bw-font-table);
+    border: none !important;
+  }
+}
+
+.hpg-txn-table {
+  table { min-width: 360px; }
+
+  th {
+    font-size: var(--bw-font-overline);
+    font-weight: var(--bw-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+    padding: 0.5rem 0.75rem !important;
+    border: none !important;
+  }
+
+  td {
+    white-space: nowrap;
+    font-size: var(--bw-font-table);
+    border: none !important;
+  }
+}

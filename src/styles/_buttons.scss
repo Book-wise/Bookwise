@@ -1,0 +1,60 @@
+// ============================================
+// Bookwise — Shared Button Patterns
+// ============================================
+
+// ── Day toggle button (circle) ───────────────────────────────────────────────
+// Extracted verbatim from booking-form-dialog / block-time-dialog `.day-btn`.
+
+.bw-day-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--bw-radius-pill);
+  border: 1px solid var(--surface-border, #d1d5db);
+  background: var(--surface-card, white);
+  color: var(--text-color, #374151);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background var(--bw-transition-fast),
+    color var(--bw-transition-fast),
+    border-color var(--bw-transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: var(--bw-300);
+    color: var(--bw-300);
+  }
+
+  &.active {
+    background: var(--bw-300);
+    border-color: var(--bw-300);
+    color: white;
+  }
+}
+
+// ── Ghost icon button ─────────────────────────────────────────────────────────
+// Shared recipe of `.bw-pc__edit-btn` (patient-card) and `.bw-back-btn`
+// (booking-detail-dialog).
+
+.bw-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.375rem;
+  cursor: pointer;
+  color: var(--text-color-secondary);
+  border-radius: var(--bw-radius-pill);
+  transition: background var(--bw-transition-fast);
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--surface-100, #f5f5f5);
+    color: var(--text-color);
+  }
+}
