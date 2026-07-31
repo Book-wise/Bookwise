@@ -3,9 +3,9 @@
   @case ('list') {
     <div class="hpg-list">
       @if (salesLoading()) {
-        <div class="hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
-        <div class="hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
-        <div class="hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+        <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+        <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+        <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
       } @else if (sales().length === 0) {
         <div class="hpg-empty">
           <i class="pi pi-wallet hpg-empty__icon"></i>
@@ -13,7 +13,7 @@
         </div>
       } @else {
         @for (sale of sales(); track sale.id) {
-          <div class="hpg-card">
+          <div class="bw-card hpg-card">
             <div class="hpg-card__header">
               <span class="hpg-card__date">
                 {{ lastTransactionDate(sale) | date:'EEEE, d MMMM yyyy - HH:mm' }}
@@ -48,7 +48,7 @@
 
   @case ('loading') {
     <div class="hpg-detail">
-      <div class="hpg-skeleton">
+      <div class="bw-card hpg-skeleton">
         <p-skeleton width="120px" height="0.875rem" />
         <div class="hpg-sk-gap"></div>
         <p-skeleton width="100%" height="3rem" borderRadius="6px" />
@@ -69,14 +69,14 @@
       </button>
 
       <!-- Header card -->
-      <div class="hpg-detail-card hpg-detail-card--header">
+      <div class="bw-card bw-card--header hpg-detail-card hpg-detail-card--header">
         <div class="hpg-detail-header">
           <p-tag
             [value]="saleStatusLabel(sale.payment_status)"
             [severity]="saleStatusSeverity(sale.payment_status)"
           />
           @if (sale.wc_order_id) {
-            <span class="hpg-online-badge">
+            <span class="bw-chip bw-chip--online">
               <i class="pi pi-globe"></i>
               Online
             </span>
@@ -86,7 +86,7 @@
         <div class="hpg-detail-amounts">
           <span class="hpg-paid-amount">{{ sale.paid_amount | bwCurrency }}</span>
           @if (toNumber(sale.remaining_amount) > 0) {
-            <span class="hpg-remaining">
+            <span class="bw-chip bw-chip--remaining">
               Por pagar: {{ sale.remaining_amount | bwCurrency }}
             </span>
           }
@@ -94,7 +94,7 @@
       </div>
 
       <!-- Items table -->
-      <div class="hpg-detail-card">
+      <div class="bw-card hpg-detail-card">
         <span class="hpg-section-label">Detalle</span>
         <p-table
           [value]="items(sale)"
@@ -118,7 +118,7 @@
       </div>
 
       <!-- Transactions table -->
-      <div class="hpg-detail-card">
+      <div class="bw-card hpg-detail-card">
         <span class="hpg-section-label">Transacciones</span>
         <p-table
           [value]="sale.transactions"
