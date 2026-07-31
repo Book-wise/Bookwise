@@ -20,13 +20,13 @@
   border: none;
   border-radius: 0;
   background: linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
-  box-shadow: 0 2px 8px rgba(1, 38, 99, 0.3);
+  box-shadow: var(--bw-shadow-sidebar-toggle);
   cursor: pointer;
   display: none;
   align-items: center;
   justify-content: flex-start;
   padding-left: 1rem;
-  transition: background 0.2s;
+  transition: background var(--bw-transition-base);
 
   &:hover {
     background: var(--bw-500);
@@ -54,7 +54,7 @@
   position: relative;
   height: 100%;
   z-index: var(--z-drawer);
-  transition: width 0.3s ease;
+  transition: width var(--bw-transition-slow) ease;
   overflow: hidden;
 
   // Decorative glow top-right
@@ -104,7 +104,7 @@
     width: 220px !important;
     height: 100vh;
     height: 100dvh;
-    transition: transform 0.3s ease;
+    transition: transform var(--bw-transition-slow) ease;
 
     &.mobile-open {
       transform: translateX(0);
@@ -134,7 +134,7 @@
     width: 32px;
     height: 32px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--bw-radius-md);
     background: transparent;
     cursor: pointer;
     align-items: center;
@@ -230,7 +230,7 @@
   align-items: center;
   gap: 0.625rem;
   padding: 0.625rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--bw-radius-lg);
   color: var(--sidebar-text);
   text-decoration: none;
   transition: all 0.18s ease;
@@ -292,18 +292,18 @@
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.25);
   background: var(--bw-700);
-  box-shadow: 0 2px 8px rgba(1, 38, 99, 0.45);
+  box-shadow: var(--bw-shadow-sidebar-tab);
   color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  transition: left 0.3s ease, background 0.2s, box-shadow 0.2s;
+  transition: left var(--bw-transition-slow) ease, background var(--bw-transition-base), box-shadow var(--bw-transition-base);
 
   &:hover {
     background: var(--bw-300);
     border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 3px 12px rgba(4, 106, 244, 0.5);
+    box-shadow: var(--bw-shadow-sidebar-tab-hover);
     color: #fff;
   }
 
@@ -348,7 +348,7 @@
   height: 100%;
   padding: 1.25rem;
   background: var(--surface-ground);
-  transition: background 0.2s;
+  transition: background var(--bw-transition-base);
 
   @media (max-width: 991px) {
     padding: 1rem;

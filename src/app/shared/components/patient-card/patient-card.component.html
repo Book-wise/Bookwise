@@ -1,4 +1,4 @@
-<section class="bw-pc">
+<section class="bw-card bw-card--signature bw-pc">
   <!-- ── Avatar + Name row ────────────────────────────────────────────────────── -->
   <div class="bw-pc__row">
     <div class="bw-pc__left">
@@ -31,7 +31,7 @@
       @if (showEdit()) {
         <button
           type="button"
-          class="bw-pc__edit-btn"
+          class="bw-icon-btn"
           data-testid="pc-edit"
           (click)="onEditClick()"
           aria-label="Edit patient"
@@ -117,7 +117,7 @@
                 <span>4 / 10 sesiones</span>
                 <span class="bw-pc__pack-remaining">6 restantes</span>
               </div>
-              <span class="bw-pc__pack-status bw-pc__pack-status--active">Activo</span>
+              <span class="bw-chip bw-chip--success">Activo</span>
             </li>
             <li class="bw-pc__pack-item">
               <div class="bw-pc__pack-name">Plan Neuromuscular 5 sesiones</div>
@@ -125,7 +125,7 @@
                 <span>0 / 5 sesiones</span>
                 <span class="bw-pc__pack-remaining">5 restantes</span>
               </div>
-              <span class="bw-pc__pack-status bw-pc__pack-status--active">Activo</span>
+              <span class="bw-chip bw-chip--success">Activo</span>
             </li>
             <li class="bw-pc__pack-item">
               <div class="bw-pc__pack-name">Plan Post-operatorio</div>
@@ -133,7 +133,7 @@
                 <span>8 / 8 sesiones</span>
                 <span class="bw-pc__pack-remaining">Completado</span>
               </div>
-              <span class="bw-pc__pack-status bw-pc__pack-status--used">Completado</span>
+              <span class="bw-chip bw-chip--online">Completado</span>
             </li>
           </ul>
         }
@@ -175,7 +175,7 @@
                 <span class="bw-pc__sale-label">Pagado</span>
                 <span class="bw-pc__sale-amount">$150.000</span>
               </div>
-              <span class="bw-pc__sale-status bw-pc__sale-status--paid">Pagado</span>
+              <span class="bw-chip bw-chip--success">Pagado</span>
             </li>
             <li class="bw-pc__sale-item">
               <div class="bw-pc__sale-row">
@@ -186,7 +186,7 @@
                 <span class="bw-pc__sale-label">Pagado</span>
                 <span class="bw-pc__sale-amount">$40.000</span>
               </div>
-              <span class="bw-pc__sale-status bw-pc__sale-status--partial">Pago parcial</span>
+              <span class="bw-chip bw-chip--warning">Pago parcial</span>
             </li>
           </ul>
         }

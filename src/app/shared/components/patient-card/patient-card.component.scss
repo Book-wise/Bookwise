@@ -18,16 +18,13 @@
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
+// Surface recipe (bg/border/radius/overflow + signature accent) lives in global
+// `.bw-card.bw-card--signature` (styles/_cards.scss). `.bw-pc` only keeps layout.
 
 .bw-pc {
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
-  border-left: 3px solid var(--bw-300);
-  overflow: hidden;
 }
 
 // ── Avatar + Name row ─────────────────────────────────────────────────────────
@@ -106,26 +103,12 @@
   display: inline-flex;
 }
 
-.bw-pc__edit-btn {
-  background: none;
-  border: none;
-  padding: 0.375rem;
-  cursor: pointer;
-  color: var(--text-color-secondary);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
+// ── Edit button ────────────────────────────────────────────────────────────────
+// Ghost recipe lives in global `.bw-icon-btn` (styles/_buttons.scss).
+// Component hook only sizes the pencil icon.
 
-  &:hover {
-    background: var(--surface-100, #f5f5f5);
-    color: var(--text-color);
-  }
-
-  i {
-    font-size: 0.875rem;
-  }
+.bw-pc__actions .bw-icon-btn i {
+  font-size: 0.875rem;
 }
 
 // ── Warning bar ───────────────────────────────────────────────────────────────
@@ -176,7 +159,7 @@
   font-weight: var(--bw-weight-semibold);
   color: var(--text-color-secondary);
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all var(--bw-transition-base) ease;
   position: relative;
 
   &::after {
@@ -189,7 +172,9 @@
     height: 2px;
     background: var(--bw-300);
     border-radius: 1px;
-    transition: transform 0.2s ease, background 0.2s ease;
+    transition:
+      transform var(--bw-transition-base) ease,
+      background var(--bw-transition-base) ease;
   }
 
   &:hover {
@@ -239,22 +224,6 @@ body.dark-theme {
   }
 }
 
-.bw-pc__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: linear-gradient(135deg, var(--bw-300), var(--bw-500));
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: var(--bw-weight-bold);
-  border-radius: 10px;
-  line-height: 1;
-  box-shadow: 0 1px 4px rgba(4, 106, 244, 0.3);
-}
-
 // ── Panel ────────────────────────────────────────────────────────────────────
 
 .bw-pc__panel {
@@ -302,21 +271,6 @@ body.dark-theme {
   }
 }
 
-.bw-pc__empty {
-  padding: 1.5rem 1rem;
-  text-align: center;
-  font-size: var(--bw-font-table);
-  color: var(--text-color-secondary);
-  margin: 0;
-}
-
-.bw-pc__skeleton-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-}
-
 // ── Pack list ─────────────────────────────────────────────────────────────────
 
 .bw-pc__pack-list {
@@ -358,28 +312,6 @@ body.dark-theme {
   color: var(--text-color-secondary);
 }
 
-.bw-pc__pack-status {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: var(--bw-weight-semibold);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  width: fit-content;
-
-  &--active {
-    background: var(--green-100, #dcfce7);
-    color: var(--green-700, #15803d);
-  }
-  &--used {
-    background: var(--blue-100, #dbeafe);
-    color: var(--blue-700, #1d4ed8);
-  }
-  &--expired {
-    background: var(--surface-100, #f5f5f5);
-    color: var(--text-color-secondary);
-  }
-}
-
 // ── Sale list ─────────────────────────────────────────────────────────────────
 
 .bw-pc__sale-list {
@@ -418,28 +350,6 @@ body.dark-theme {
   color: var(--text-color);
 }
 
-.bw-pc__sale-status {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: var(--bw-weight-semibold);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  width: fit-content;
-
-  &--paid {
-    background: var(--green-100, #dcfce7);
-    color: var(--green-700, #15803d);
-  }
-  &--partial {
-    background: var(--yellow-100, #fef9c3);
-    color: var(--yellow-700, #a16207);
-  }
-  &--unpaid {
-    background: var(--red-100, #fee2e2);
-    color: var(--red-700, #b91c1c);
-  }
-}
-
 // ── Booking list ──────────────────────────────────────────────────────────────
 
 .bw-pc__booking-list {
@@ -474,13 +384,6 @@ body.dark-theme {
   font-size: var(--bw-font-table);
   font-weight: var(--bw-weight-semibold);
   color: var(--text-color);
-}
-
-.bw-pc__booking-status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
 }
 
 .bw-pc__booking-time {
@@ -581,7 +484,7 @@ body.dark-theme {
   color: var(--text-color-secondary);
   background: var(--surface-100, #f5f5f5);
   border: 1px solid var(--surface-border);
-  border-radius: 4px;
+  border-radius: var(--bw-radius-sm);
   padding: 0.1rem 0.4rem;
   white-space: nowrap;
 }

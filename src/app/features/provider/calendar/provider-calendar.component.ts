@@ -18,7 +18,6 @@ import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -29,7 +28,7 @@ import { AuthService } from '@services/auth.service';
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
-import { BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-statuses';
+import { BOOKING_STATUSES, bookingStatusChipClass } from '@features/admin/bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
@@ -55,7 +54,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     CardModule,
     ButtonModule,
     MultiSelectModule,
-    TagModule,
     DialogModule,
     SkeletonModule,
     BookingFormDialogComponent,
@@ -570,18 +568,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     this.store.setSelectedBookingId(null);
   }
 
-  getStatusSeverity(
-    statusName?: string,
-    statusId?: number,
-  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
-    if (statusId) {
-      const status = BOOKING_STATUSES.find((s) => s.value === statusId);
-      if (status) return status.severity === 'help' ? 'warn' : status.severity;
-    }
-    const status = BOOKING_STATUSES.find(
-      (s) => s.label.toLowerCase() === statusName?.toLowerCase()
-    );
-    if (status) return status.severity === 'help' ? 'warn' : status.severity;
-    return 'info';
+  getStatusChipClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipClass(statusName, statusId);
   }
 }

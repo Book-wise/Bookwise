@@ -19,16 +19,15 @@
 }
 
 // ── Card ────────────────────────────────────────────────────────────────────────
+// Surface recipe (bg/border/radius) lives in global `.bw-card` (styles/_cards.scss).
+// Component classes only layer layout + per-card padding/shadow.
 
 .hpg-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
   padding: 1rem 1.125rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--bw-shadow-card);
 
   &__header {
     display: flex;
@@ -82,8 +81,8 @@
     font-weight: var(--bw-weight-semibold);
     color: var(--bw-300, #046af4);
     padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    transition: background 0.15s;
+    border-radius: var(--bw-radius-sm);
+    transition: background var(--bw-transition-fast);
 
     &:hover { background: var(--bw-50, #f0f6ff); }
   }
@@ -108,25 +107,22 @@
   font-weight: var(--bw-weight-semibold);
   color: var(--bw-300, #046af4);
   padding: 0.375rem 0;
-  transition: color 0.15s;
+  transition: color var(--bw-transition-fast);
 
   &:hover { color: var(--bw-400, #0358cc); }
 }
 
 .hpg-detail-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
   padding: 1rem 1.125rem;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--bw-shadow-card);
 
+  // Shadow-killer: global `.bw-card--header` (box-shadow: none) is injected
+  // BEFORE `.hpg-detail-card` above, so re-assert `none` at component specificity.
   &--header {
-    background: var(--bw-50, #f0f6ff);
-    border-color: var(--bw-100, #dbeafe);
-    border-left: 3px solid var(--bw-300, #046af4);
+    box-shadow: none;
   }
 }
 
@@ -134,22 +130,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.hpg-online-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.7rem;
-  font-weight: var(--bw-weight-semibold);
-  color: var(--blue-600, #2563eb);
-  background: var(--blue-50, #eff6ff);
-  border: 1px solid var(--blue-200, #bfdbfe);
-  border-radius: 4px;
-  padding: 0.125rem 0.375rem;
-  white-space: nowrap;
-
-  i { font-size: 0.65rem; }
 }
 
 .hpg-detail-amounts {
@@ -164,15 +144,6 @@
   color: var(--text-color);
 }
 
-.hpg-remaining {
-  font-size: var(--bw-font-caption);
-  font-weight: var(--bw-weight-semibold);
-  color: var(--orange-600);
-  background: var(--orange-50);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-}
-
 .hpg-section-label {
   font-size: var(--bw-font-overline);
   font-weight: var(--bw-weight-bold);
@@ -182,16 +153,8 @@
   margin-bottom: 0.15rem;
 }
 
-// ── Items table ─────────────────────────────────────────────────────────────────
-
-.hpg-items-table {
-  table { min-width: 260px; }
-
-  td {
-    font-size: var(--bw-font-table);
-    border: none !important;
-  }
-}
+// Table recipes (`.hpg-items-table`, `.hpg-txn-table`) live globally in
+// `styles/_tables.scss` — removed from here.
 
 .hpg-item {
   &__name {
@@ -214,27 +177,7 @@
   }
 }
 
-// ── Transactions table ──────────────────────────────────────────────────────────
-
-.hpg-txn-table {
-  table { min-width: 360px; }
-
-  th {
-    font-size: var(--bw-font-overline);
-    font-weight: var(--bw-weight-bold);
-    text-transform: uppercase;
-    letter-spacing: var(--bw-tracking-overline);
-    color: var(--text-color-secondary);
-    padding: 0.5rem 0.75rem !important;
-    border: none !important;
-  }
-
-  td {
-    white-space: nowrap;
-    font-size: var(--bw-font-table);
-    border: none !important;
-  }
-}
+// ── Transactions (cell styles only; table recipe lives in _tables.scss) ───────
 
 .hpg-txn {
   &__time {
@@ -267,17 +210,11 @@
 // ── Skeleton ────────────────────────────────────────────────────────────────────
 
 .hpg-sk-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
   padding: 1.5rem 1.125rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--bw-shadow-card);
 }
 
 .hpg-skeleton {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
   padding: 1rem;
 }
 

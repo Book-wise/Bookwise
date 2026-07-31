@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { TabsModule } from 'primeng/tabs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SelectModule } from 'primeng/select';
@@ -15,21 +14,20 @@ import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
-import { PaymentTabComponent } from './payment-tab.component';
-import { ReservaTabComponent } from './reserva-tab.component';
-import { HistorialTabComponent } from './historial-tab.component';
+import { PaymentTabComponent } from './tabs/payment/payment-tab.component';
+import { ReservaTabComponent } from './tabs/reserva/reserva-tab.component';
+import { HistorialTabComponent } from './tabs/historial/historial-tab.component';
 
 export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';
 
 @Component({
-  selector: 'bw-payment-detail-dialog',
+  selector: 'bw-booking-detail-dialog',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     DialogModule,
     ButtonModule,
-    TagModule,
     TabsModule,
     SkeletonModule,
     SelectModule,
@@ -38,10 +36,10 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     HistorialTabComponent,
   ],
   providers: [ClientDetailStore],
-  templateUrl: './payment-detail-dialog.component.html',
-  styleUrl: './payment-detail-dialog.component.scss',
+  templateUrl: './booking-detail-dialog.component.html',
+  styleUrl: './booking-detail-dialog.component.scss',
 })
-export class PaymentDetailDialogComponent {
+export class BookingDetailDialogComponent {
   private bookingsApi = inject(BookingsApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
@@ -75,16 +73,6 @@ export class PaymentDetailDialogComponent {
   );
 
   readonly booking = computed(() => this.store.selectedBooking());
-
-  readonly statusSeverity = computed(() => {
-    const name = this.store.selectedBooking()?.status?.name?.toLowerCase();
-    if (!name) return undefined as any;
-    if (name.includes('confirm')) return 'success';
-    if (name.includes('cancel')) return 'danger';
-    if (name.includes('pendiente') || name.includes('espera')) return 'warn';
-    if (name.includes('asiste') || name.includes('completa')) return 'info';
-    return 'secondary';
-  });
 
   open(booking: Booking, tab: BookingTab = 'pago', scrollToTxn = false): void {
     this.store.selectBooking(booking);

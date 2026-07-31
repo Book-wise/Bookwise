@@ -121,7 +121,7 @@
             <td>{{ provider.phone }}</td>
             <td>
               @if (provider.location; as loc) {
-                <span class="location-badge" [style.--badge-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
+                <span class="bw-chip" [style.--chip-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
                   {{ loc.name }}
                 </span>
               } @else {
@@ -129,15 +129,14 @@
               }
             </td>
             <td>
-              <p-tag
-                [value]="provider.active ? 'Activo' : 'Inactivo'"
-                [severity]="provider.active ? 'success' : 'danger'"
-              />
+              <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                {{ provider.active ? 'Activo' : 'Inactivo' }}
+              </span>
             </td>
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
               <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
-              <p-button icon="pi pi-calendar" class="p-button-text" pTooltip="Ver Agenda" />
+              <p-button icon="pi pi-calendar" class="p-button-text" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
             </td>
           </tr>
         </ng-template>
@@ -174,7 +173,7 @@
             <div class="prov-card__row">
               <span class="prov-card__label">Sucursal</span>
               @if (provider.location; as loc) {
-                <span class="location-badge" [style.--badge-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
+                <span class="bw-chip" [style.--chip-color]="locationColorMap().get(loc.id) ?? 'var(--surface-border)'">
                   {{ loc.name }}
                 </span>
               } @else {
@@ -184,17 +183,16 @@
 
             <div class="prov-card__row">
               <span class="prov-card__label">Estado</span>
-              <p-tag
-                [value]="provider.active ? 'Activo' : 'Inactivo'"
-                [severity]="provider.active ? 'success' : 'danger'"
-              />
+              <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                {{ provider.active ? 'Activo' : 'Inactivo' }}
+              </span>
             </div>
           </div>
 
           <div class="prov-card__actions">
             <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(provider)" />
             <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
-            <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" />
+            <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
           </div>
         </div>
       } @empty {

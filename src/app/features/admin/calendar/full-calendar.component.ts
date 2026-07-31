@@ -19,7 +19,6 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -33,9 +32,10 @@ import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialo
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
-import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
+import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
+import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -67,7 +67,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     ButtonModule,
     SelectModule,
     MultiSelectModule,
-    TagModule,
     DialogModule,
     SkeletonModule,
     BookingDialogComponent,
@@ -90,6 +89,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly lang = inject(LanguageService);
   readonly store = inject(BookingStore);
   private httpError = inject(HttpErrorService);
+  private calNav = inject(CalendarNavigationService);
   private tzService = inject(TimezoneService);
   private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   private calendar: Calendar | null = null;
@@ -365,6 +365,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.nowLabelInterval) clearInterval(this.nowLabelInterval);
     this.destroyHoverSelect();
     if (this.calendar) this.calendar.destroy();
+    // Never leave stale pending navigation behind if it was not consumed
+    this.calNav.consumePending();
   }
 
   private updateCalendarI18n(): void {
@@ -406,15 +408,31 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadLocations(): void {
+    // Pending navigation pre-selection — consumed BEFORE the API call (one-shot,
+    // transactional) so it is cleared even when the response is empty or the
+    // component is destroyed before the request completes.
+    const pending = this.calNav.consumePending();
+    const pendingLocationId = pending.locationId;
+    const pendingProviderId = pending.providerId;
+
     this.locationsApi.getLocations().subscribe({
       next: (data) => {
         this.locations.set(data);
-        if (data.length > 0) {
-          this.selectedLocationId = data[0].id;
-          this.previousLocationId = data[0].id;
-          this.loadProviders(data[0].id);
-          this.onFilterChange();
+        if (data.length === 0) return;
+
+        if (pendingLocationId != null) {
+          this.selectedLocationId = pendingLocationId;
+          this.previousLocationId = pendingLocationId;
+          // Provider pre-selection + filter sync happen in the providers callback
+          this.loadProviders(pendingLocationId, pendingProviderId);
+          return;
         }
+
+        // Default: first location
+        this.selectedLocationId = data[0].id;
+        this.previousLocationId = data[0].id;
+        this.loadProviders(data[0].id);
+        this.onFilterChange();
       },
       error: () => {
         this.locations.set([]);
@@ -422,15 +440,46 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  loadProviders(locationId?: number | null): void {
+  loadProviders(locationId?: number | null, providerId?: number | null): void {
     this.providersLoading.set(true);
     const params = locationId ? { location_id: locationId } : undefined;
     this.providersApi.getProviders(params).subscribe({
       next: (data) => {
         this.providers.set(data);
         this.providersLoading.set(false);
+
+        // Pre-selection from calendar navigation: sync filters and confirm with toast
+        if (providerId != null) {
+          this.selectedProviderId = providerId;
+          this.onFilterChange();
+          this.showWelcomeToast(providerId, data);
+        }
       },
-      error: () => this.providersLoading.set(false),
+      error: (err) => {
+        this.providersLoading.set(false);
+        if (providerId != null) {
+          // Navigation pre-selection: apply the filter intent anyway so the UI
+          // and the store stay consistent, and surface the failure with a toast.
+          this.selectedProviderId = providerId;
+          this.onFilterChange();
+          this.httpError.handle(err, 'cargar profesionales');
+        }
+      },
+    });
+  }
+
+  /** One-shot toast confirming the calendar opened with pre-selected filters. */
+  private showWelcomeToast(providerId: number, providers: Provider[]): void {
+    const provider = providers.find((p) => p.id === providerId);
+    const location = this.locations().find((l) => l.id === this.selectedLocationId);
+    if (!provider || !location) return;
+    const providerName = `${provider.first_name} ${provider.last_name}`.trim();
+    this.messageService.add({
+      severity: 'success',
+      summary: providerName,
+      detail: `Mostrando agenda de ${providerName} en ${location.name}`,
+      key: 'global',
+      life: 5000,
     });
   }
 
@@ -867,25 +916,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => this.showEventDialog.set(true), 100);
   }
 
-  getStatusSeverity(
-    statusName?: string,
-    statusId?: number,
-  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
-    // Primero buscar por status_id (más confiable)
-    if (statusId) {
-      const status = BOOKING_STATUSES.find((s) => s.value === statusId);
-      if (status) {
-        // Mapear 'help' a 'warn' ya que PrimeNG no soporta 'help'
-        return status.severity === 'help' ? 'warn' : status.severity;
-      }
-    }
-    // Fallback por nombre
-    const status = BOOKING_STATUSES.find(
-      (s) => s.label.toLowerCase() === statusName?.toLowerCase(),
-    );
-    if (status) {
-      return status.severity === 'help' ? 'warn' : status.severity;
-    }
-    return 'info';
+  getStatusChipClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipClass(statusName, statusId);
   }
 }

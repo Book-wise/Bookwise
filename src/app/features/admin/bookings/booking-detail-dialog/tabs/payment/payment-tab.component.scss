@@ -24,21 +24,19 @@
 }
 
 // ── Cards ─────────────────────────────────────────────────────────────────────
+// Surface recipe (bg/border/radius) lives in global `.bw-card` (styles/_cards.scss).
+// Component classes only layer layout + per-card padding/shadow.
 
 .sale-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 8px;
   padding: 1rem 1.125rem;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--bw-shadow-card);
 
+  // Shadow-killer: global `.bw-card--header` (box-shadow: none) is injected
+  // BEFORE `.sale-card` above, so re-assert `none` at component specificity.
   &--header {
-    background: var(--bw-50, #f0f6ff);
-    border-color: var(--bw-100, #dbeafe);
-    border-left: 3px solid var(--bw-300, #046af4);
     box-shadow: none;
   }
 
@@ -59,25 +57,6 @@
     align-items: center;
     gap: 0.6rem;
     flex-wrap: wrap;
-  }
-
-  &__online-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.7rem;
-    font-weight: var(--bw-weight-semibold);
-    color: var(--blue-600, #2563eb);
-    background: var(--blue-50, #eff6ff);
-    border: 1px solid var(--blue-200, #bfdbfe);
-    border-radius: 4px;
-    padding: 0.125rem 0.375rem;
-    white-space: nowrap;
-    line-height: 1.2;
-
-    i {
-      font-size: 0.65rem;
-    }
   }
 
   &__section-label {
@@ -195,15 +174,6 @@
   }
 }
 
-.sale-remaining {
-  font-size: var(--bw-font-caption);
-  font-weight: var(--bw-weight-semibold);
-  color: var(--orange-600);
-  background: var(--orange-50);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-}
-
 // ── Detalle ───────────────────────────────────────────────────────────────────
 
 .sale-card--detail,
@@ -215,16 +185,8 @@
   }
 }
 
-.bw-detail-table {
-  margin-bottom: 0.75rem;
-
-  table { min-width: 260px; }
-
-  td {
-    font-size: var(--bw-font-table);
-    border: none !important;
-  }
-}
+// Table recipes (`.bw-detail-table`, `.bw-txn-table`) live globally in
+// `styles/_tables.scss` — removed from here.
 
 .bw-detail {
   &__name {
@@ -249,18 +211,6 @@
 
 // ── Transacciones ─────────────────────────────────────────────────────────────
 
-.bw-txn-table {
-  margin-bottom: 0.75rem;
-
-  table { min-width: 380px; }
-
-  td {
-    white-space: nowrap;
-    font-size: var(--bw-font-table);
-    border: none !important;
-  }
-}
-
 .bw-txn {
   &__time {
     font-weight: var(--bw-weight-semibold);
@@ -276,7 +226,7 @@
     font-family: monospace;
     background: var(--bw-50, #f0f6ff);
     padding: 0.1rem 0.45rem;
-    border-radius: 4px;
+    border-radius: var(--bw-radius-sm);
     font-size: var(--bw-font-caption);
   }
 
@@ -324,7 +274,7 @@
   padding: 0.75rem;
   margin: 0 0 0.75rem;
   background: var(--surface-ground);
-  border-radius: 6px;
+  border-radius: var(--bw-radius-md);
 
   &__row {
     display: flex;

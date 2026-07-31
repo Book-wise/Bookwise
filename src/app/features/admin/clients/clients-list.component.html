@@ -50,10 +50,9 @@
         <td>{{ client.email }}</td>
         <td>{{ client.phone }}</td>
         <td>
-          <p-tag
-            [value]="client.active ? 'Activo' : 'Inactivo'"
-            [severity]="client.active ? 'success' : 'danger'"
-          ></p-tag>
+          <span class="bw-chip" [class]="client.active ? 'bw-chip--success' : 'bw-chip--danger'">
+            {{ client.active ? 'Activo' : 'Inactivo' }}
+          </span>
         </td>
         <td>
           <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver"></p-button>

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { switchMap, of, map, catchError } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Sale, SaleTransaction } from '@models';
@@ -11,6 +10,7 @@ import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { HistorialStore } from '@core/stores/historial.store';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
+import { salePaymentChipClass } from '../../../constants/booking-statuses';
 
 interface SaleItem {
   name: string;
@@ -25,7 +25,7 @@ type ViewMode = 'list' | 'detail' | 'loading';
 @Component({
   selector: 'bw-historial-pagos',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TagModule, TableModule, SkeletonModule, BwCurrencyPipe],
+  imports: [CommonModule, ButtonModule, TableModule, SkeletonModule, BwCurrencyPipe],
   templateUrl: './historial-pagos.component.html',
   styleUrl: './historial-pagos.component.scss',
 })
@@ -76,12 +76,8 @@ export class HistorialPagosComponent {
     }
   }
 
-  saleStatusSeverity(status: string | undefined): 'success' | 'warn' | 'danger' {
-    switch (status) {
-      case 'paid':    return 'success';
-      case 'partial': return 'warn';
-      default:        return 'danger';
-    }
+  saleStatusChipClass(status: string | undefined): string {
+    return salePaymentChipClass(status);
   }
 
   /** Latest transaction paid_at for card date display */

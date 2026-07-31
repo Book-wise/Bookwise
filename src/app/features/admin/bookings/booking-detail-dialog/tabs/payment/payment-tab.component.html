@@ -3,7 +3,7 @@
   <div class="sale-body sale-skeleton">
 
     <!-- Card 1: header -->
-    <div class="sale-card sale-card--header bw-sk-card">
+    <div class="bw-card bw-card--header sale-card sale-card--header bw-sk-card">
       <div class="sale-header__top">
         <p-skeleton width="140px" height="0.875rem" />
         <p-skeleton width="90px" height="1.5rem" borderRadius="4px" />
@@ -15,7 +15,7 @@
     </div>
 
     <!-- Card 2: cliente + total -->
-    <div class="sale-card bw-sk-card">
+    <div class="bw-card sale-card bw-sk-card">
       <div class="sale-row">
         <p-skeleton width="160px" height="0.875rem" />
         <p-skeleton width="65px" height="0.875rem" />
@@ -23,21 +23,21 @@
     </div>
 
     <!-- Card 3: detalle -->
-    <div class="sale-card sale-card--detail bw-sk-card">
+    <div class="bw-card sale-card sale-card--detail bw-sk-card">
       <p-skeleton width="55px" height="0.7rem" />
       <div class="sk-gap"></div>
       <p-skeleton width="100%" height="2.5rem" borderRadius="4px" />
     </div>
 
     <!-- Card 4: transacciones -->
-    <div class="sale-card sale-card--txn bw-sk-card">
+    <div class="bw-card sale-card sale-card--txn bw-sk-card">
       <p-skeleton width="95px" height="0.7rem" />
       <div class="sk-gap"></div>
       <p-skeleton width="100%" height="2.5rem" borderRadius="4px" />
     </div>
 
     <!-- Card 5: nota -->
-    <div class="sale-card bw-sk-card">
+    <div class="bw-card sale-card bw-sk-card">
       <p-skeleton width="40px" height="0.7rem" />
       <div class="sk-gap"></div>
       <p-skeleton width="100%" height="3.5rem" borderRadius="4px" />
@@ -49,7 +49,7 @@
 <div class="sale-body">
 
   <!-- ── Card 1: resumen de pago ───────────────────────────────────────────── -->
-  <div class="sale-card sale-card--header">
+  <div class="bw-card bw-card--header sale-card sale-card--header">
 
     <div class="sale-header__top">
       <div class="sale-header__meta">
@@ -61,9 +61,9 @@
         }
       </div>
       <div class="sale-header__actions">
-        <p-tag [value]="statusLabel()" [severity]="statusSeverity()" />
+        <span class="bw-chip" [class]="statusChipClass()">{{ statusLabel() }}</span>
         @if (isOnline()) {
-          <span class="sale-card__online-badge">
+          <span class="bw-chip bw-chip--online">
             <i class="pi pi-globe"></i>
             Online
           </span>
@@ -83,14 +83,14 @@
     <div class="sale-header__bottom">
       <span class="sale-paid-amount">{{ sale.paid_amount | bwCurrency }}</span>
       @if (sale.remaining_amount > 0) {
-        <span class="sale-remaining">Por pagar: {{ sale.remaining_amount | bwCurrency }}</span>
+        <span class="bw-chip bw-chip--remaining">Por pagar: {{ sale.remaining_amount | bwCurrency }}</span>
       }
     </div>
 
   </div>
 
   <!-- ── Card 2: cliente + total de la venta ────────────────────────────── -->
-  <div class="sale-card">
+  <div class="bw-card sale-card">
     <div class="sale-row">
       <div class="sale-row__meta">
         <i class="pi pi-user sale-row__icon"></i>
@@ -101,7 +101,7 @@
   </div>
 
   <!-- ── Card 3: detalle de ítems ────────────────────────────────────────── -->
-  <div class="sale-card sale-card--detail">
+  <div class="bw-card sale-card sale-card--detail">
     <span class="sale-card__section-label">Detalle</span>
     <p-table
       [value]="sale.items"
@@ -125,7 +125,7 @@
   </div>
 
   <!-- ── Card 4: transacciones ───────────────────────────────────────────── -->
-  <div class="sale-card sale-card--txn">
+  <div class="bw-card sale-card sale-card--txn">
     <span class="sale-card__section-label">Transacciones</span>
     <p-table
       [value]="sale.transactions"
@@ -222,7 +222,7 @@
   </div>
 
   <!-- ── Card 5: nota ────────────────────────────────────────────────────── -->
-  <div class="sale-card">
+  <div class="bw-card sale-card">
     <span class="sale-card__section-label">Nota</span>
     <textarea
       pTextarea

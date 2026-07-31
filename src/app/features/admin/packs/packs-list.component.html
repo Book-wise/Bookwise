@@ -34,8 +34,9 @@
         <td>{{ pack.total_sessions }}</td>
         <td>{{ pack.price | bwCurrency }}</td>
         <td>
-          <p-tag [value]="pack.active ? 'Activo' : 'Inactivo'" 
-                 [severity]="pack.active ? 'success' : 'danger'"></p-tag>
+          <span class="bw-chip" [class]="pack.active ? 'bw-chip--success' : 'bw-chip--danger'">
+            {{ pack.active ? 'Activo' : 'Inactivo' }}
+          </span>
         </td>
         <td>
           <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar"></p-button>

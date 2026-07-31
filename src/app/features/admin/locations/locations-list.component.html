@@ -67,7 +67,9 @@
             <td>{{ location.city }}</td>
             <td>
               <div class="status-cell">
-                <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />
+                <span class="bw-chip" [class]="location.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                  {{ location.active ? 'Activo' : 'Inactivo' }}
+                </span>
                 <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
               </div>
             </td>
@@ -101,7 +103,9 @@
             <div class="loc-card__row">
               <span class="loc-card__label">Estado</span>
               <div class="status-cell">
-                <p-tag [value]="location.active ? 'Activo' : 'Inactivo'" [severity]="location.active ? 'success' : 'danger'" />
+                <span class="bw-chip" [class]="location.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                  {{ location.active ? 'Activo' : 'Inactivo' }}
+                </span>
                 <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
               </div>
             </div>

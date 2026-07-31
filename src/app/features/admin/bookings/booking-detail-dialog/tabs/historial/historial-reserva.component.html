@@ -14,10 +14,9 @@
     <div class="hr-card">
       <div class="hr-card__top">
         <span class="hr-card__service">{{ booking.service?.name ?? '—' }}</span>
-        <p-tag
-          [value]="booking.status?.name ?? ''"
-          [style]="{ background: booking.status?.color }"
-        />
+        <span class="bw-chip" [class]="statusChipClass(booking.status?.name, booking.status_id)">
+          {{ booking.status?.name ?? '' }}
+        </span>
       </div>
 
       <div class="hr-card__body">
