@@ -36,6 +36,7 @@ import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
+import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -90,6 +91,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly lang = inject(LanguageService);
   readonly store = inject(BookingStore);
   private httpError = inject(HttpErrorService);
+  private calNav = inject(CalendarNavigationService);
   private tzService = inject(TimezoneService);
   private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   private calendar: Calendar | null = null;
@@ -409,12 +411,25 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.locationsApi.getLocations().subscribe({
       next: (data) => {
         this.locations.set(data);
-        if (data.length > 0) {
-          this.selectedLocationId = data[0].id;
-          this.previousLocationId = data[0].id;
-          this.loadProviders(data[0].id);
-          this.onFilterChange();
+        if (data.length === 0) return;
+
+        // Pending navigation pre-selection — one-shot, consumed transactionally
+        if (this.calNav.hasPendingNavigation()) {
+          const pending = this.calNav.consumePending();
+          if (pending.locationId != null) {
+            this.selectedLocationId = pending.locationId;
+            this.previousLocationId = pending.locationId;
+            // Provider pre-selection + filter sync happen in the providers callback
+            this.loadProviders(pending.locationId, pending.providerId);
+            return;
+          }
         }
+
+        // Default: first location
+        this.selectedLocationId = data[0].id;
+        this.previousLocationId = data[0].id;
+        this.loadProviders(data[0].id);
+        this.onFilterChange();
       },
       error: () => {
         this.locations.set([]);
@@ -422,15 +437,37 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  loadProviders(locationId?: number | null): void {
+  loadProviders(locationId?: number | null, providerId?: number | null): void {
     this.providersLoading.set(true);
     const params = locationId ? { location_id: locationId } : undefined;
     this.providersApi.getProviders(params).subscribe({
       next: (data) => {
         this.providers.set(data);
         this.providersLoading.set(false);
+
+        // Pre-selection from calendar navigation: sync filters and confirm with toast
+        if (providerId != null) {
+          this.selectedProviderId = providerId;
+          this.onFilterChange();
+          this.showWelcomeToast(providerId, data);
+        }
       },
       error: () => this.providersLoading.set(false),
+    });
+  }
+
+  /** One-shot toast confirming the calendar opened with pre-selected filters. */
+  private showWelcomeToast(providerId: number, providers: Provider[]): void {
+    const provider = providers.find((p) => p.id === providerId);
+    const location = this.locations().find((l) => l.id === this.selectedLocationId);
+    if (!provider || !location) return;
+    const providerName = `${provider.first_name} ${provider.last_name}`.trim();
+    this.messageService.add({
+      severity: 'success',
+      summary: providerName,
+      detail: `Mostrando agenda de ${providerName} en ${location.name}`,
+      key: 'global',
+      life: 5000,
     });
   }
 
