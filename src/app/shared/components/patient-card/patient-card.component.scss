@@ -159,7 +159,7 @@
   font-weight: var(--bw-weight-semibold);
   color: var(--text-color-secondary);
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all var(--bw-transition-base) ease;
   position: relative;
 
   &::after {
@@ -172,7 +172,9 @@
     height: 2px;
     background: var(--bw-300);
     border-radius: 1px;
-    transition: transform 0.2s ease, background 0.2s ease;
+    transition:
+      transform var(--bw-transition-base) ease,
+      background var(--bw-transition-base) ease;
   }
 
   &:hover {
@@ -482,7 +484,7 @@ body.dark-theme {
   color: var(--text-color-secondary);
   background: var(--surface-100, #f5f5f5);
   border: 1px solid var(--surface-border);
-  border-radius: 4px;
+  border-radius: var(--bw-radius-sm);
   padding: 0.1rem 0.4rem;
   white-space: nowrap;
 }

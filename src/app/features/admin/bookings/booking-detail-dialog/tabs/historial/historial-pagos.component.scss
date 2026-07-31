@@ -81,8 +81,8 @@
     font-weight: var(--bw-weight-semibold);
     color: var(--bw-300, #046af4);
     padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    transition: background 0.15s;
+    border-radius: var(--bw-radius-sm);
+    transition: background var(--bw-transition-fast);
 
     &:hover { background: var(--bw-50, #f0f6ff); }
   }
@@ -107,7 +107,7 @@
   font-weight: var(--bw-weight-semibold);
   color: var(--bw-300, #046af4);
   padding: 0.375rem 0;
-  transition: color 0.15s;
+  transition: color var(--bw-transition-fast);
 
   &:hover { color: var(--bw-400, #0358cc); }
 }
