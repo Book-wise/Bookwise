@@ -521,7 +521,7 @@
             <button
               *ngFor="let day of daysOfWeek()"
               type="button"
-              class="day-btn"
+              class="bw-day-btn"
               [class.active]="isDaySelected(day.value)"
               (click)="toggleDay(day.value)">
               {{ day.label }}

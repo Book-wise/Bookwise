@@ -13,14 +13,14 @@
 .dialog-content {
   flex: 0 0 100%;
   width: 100%;
-  transition: transform 0.3s ease;
+  transition: transform var(--bw-transition-slow) ease;
 }
 
 .service-creation-panel {
   flex: 0 0 100%;
   width: 100%;
   padding: 0.25rem 0;
-  transition: transform 0.3s ease;
+  transition: transform var(--bw-transition-slow) ease;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -37,7 +37,7 @@
   flex: 0 0 100%;
   width: 100%;
   padding: 0.25rem 0;
-  transition: transform 0.3s ease;
+  transition: transform var(--bw-transition-slow) ease;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -70,7 +70,7 @@
   font-size: 0.75rem;
   color: #ffffff;
   background-color: var(--bw-warning);
-  transition: background-color 0.2s ease;
+  transition: background-color var(--bw-transition-base) ease;
 
   &.is-valid {
     background-color: var(--bw-success);
@@ -105,7 +105,7 @@
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s;
+  transition: background var(--bw-transition-fast);
 
   &:hover { background: #dbeafe; }
 
@@ -331,34 +331,6 @@
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
-}
-
-.day-btn {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  border: 1px solid var(--surface-border, #d1d5db);
-  background: var(--surface-card, white);
-  color: var(--text-color, #374151);
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    border-color: var(--bw-300);
-    color: var(--bw-300);
-  }
-
-  &.active {
-    background: var(--bw-300);
-    border-color: var(--bw-300);
-    color: white;
-  }
 }
 
 .repeat-freq-row {
