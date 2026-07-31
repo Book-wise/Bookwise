@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -36,7 +35,7 @@ const LOCATION_PALETTE = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CardModule, TagModule,
+    CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
     SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, ProviderDialogComponent,
   ],
   templateUrl: './providers-list.component.html',

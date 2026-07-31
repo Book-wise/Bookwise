@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
@@ -32,7 +31,7 @@ interface ConflictData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CardModule, TagModule,
+    CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
     SkeletonModule, ToggleSwitchModule, DialogModule, LocationDialogComponent,
   ],
   templateUrl: './locations-list.component.html',

@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -24,7 +23,6 @@ import { SkeletonModule } from 'primeng/skeleton';
     TableModule,
     ButtonModule,
     CardModule,
-    TagModule,
     InputTextModule,
     IconFieldModule,
     InputIconModule,

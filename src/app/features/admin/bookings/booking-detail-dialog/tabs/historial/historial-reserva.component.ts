@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Booking } from '@models';
 import { HistorialStore } from '@core/stores/historial.store';
@@ -9,7 +8,7 @@ import { TimezoneService } from '@services/timezone.service';
 @Component({
   selector: 'bw-historial-reserva',
   standalone: true,
-  imports: [CommonModule, TagModule, SkeletonModule],
+  imports: [CommonModule, SkeletonModule],
   templateUrl: './historial-reserva.component.html',
   styleUrl: './historial-reserva.component.scss',
 })
