@@ -5,6 +5,9 @@
 // `.bw-chip` — shared status badge pattern. Set `--chip-color` per variant;
 // background and border are derived via color-mix, so no hardcoded tints.
 //
+// Unified visual recipe with the legacy `.location-badge` (12% bg / 30%
+// border / 4px radius / larger type) for consistent contrast everywhere.
+//
 // Example:
 //   <span class="bw-chip bw-chip--online"><i class="pi pi-globe"></i> Online</span>
 
@@ -12,18 +15,18 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.7rem;
-  font-weight: var(--bw-weight-semibold);
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
   color: var(--chip-color);
-  background: color-mix(in srgb, var(--chip-color) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--chip-color) 25%, transparent);
-  border-radius: var(--bw-radius-pill);
-  padding: 0.125rem 0.375rem;
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
+  border-radius: var(--bw-radius-sm);
+  padding: 0.1rem 0.5rem;
   white-space: nowrap;
-  line-height: 1.2;
+  line-height: 1.4;
 
   i {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
   }
 
   &__dot {
@@ -53,5 +56,9 @@
 
   &--danger {
     --chip-color: var(--red-500, #ef4444);
+  }
+
+  &--secondary {
+    --chip-color: var(--text-color-secondary);
   }
 }

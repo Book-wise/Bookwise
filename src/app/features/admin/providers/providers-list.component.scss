@@ -99,19 +99,9 @@
   }
 }
 
-// ── Location badge (table + cards) ────────────────────────────────────
-
-.location-badge {
-  display: inline-block;
-  padding: 0.1rem 0.5rem;
-  border-radius: 4px;
-  font-size: var(--bw-font-table);
-  font-weight: var(--bw-weight-medium, 500);
-  line-height: 1.4;
-  background: color-mix(in srgb, var(--badge-color) 12%, transparent);
-  color: var(--badge-color);
-  border: 1px solid color-mix(in srgb, var(--badge-color) 30%, transparent);
-}
+// ── Location badge ────────────────────────────────────────────────────
+// Uses the shared .bw-chip recipe (see styles/_badges.scss) with a
+// per-location --chip-color. No local recipe needed.
 
 // ── Table vs Cards (responsive) ────────────────────────────────────────
 
