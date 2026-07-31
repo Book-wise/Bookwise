@@ -26,18 +26,18 @@ Chain strategy: feature-branch-chain
 
 ## Phase 1: Tokens & Partials Foundation
 
-- [ ] 1.1 `src/styles/_tokens.scss`: add radius (--bw-radius-sm/md/lg/pill 4/6/8/999px), transitions (--bw-transition-fast/base/slow 0.15/0.2/0.3s), --bw-shadow-popover, spacing scale (--bw-space-xs..xl 0.25..2rem incl. --bw-space-md: 1rem), --bw-fc-btn-* palette + --bw-fc-today-bg, --bw-surface-muted, sidebar shadows.
-- [ ] 1.2 Create `src/styles/_calendar.scss`: layout chrome, filters union, all .fc base rules, toolbar buttons + 425/374/768 media, status filter, blocked/now/slot-preview, tooltips, rewritten .hover-mirror-* (#3788d8→--bw-300); merged brand dark .fc last.
-- [ ] 1.3 Create `src/styles/_badges.scss`: .bw-chip (color-mix on --chip-color) + __dot + --online/--remaining/--success/--warning/--danger variants.
-- [ ] 1.4 Create `src/styles/_buttons.scss`: .bw-day-btn (circle toggle, pill radius, fast transition), .bw-icon-btn (ghost).
-- [ ] 1.5 Create `src/styles/_tables.scss`: .bw-detail-table/.bw-txn-table/.hpg-items-table/.hpg-txn-table verbatim.
-- [ ] 1.6 `src/styles.scss`: @use the 4 partials after cards; delete old dark .fc block (lines 173–198).
+- [x] 1.1 `src/styles/_tokens.scss`: add radius (--bw-radius-sm/md/lg/pill 4/6/8/999px), transitions (--bw-transition-fast/base/slow 0.15/0.2/0.3s), --bw-shadow-popover, spacing scale (--bw-space-xs..xl 0.25..2rem incl. --bw-space-md: 1rem), --bw-fc-btn-* palette + --bw-fc-today-bg, --bw-surface-muted, sidebar shadows.
+- [x] 1.2 Create `src/styles/_calendar.scss`: layout chrome, filters union, all .fc base rules, toolbar buttons + 425/374/768 media, status filter, blocked/now/slot-preview, tooltips, rewritten .hover-mirror-* (#3788d8→--bw-300); merged brand dark .fc last.
+- [x] 1.3 Create `src/styles/_badges.scss`: .bw-chip (color-mix on --chip-color) + __dot + --online/--remaining/--success/--warning/--danger variants.
+- [x] 1.4 Create `src/styles/_buttons.scss`: .bw-day-btn (circle toggle, pill radius, fast transition), .bw-icon-btn (ghost).
+- [x] 1.5 Create `src/styles/_tables.scss`: .bw-detail-table/.bw-txn-table/.hpg-items-table/.hpg-txn-table verbatim.
+- [x] 1.6 `src/styles.scss`: @use the 4 partials after cards; delete old dark .fc block (lines 173–198).
 
 ## Phase 2: Calendar Globalization
 
-- [ ] 2.1 `full-calendar.component.scss`: remove moved blocks; keep .event-details grid, .slot-menu, .cal-* skeletons, .calendar-loading overrides. Target ≤5kB.
-- [ ] 2.2 `provider-calendar.component.scss`: remove moved blocks; keep .event-details flex, .slot-menu, pink .fc-timegrid-slot:hover, skeletons. Target ~3–4kB.
-- [ ] 2.3 Build checkpoint: `npx ng build --configuration production` — both calendars pass 8kB error (no template changes expected).
+- [x] 2.1 `full-calendar.component.scss`: remove moved blocks; keep .event-details grid, .slot-menu, .cal-* skeletons, .calendar-loading overrides. Target ≤5kB. ✅ 14.11 kB → 4.54 kB
+- [x] 2.2 `provider-calendar.component.scss`: remove moved blocks; keep .event-details flex, .slot-menu, pink .fc-timegrid-slot:hover, skeletons. Target ~3–4kB. ✅ 9.96 kB → 2.04 kB
+- [x] 2.3 Build checkpoint: `npx ng build --configuration production` — both calendars pass 8kB error (no template changes expected). ✅ build clean; only patient-card 9.05 kB error remains (Phase 3, expected). Tests 224 pass / 2 pre-existing failures (clients-api spec, out of scope).
 
 ## Phase 3: Pattern Adoption
 
