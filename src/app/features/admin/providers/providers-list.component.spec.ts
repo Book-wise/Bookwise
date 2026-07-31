@@ -113,4 +113,60 @@ describe('ProvidersListComponent', () => {
       expect(pCard).toBeTruthy();
     });
   });
+
+  // ── Agenda button render (desktop table + mobile cards) ────────────
+
+  describe('agenda button rendering', () => {
+    function agendaButtons(nativeEl: HTMLElement): HTMLElement[] {
+      // Agenda buttons render in both the desktop table (icon-only) and the
+      // mobile cards (icon + label). Match by rendered content, not by input
+      // attributes (component inputs are not reflected to the host DOM).
+      return Array.from(nativeEl.querySelectorAll<HTMLElement>('p-button')).filter(
+        (btn) => btn.querySelector('i.pi-calendar') !== null || btn.textContent?.includes('Agenda'),
+      );
+    }
+
+    function renderWith(provider: Provider): HTMLElement {
+      // Load the data through the API mock so ngOnInit's loadProviders() yields
+      // the fixture instead of the beforeEach empty-list default.
+      mockProvidersApi.getProviders.mockReturnValue(of([provider]));
+      fixture.detectChanges();
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('enables the Agenda button with "Ver Agenda" tooltip when the provider has a location', () => {
+      const nativeEl = renderWith(baseProvider());
+
+      const buttons = agendaButtons(nativeEl);
+      expect(buttons.length).toBeGreaterThan(0);
+      for (const btn of buttons) {
+        const inner = btn.querySelector('button');
+        expect(inner).toBeTruthy();
+        expect(inner!.disabled).toBe(false);
+      }
+
+      buttons[0].dispatchEvent(new MouseEvent('mouseenter'));
+      fixture.detectChanges();
+      const tooltip = document.body.querySelector('.p-tooltip .p-tooltip-text');
+      expect(tooltip?.textContent?.trim()).toBe('Ver Agenda');
+    });
+
+    it('disables the Agenda button with "Sin sucursal asignada" tooltip when the provider has no location', () => {
+      const nativeEl = renderWith(baseProvider({ location: null }));
+
+      const buttons = agendaButtons(nativeEl);
+      expect(buttons.length).toBeGreaterThan(0);
+      for (const btn of buttons) {
+        const inner = btn.querySelector('button');
+        expect(inner).toBeTruthy();
+        expect(inner!.disabled).toBe(true);
+      }
+
+      buttons[0].dispatchEvent(new MouseEvent('mouseenter'));
+      fixture.detectChanges();
+      const tooltip = document.body.querySelector('.p-tooltip .p-tooltip-text');
+      expect(tooltip?.textContent?.trim()).toBe('Sin sucursal asignada');
+    });
+  });
 });
