@@ -1,9 +1,3 @@
-export const PAYMENT_STATUSES = [
-  { label: 'No pagado', value: 'unpaid', color: '#fca5a5', severity: 'danger' as const },
-  { label: 'Pago parcial', value: 'partial', color: '#fcd34d', severity: 'warn' as const },
-  { label: 'Pagado', value: 'paid', color: '#86efac', severity: 'success' as const },
-];
-
 export const BOOKING_STATUSES = [
   { labelKey: 'status.1', label: 'Reservado',  value: 1, color: '#93c5fd', severity: 'info' as const },
   { labelKey: 'status.2', label: 'Confirmado', value: 2, color: '#fb923c', severity: 'warn' as const },
