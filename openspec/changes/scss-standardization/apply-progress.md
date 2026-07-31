@@ -98,3 +98,64 @@ None in content. Noted at apply time:
 - Phase 5: `angular.json` anyComponentStyle warning 4→6kB + final verification (build/tests) + visual QA — PR 3 (from `feat/scss-wu2-patterns`).
 
 **Next recommended**: apply PR 3 (Phase 5: budget bump + final verify + visual QA) from `feat/scss-wu2-patterns`.
+
+---
+
+## Batch: PR 3 (Phase 5) — Budget Bump + Final Verification + Visual QA — FINAL
+
+**Status**: ✅ Complete — all 21 tasks done. Change ready for `sdd-verify`.
+**Branch**: `feat/scss-wu3-budget` (based on PR 2 branch `feat/scss-wu2-patterns` — feature-branch-chain, final slice)
+**Mode**: Strict TDD (relaxed per orchestration — structural config + verification gates; evidence via build/test regression, no unit layer for angular.json config)
+
+## Completed Tasks
+
+| Task | Status | Evidence |
+|------|--------|----------|
+| 4.3 tail (leftover) | [x] | `5f929b6` — 3 files uncommitted from PR 2 finished: `4px/6px` radii → `--bw-radius-sm/md`, `0.15s/0.2s` → `--bw-transition-fast/base` in payment-tab, historial-pagos, patient-card. Pure substitution |
+| 5.1 Budget bump | [x] | `628d8b7` — `angular.json` `anyComponentStyle` `maximumWarning` 4kB→**6kB**; `maximumError` stays **8kB** (verified via grep: `"type": "anyComponentStyle"` → warning 6kB / error 8kB) |
+| 5.2 Production build | [x] | `ng build --configuration production` — **zero errors**; component-style warnings: admin-layout 5.45, booking-form-dialog 5.37, payment-tab 4.44 all cleared by the bump; **patient-card 7.21kB still warns** (see Deviations) |
+| 5.3 Test regression | [x] | `ng test --no-watch` → **224 passed / 2 failed** — identical to baseline (clients-api.service.spec.ts pre-existing TestBed errors; do NOT use `--browsers=ChromeHeadless`, breaks Vitest) |
+| 5.4 Visual QA checklist | [x] | Documented below — 7 deliberate changes need human eyes (light + dark, ≤768px) |
+
+## Verification Evidence
+
+- **Build**: `npx ng build --configuration production` ✅ zero `anyComponentStyle` errors, 7.9s. Remaining warnings: patient-card 7.21kB (>6kB warning, <8kB error — design exception), initial bundle 810.78kB (out of scope per proposal), luxon CommonJS (pre-existing, unrelated to SCSS).
+- **Tests**: `npx ng test --no-watch` → **224 passed / 2 failed** — exact baseline match, zero new regressions (16 files: 15 pass, 1 fail = clients-api).
+- **Commit chain**: `5f929b6` (sweep tail) → `628d8b7` (budget) → `9e04fa1` (artifacts).
+
+## Deviations from Design
+
+- **patient-card remains a warning (7.21 kB > 6 kB)** — the batch gate demanded "zero component-style warnings" and expected patient-card "7.2kB under the 6kB warning", but 7.21 > 6.0 numerically. Per design, patient-card targets "~7.5kB (warning ok)" and the proposal explicitly excludes globalizing `bw-pc__*` internals to duck the budget. Every `bw-pc__*` class is live in the template (no dead weight left after 3.1). **Decision: keep as documented exception** — spec "SHOULD stay under 6kB" is non-binding; the MUST (8kB error) is met. Trim/globalize = follow-up task if maintainer wants zero warnings.
+
+## Visual QA Checklist (Task 5.4) — HUMAN VERIFICATION REQUIRED
+
+Run `npm start` (dev server) and check in **light + dark theme**, desktop + ≤768px. Each row = a deliberate change from the refactor:
+
+| # | Area | What changed | Check |
+|---|------|-------------|-------|
+| 1 | Calendar (full + provider), dark | Dark `.fc` now brand blue (`--bw-300`) instead of indigo `#667eea`; today bg uses `--bw-fc-today-bg`; event mirror hover `#3788d8` → `--bw-300` + `color-mix` | Toolbar buttons, "hoy" highlight, active button, mirror/drag hover pill+body — coherent brand blue, no purple/indigo remnants |
+| 2 | Calendar toolbar responsive | Shared media blocks (≤768 stack, ≤425 custom buttons) | Toolbar stacks cleanly on mobile; custom buttons (Nueva reserva/Blocker) still visible on desktop, hidden on ≤425px |
+| 3 | patient-card | Root `.bw-pc` → `bw-card bw-card--signature bw-pc` (border-left 3px brand blue); status badges 4px → pill (999px) via `.bw-chip`; edit button → ghost `.bw-icon-btn` | Signature border-left present; chips are pills (not 4px corners); "Completado" pack badge is BLUE (bw-chip--online), not green; ghost edit hover darkens |
+| 4 | payment-tab / historial-pagos | Cards layered on `.bw-card` (padding/shadow preserved via layout classes); tables from `_tables.scss`; badges → `.bw-chip` | Sale/historial cards keep their padding + shadow; header cards keep tinted bg; table headers align; "Completado"/"Online" chips readable in light+dark |
+| 5 | admin-dashboard | Stat value blue `#667eea` → brand `var(--bw-300)` | KPI values render brand blue (#046af4), no indigo |
+| 6 | booking-detail-dialog, mobile | `.bw-status-mobile` margin-bottom restored (`--bw-space-md` now defined — was silently dropped) | At ≤768px the status row has breathing room below it (1rem) |
+| 7 | booking-form-dialog + block-time-dialog | `.day-btn` → global `.bw-day-btn` | Day toggler still highlights selected day and toggles `.active` on click in BOTH dialogs |
+| 8 | provider-calendar | Pink select-hover `.fc-timegrid-slot:hover` stays component-scoped | Hovering a time slot still shows the pink highlight |
+
+**If any row regresses** (not merely looks different): record it in this file as a risk with the finding, and fix it in a follow-up commit on this branch before merge.
+
+## Risks
+
+- **CRITICAL (decision needed)**: patient-card 7.21kB warning is a **deliberate design exception** (proposal Out of Scope), NOT a regression. If the maintainer requires zero warnings, scope a follow-up: trim or globalize `bw-pc__*` internals.
+- QA pending: the 7 deliberate visual shifts in the checklist above are UNVERIFIED by human eyes — `sdd-verify` cannot validate pixel-level appearance.
+- Initial bundle 810.78kB warning unchanged (out of scope per proposal, JS libs).
+- Leftover uncommitted work from PR 2 (3-file token sweep) was carried into PR 3 as commit `5f929b6` — PR 2's diff on GitHub does NOT include it; PR 3's diff does. Reviewers should know it belongs to task 4.3.
+
+## Final State
+
+- **All 21 tasks `[x]`** in tasks.md.
+- Budget: warning 6kB / error 8kB (`angular.json`).
+- Build: zero errors. Tests: 224 pass / 2 pre-existing failures (clients-api, out of scope).
+- Docs synced: `D:\documentos\trabajo\bookwise\frontend\design-system-tokens.md` + `design-system-ui.md` (radius/transition/spacing/shadow/fc tokens, partials registry, budget).
+
+**Next recommended**: `sdd-verify` (or `sdd-archive` once verify passes).
