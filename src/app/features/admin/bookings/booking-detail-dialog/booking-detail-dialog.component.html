@@ -21,7 +21,7 @@
           <span class="booking-dialog-title">
             {{ booking.client?.first_name }} {{ booking.client?.last_name }}
           </span>
-          <p-tag [value]="booking.service?.name || ''" severity="secondary" class="booking-service-tag" />
+          <span class="bw-chip bw-chip--secondary booking-service-tag">{{ booking.service?.name || '' }}</span>
           <p-select
             [options]="statusOptions"
             [ngModel]="selectedStatusId()"

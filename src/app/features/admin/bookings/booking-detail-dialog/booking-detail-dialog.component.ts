@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
 import { TabsModule } from 'primeng/tabs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SelectModule } from 'primeng/select';
@@ -29,7 +28,6 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     FormsModule,
     DialogModule,
     ButtonModule,
-    TagModule,
     TabsModule,
     SkeletonModule,
     SelectModule,
@@ -75,16 +73,6 @@ export class BookingDetailDialogComponent {
   );
 
   readonly booking = computed(() => this.store.selectedBooking());
-
-  readonly statusSeverity = computed(() => {
-    const name = this.store.selectedBooking()?.status?.name?.toLowerCase();
-    if (!name) return undefined as any;
-    if (name.includes('confirm')) return 'success';
-    if (name.includes('cancel')) return 'danger';
-    if (name.includes('pendiente') || name.includes('espera')) return 'warn';
-    if (name.includes('asiste') || name.includes('completa')) return 'info';
-    return 'secondary';
-  });
 
   open(booking: Booking, tab: BookingTab = 'pago', scrollToTxn = false): void {
     this.store.selectBooking(booking);
