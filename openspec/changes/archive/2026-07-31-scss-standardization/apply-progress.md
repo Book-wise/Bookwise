@@ -220,3 +220,9 @@ Run `npm start` (dev server) and check in **light + dark theme**, desktop + ≤7
 ### Post-verify QA adjustment (contrast)
 
 - **`.bw-chip` darkened**: background `color-mix 12%` → **18%**, border `30%` → **35%`** (`_badges.scss`) — maintainer feedback: chips looked too transparent. Applies globally to every badge (single recipe). Prod build re-verified: zero errors, same 3 baseline warnings.
+
+### Post-archive fix (historial-reserva chip color)
+
+- **Root cause**: `historial-reserva` bound `[style.--chip-color]="booking.status?.color"` — the backend status colors are PASTEL (`#93c5fd`, `#86efac`, `#fca5a5`...), so `color-mix(pastel 18%, transparent)` was double-washed → invisible chip.
+- **Fix**: migrated to the same strong variant classes as the rest of the system — `statusChipClass()` wrapper delegating to `bookingStatusChipClass(statusName, statusId)` in `historial-reserva.component.ts` + `[class]` binding in the template. Now consistent with calendar/others (single recipe, strong colors).
+- **Verification**: prod build zero errors; full suite unchanged (230 passed / 2 pre-existing excluded clients-api).
