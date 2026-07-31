@@ -59,3 +59,14 @@ Chain strategy: feature-branch-chain
 - [x] 5.2 `npx ng build --configuration production` passes without errors/warnings from touched components. ✅ zero errors; 3/4 warnings cleared by bump; **patient-card 7.21kB remains a warning** — design-intended exception (proposal Out of Scope "stays ~7.5kB"), under 8kB error
 - [x] 5.3 `npx ng test --no-watch` — zero regressions. ✅ 224 passed / 2 failed (identical to baseline — pre-existing clients-api TestBed failures)
 - [x] 5.4 Visual QA (light+dark, ≤768px): checklist documented in apply-progress — 7 deliberate changes for human verification.
+
+## Phase 6: Badge Standardization Extension (p-tag → bw-chip)
+
+- [x] 6.1 Shared chip-class helpers with spec (Strict TDD): `bookingStatusChipClass` + `salePaymentChipClass` pure functions in `booking-statuses.ts`, spec-first (`booking-statuses.spec.ts`, +6 tests → 230 passed). ✅ (`c2b6eb2`)
+- [x] 6.2 `bw-chip--secondary` variant in `_badges.scss` (`var(--text-color-secondary)`, theme-aware) + drop dead legacy `.location-badge` recipe. ✅ (`c2b6eb2`)
+- [x] 6.3 clients/packs/locations/providers active-inactive tags → `.bw-chip` with `[class]` ternary. ✅ (`b499ca2`)
+- [x] 6.4 full-calendar + provider-calendar status tags → `.bw-chip` via `getStatusChipClass` (delegates to shared helper); unknown status → neutral `bw-chip--secondary`. ✅ (`de8479c`)
+- [x] 6.5 historial-pagos + payment-tab status tags → `.bw-chip` via `salePaymentChipClass`; historial-reserva → dynamic `[style.--chip-color]` with fallback. ✅ (`585639b`)
+- [x] 6.6 booking-detail service tag → `bw-chip--secondary booking-service-tag`; dead `statusSeverity` computed removed. ✅ (`32dcf81`)
+- [x] 6.7 Remove unused `TagModule` imports from all 10 components — zero `p-tag` / `TagModule` in src. ✅ (`9551ee5` + absorbed)
+- [x] 6.8 Verification: grep zero p-tag; tests 230 passed / 2 pre-existing failures; prod build zero errors. ✅

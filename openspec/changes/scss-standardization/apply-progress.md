@@ -159,3 +159,60 @@ Run `npm start` (dev server) and check in **light + dark theme**, desktop + ≤7
 - Docs synced: `D:\documentos\trabajo\bookwise\frontend\design-system-tokens.md` + `design-system-ui.md` (radius/transition/spacing/shadow/fc tokens, partials registry, budget).
 
 **Next recommended**: `sdd-verify` (or `sdd-archive` once verify passes).
+
+---
+
+## Batch: WU4 (Extension — PR 4) — p-tag → .bw-chip Badge Standardization
+
+**Status**: ✅ Complete (extension: ALL remaining `p-tag` usages migrated to the single `.bw-chip` recipe)
+**Branch**: `feat/scss-wu4-badges` (stacked on PR 3 branch `feat/scss-wu3-budget` — feature-branch-chain, extension slice)
+**Mode**: Strict TDD (genuine RED→GREEN→REFACTOR — helpers extracted to pure functions with spec written first)
+
+## Completed Tasks (Phase 6 extension)
+
+| Task | Status | Evidence |
+|------|--------|----------|
+| 6.1 Shared chip-class helpers + spec (TDD) | [x] | `c2b6eb2` — RED: `booking-statuses.spec.ts` fails (TS2305 no exported member); GREEN: `bookingStatusChipClass` + `salePaymentChipClass` in `booking-statuses.ts`, spec 230/232 green. +6 tests (224 → 230 passed) |
+| 6.2 `.bw-chip--secondary` variant + legacy `.location-badge` dead recipe dropped | [x] | `c2b6eb2` — `_badges.scss` + `providers-list.component.scss` (leftover uncommitted dead-CSS from the location-badge migration, badge-scoped, carried into WU4) |
+| 6.3 clients/packs/locations/providers active/inactive tags | [x] | `b499ca2` — 6 sites → `.bw-chip` + `[class]` ternary (`bw-chip--success/--danger`) |
+| 6.4 calendar status tags | [x] | `de8479c` — both calendars delegate to `bookingStatusChipClass` via `getStatusChipClass`; unknown status now `bw-chip--secondary` (was blue `info` tag) |
+| 6.5 historial/payment status tags | [x] | `585639b` — historial-pagos (2) + payment-tab delegate to `salePaymentChipClass`; historial-reserva uses `[style.--chip-color]` dynamic backend color with `?? 'var(--text-color-secondary)'` fallback |
+| 6.6 service tag → `bw-chip--secondary` | [x] | `32dcf81` — booking-detail header service tag; dead `statusSeverity` computed removed (unused) |
+| 6.7 TagModule imports removed | [x] | `9551ee5` (+ absorbed into `de8479c`/`585639b`/`32dcf81` via whole-file staging) — zero `TagModule` / zero `p-tag` remain in src (only intentional doc comment in booking-statuses.ts) |
+
+## Verification Evidence
+
+- **Grep**: `p-tag` and `TagModule` = 0 usage sites in `src/` (one intentional doc comment in `booking-statuses.ts` explains the mapping).
+- **Tests**: `npx ng test --no-watch` → **230 passed / 2 failed** = baseline 224 + 6 new spec tests; the 2 failures are the pre-existing clients-api TestBed errors. Zero new regressions.
+- **Build**: `npx ng build --configuration production` → **zero errors**. Only known/expected warnings: initial bundle 810.85 kB (out of scope), patient-card 7.21 kB (documented exception), luxon CommonJS (pre-existing).
+- **Commit chain**: `c2b6eb2` (helpers + variant, TDD) → `b499ca2` (lists) → `de8479c` (calendars) → `585639b` (historial/payment) → `32dcf81` (service tag) → `9551ee5` (TagModule sweep).
+
+## TDD Cycle Evidence (Phase 6)
+
+| Task | RED | GREEN | REFACTOR |
+|------|-----|-------|----------|
+| 6.1 helpers | ✅ spec written first — failed with `TS2305: no exported member 'bookingStatusChipClass'` | ✅ functions implemented — spec + suite green (230/232) | ✅ 4 duplicate helper impls collapsed into 2 shared pure functions; components delegate |
+| 6.2–6.7 | N/A — presentational class swaps in templates + CSS; no behavior to test beyond helper mapping (covered by 6.1); verified via grep (zero p-tag) + full suite + prod build | ✅ | — |
+
+## Deviations from Design
+
+- **Helpers extracted to shared pure functions** (`booking-statuses.ts`) instead of per-component rewrites: the 4 duplicate severity helpers (2 calendars + historial-pagos + payment-tab) became 2 exported pure functions, giving a genuine TDD cycle (spec-first) and single-source mapping. Component methods (`getStatusChipClass`, `saleStatusChipClass`, `statusChipClass`) now delegate.
+- **Fallback color change**: unknown booking status previously rendered a blue `info` tag; now renders neutral `bw-chip--secondary` (gray) — semantically correct for "Sin estado". Deliberate, needs visual QA.
+- **Dead `statusSeverity` computed** (booking-detail-dialog) removed — it was unused since the header stopped using a status tag; no template referenced it.
+- **5 of 10 TagModule removals landed inside their migration commits** (whole-file staging) — commit `9551ee5` covers the remaining 5.
+- **`.location-badge` dead recipe removal** was already present uncommitted in the wu3 working tree (leftover from the location-badge migration); badge-scoped so carried into WU4 commit `c2b6eb2`.
+
+## Risks
+
+- **Visual QA pending**: 3 deliberate visual shifts — (1) all tags are now pills with 12%/30% color-mix bg/border (vs PrimeNG flat severity colors); (2) unknown status blue → gray; (3) service tag gray secondary (vs PrimeNG gray). All consistent with the established `.bw-chip` recipe, but human eyes needed in light+dark.
+- **`salePaymentChipClass` reuses 'partial' → warn semantics** — identical mapping to the old helpers, no drift.
+- Pre-existing baseline unchanged: 2 clients-api spec failures, patient-card 7.21 kB warning, initial bundle 810 kB, luxon CommonJS — all out of scope.
+
+## Final State (after WU4)
+
+- **Zero `p-tag` / `TagModule` in src** — ONE badge recipe (`.bw-chip`) in the whole system.
+- Tests: **230 passed / 2 pre-existing failures**. Build: **zero errors**.
+- Docs synced: `design-system-ui.md` Badges section + `calendar-bookings.md` (status badge note).
+- Branch `feat/scss-wu4-badges` stacked on `feat/scss-wu3-budget` per feature-branch-chain (PR 4 targets PR 3 branch).
+
+**Next recommended**: `sdd-verify` (covers the whole change incl. WU4 extension).
