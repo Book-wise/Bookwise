@@ -4,6 +4,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Booking } from '@models';
 import { HistorialStore } from '@core/stores/historial.store';
 import { TimezoneService } from '@services/timezone.service';
+import { bookingStatusChipClass } from '../../../constants/booking-statuses';
 
 @Component({
   selector: 'bw-historial-reserva',
@@ -25,6 +26,10 @@ export class HistorialReservaComponent {
 
   formatCreatedAt(iso: string | undefined): string {
     return iso ? this.tzService.formatCardDate(iso) : '—';
+  }
+
+  statusChipClass(statusName: string | undefined, statusId?: number): string {
+    return bookingStatusChipClass(statusName, statusId);
   }
 
   actionLabel(booking: Booking): string {
