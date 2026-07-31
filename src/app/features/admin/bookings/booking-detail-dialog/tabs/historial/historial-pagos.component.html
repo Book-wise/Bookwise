@@ -18,10 +18,9 @@
               <span class="hpg-card__date">
                 {{ lastTransactionDate(sale) | date:'EEEE, d MMMM yyyy - HH:mm' }}
               </span>
-              <p-tag
-                [value]="saleStatusLabel(sale.payment_status)"
-                [severity]="saleStatusSeverity(sale.payment_status)"
-              />
+              <span class="bw-chip" [class]="saleStatusChipClass(sale.payment_status)">
+                {{ saleStatusLabel(sale.payment_status) }}
+              </span>
             </div>
 
             <div class="hpg-card__body">
@@ -71,10 +70,9 @@
       <!-- Header card -->
       <div class="bw-card bw-card--header hpg-detail-card hpg-detail-card--header">
         <div class="hpg-detail-header">
-          <p-tag
-            [value]="saleStatusLabel(sale.payment_status)"
-            [severity]="saleStatusSeverity(sale.payment_status)"
-          />
+          <span class="bw-chip" [class]="saleStatusChipClass(sale.payment_status)">
+            {{ saleStatusLabel(sale.payment_status) }}
+          </span>
           @if (sale.wc_order_id) {
             <span class="bw-chip bw-chip--online">
               <i class="pi pi-globe"></i>

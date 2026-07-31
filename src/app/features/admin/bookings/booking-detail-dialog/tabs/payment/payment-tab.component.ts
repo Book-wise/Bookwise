@@ -7,7 +7,6 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { TextareaModule } from 'primeng/textarea';
-import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
@@ -18,6 +17,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { PAYMENT_METHOD_OPTIONS } from '../../../constants/payment-methods';
+import { salePaymentChipClass } from '../../../constants/booking-statuses';
 
 export interface SaleItem {
   name: string;
@@ -51,7 +51,7 @@ interface SaleVm {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    SkeletonModule, ButtonModule, MenuModule, TextareaModule, TagModule,
+    SkeletonModule, ButtonModule, MenuModule, TextareaModule,
     TableModule, InputNumberModule, SelectModule,
     BwCurrencyPipe,
   ],
@@ -154,12 +154,7 @@ export class PaymentTabComponent {
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
-  readonly statusSeverity = computed((): 'success' | 'warn' | 'danger' => {
-    const s = this.vm().sale?.status;
-    if (s === 'paid')    return 'success';
-    if (s === 'partial') return 'warn';
-    return 'danger';
-  });
+  readonly statusChipClass = computed((): string => salePaymentChipClass(this.vm().sale?.status));
 
   readonly statusLabel = computed((): string => {
     const s = this.vm().sale?.status;

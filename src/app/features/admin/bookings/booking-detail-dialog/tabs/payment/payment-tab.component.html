@@ -61,7 +61,7 @@
         }
       </div>
       <div class="sale-header__actions">
-        <p-tag [value]="statusLabel()" [severity]="statusSeverity()" />
+        <span class="bw-chip" [class]="statusChipClass()">{{ statusLabel() }}</span>
         @if (isOnline()) {
           <span class="bw-chip bw-chip--online">
             <i class="pi pi-globe"></i>
