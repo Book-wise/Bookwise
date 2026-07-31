@@ -26,6 +26,17 @@
   --bw-success: #22c55e;
   --bw-warning: #f59e0b;
 
+  // ── Chip text colors ────────────────────────────────────────
+  // Status chips render a DARK text variant on the light 18% color-mix tint
+  // (WCAG AA ≥ 4.5:1 in light mode). Overridden in dark-theme with light text
+  // on the dark tint. `--chip-color` (the accent) stays unchanged.
+  --bw-chip-text-online:    #1d4ed8;   // blue-700
+  --bw-chip-text-remaining: #9a3412;   // orange-800
+  --bw-chip-text-success:   #166534;   // green-800
+  --bw-chip-text-warning:   #92400e;   // amber-800
+  --bw-chip-text-danger:    #991b1b;   // red-800
+  --bw-chip-text-secondary: #374151;   // gray-700
+
   // ── PrimeNG compat ────────────────────────────
   --primary-color: var(--bw-300);
 
@@ -52,6 +63,7 @@
   // ── Surfaces (light mode) ─────────────────────
   --surface-ground: #f0f5ff;
   --surface-card:   #ffffff;
+  --surface-border: #e5e7eb;   // neutral light border (overridden in dark-theme)
   --bw-surface-muted: #f3f4f6;   // neutral muted surface (FullCalendar grid, list hover)
 
   // ── Radius Scale ──────────────────────────────────────────────────────────

@@ -17,7 +17,11 @@
   gap: 0.25rem;
   font-size: var(--bw-font-table);
   font-weight: var(--bw-weight-medium);
-  color: var(--chip-color);
+  // Status variants set a theme-aware `--chip-text-color` (dark in light mode,
+  // light in dark mode) so text keeps WCAG AA contrast on the tinted
+  // background. Decorative chips (inline `--chip-color`) fall back to the
+  // accent color — unchanged recipe.
+  color: var(--chip-text-color, var(--chip-color));
   background: color-mix(in srgb, var(--chip-color) 18%, transparent);
   border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
   border-radius: var(--bw-radius-sm);
@@ -38,27 +42,35 @@
   }
 
   // ── Variants ──────────────────────────────────────────────────────────────
+  // `--chip-color` keeps the accent (drives bg tint, border and dot);
+  // `--chip-text-color` is the theme-aware AA-compliant text value.
   &--online {
     --chip-color: var(--blue-600, #2563eb);
+    --chip-text-color: var(--bw-chip-text-online);
   }
 
   &--remaining {
     --chip-color: var(--orange-600, #f97316);
+    --chip-text-color: var(--bw-chip-text-remaining);
   }
 
   &--success {
     --chip-color: var(--bw-success, #22c55e);
+    --chip-text-color: var(--bw-chip-text-success);
   }
 
   &--warning {
     --chip-color: var(--bw-warning, #f59e0b);
+    --chip-text-color: var(--bw-chip-text-warning);
   }
 
   &--danger {
     --chip-color: var(--red-500, #ef4444);
+    --chip-text-color: var(--bw-chip-text-danger);
   }
 
   &--secondary {
     --chip-color: var(--text-color-secondary);
+    --chip-text-color: var(--bw-chip-text-secondary);
   }
 }

@@ -90,6 +90,14 @@ body.dark-theme {
   --text-heading:         var(--text-color);
   --text-label:           #cbd5e1;
 
+  // Chip text: light variants on the dark 18% tint (WCAG AA on dark surfaces)
+  --bw-chip-text-online:    #93c5fd;   // blue-300
+  --bw-chip-text-remaining: #fdba74;   // orange-300
+  --bw-chip-text-success:   #86efac;   // green-300
+  --bw-chip-text-warning:   #fcd34d;   // amber-300
+  --bw-chip-text-danger:    #fca5a5;   // red-300
+  --bw-chip-text-secondary: #cbd5e1;   // slate-300
+
   background: var(--surface-ground);
   color: var(--text-color);
 
