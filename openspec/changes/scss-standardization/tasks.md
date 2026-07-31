@@ -41,17 +41,17 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Pattern Adoption
 
-- [ ] 3.1 patient-card: root → `bw-card bw-card--signature bw-pc`; badges → .bw-chip; .bw-pc__edit-btn → .bw-icon-btn; bw-pc__* stay scoped. Verify parity.
-- [ ] 3.2 payment-tab: prepend bw-card on 10 .sale-card spots; --header adds box-shadow:none; badges → .bw-chip--online/--remaining; tables → _tables.scss.
-- [ ] 3.3 historial-pagos: 4 .hpg-* cards → bw-card (+bw-card--header at line 72); tables → _tables.scss; badges → .bw-chip.
-- [ ] 3.4 booking-form-dialog.html:524 + block-time-dialog.html:212: .day-btn → .bw-day-btn; delete scss .day-btn block. Keep the two .dialog-content blocks split.
-- [ ] 3.5 booking-detail-dialog: .bw-back-btn → .bw-icon-btn; verify --bw-space-md restores .bw-status-mobile margin.
+- [x] 3.1 patient-card: root → `bw-card bw-card--signature bw-pc`; badges → .bw-chip; .bw-pc__edit-btn → .bw-icon-btn; bw-pc__* stay scoped. Verify parity. ✅ 9.05 kB ERROR → 7.13 kB warning (`7d87daf`)
+- [x] 3.2 payment-tab: prepend bw-card on 10 .sale-card spots; --header adds box-shadow:none; badges → .bw-chip--online/--remaining; tables → _tables.scss. ✅ 5.48 → 4.41 kB (`7d87daf`)
+- [x] 3.3 historial-pagos: 4 .hpg-* cards → bw-card (+bw-card--header at line 72); tables → _tables.scss; badges → .bw-chip. ✅ 4.57 → <4 kB (`7d87daf`)
+- [x] 3.4 booking-form-dialog.html:524 + block-time-dialog.html:212: .day-btn → .bw-day-btn; delete scss .day-btn block. Keep the two .dialog-content blocks split. ✅ (`d4a69f2`)
+- [x] 3.5 booking-detail-dialog: .bw-back-btn → .bw-icon-btn; verify --bw-space-md restores .bw-status-mobile margin. ✅ (`c885699`)
 
 ## Phase 4: Token Sweep
 
-- [ ] 4.1 `admin-layout.component.scss`: literal shadows → --bw-shadow-sidebar-* tokens.
-- [ ] 4.2 `admin-dashboard.component.scss`: #667eea → var(--bw-300); grays → text tokens.
-- [ ] 4.3 Grep-verify touched files: no new literal radius/transition/shadow/colors.
+- [x] 4.1 `admin-layout.component.scss`: literal shadows → --bw-shadow-sidebar-* tokens. ✅ (`d4a69f2`)
+- [x] 4.2 `admin-dashboard.component.scss`: #667eea → var(--bw-300); grays → text tokens. ✅ (`d4a69f2`)
+- [x] 4.3 Grep-verify touched files: no new literal radius/transition/shadow/colors. ✅ (`d4a69f2`; non-exact literals flagged in apply-progress)
 
 ## Phase 5: Budget & Verification
 

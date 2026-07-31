@@ -51,3 +51,50 @@ None for CSS content — pure moves per design sections 2.1–2.2. Noted at appl
 - Phase 5: angular.json budget bump 4→6 kB + final verification + visual QA — PR 3.
 
 **Next recommended**: apply PR 2 (Phases 3–4) from `feat/scss-standardization` tracker.
+
+---
+
+## Batch: PR 2 (Phases 3–4) — Pattern Adoption + Token Sweep
+
+**Status**: ✅ Complete (work units: 3.1–3.3 pattern adoption, 3.4–3.5 dialog patterns, 4.1–4.3 token sweep)
+**Branch**: `feat/scss-wu2-patterns` (based on PR 1 branch `feat/scss-wu1-foundation`)
+**Mode**: Strict TDD (relaxed per orchestration — pure CSS extraction/class swaps, zero behavior change; verified via build + test regression checks)
+
+## Completed Tasks
+
+| Task | Status | Evidence |
+|------|--------|----------|
+| 3.1 patient-card | [x] | `7d87daf` — root → `bw-card bw-card--signature bw-pc`; badges → `.bw-chip--success/--online/--warning`; edit btn → `.bw-icon-btn`; dropped 4 dead blocks (`__badge`, `__empty`, `__skeleton-list`, `__booking-status-dot`) + status recipes; `bw-pc__*` internals stay scoped. 9.05 kB ERROR → **7.13 kB** warning |
+| 3.2 payment-tab | [x] | `7d87daf` — 10 `.sale-card` spots → `bw-card` layered (incl. `--header` at header spot); badges → `.bw-chip--online/--remaining`; `.bw-detail-table`/`.bw-txn-table` → global `_tables.scss`. 5.48 → **4.41 kB** |
+| 3.3 historial-pagos | [x] | `7d87daf` — 4 `.hpg-*` cards → `bw-card` (+`--header` at detail-header spot); badges → `.bw-chip`; tables → `_tables.scss`. 4.57 → **<4 kB** (dropped off warning list) |
+| 3.4 dialogs day-btn | [x] | `d4a69f2` — `.day-btn` → global `.bw-day-btn` (identical recipe) in booking-form-dialog.html:524 + block-time-dialog.html:212; local `.day-btn` blocks deleted from both SCSS. **The two `.dialog-content` blocks stay split** (transform-owner top, layout ~line 208) |
+| 3.5 booking-detail back-btn | [x] | `c885699` — `.bw-back-btn` → `.bw-icon-btn` (+ icon-size hook); verified `--bw-space-md` (defined `_tokens.scss:71`) restores `.bw-status-mobile` margin at scss:153 |
+| 4.1 admin-layout shadows | [x] | `d4a69f2` — 3 literal shadows → `--bw-shadow-sidebar-toggle/tab/tab-hover` (already defined in `_tokens.scss:177–179`) |
+| 4.2 admin-dashboard colors | [x] | `d4a69f2` — `#667eea` → `var(--bw-300)` (per `_calendar.scss` precedent "legacy indigo → brand blue"); `#333/#666/#888` → `--text-heading`/`--text-color-secondary` |
+| 4.3 literal sweep | [x] | `d4a69f2` — tokenized exact matches in touched files: radii 4/6/8px → `--bw-radius-sm/md/lg`, transitions 0.15/0.2/0.3s → `--bw-transition-fast/base/slow` |
+
+## Verification Evidence
+
+- **Build**: `npx ng build --configuration production` ✅ — zero errors; patient-card no longer an 8kB ERROR.
+- **Remaining warnings** (expected until Phase 5.1 raises warning budget 4→6kB): patient-card 7.21 kB, admin-layout 5.45 kB, booking-form-dialog 5.37 kB, payment-tab 4.44 kB. Initial-bundle 810.78 kB warning unchanged (out of scope per proposal).
+- **Tests**: `npx ng test --no-watch` → **224 passed / 2 failed** — identical to baseline (`clients-api.service.spec.ts` pre-existing TestBed error, out of scope).
+
+## Deviations from Design
+
+None in content. Noted at apply time:
+- Global `.bw-icon-btn` hover bg is `--surface-100` vs local `--surface-ground`; base color `--text-color-secondary` vs local `--text-color` — imperceptible ghost-button shift (back arrow slightly dimmer, darkens on hover).
+- `--bw-shadow-sidebar-*` tokens were **already defined** in `_tokens.scss` (PR 1) — 4.1 was a pure mapping, no token additions needed.
+- Non-exact literals intentionally left (no token exists): `0.18s` transition, `10px` radius (payment-tab `.sale-body`, admin-layout), `1px` underline, `50%` circles, `0` resets, partial radii (`6px 6px 0 0`).
+
+## Notes / Risks for Review
+
+- **Chip visual shift**: status badges (radius 4px → pill, `color-mix` bg) — deliberate design choice from PR 1 `_badges.scss`; needs visual QA (Phase 5.4).
+- **patient-card "Completado" (blue) pack badge** → `bw-chip--online` (blue variant) — closest blue match; semantic name differs from visual role. QA-check in light+dark.
+- **`.hpg-back-btn` / `.bw-pc__back`** left component-scoped (text-link rows, not icon circles) — outside task scope.
+- **Vitest discovery**: this project runs Vitest (karma-style output); passing `--browsers=ChromeHeadless` breaks the run. Always use plain `npx ng test --no-watch`.
+
+## Pending (NOT in this batch)
+
+- Phase 5: `angular.json` anyComponentStyle warning 4→6kB + final verification (build/tests) + visual QA — PR 3 (from `feat/scss-wu2-patterns`).
+
+**Next recommended**: apply PR 3 (Phase 5: budget bump + final verify + visual QA) from `feat/scss-wu2-patterns`.

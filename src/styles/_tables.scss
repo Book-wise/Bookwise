@@ -2,8 +2,9 @@
 // Bookwise — Shared Table Patterns
 // ============================================
 //
-// Extracted verbatim from payment-tab and historial-pagos (zero template change).
+// Extracted verbatim from payment-tab and historial-pagos.
 // Card tables share the same base recipe: no borders, dense rows.
+// Components consume these globally — no local table recipes remain.
 
 // ── Booking detail items / transactions (payment-tab) ────────────────────────
 
