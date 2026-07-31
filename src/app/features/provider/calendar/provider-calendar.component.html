@@ -167,10 +167,9 @@
       </div>
       <div class="detail-row">
         <span class="label">Estado:</span>
-        <p-tag
-          [value]="booking.status?.name || 'Sin estado'"
-          [severity]="getStatusSeverity(booking.status?.name)"
-        ></p-tag>
+        <span class="bw-chip" [class]="getStatusChipClass(booking.status?.name)">
+          {{ booking.status?.name || 'Sin estado' }}
+        </span>
       </div>
       @if (booking.notes) {
         <div class="detail-row">

@@ -19,7 +19,6 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -33,7 +32,7 @@ import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialo
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
-import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
+import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
@@ -67,7 +66,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     ButtonModule,
     SelectModule,
     MultiSelectModule,
-    TagModule,
     DialogModule,
     SkeletonModule,
     BookingDialogComponent,
@@ -867,25 +865,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => this.showEventDialog.set(true), 100);
   }
 
-  getStatusSeverity(
-    statusName?: string,
-    statusId?: number,
-  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
-    // Primero buscar por status_id (más confiable)
-    if (statusId) {
-      const status = BOOKING_STATUSES.find((s) => s.value === statusId);
-      if (status) {
-        // Mapear 'help' a 'warn' ya que PrimeNG no soporta 'help'
-        return status.severity === 'help' ? 'warn' : status.severity;
-      }
-    }
-    // Fallback por nombre
-    const status = BOOKING_STATUSES.find(
-      (s) => s.label.toLowerCase() === statusName?.toLowerCase(),
-    );
-    if (status) {
-      return status.severity === 'help' ? 'warn' : status.severity;
-    }
-    return 'info';
+  getStatusChipClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipClass(statusName, statusId);
   }
 }
