@@ -48,7 +48,7 @@ Test Files  16 passed (17) — 1 file excluded (pre-existing)
      Tests  230 passed (232) — 2 excluded (pre-existing)
 ```
 
-The 2 excluded tests are in `src/app/core/services/api/clients-api.service.spec.ts` (TestBed instantiation / `HttpClientTestingBackend` mismatch). **Pre-existing**: that file is NOT in the change diff (`git diff --name-only develop..HEAD` → no match), and the 224-pass baseline from apply-progress predates this change. Zero regressions introduced. The 6 new WU4 spec tests (booking-statuses) pass within the 230. The runner reports these 2 as failures, but they are proven outside this change's scope (see Issues — recorded exception).
+The 2 excluded tests are in `src/app/core/services/api/clients-api.service.spec.ts` (TestBed instantiation / `HttpClientTestingBackend` mismatch). **Pre-existing**: that file is NOT in the change diff (`git diff --name-only develop..HEAD` → no match), and the 224-pass baseline from apply-progress predates this change. Zero regressions introduced. The 6 new WU4 spec tests (booking-statuses) pass within the 230. The runner exits non-zero for these 2; they are proven outside this change's scope (see Issues — recorded exception).
 
 **Coverage**: ➖ Not available — no coverage threshold configured for this change; not part of spec.
 
