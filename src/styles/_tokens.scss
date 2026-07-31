@@ -29,6 +29,15 @@
   // ── PrimeNG compat ────────────────────────────
   --primary-color: var(--bw-300);
 
+  // ── FullCalendar button palette ───────────────
+  --bw-fc-btn-bg:           #3b82f6;
+  --bw-fc-btn-border:       #3b82f6;
+  --bw-fc-btn-hover-bg:     #2563eb;
+  --bw-fc-btn-hover-border: #2563eb;
+  --bw-fc-btn-active-bg:    #1d4ed8;
+  --bw-fc-btn-active-border:#1d4ed8;
+  --bw-fc-today-bg:         rgba(59, 130, 246, 0.1);
+
   // ── Sidebar (always dark — theme-invariant) ───
   --sidebar-bg-from:      var(--bw-900);
   --sidebar-bg-to:        var(--bw-600);
@@ -43,6 +52,25 @@
   // ── Surfaces (light mode) ─────────────────────
   --surface-ground: #f0f5ff;
   --surface-card:   #ffffff;
+  --bw-surface-muted: #f3f4f6;   // neutral muted surface (FullCalendar grid, list hover)
+
+  // ── Radius Scale ──────────────────────────────────────────────────────────
+  --bw-radius-sm:   4px;
+  --bw-radius-md:   6px;
+  --bw-radius-lg:   8px;
+  --bw-radius-pill: 999px;
+
+  // ── Transition Durations ──────────────────────────────────────────────────
+  --bw-transition-fast: 0.15s;
+  --bw-transition-base: 0.2s;
+  --bw-transition-slow: 0.3s;
+
+  // ── Spacing Scale (rem at 16px base) ──────────────────────────────────────
+  --bw-space-xs: 0.25rem;
+  --bw-space-sm: 0.5rem;
+  --bw-space-md: 1rem;
+  --bw-space-lg: 1.5rem;
+  --bw-space-xl: 2rem;
 
   // ── Text ──────────────────────────────────────
   --text-color:           #1a2744;
@@ -141,6 +169,12 @@
 
   // ── Shadows ─────────────────────────────────────────────────────────────
   --bw-shadow-card:           0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --bw-shadow-popover:        0 4px 12px rgba(0, 0, 0, 0.15);
   --bw-dialog-header-shadow:  0 6px 10px -6px rgba(0, 0, 0, 0.08);
   --bw-dialog-content-shadow: inset 0 -18px 14px -14px rgba(0, 0, 0, 0.07);
+
+  // ── Sidebar shadows (always-dark chrome) ─────
+  --bw-shadow-sidebar-toggle:     0 2px 8px rgba(1, 38, 99, 0.3);
+  --bw-shadow-sidebar-tab:        0 2px 8px rgba(1, 38, 99, 0.45);
+  --bw-shadow-sidebar-tab-hover:  0 3px 12px rgba(4, 106, 244, 0.5);
 }
