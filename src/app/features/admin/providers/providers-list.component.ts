@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -10,6 +11,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location, Provider } from '@models';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
@@ -44,6 +46,8 @@ const LOCATION_PALETTE = [
 export class ProvidersListComponent implements OnInit {
   private providersApi = inject(ProvidersApiService);
   private httpError = inject(HttpErrorService);
+  private router = inject(Router);
+  private calNav = inject(CalendarNavigationService);
   protected refStore = inject(ReferenceStore);
 
   // ── Data ────────────────────────────────────────────────────────────────
@@ -187,6 +191,13 @@ export class ProvidersListComponent implements OnInit {
   onEditRequested(): void {
     const prov = this.selectedProvider();
     if (prov) this.openEdit(prov);
+  }
+
+  // ── Calendar navigation ──────────────────────────────────────────────────
+
+  goToAgenda(provider: Provider): void {
+    if (!provider.location) return;
+    this.calNav.navigateToCalendar(provider.location.id, provider.id, this.router);
   }
 
   // ── Filter handlers ──────────────────────────────────────────────────────

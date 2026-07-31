@@ -136,7 +136,7 @@
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
               <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
-              <p-button icon="pi pi-calendar" class="p-button-text" pTooltip="Ver Agenda" />
+              <p-button icon="pi pi-calendar" class="p-button-text" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
             </td>
           </tr>
         </ng-template>
@@ -192,7 +192,7 @@
           <div class="prov-card__actions">
             <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(provider)" />
             <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
-            <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" />
+            <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
           </div>
         </div>
       } @empty {
