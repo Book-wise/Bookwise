@@ -1,0 +1,650 @@
+// ============================================
+// Bookwise — Shared FullCalendar Styles
+// ============================================
+//
+// Consumed by full-calendar (admin) and provider-calendar (provider).
+// Extracted verbatim from both components (pure move — zero behavior change)
+// with two deliberate exceptions per design:
+//   • .hover-mirror-* : :host dropped, #3788d8 → var(--bw-300) + color-mix
+//   • body.dark-theme .fc : merged from styles.scss + full-calendar, brand tokens
+// The dark block MUST stay last in this file — equal-specificity overrides.
+//
+// Component-scoped rules stay in each component: .cal-* skeletons,
+// .calendar-loading radius/padding, .slot-menu variants, .event-details,
+// provider pink .fc-timegrid-slot:hover.
+
+// ── Layout chrome ────────────────────────────────────────────────────────────
+
+.full-calendar-container {
+  padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0;
+
+    .p-card {
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .calendar-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 425px) {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 0.75rem;
+
+      .calendar-actions {
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+    }
+
+    @media (max-width: 374px) {
+      padding: 0.5rem;
+    }
+  }
+
+  .filters {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .p-select,
+    .p-multiselect {
+      min-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      width: 100%;
+      flex-direction: column;
+
+      .p-select,
+      .p-multiselect {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+
+    @media (max-width: 425px) {
+      width: auto;
+      flex: 1;
+    }
+  }
+
+  .calendar-area {
+    position: relative;
+    overflow: hidden;
+  }
+
+  // Common core — each calendar keeps its own radius/padding override
+  .calendar-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: stretch;
+    background: var(--p-surface-0);
+    z-index: var(--z-overlay);
+  }
+
+  // FullCalendar CSS variables — tokenized per design (no literal values)
+  .calendar-wrapper {
+    --fc-event-text-color: #000;
+    --fc-border-color: #e5e7eb;
+    --fc-button-bg-color: var(--bw-fc-btn-bg);
+    --fc-button-border-color: var(--bw-fc-btn-border);
+    --fc-button-hover-bg-color: var(--bw-fc-btn-hover-bg);
+    --fc-button-hover-border-color: var(--bw-fc-btn-hover-border);
+    --fc-button-active-bg-color: var(--bw-fc-btn-active-bg);
+    --fc-button-active-border-color: var(--bw-fc-btn-active-border);
+    --fc-today-bg-color: var(--bw-fc-today-bg);
+    --fc-event-border-color: transparent;
+    --fc-page-bg-color: var(--surface-card);
+    --fc-neutral-bg-color: var(--bw-surface-muted);
+    --fc-list-event-hover-bg-color: var(--bw-surface-muted);
+  }
+}
+
+// ── Status filter option — rendered inside PrimeNG overlay (outside component scope) ──
+
+.bw-status-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bw-status-filter-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// ── FullCalendar base rules ──────────────────────────────────────────────────
+// Previously ::ng-deep in the components — already global, moved as plain rules.
+
+.fc {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.fc .fc-button {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-transform: capitalize;
+  font-size: 0.875rem;
+}
+
+.fc .fc-daygrid-day-number {
+  padding: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.fc .fc-event {
+  cursor: pointer;
+  color: #000 !important;
+  border-radius: 4px;
+  padding: 0;
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+
+.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview) {
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+}
+
+// ── Payment indicator inside event ───────────────────────────────────────────
+
+.fc .ev-inner {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 2px 4px 2px 0;
+}
+
+.fc .ev-pay-badge {
+  width: 10%;
+  min-width: 10px;
+  max-width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: white;
+  align-self: stretch;
+  border-radius: 0;
+  margin-right: 3px;
+
+  &--paid {
+    background: #16a34a;
+  }
+  &--partial {
+    background: #65a30d;
+  }
+}
+
+.fc .ev-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+.fc .fc-event-title {
+  font-weight: 500;
+}
+
+.fc .fc-day-today {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.fc .fc-timegrid-slot {
+  height: 1.25rem;
+}
+
+.fc .fc-timegrid-slot-label-cushion {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+// Time labels en formato 24h
+.fc .fc-timegrid-axis-cushion {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.fc .fc-timegrid-slot-label {
+  font-size: 0.75rem;
+}
+
+.fc .fc-day-max-events {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+// ── Custom toolbar buttons — ocultos en desktop, visibles solo en ≤425px ────
+
+.fc-bwNewBooking-button,
+.fc-bwBlockTime-button {
+  display: none !important;
+}
+
+@media (max-width: 425px) {
+  // touch-action: manipulation elimina el delay de doble-tap en iOS/Android
+  .fc-bwNewBooking-button,
+  .fc-bwBlockTime-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none !important;
+    transition:
+      background 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .fc-bwNewBooking-button {
+    background: var(--p-button-primary-background) !important;
+    border-color: var(--p-button-primary-border-color) !important;
+    color: var(--p-button-primary-color) !important;
+    gap: 0.3rem;
+
+    &::before {
+      font-family: 'primeicons';
+      content: '\e90d';
+      font-size: 0.75rem;
+    }
+    &:hover {
+      background: var(--p-button-primary-hover-background) !important;
+    }
+  }
+
+  .fc-bwBlockTime-button {
+    background: var(--p-button-secondary-background) !important;
+    border-color: var(--p-button-secondary-border-color) !important;
+    color: var(--p-button-secondary-color) !important;
+    gap: 0.3rem;
+
+    &::before {
+      font-family: 'primeicons';
+      content: '\e95f';
+      font-size: 0.75rem;
+    }
+    &:hover {
+      background: var(--p-button-secondary-hover-background) !important;
+    }
+  }
+
+  .full-calendar-container .calendar-header .calendar-actions {
+    display: none;
+  }
+}
+
+@media (max-width: 374px) {
+  .fc-bwNewBooking-button,
+  .fc-bwBlockTime-button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+    margin: 0.125rem 0.25rem !important;
+  }
+
+  .fc {
+    .fc-toolbar-title {
+      font-size: 0.875rem !important;
+    }
+
+    .fc-button {
+      padding: 0.25rem 0.375rem !important;
+      font-size: 0.6875rem !important;
+    }
+
+    .fc-toolbar-chunk {
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+    }
+  }
+}
+
+// Responsive styles (≤768px)
+@media (max-width: 768px) {
+  .fc {
+    // Toolbar
+    .fc-toolbar {
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      align-items: center !important;
+    }
+
+    .fc-toolbar-title {
+      font-size: 1.1rem !important;
+    }
+
+    .fc-toolbar-chunk {
+      display: flex !important;
+      gap: 0.25rem !important;
+    }
+
+    // Botones
+    .fc-button {
+      padding: 0.375rem 0.625rem !important;
+      font-size: 0.75rem !important;
+    }
+
+    // Días
+    .fc-daygrid-day-number {
+      padding: 0.25rem !important;
+      font-size: 0.75rem !important;
+    }
+
+    // Encabezados
+    .fc-col-header-cell-cushion {
+      font-size: 0.625rem !important;
+      padding: 0.25rem !important;
+    }
+
+    // Eventos
+    .fc-event {
+      font-size: 0.7rem !important;
+      padding: 1px 2px !important;
+    }
+
+    // Timegrid
+    .fc-timegrid-slot {
+      height: 1.5rem !important;
+    }
+
+    .fc-timegrid-slot-label-cushion {
+      font-size: 0.625rem !important;
+    }
+
+    // Max events
+    .fc-day-max-events {
+      font-size: 0.75rem !important;
+    }
+  }
+}
+
+// ── Event hover tooltip ───────────────────────────────────────────────────────
+
+.event-tooltip-panel {
+  .p-overlaypanel-content {
+    padding: 0.75rem 1rem;
+  }
+}
+
+.ev-tooltip {
+  min-width: 200px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-color);
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--surface-border, #e5e7eb);
+    margin: 0.25rem 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-color);
+
+    i {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+      flex-shrink: 0;
+      width: 14px;
+      text-align: center;
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+// ── Blocked slot events ───────────────────────────────────────────────────────
+
+.fc-blocked-slot {
+  background: repeating-linear-gradient(
+    -45deg,
+    #9ca3af 0px,
+    #9ca3af 3px,
+    #ffffff 3px,
+    #ffffff 11px
+  ) !important;
+  border-color: #9ca3af !important;
+  border-left: 3px solid #6b7280 !important;
+  cursor: pointer !important;
+
+  .fc-event-main {
+    padding: 2px 4px;
+  }
+}
+
+.ev-blocked {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  overflow: hidden;
+
+  &__icon {
+    font-size: 0.65rem;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: #000;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ── Now indicator ────────────────────────────────────────────────────────────
+
+.fc .fc-timegrid-now-indicator-line {
+  border-color: #ef4444;
+  border-width: 2px;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: #ef4444;
+  border-bottom-color: #ef4444;
+}
+
+.fc .fc-timegrid-now-indicator-arrow[data-now]::after {
+  content: attr(data-now);
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #ef4444;
+  background: var(--fc-page-bg-color, #ffffff);
+  padding: 1px 2px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+// ── Mirror en hover (selectMirror + programmatic select) ──────────────────
+// :host dropped — rendered inside the calendar container, global rules apply.
+// #3788d8 → var(--bw-300) + color-mix (design: QA-flagged color shift).
+
+/* 1. EL BLOQUE FANTASMA GENERAL */
+.fc-event-mirror {
+  background-color: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+  position: relative !important;
+  pointer-events: none !important; /* IMPORTANTE: Hace el bloque invisible a los toques */
+}
+
+/* 2. EL CONTENEDOR PRINCIPAL */
+.hover-mirror-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  pointer-events: none !important; /* El dedo traspasará esta capa */
+}
+
+/* 3. LA ETIQUETA FLOTANTE SUPERIOR */
+.hover-mirror-label {
+  position: absolute !important;
+  top: -14px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+
+  background-color: var(--bw-300) !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  padding: 3px 8px !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important; /* Evita que la píldora azul bloquee el touch */
+}
+
+/* 4. EL CUERPO DEL PREVIEW */
+.hover-mirror-body {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+
+  background-color: color-mix(in srgb, var(--bw-300) 15%, transparent) !important;
+  border: 2px dashed var(--bw-300) !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  pointer-events: none !important; /* El dedo traspasará el fondo azul traslúcido */
+}
+
+// ── Slot preview event (bloque temporal al clickear un slot) ─────────────────
+
+.fc .fc-event.bw-slot-preview {
+  background: rgba(4, 106, 244, 0.1) !important;
+  border: 2px dashed rgba(4, 106, 244, 0.5) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  pointer-events: none;
+}
+
+.fc .fc-event.bw-slot-preview .bw-slot-preview-inner {
+  height: 100%;
+}
+
+.slot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-backdrop);
+}
+
+// ── Dark mode para FullCalendar ──────────────────────────────────────────────
+// Merged from styles.scss + full-calendar component — all brand tokens.
+// MUST stay LAST in this file (equal-specificity overrides).
+// No legacy indigo (#667eea / #16213e) — brand blue via --bw-300.
+
+body.dark-theme .fc {
+  --fc-border-color: #374151;
+  --fc-page-bg-color: var(--surface-card);
+  --fc-neutral-bg-color: var(--surface-ground);
+  --fc-today-bg-color: rgba(4, 106, 244, 0.12);
+
+  .fc-toolbar-title,
+  .fc-daygrid-day-number {
+    color: var(--text-color) !important;
+  }
+
+  .fc-col-header-cell-cushion {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .fc-button,
+  .fc-button-primary {
+    background: #374151 !important;
+    border-color: #374151 !important;
+
+    &:hover {
+      background: #4b5563 !important;
+    }
+  }
+
+  .fc-button-active,
+  .fc-button-active:hover {
+    background: var(--bw-300) !important;
+    border-color: var(--bw-300) !important;
+  }
+}
