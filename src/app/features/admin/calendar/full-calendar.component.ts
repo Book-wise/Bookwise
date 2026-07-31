@@ -365,6 +365,8 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.nowLabelInterval) clearInterval(this.nowLabelInterval);
     this.destroyHoverSelect();
     if (this.calendar) this.calendar.destroy();
+    // Never leave stale pending navigation behind if it was not consumed
+    this.calNav.consumePending();
   }
 
   private updateCalendarI18n(): void {
@@ -406,21 +408,24 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadLocations(): void {
+    // Pending navigation pre-selection — consumed BEFORE the API call (one-shot,
+    // transactional) so it is cleared even when the response is empty or the
+    // component is destroyed before the request completes.
+    const pending = this.calNav.consumePending();
+    const pendingLocationId = pending.locationId;
+    const pendingProviderId = pending.providerId;
+
     this.locationsApi.getLocations().subscribe({
       next: (data) => {
         this.locations.set(data);
         if (data.length === 0) return;
 
-        // Pending navigation pre-selection — one-shot, consumed transactionally
-        if (this.calNav.hasPendingNavigation()) {
-          const pending = this.calNav.consumePending();
-          if (pending.locationId != null) {
-            this.selectedLocationId = pending.locationId;
-            this.previousLocationId = pending.locationId;
-            // Provider pre-selection + filter sync happen in the providers callback
-            this.loadProviders(pending.locationId, pending.providerId);
-            return;
-          }
+        if (pendingLocationId != null) {
+          this.selectedLocationId = pendingLocationId;
+          this.previousLocationId = pendingLocationId;
+          // Provider pre-selection + filter sync happen in the providers callback
+          this.loadProviders(pendingLocationId, pendingProviderId);
+          return;
         }
 
         // Default: first location
@@ -450,7 +455,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.showWelcomeToast(providerId, data);
         }
       },
-      error: () => this.providersLoading.set(false),
+      error: (err) => {
+        this.providersLoading.set(false);
+        if (providerId != null) {
+          // Navigation pre-selection: apply the filter intent anyway so the UI
+          // and the store stay consistent, and surface the failure with a toast.
+          this.selectedProviderId = providerId;
+          this.onFilterChange();
+          this.httpError.handle(err, 'cargar profesionales');
+        }
+      },
     });
   }
 

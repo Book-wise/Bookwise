@@ -8,7 +8,7 @@ describe('CalendarNavigationService', () => {
   let mockRouter: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    mockRouter = { navigate: vi.fn() };
+    mockRouter = { navigate: vi.fn(() => Promise.resolve(true)) };
 
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection()],
@@ -53,6 +53,31 @@ describe('CalendarNavigationService', () => {
       service.navigateToCalendar(1, 2, mockRouter as unknown as Router);
 
       expect(service.hasPendingNavigation()).toBe(true);
+    });
+  });
+
+  // ── navigation rejection ───────────────────────────────────────
+
+  describe('navigateToCalendar with a rejected navigation', () => {
+    it('clears both pending signals when router.navigate rejects', async () => {
+      // Same promise observed from both sides: the test handles the rejection
+      // (avoiding unhandled-rejection noise) and the service must also react.
+      const nav = Promise.reject(new Error('lazy chunk failed'));
+      nav.catch(() => {});
+      const rejectedRouter = { navigate: vi.fn(() => nav) };
+
+      service.navigateToCalendar(3, 7, rejectedRouter as unknown as Router);
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(service.hasPendingNavigation()).toBe(false);
+      expect(service.consumePending()).toEqual({ locationId: null, providerId: null });
+    });
+
+    it('keeps pending signals set when navigation resolves', async () => {
+      await service.navigateToCalendar(3, 7, mockRouter as unknown as Router);
+
+      expect(service.hasPendingNavigation()).toBe(true);
+      expect(service.consumePending()).toEqual({ locationId: 3, providerId: 7 });
     });
   });
 

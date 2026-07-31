@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FullCalendarComponent } from './full-calendar.component';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
@@ -39,6 +40,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
   let mockServicesApi: { getServices: ReturnType<typeof vi.fn>; getPacks: ReturnType<typeof vi.fn> };
   let mockClientsApi: { getClients: ReturnType<typeof vi.fn> };
   let mockMessageService: { add: ReturnType<typeof vi.fn> };
+  let mockHttpError: { handle: ReturnType<typeof vi.fn>; toToastConfig: ReturnType<typeof vi.fn> };
 
   const locCentro: Location = {
     id: 1,
@@ -74,7 +76,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
   };
 
   beforeEach(async () => {
-    mockRouter = { navigate: vi.fn() };
+    mockRouter = { navigate: vi.fn(() => Promise.resolve(true)) };
     mockLocationsApi = {
       getLocations: vi.fn(() => of([locCentro, locNorte])),
       getRegions: vi.fn(() => of({ data: [] })),
@@ -86,6 +88,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     mockServicesApi = { getServices: vi.fn(() => of([])), getPacks: vi.fn(() => of({ data: [] })) };
     mockClientsApi = { getClients: vi.fn(() => of([])) };
     mockMessageService = { add: vi.fn() };
+    mockHttpError = { handle: vi.fn(), toToastConfig: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [FullCalendarComponent],
@@ -99,7 +102,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
         { provide: ServicesApiService, useValue: mockServicesApi },
         { provide: ClientsApiService, useValue: mockClientsApi },
         { provide: MessageService, useValue: mockMessageService },
-        { provide: HttpErrorService, useValue: { handle: vi.fn(), toToastConfig: vi.fn() } },
+        { provide: HttpErrorService, useValue: mockHttpError },
         // REAL service — the transactional consumption is the behavior under test
         CalendarNavigationService,
       ],
@@ -165,6 +168,42 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
 
       expect(component.selectedProviderId).toBe(999);
       expect(mockMessageService.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pending navigation edge cases', () => {
+    it('consumes and clears pending navigation when the locations API returns an empty list', () => {
+      mockLocationsApi.getLocations.mockReturnValue(of([]));
+      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      expect(calNav.hasPendingNavigation()).toBe(true);
+
+      component.loadLocations();
+
+      expect(calNav.hasPendingNavigation()).toBe(false);
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null });
+    });
+
+    it('applies the pending provider filter and surfaces a toast when loading providers fails', () => {
+      mockProvidersApi.getProviders.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
+      );
+      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+
+      component.loadLocations();
+
+      // Filter intent is applied to the store even though the providers list failed
+      expect(component.selectedProviderId).toBe(7);
+      expect(store.filters().selectedProviderId).toBe(7);
+      expect(mockHttpError.handle).toHaveBeenCalledTimes(1);
+    });
+
+    it('clears unconsumed pending navigation when the component is destroyed', () => {
+      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      expect(calNav.hasPendingNavigation()).toBe(true);
+
+      fixture.destroy();
+
+      expect(calNav.hasPendingNavigation()).toBe(false);
     });
   });
 

@@ -12,10 +12,18 @@ export class CalendarNavigationService {
   );
 
   /** Set pending filters and navigate. Clears after transactional read. */
-  navigateToCalendar(locationId: number, providerId: number, router: Router): void {
+  navigateToCalendar(locationId: number, providerId: number, router: Router): Promise<void> {
     this.pendingLocationId.set(locationId);
     this.pendingProviderId.set(providerId);
-    void router.navigate(['/admin', 'calendar']);
+    return router.navigate(['/admin', 'calendar']).then(
+      () => undefined,
+      () => {
+        // Navigation failed (lazy chunk / guard rejection): never leave stale
+        // pending signals that would mis-apply filters on a later visit.
+        this.pendingLocationId.set(null);
+        this.pendingProviderId.set(null);
+      },
+    );
   }
 
   /** Transactional read-and-clear: returns pending state or nulls */
