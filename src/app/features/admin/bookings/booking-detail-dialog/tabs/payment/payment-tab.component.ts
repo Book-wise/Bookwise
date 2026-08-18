@@ -10,6 +10,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { Booking, BookingPayment, CreateSaleRequest, Sale, SaleTransaction } from '@models';
 import { SalesApiService } from '@services/api/sales-api.service';
@@ -52,7 +53,7 @@ interface SaleVm {
   imports: [
     CommonModule, FormsModule,
     SkeletonModule, ButtonModule, MenuModule, TextareaModule,
-    TableModule, InputNumberModule, SelectModule,
+    TableModule, InputNumberModule, SelectModule, TooltipModule,
     BwCurrencyPipe,
   ],
   templateUrl: './payment-tab.component.html',

@@ -2,6 +2,12 @@
 
   <div class="sale-body sale-skeleton">
 
+    <!-- Encabezado -->
+    <div class="sale-heading">
+      <p-skeleton width="150px" height="1rem" />
+      <p-skeleton width="80px" height="0.75rem" />
+    </div>
+
     <!-- Card 1: header -->
     <div class="bw-card bw-card--header sale-card sale-card--header bw-sk-card">
       <div class="sale-header__top">
@@ -48,6 +54,14 @@
 } @else if (vm().sale; as sale) {
 <div class="sale-body">
 
+  <!-- ── Encabezado: identificación de la venta ────────────────────────────── -->
+  <div class="sale-heading">
+    <span class="sale-title">Detalle de venta #{{ sale.id }}</span>
+    @if (sale.wc_order_id) {
+      <span class="sale-id">{{ sale.wc_order_id }}</span>
+    }
+  </div>
+
   <!-- ── Card 1: resumen de pago ───────────────────────────────────────────── -->
   <div class="bw-card bw-card--header sale-card sale-card--header">
 
@@ -70,10 +84,11 @@
         }
         <p-button
           icon="pi pi-ellipsis-v"
-          [rounded]="true"
-          variant="text"
+          variant="outlined"
           severity="secondary"
           size="small"
+          pTooltip="Opciones de venta"
+          tooltipPosition="left"
           (onClick)="saleMenu.toggle($event)"
         />
         <p-menu #saleMenu [model]="saleMenuItems" [popup]="true" [appendTo]="'body'" styleClass="bw-sale-menu" />

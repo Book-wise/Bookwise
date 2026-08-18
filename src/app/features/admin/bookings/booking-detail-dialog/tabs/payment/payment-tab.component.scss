@@ -74,6 +74,13 @@
   }
 }
 
+.sale-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0 0.25rem;
+}
+
 .sale-title {
   font-weight: var(--bw-weight-semibold);
   font-size: var(--bw-font-body);
