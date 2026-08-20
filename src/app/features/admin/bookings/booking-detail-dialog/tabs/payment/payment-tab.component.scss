@@ -299,6 +299,31 @@
 .bw-abono-method  { flex: 1; }
 .bw-abono-notes   { width: 100%; resize: none; }
 
+// ── Enviar comprobante (popover) ─────────────────────────────────────────────
+
+.bw-send-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 240px;
+
+  &__label {
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+    font-weight: var(--bw-weight-medium);
+  }
+
+  &__input {
+    width: 100%;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.375rem;
+  }
+}
+
 // ── Nota ──────────────────────────────────────────────────────────────────────
 
 .sale-note-input {

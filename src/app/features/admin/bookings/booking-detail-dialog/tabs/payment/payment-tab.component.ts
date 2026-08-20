@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, signal, ViewChild } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, switchMap, concat, of, map, catchError } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -11,7 +11,9 @@ import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
-import { MenuItem } from 'primeng/api';
+import { PopoverModule, Popover } from 'primeng/popover';
+import { InputTextModule } from 'primeng/inputtext';
+import { MenuItem, MenuItemCommandEvent, MessageService } from 'primeng/api';
 import { Booking, BookingPayment, CreateSaleRequest, Sale, SaleTransaction } from '@models';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -38,6 +40,7 @@ export interface SaleDetail {
   payment_method?: string | null;
   wc_order_id?: number | null;
   client_name: string;
+  client_email: string;
   items: SaleItem[];
   transactions: SaleTransaction[];
 }
@@ -54,6 +57,7 @@ interface SaleVm {
     CommonModule, FormsModule,
     SkeletonModule, ButtonModule, MenuModule, TextareaModule,
     TableModule, InputNumberModule, SelectModule, TooltipModule,
+    PopoverModule, InputTextModule,
     BwCurrencyPipe,
   ],
   templateUrl: './payment-tab.component.html',
@@ -64,10 +68,14 @@ export class PaymentTabComponent {
 
   private readonly salesApi = inject(SalesApiService);
   private readonly httpError = inject(HttpErrorService);
+  private readonly messageService = inject(MessageService);
   private readonly el        = inject(ElementRef);
 
   readonly booking      = input.required<Booking>();
   readonly scrollToTxn  = input(false);
+
+  @ViewChild('sendReceiptPopover') sendReceiptPopover!: Popover;
+  @ViewChild('saleMenuBtn', { read: ElementRef }) saleMenuBtn!: ElementRef<HTMLElement>;
 
   constructor() {
     effect(() => {
@@ -142,13 +150,18 @@ export class PaymentTabComponent {
 
   readonly paymentMethods = PAYMENT_METHOD_OPTIONS;
 
+  // ── Enviar comprobante ──────────────────────────────────────────────────────
+
+  readonly receiptEmail  = signal('');
+  readonly receiptSaving = signal(false);
+
   // ── Misc state ────────────────────────────────────────────────────────────────
 
   readonly noteText = signal('');
 
   readonly saleMenuItems: MenuItem[] = [
     { label: 'Ver comprobante',    icon: 'pi pi-eye' },
-    { label: 'Enviar comprobante', icon: 'pi pi-send' },
+    { label: 'Enviar comprobante', icon: 'pi pi-send', command: (e) => this.openSendReceipt(e) },
     { separator: true },
     { label: 'Eliminar venta',     icon: 'pi pi-trash', styleClass: 'bw-menu-danger' },
   ];
@@ -216,6 +229,42 @@ export class PaymentTabComponent {
     console.log('Note saved:', this.noteText());
   }
 
+  // ── Enviar comprobante ──────────────────────────────────────────────────────
+
+  openSendReceipt(event?: MenuItemCommandEvent): void {
+    this.receiptEmail.set(this.vm().sale?.client_email ?? '');
+    this.receiptSaving.set(false);
+    this.sendReceiptPopover.show(event?.originalEvent, this.saleMenuBtn.nativeElement);
+  }
+
+  closeSendReceipt(): void {
+    this.sendReceiptPopover.hide();
+  }
+
+  submitSendReceipt(saleId: number): void {
+    const email = this.receiptEmail().trim();
+    if (!email) return;
+
+    this.receiptSaving.set(true);
+    this.salesApi.sendReceipt(saleId, { email }).subscribe({
+      next: () => {
+        this.receiptSaving.set(false);
+        this.sendReceiptPopover.hide();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Comprobante enviado',
+          detail: `Se envió el comprobante a ${email}`,
+          key: 'global',
+          life: 4000,
+        });
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'enviar comprobante');
+        this.receiptSaving.set(false);
+      },
+    });
+  }
+
   // ── Private ───────────────────────────────────────────────────────────────────
 
   private buildSaleDetail(data: Sale, booking: Booking): SaleDetail {
@@ -231,6 +280,7 @@ export class PaymentTabComponent {
       client_name:      data.client
         ? `${data.client.first_name} ${data.client.last_name}`
         : `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim(),
+      client_email:     data.client?.email ?? booking.client?.email ?? '',
       items:        this.buildItems(data, booking),
       transactions: data.transactions.map(t => ({ ...t, amount: Number(t.amount) })),
     };

@@ -11,6 +11,8 @@ import {
   CreateTransactionResponse,
   TransactionListResponse,
   DeleteTransactionResponse,
+  SendReceiptRequest,
+  SendReceiptResponse,
   PaginatedResponse,
 } from '@models';
 import { buildHttpParams } from './build-http-params';
@@ -65,6 +67,13 @@ export class SalesApiService {
   deleteTransaction(saleId: number, transactionId: number): Observable<DeleteTransactionResponse> {
     return this.http.delete<DeleteTransactionResponse>(
       `${this.baseUrl}/sales/${saleId}/transactions/${transactionId}`,
+    );
+  }
+
+  sendReceipt(saleId: number, body: SendReceiptRequest): Observable<SendReceiptResponse> {
+    return this.http.post<SendReceiptResponse>(
+      `${this.baseUrl}/sales/${saleId}/receipt/send`,
+      body,
     );
   }
 }

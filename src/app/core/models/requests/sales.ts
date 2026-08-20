@@ -28,3 +28,13 @@ export interface UpdateSaleRequest {
   total?: number;
   payment_method?: string;
 }
+
+// ── POST /api/v1/sales/:id/receipt/send ───────────────────────────────────────
+
+export interface SendReceiptRequest {
+  email: string;
+}
+
+export interface SendReceiptResponse {
+  message: string;
+}

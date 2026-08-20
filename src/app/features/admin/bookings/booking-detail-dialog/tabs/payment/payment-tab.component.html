@@ -83,6 +83,7 @@
           </span>
         }
         <p-button
+          #saleMenuBtn
           icon="pi pi-ellipsis-v"
           variant="outlined"
           severity="secondary"
@@ -92,6 +93,41 @@
           (onClick)="saleMenu.toggle($event)"
         />
         <p-menu #saleMenu [model]="saleMenuItems" [popup]="true" [appendTo]="'body'" styleClass="bw-sale-menu" />
+
+        <p-popover #sendReceiptPopover [dismissable]="true">
+          <div class="bw-send-receipt">
+            <span class="bw-send-receipt__label">Enviar comprobante a</span>
+            <input
+              type="email"
+              pInputText
+              [ngModel]="receiptEmail()"
+              (ngModelChange)="receiptEmail.set($event)"
+              placeholder="correo@cliente.com"
+              class="bw-send-receipt__input"
+            />
+            <div class="bw-send-receipt__actions">
+              <p-button
+                icon="pi pi-times"
+                variant="text"
+                severity="secondary"
+                size="small"
+                pTooltip="Cancelar"
+                tooltipPosition="top"
+                [disabled]="receiptSaving()"
+                (onClick)="closeSendReceipt()"
+              />
+              <p-button
+                icon="pi pi-check"
+                size="small"
+                pTooltip="Enviar"
+                tooltipPosition="top"
+                [loading]="receiptSaving()"
+                [disabled]="!receiptEmail()"
+                (onClick)="submitSendReceipt(sale.id)"
+              />
+            </div>
+          </div>
+        </p-popover>
       </div>
     </div>
 

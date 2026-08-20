@@ -21,6 +21,9 @@
           <span class="booking-dialog-title">
             {{ booking.client?.first_name }} {{ booking.client?.last_name }}
           </span>
+          @if (booking.client?.rut; as rut) {
+            <span class="bw-chip booking-client-rut">{{ rut }}</span>
+          }
           <span class="bw-chip bw-chip--secondary booking-service-tag">{{ booking.service?.name || '' }}</span>
           <p-select
             [options]="statusOptions"
