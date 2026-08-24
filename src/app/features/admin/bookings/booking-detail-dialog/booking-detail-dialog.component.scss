@@ -7,22 +7,38 @@
 }
 
 :host ::ng-deep .booking-dialog-tabs {
-  --p-tabs-active-bar-color: var(--color-primary, #046af4);
-
   .p-tablist {
-    border-bottom: none;
+    background: transparent !important;
+    border-bottom: none !important;
     padding: 0;
     margin-bottom: 0;
+    gap: 0.25rem;
   }
 
   .p-tab {
     font-size: var(--bw-font-table);
     white-space: nowrap;
     padding: 0.5rem 0.875rem;
-    padding-bottom: 0.625rem;
+    border-radius: 6px 6px 0 0;
+    color: var(--color-primary, #046af4) !important;
+    background: transparent;
+    border-color: transparent !important;
+    transition: background 0.15s ease;
+
+    // Matar el active bar de PrimeNG
+    &::after,
+    &::before {
+      display: none !important;
+    }
+
+    &:hover:not([data-p-active='true']) {
+      background: rgba(4, 106, 244, 0.08);
+    }
 
     &[data-p-active='true'] {
-      color: var(--color-primary, #046af4);
+      color: #ffffff !important;
+      background: var(--color-primary, #046af4) !important;
+      font-weight: var(--bw-weight-semibold);
     }
   }
 }
