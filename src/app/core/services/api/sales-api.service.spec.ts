@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { SalesApiService } from './sales-api.service';
 import { environment } from '@env/environment';
-import { Sale, SaleDetailResponse, CreateSaleRequest, UpdateSaleRequest, CreateTransactionRequest, CreateTransactionResponse, TransactionListResponse, DeleteTransactionResponse, PaginatedResponse } from '@models';
+import { Sale, SaleDetailResponse, CreateSaleRequest, UpdateSaleRequest, CreateTransactionRequest, CreateTransactionResponse, TransactionListResponse, DeleteTransactionResponse, SendReceiptRequest, SendReceiptResponse, PaginatedResponse } from '@models';
 
 describe('SalesApiService', () => {
   let service: SalesApiService;
@@ -135,6 +135,20 @@ describe('SalesApiService', () => {
     });
 
     const req = httpMock.expectOne(`${baseUrl}/sales/1/transactions`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(body);
+    req.flush(response);
+  });
+
+  it('POST /sales/:id/receipt/send via sendReceipt()', () => {
+    const body: SendReceiptRequest = { email: 'cliente@test.com' };
+    const response: SendReceiptResponse = { message: 'Comprobante enviado' };
+
+    service.sendReceipt(1, body).subscribe((data) => {
+      expect(data).toEqual(response);
+    });
+
+    const req = httpMock.expectOne(`${baseUrl}/sales/1/receipt/send`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(body);
     req.flush(response);
