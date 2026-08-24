@@ -48,6 +48,14 @@ import { CommonModule } from '@angular/common';
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Desktop: raise button above dialog footer */
+    @media (min-width: 769px) {
+      .bw-scroll-top {
+        bottom: 5rem;
+        right: 2rem;
+      }
+    }
   `,
 })
 export class ScrollTopButtonComponent {
