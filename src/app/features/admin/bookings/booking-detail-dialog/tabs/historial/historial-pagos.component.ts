@@ -5,16 +5,19 @@ import { switchMap, of, map, catchError } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DateTime } from 'luxon';
 import { Sale, SaleTransaction } from '@models';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { HistorialStore } from '@core/stores/historial.store';
+import { TimezoneService } from '@services/timezone.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { salePaymentChipClass } from '../../../constants/booking-statuses';
 
 interface SaleItem {
   name: string;
   description?: string;
+  provider?: string;
   quantity: number;
   unit_price: number;
   total: number;
@@ -33,6 +36,7 @@ export class HistorialPagosComponent {
   private readonly salesApi      = inject(SalesApiService);
   private readonly httpError      = inject(HttpErrorService);
   private readonly historialStore = inject(HistorialStore);
+  private readonly tzService      = inject(TimezoneService);
 
   /** Sales list comes from the shared store (cached per clientId). */
   readonly sales        = this.historialStore.sales;
@@ -102,9 +106,13 @@ export class HistorialPagosComponent {
 
   items(sale: Sale | null): SaleItem[] {
     if (!sale) return [];
+    const providerName = sale.booking?.provider
+      ? `${sale.booking.provider.first_name} ${sale.booking.provider.last_name}`
+      : '—';
     if (sale.booking) {
       return [{
         name:       sale.booking.service.name,
+        provider:   providerName,
         quantity:   1,
         unit_price: Number(sale.booking.price),
         total:      Number(sale.booking.price),
@@ -116,12 +124,20 @@ export class HistorialPagosComponent {
       return sale.client_pack.sessions.map(s => ({
         name:        svcName,
         description: `Sesión ${s.session_number}`,
+        provider:    providerName,
         quantity:    1,
         unit_price:  s.effective_price,
         total:       s.effective_price,
       }));
     }
     return [];
+  }
+
+  /** Format date in Spanish using Luxon */
+  formatCardDate(iso: string | null): string {
+    if (!iso) return '—';
+    const tz = this.tzService.activeTimezone();
+    return DateTime.fromISO(iso, { zone: tz }).setLocale('es').toFormat("EEEE, d 'de' MMMM yyyy - HH:mm");
   }
 
   /** Convierte Amount (string | number) a number para comparaciones en template */

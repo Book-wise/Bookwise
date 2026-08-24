@@ -16,7 +16,7 @@
           <div class="bw-card hpg-card">
             <div class="hpg-card__header">
               <span class="hpg-card__date">
-                {{ lastTransactionDate(sale) | date:'EEEE, d MMMM yyyy - HH:mm' }}
+                {{ formatCardDate(lastTransactionDate(sale)) }}
               </span>
               <span class="bw-chip" [class]="saleStatusChipClass(sale.payment_status)">
                 {{ saleStatusLabel(sale.payment_status) }}
@@ -101,6 +101,13 @@
           size="small"
           class="hpg-items-table"
         >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Servicio</th>
+              <th>Profesional</th>
+              <th>Valor unitario</th>
+            </tr>
+          </ng-template>
           <ng-template pTemplate="body" let-item>
             <tr>
               <td class="hpg-item__name">
@@ -109,6 +116,7 @@
                   <span class="hpg-item__desc">{{ item.description }}</span>
                 }
               </td>
+              <td class="hpg-item__provider">{{ item.provider }}</td>
               <td class="hpg-item__price">{{ item.total | bwCurrency }}</td>
             </tr>
           </ng-template>

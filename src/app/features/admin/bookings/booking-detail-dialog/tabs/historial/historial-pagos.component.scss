@@ -169,6 +169,11 @@
     margin-top: 0.1rem;
   }
 
+  &__provider {
+    color: var(--text-color-secondary);
+    white-space: nowrap;
+  }
+
   &__price {
     font-weight: var(--bw-weight-semibold);
     color: var(--text-color);
