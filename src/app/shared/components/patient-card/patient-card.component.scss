@@ -1,18 +1,9 @@
-:host {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 .bw-pc {
   display: flex;
   flex-direction: column;
   gap: 0;
-  flex: 1;
-  min-height: 0;
 }
 
 // ── Panel mode: fill entire card ──────────────────────────────────────────────
@@ -20,8 +11,7 @@
 .bw-pc--panel {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
 }
 
 // ── Avatar + Name row ─────────────────────────────────────────────────────────
