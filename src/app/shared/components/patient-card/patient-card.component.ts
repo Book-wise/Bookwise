@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -19,7 +19,7 @@ export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
   templateUrl: './patient-card.component.html',
   styleUrl: './patient-card.component.scss',
 })
-export class PatientCardComponent {
+export class PatientCardComponent implements AfterViewInit, OnDestroy {
   readonly detailStore = inject(ClientDetailStore);
   readonly lang = inject(LanguageService);
 
@@ -39,6 +39,30 @@ export class PatientCardComponent {
   // ── Tab navigation ────────────────────────────────────────────────────────────
 
   readonly activeTab = signal<PatientTab | null>(null);
+
+  // ── Viewport breakpoint ──────────────────────────────────────────────────────
+
+  private readonly breakpointQuery = window.matchMedia('(max-width: 1024px)');
+  private previousMobile = this.breakpointQuery.matches;
+  readonly isMobile = signal(this.previousMobile);
+
+  ngAfterViewInit(): void {
+    this.breakpointQuery.addEventListener('change', this.onBreakpointChange);
+  }
+
+  ngOnDestroy(): void {
+    this.breakpointQuery.removeEventListener('change', this.onBreakpointChange);
+  }
+
+  private onBreakpointChange = (e: MediaQueryListEvent): void => {
+    const changed = e.matches !== this.previousMobile;
+    this.previousMobile = e.matches;
+    this.isMobile.set(e.matches);
+
+    if (changed) {
+      this.activeTab.set(null);
+    }
+  };
 
   // ── Notifications state ───────────────────────────────────────────────────────
 
