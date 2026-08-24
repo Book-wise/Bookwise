@@ -74,6 +74,11 @@ a {
   color: white;
 }
 
+// ── Dialog footer — global padding (aplica a todos los p-dialog, incluido ConfirmDialog) ──
+.p-dialog-footer {
+  padding: 1.25rem;
+}
+
 // ============================================
 // DARK MODE
 // ============================================
