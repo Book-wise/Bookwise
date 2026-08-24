@@ -69,7 +69,7 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   ];
 
   private readonly mobileTabsOnly = new Set<BookingTab>(['reserva', 'pago', 'ficha']);
-  private readonly breakpointQuery = window.matchMedia('(max-width: 1024px)');
+  private readonly breakpointQuery = window.matchMedia('(max-width: 768px)');
   readonly isMobile = signal(this.breakpointQuery.matches);
 
   readonly visibleTabs = computed(() =>

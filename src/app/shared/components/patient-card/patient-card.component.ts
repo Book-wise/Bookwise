@@ -45,7 +45,7 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   // ── Viewport breakpoint ──────────────────────────────────────────────────────
 
-  private readonly breakpointQuery = window.matchMedia('(max-width: 1024px)');
+  private readonly breakpointQuery = window.matchMedia('(max-width: 768px)');
   private previousMobile = this.breakpointQuery.matches;
   readonly isMobile = signal(this.previousMobile);
 
