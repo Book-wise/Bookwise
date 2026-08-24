@@ -4,6 +4,43 @@
   gap: 0.75rem;
 }
 
+// ── Tabs — pill style matching payment dialog ────────────────────────────────
+
+:host ::ng-deep .hp-container .p-tablist {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding: 0;
+  margin-bottom: 0;
+  gap: 0.25rem;
+}
+
+:host ::ng-deep .hp-container .p-tab {
+  font-size: var(--bw-font-table);
+  white-space: nowrap;
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px 6px 0 0;
+  color: var(--bw-tab-color) !important;
+  background: transparent;
+  border-color: transparent !important;
+  transition: background 0.15s ease;
+
+  // Kill PrimeNG active bar
+  &::after,
+  &::before {
+    display: none !important;
+  }
+
+  &:hover:not([data-p-active='true']) {
+    background: rgba(4, 106, 244, 0.08);
+  }
+
+  &[data-p-active='true'] {
+    color: #ffffff !important;
+    background: var(--color-primary, #046af4) !important;
+    font-weight: var(--bw-weight-semibold);
+  }
+}
+
 .hp-table {
   table { min-width: 380px; }
 
