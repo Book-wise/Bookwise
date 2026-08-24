@@ -355,24 +355,25 @@
 }
 
 // ── Delete confirmation dialog ──────────────────────────────────────────────
+// ConfirmDialog se renderiza en <body>, necesitamos ::ng-deep para alcance
 
-.bw-delete-confirm {
+:host ::ng-deep .bw-delete-confirm {
   .p-confirmdialog-icon {
     font-size: 3rem !important;
     color: var(--red-500, #ef4444) !important;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .p-confirmdialog-message {
     text-align: center;
     color: var(--text-color-secondary);
     font-size: var(--bw-font-table);
-    line-height: 1.5;
-    padding: 0 1rem;
+    line-height: 1.6;
+    padding: 0.5rem 1.5rem 0;
   }
 
   .p-confirmdialog-footer {
-    padding-top: 1.5rem;
+    padding-top: 1.75rem;
     gap: 0.75rem;
 
     .p-button {
