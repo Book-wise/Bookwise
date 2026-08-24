@@ -149,9 +149,9 @@
 // ── Responsive — Mobile ───────────────────────────────────────────────────────
 
 @media (max-width: 768px) {
-  // Intercambiar headers
-  .bw-desktop-header { display: none; }
-  .bw-mobile-header  { display: flex; }
+  // Siempre mostrar el header desktop (título + tabs)
+  .bw-desktop-header { display: flex; }
+  .bw-mobile-header  { display: none; }
 
   .bw-status-mobile {
     display: block;
