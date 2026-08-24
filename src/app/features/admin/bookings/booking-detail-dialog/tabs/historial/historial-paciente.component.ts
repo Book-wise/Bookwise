@@ -62,12 +62,8 @@ export class HistorialPacienteComponent implements AfterViewInit, OnDestroy {
     this.activeSubTab() === 'atenciones' ? this.attendedBookings() : this.createdBookings(),
   );
 
-  /** Total count for the current sub-tab */
-  readonly currentTotal = computed(() =>
-    this.activeSubTab() === 'atenciones'
-      ? this.bookingsPagination().total
-      : this.bookingsPagination().total,
-  );
+  /** Total count for the current sub-tab — uses actual filtered list length */
+  readonly currentTotal = computed(() => this.currentList().length);
 
   // ── Scroll-to-top ─────────────────────────────────────────────────────────
   readonly showScrollTop = signal(false);
