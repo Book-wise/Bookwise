@@ -1,9 +1,9 @@
 <div class="hp-container">
   <!-- Counter -->
   <bw-paginated-counter
-    [showing]="bookingsShowingCount()"
-    [total]="bookingsPagination().total"
-    label="reservaciones"
+    [showing]="currentList().length"
+    [total]="currentTotal()"
+    [label]="activeSubTab() === 'atenciones' ? 'atenciones' : 'reservaciones'"
   />
 
   <p-tabs [value]="activeSubTab()" (valueChange)="onTabChange($event)">
