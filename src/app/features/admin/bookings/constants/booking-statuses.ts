@@ -4,7 +4,7 @@ export const BOOKING_STATUSES = [
   { labelKey: 'status.3', label: 'Asiste',     value: 3, color: '#ec4899', severity: 'help' as const },
   { labelKey: 'status.4', label: 'No asistio', value: 4, color: '#f9a8d4', severity: 'secondary' as const },
   { labelKey: 'status.5', label: 'Pendiente',  value: 5, color: '#fca5a5', severity: 'danger' as const },
-  { labelKey: 'status.6', label: 'En espera',  value: 6, color: '#86efac', severity: 'secondary' as const },
+  { labelKey: 'status.6', label: 'En espera',  value: 6, color: '#86efac', severity: 'success' as const },
   { labelKey: 'status.7', label: 'Cancelado',  value: 7, color: '#D1D5DB', severity: 'danger' as const },
 ];
 
