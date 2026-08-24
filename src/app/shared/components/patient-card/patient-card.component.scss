@@ -515,3 +515,119 @@ body.dark-theme {
   max-width: 220px;
   line-height: 1.5;
 }
+
+// ── Mobile items button (tablet & below) ────────────────────────────────────
+
+.bw-pc__mobile-items {
+  display: none;
+}
+
+.bw-pc__mobile-items-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: var(--bw-50);
+  border: none;
+  border-top: 1px solid var(--surface-border);
+  cursor: pointer;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color-secondary);
+  transition: background var(--bw-transition-base) ease;
+
+  &:hover {
+    background: rgba(4, 106, 244, 0.06);
+  }
+}
+
+.bw-pc__mobile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 9999px;
+  background: var(--bw-500, #046af4);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: var(--bw-weight-bold);
+}
+
+.bw-pc__mobile-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0;
+  min-width: 180px;
+}
+
+.bw-pc__mobile-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+  text-align: left;
+  transition: background var(--bw-transition-base) ease;
+
+  &:hover {
+    background: var(--surface-50, #fafafa);
+  }
+}
+
+.bw-pc__menu-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 9999px;
+  background: var(--surface-200, #e5e7eb);
+  color: var(--text-color-secondary);
+  font-size: 0.7rem;
+  font-weight: var(--bw-weight-bold);
+}
+
+// ── Responsive: tablet & below ──────────────────────────────────────────────
+
+@media (max-width: 1024px) {
+  .bw-pc__tabs {
+    display: none !important;
+  }
+
+  .bw-pc__mobile-items {
+    display: flex;
+  }
+}
+
+body.dark-theme {
+  .bw-pc__mobile-items-btn {
+    background: rgba(4, 106, 244, 0.08);
+
+    &:hover {
+      background: rgba(4, 106, 244, 0.14);
+    }
+  }
+
+  .bw-pc__mobile-menu-item {
+    &:hover {
+      background: rgba(4, 106, 244, 0.14);
+    }
+  }
+
+  .bw-pc__menu-badge {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-color-secondary);
+  }
+}

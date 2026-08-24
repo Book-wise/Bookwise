@@ -85,6 +85,15 @@ export class PatientCardComponent {
     this.detailStore.recent().loaded ? this.detailStore.recent().data.length : null
   );
 
+  /** Total items across all tabs for mobile button badge */
+  readonly totalItemsCount = computed(() => {
+    const plans = this.plansCount();
+    const sessions = this.sessionsCount();
+    const prepaid = this.prepaidCount() ?? 0;
+    const recent = this.recentCount() ?? 0;
+    return plans + sessions + prepaid + recent;
+  });
+
   // ── Derived: active packs for Sesiones tab (from store) ──────────────────────
 
   readonly activePacks = computed(() =>

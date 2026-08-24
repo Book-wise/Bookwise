@@ -51,6 +51,7 @@
   }
 
   <!-- ── Tab area ─────────────────────────────────────────────────────────────── -->
+  <!-- Desktop: individual tabs -->
   <nav
     class="bw-pc__tabs"
     [class.bw-pc__tabs--hidden]="activeTab() !== null"
@@ -95,6 +96,54 @@
       {{ lang.t('patient_card.tab.recent') }}
     </button>
   </nav>
+
+  <!-- Mobile/Tablet: consolidated button -->
+  <div
+    class="bw-pc__mobile-items"
+    [class.bw-pc__mobile-items--hidden]="activeTab() !== null"
+  >
+    <button
+      type="button"
+      class="bw-pc__mobile-items-btn"
+      (click)="mobileMenuPopover.toggle($event)"
+      data-testid="tab-mobile-items"
+    >
+      <span>Items asociados al paciente</span>
+      @if (totalItemsCount() > 0) {
+        <span class="bw-pc__mobile-badge">{{ totalItemsCount() }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Popover menu -->
+  <p-popover #mobileMenuPopover [style]="{ width: '100%' }">
+    <div class="bw-pc__mobile-menu">
+      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('planes'); mobileMenuPopover.hide()">
+        {{ lang.t('patient_card.tab.plans') }}
+        @if (plansCount() > 0) {
+          <span class="bw-pc__menu-badge">{{ plansCount() }}</span>
+        }
+      </button>
+      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('sesiones'); mobileMenuPopover.hide()">
+        {{ lang.t('patient_card.tab.sessions') }}
+        @if (sessionsCount() > 0) {
+          <span class="bw-pc__menu-badge">{{ sessionsCount() }}</span>
+        }
+      </button>
+      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('prepago'); mobileMenuPopover.hide()">
+        {{ lang.t('patient_card.tab.prepaid') }}
+        @if (prepaidCount() !== null && prepaidCount()! > 0) {
+          <span class="bw-pc__menu-badge">{{ prepaidCount() }}</span>
+        }
+      </button>
+      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('recientes'); mobileMenuPopover.hide()">
+        {{ lang.t('patient_card.tab.recent') }}
+        @if (recentCount() !== null && recentCount()! > 0) {
+          <span class="bw-pc__menu-badge">{{ recentCount() }}</span>
+        }
+      </button>
+    </div>
+  </p-popover>
 
   <!-- ── Panel view (always in DOM, hidden via CSS) ──────────────────────────── -->
   <div
