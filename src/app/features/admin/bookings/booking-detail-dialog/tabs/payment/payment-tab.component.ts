@@ -61,6 +61,7 @@ interface SaleVm {
     PopoverModule, InputTextModule, ConfirmDialogModule,
     BwCurrencyPipe,
   ],
+  providers: [ConfirmationService],
   templateUrl: './payment-tab.component.html',
   styleUrl: './payment-tab.component.scss',
 })

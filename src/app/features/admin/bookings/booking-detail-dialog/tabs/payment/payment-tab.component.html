@@ -167,9 +167,7 @@
             {{ item.name }}
             @if (item.description) {
               <span class="bw-detail__desc">{{ item.description }}</span>
-}
-
-<p-confirmDialog />
+            }
           </td>
           <td class="bw-detail__price">{{ item.total | bwCurrency }}</td>
         </tr>
@@ -310,3 +308,5 @@
   </div>
 
 }
+
+<p-confirmDialog />
