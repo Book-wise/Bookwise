@@ -12,6 +12,9 @@ import { CommonModule } from '@angular/common';
     <div class="bw-counter">
       <span class="bw-counter__text">
         Mostrando <strong>{{ showing() }}</strong> de <strong>{{ total() }}</strong> {{ label() }}
+        @if (filterBadge()) {
+          <span class="bw-counter__badge">{{ filterBadge() }}</span>
+        }
       </span>
     </div>
   `,
@@ -26,6 +29,19 @@ import { CommonModule } from '@angular/common';
       font-weight: var(--bw-weight-semibold, 600);
       color: var(--text-color, #111827);
     }
+
+    .bw-counter__badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 0.375rem;
+      padding: 0.05rem 0.4rem;
+      font-size: 0.6875rem;
+      font-weight: var(--bw-weight-semibold, 600);
+      color: #fff;
+      background: #1FB27C;
+      border-radius: var(--bw-radius-sm, 4px);
+      vertical-align: middle;
+    }
   `,
 })
 export class PaginatedCounterComponent {
@@ -37,4 +53,7 @@ export class PaginatedCounterComponent {
 
   /** Label for the item type — e.g., "reservaciones", "pagos". */
   readonly label = input('reservaciones');
+
+  /** Optional filter badge — e.g., "Asiste", "Confirmado". */
+  readonly filterBadge = input<string | null>(null);
 }

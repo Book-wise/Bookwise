@@ -4,6 +4,7 @@
     [showing]="currentList().length"
     [total]="currentTotal()"
     [label]="activeSubTab() === 'atenciones' ? 'atenciones' : 'reservaciones'"
+    [filterBadge]="activeSubTab() === 'atenciones' ? 'Asiste' : null"
   />
 
   <p-tabs [value]="activeSubTab()" (valueChange)="onTabChange($event)">
