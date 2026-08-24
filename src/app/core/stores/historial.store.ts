@@ -130,7 +130,25 @@ export const HistorialStore = signalStore(
               patchState(store, {
                 bookings,
                 sales,
+                paginatedBookings: bookings,
+                paginatedSales: sales,
+                bookingsPagination: {
+                  currentPage: 1,
+                  lastPage: 1,
+                  total: bookings.length,
+                  perPage: 50,
+                  hasMore: false,
+                },
+                salesPagination: {
+                  currentPage: 1,
+                  lastPage: 1,
+                  total: sales.length,
+                  perPage: 50,
+                  hasMore: false,
+                },
                 loading: false,
+                loadingBookingsPage: false,
+                loadingSalesPage: false,
                 loadedClients: { ...store.loadedClients(), [clientId]: true },
               });
             }),
@@ -147,6 +165,13 @@ export const HistorialStore = signalStore(
         activeClientId: clientId,
         loadedClients: { ...store.loadedClients(), [clientId]: false },
         loading: true,
+        // Reset paginated state
+        paginatedBookings: [],
+        paginatedSales: [],
+        bookingsPagination: { ...initialPagination },
+        salesPagination: { ...initialPagination },
+        loadingBookingsPage: true,
+        loadingSalesPage: true,
       });
 
       forkJoin({
@@ -163,7 +188,26 @@ export const HistorialStore = signalStore(
           patchState(store, {
             bookings,
             sales,
+            // Also populate paginated state so sub-components see data
+            paginatedBookings: bookings,
+            paginatedSales: sales,
+            bookingsPagination: {
+              currentPage: 1,
+              lastPage: 1,
+              total: bookings.length,
+              perPage: 50,
+              hasMore: false,
+            },
+            salesPagination: {
+              currentPage: 1,
+              lastPage: 1,
+              total: sales.length,
+              perPage: 50,
+              hasMore: false,
+            },
             loading: false,
+            loadingBookingsPage: false,
+            loadingSalesPage: false,
             loadedClients: { ...store.loadedClients(), [clientId]: true },
           });
         },
@@ -178,6 +222,8 @@ export const HistorialStore = signalStore(
       patchState(store, {
         loadedClients: { ...store.loadedClients(), [id]: false },
         loading: true,
+        loadingBookingsPage: true,
+        loadingSalesPage: true,
       });
 
       forkJoin({
@@ -194,7 +240,25 @@ export const HistorialStore = signalStore(
           patchState(store, {
             bookings,
             sales,
+            paginatedBookings: bookings,
+            paginatedSales: sales,
+            bookingsPagination: {
+              currentPage: 1,
+              lastPage: 1,
+              total: bookings.length,
+              perPage: 50,
+              hasMore: false,
+            },
+            salesPagination: {
+              currentPage: 1,
+              lastPage: 1,
+              total: sales.length,
+              perPage: 50,
+              hasMore: false,
+            },
             loading: false,
+            loadingBookingsPage: false,
+            loadingSalesPage: false,
             loadedClients: { ...store.loadedClients(), [id]: true },
           });
         },
