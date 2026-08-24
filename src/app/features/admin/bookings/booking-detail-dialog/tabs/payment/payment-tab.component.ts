@@ -163,7 +163,7 @@ export class PaymentTabComponent {
   readonly noteText = signal('');
 
   readonly saleMenuItems: MenuItem[] = [
-    { label: 'Ver comprobante',    icon: 'pi pi-eye' },
+    { label: 'Ver comprobante',    icon: 'pi pi-eye', command: () => this.viewReceipt() },
     { label: 'Enviar comprobante', icon: 'pi pi-send', command: (e) => this.openSendReceipt(e) },
     { separator: true },
     { label: 'Eliminar venta',     icon: 'pi pi-trash', styleClass: 'bw-menu-danger', command: () => this.confirmDeleteSale() },
@@ -230,6 +230,25 @@ export class PaymentTabComponent {
 
   saveNote(): void {
     console.log('Note saved:', this.noteText());
+  }
+
+  // ── Ver comprobante ────────────────────────────────────────────────────────
+
+  viewReceipt(): void {
+    const sale = this.vm().sale;
+    if (!sale) return;
+
+    this.salesApi.getReceipt(sale.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // Revocar URL después de un tiempo para liberar memoria
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'descargar comprobante');
+      },
+    });
   }
 
   // ── Enviar comprobante ──────────────────────────────────────────────────────

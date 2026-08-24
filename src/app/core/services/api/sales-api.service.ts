@@ -78,6 +78,12 @@ export class SalesApiService {
     );
   }
 
+  getReceipt(saleId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/sales/${saleId}/receipt`, {
+      responseType: 'blob',
+    });
+  }
+
   deleteSale(saleId: number): Observable<DeleteSaleResponse> {
     return this.http.delete<DeleteSaleResponse>(
       `${this.baseUrl}/sales/${saleId}`,
