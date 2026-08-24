@@ -31,6 +31,7 @@
           <th>Fecha</th>
           <th>Servicio</th>
           <th>Profesional</th>
+          <th>Estado</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-item>
@@ -38,6 +39,11 @@
           <td class="hp-cell--date">{{ formatCardDate(item.start_time) }}</td>
           <td>{{ item.service?.name ?? '—' }}</td>
           <td>{{ providerLabel(item) }}</td>
+          <td>
+            <span class="bw-chip" [class]="statusChipClass(item)">
+              {{ item.status?.name ?? '—' }}
+            </span>
+          </td>
         </tr>
       </ng-template>
     </p-table>

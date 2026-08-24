@@ -6,6 +6,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Booking } from '@models';
 import { HistorialStore } from '@core/stores/historial.store';
 import { TimezoneService } from '@services/timezone.service';
+import { bookingStatusChipClass } from '../../../constants/booking-statuses';
 
 @Component({
   selector: 'bw-historial-paciente',
@@ -56,5 +57,9 @@ export class HistorialPacienteComponent {
       return `${booking.provider.first_name} ${booking.provider.last_name}`;
     }
     return 'No tiene';
+  }
+
+  statusChipClass(booking: Booking): string {
+    return bookingStatusChipClass(booking.status?.name, booking.status_id);
   }
 }
