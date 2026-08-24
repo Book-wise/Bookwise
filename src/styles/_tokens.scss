@@ -26,6 +26,20 @@
   --bw-success: #22c55e;
   --bw-warning: #f59e0b;
 
+  // ── Booking status colors (AgendaPro palette) ──────────────
+  --bw-status-reservado:   #77D0FA;
+  --bw-status-confirmado:  #ECBE51;
+  --bw-status-asiste:      #1FB27C;
+  --bw-status-no-asistio:  #FCCAC2;
+  --bw-status-pendiente:   #FD8991;
+  --bw-status-en-espera:   #1FB27C;
+  --bw-status-cancelado:   #E3E7ED;
+
+  // ── Payment status colors (AgendaPro palette) ──────────────
+  --bw-payment-paid:    #1FB27C;
+  --bw-payment-partial: #ECBE51;
+  --bw-payment-unpaid:  #FD8991;
+
   // ── Chip text colors ────────────────────────────────────────
   // Status chips render a DARK text variant on the light 18% color-mix tint
   // (WCAG AA ≥ 4.5:1 in light mode). Overridden in dark-theme with light text

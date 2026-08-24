@@ -280,7 +280,7 @@
 
       <div class="detail-row">
         <span class="label">Estado</span>
-        <span class="bw-chip" [class]="getStatusChipClass(booking.status?.name, booking.status_id)">
+        <span class="bw-chip" [style.--chip-color]="getStatusChipClass(booking.status?.name, booking.status_id)">
           {{ booking.status?.name || 'Sin estado' }}
         </span>
       </div>

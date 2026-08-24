@@ -18,7 +18,7 @@
               <span class="hpg-card__date">
                 {{ formatCardDate(lastTransactionDate(sale)) }}
               </span>
-              <span class="bw-chip" [class]="saleStatusChipClass(sale.payment_status)">
+              <span class="bw-chip" [style.--chip-color]="saleStatusChipClass(sale.payment_status)">
                 {{ saleStatusLabel(sale.payment_status) }}
               </span>
             </div>
@@ -70,7 +70,7 @@
       <!-- Header card -->
       <div class="bw-card bw-card--header hpg-detail-card hpg-detail-card--header">
         <div class="hpg-detail-header">
-          <span class="bw-chip" [class]="saleStatusChipClass(sale.payment_status)">
+          <span class="bw-chip" [style.--chip-color]="saleStatusChipClass(sale.payment_status)">
             {{ saleStatusLabel(sale.payment_status) }}
           </span>
           @if (sale.wc_order_id) {

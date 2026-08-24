@@ -40,7 +40,7 @@
           <td>{{ item.service?.name ?? '—' }}</td>
           <td>{{ providerLabel(item) }}</td>
           <td>
-            <span class="bw-chip" [class]="statusChipClass(item)">
+            <span class="bw-chip" [style.--chip-color]="statusChipClass(item)">
               {{ item.status?.name ?? '—' }}
             </span>
           </td>

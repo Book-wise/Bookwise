@@ -14,7 +14,7 @@
     <div class="hr-card">
       <div class="hr-card__top">
         <span class="hr-card__service">{{ booking.service?.name ?? '—' }}</span>
-        <span class="bw-chip" [class]="statusChipClass(booking.status?.name, booking.status_id)">
+        <span class="bw-chip" [style.--chip-color]="statusChipClass(booking.status?.name, booking.status_id)">
           {{ booking.status?.name ?? '' }}
         </span>
       </div>
