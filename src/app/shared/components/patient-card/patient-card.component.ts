@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, HostListener, inject, input, OnDestroy, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -36,9 +36,10 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   readonly editRequested = output<void>();
 
-  // ── Tab navigation ────────────────────────────────────────────────────────────
+  // ── Panel state ──────────────────────────────────────────────────────────────
 
-  readonly activeTab = signal<PatientTab | null>(null);
+  readonly panelOpen = signal(false);
+  readonly panelTab  = signal<PatientTab>('planes');
 
   // ── Viewport breakpoint ──────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
     this.isMobile.set(e.matches);
 
     if (changed) {
-      this.activeTab.set(null);
+      this.panelOpen.set(false);
     }
   };
 
@@ -126,8 +127,22 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   // ── Methods ───────────────────────────────────────────────────────────────────
 
-  selectTab(tab: PatientTab): void {
-    this.activeTab.set(tab);
+  openPanel(tab: PatientTab): void {
+    this.panelTab.set(tab);
+    this.panelOpen.set(true);
+    this.loadTabData(tab);
+  }
+
+  closePanel(): void {
+    this.panelOpen.set(false);
+  }
+
+  switchPanelTab(tab: PatientTab): void {
+    this.panelTab.set(tab);
+    this.loadTabData(tab);
+  }
+
+  private loadTabData(tab: PatientTab): void {
     if (tab === 'planes' && !this.detailStore.packs().loaded) {
       this.detailStore.loadPacks(this.client().id);
     }
@@ -139,15 +154,18 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  backToTabs(): void {
-    this.activeTab.set(null);
-  }
-
   toggleNotif(): void {
     this.notifOpen.update(v => !v);
   }
 
   onEditClick(): void {
     this.editRequested.emit();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.panelOpen()) {
+      this.closePanel();
+    }
   }
 }

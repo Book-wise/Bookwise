@@ -2,29 +2,35 @@
 
 @keyframes bw-pc-slide-in {
   from {
-    transform: translateX(24px);
-    opacity: 0;
+    transform: translateX(100%);
   }
   to {
     transform: translateX(0);
-    opacity: 1;
+  }
+}
+
+@keyframes bw-pc-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bw-pc__panel--enter {
+  .bw-pc__slide-panel--open {
     animation: none;
   }
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
-// Surface recipe (bg/border/radius/overflow + signature accent) lives in global
-// `.bw-card.bw-card--signature` (styles/_cards.scss). `.bw-pc` only keeps layout.
 
 .bw-pc {
   display: flex;
   flex-direction: column;
   gap: 0;
+  position: relative;
 }
 
 // ── Avatar + Name row ─────────────────────────────────────────────────────────
@@ -104,8 +110,6 @@
 }
 
 // ── Edit button ────────────────────────────────────────────────────────────────
-// Ghost recipe lives in global `.bw-icon-btn` (styles/_buttons.scss).
-// Component hook only sizes the pencil icon.
 
 .bw-pc__actions .bw-icon-btn i {
   font-size: 0.875rem;
@@ -127,268 +131,6 @@
     font-size: 0.875rem;
     flex-shrink: 0;
   }
-}
-
-// ── Tab navigation ────────────────────────────────────────────────────────────
-
-.bw-pc__tabs {
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem 0;
-  border-top: 1px solid var(--surface-border);
-  overflow-x: auto;
-  background: var(--bw-50);
-
-  &--hidden {
-    display: none;
-  }
-}
-
-.bw-pc__tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.5rem 0.5rem;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: var(--bw-font-table);
-  font-weight: var(--bw-weight-semibold);
-  color: var(--text-color-secondary);
-  white-space: nowrap;
-  transition: all var(--bw-transition-base) ease;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%) scaleX(0);
-    width: 60%;
-    height: 2px;
-    background: var(--bw-300);
-    border-radius: 1px;
-    transition:
-      transform var(--bw-transition-base) ease,
-      background var(--bw-transition-base) ease;
-  }
-
-  &:hover {
-    color: var(--bw-500);
-    background: rgba(4, 106, 244, 0.06);
-    border-radius: 6px 6px 0 0;
-  }
-
-  &--active {
-    color: var(--bw-500);
-    font-weight: var(--bw-weight-bold);
-
-    &::after {
-      transform: translateX(-50%) scaleX(1);
-    }
-
-    &:hover {
-      background: rgba(4, 106, 244, 0.08);
-    }
-  }
-}
-
-body.dark-theme {
-  .bw-pc__tabs {
-    background: rgba(4, 106, 244, 0.08);
-  }
-
-  .bw-pc__tab {
-    color: var(--text-color-secondary);
-
-    &::after {
-      background: var(--bw-300);
-    }
-
-    &:hover {
-      color: var(--bw-200);
-      background: rgba(4, 106, 244, 0.14);
-    }
-
-    &--active {
-      color: var(--bw-200);
-
-      &:hover {
-        background: rgba(4, 106, 244, 0.18);
-      }
-    }
-  }
-}
-
-// ── Panel ────────────────────────────────────────────────────────────────────
-
-.bw-pc__panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-top: 1px solid var(--surface-border);
-
-  &--enter {
-    animation: bw-pc-slide-in 220ms ease-out;
-  }
-
-  &--hidden {
-    display: none;
-  }
-}
-
-.bw-pc__panel-body {
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.bw-pc__back {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.625rem 1rem;
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--surface-border);
-  cursor: pointer;
-  font-size: var(--bw-font-table);
-  font-weight: var(--bw-weight-semibold);
-  color: var(--text-color-secondary);
-  width: 100%;
-  text-align: left;
-
-  &:hover {
-    background: var(--surface-50, #fafafa);
-    color: var(--text-color);
-  }
-
-  i {
-    font-size: 0.75rem;
-  }
-}
-
-// ── Pack list ─────────────────────────────────────────────────────────────────
-
-.bw-pc__pack-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.bw-pc__pack-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.625rem 0;
-  border-bottom: 1px solid var(--surface-border);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.bw-pc__pack-name {
-  font-size: var(--bw-font-table);
-  font-weight: var(--bw-weight-semibold);
-  color: var(--text-color);
-}
-
-.bw-pc__pack-progress {
-  display: flex;
-  gap: 0.75rem;
-  font-size: var(--bw-font-table);
-  color: var(--text-color-secondary);
-}
-
-.bw-pc__pack-remaining {
-  font-size: 0.7rem;
-  color: var(--text-color-secondary);
-}
-
-// ── Sale list ─────────────────────────────────────────────────────────────────
-
-.bw-pc__sale-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.bw-pc__sale-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.625rem 0;
-  border-bottom: 1px solid var(--surface-border);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.bw-pc__sale-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--bw-font-table);
-}
-
-.bw-pc__sale-label {
-  color: var(--text-color-secondary);
-}
-
-.bw-pc__sale-amount {
-  font-weight: var(--bw-weight-semibold);
-  color: var(--text-color);
-}
-
-// ── Booking list ──────────────────────────────────────────────────────────────
-
-.bw-pc__booking-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.bw-pc__booking-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.625rem 0;
-  border-bottom: 1px solid var(--surface-border);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.bw-pc__booking-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.bw-pc__booking-service {
-  font-size: var(--bw-font-table);
-  font-weight: var(--bw-weight-semibold);
-  color: var(--text-color);
-}
-
-.bw-pc__booking-time {
-  font-size: var(--bw-font-table);
-  color: var(--text-color-secondary);
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
@@ -516,6 +258,76 @@ body.dark-theme {
   line-height: 1.5;
 }
 
+// ── Tab navigation (desktop triggers) ────────────────────────────────────────
+
+.bw-pc__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0;
+  border-top: 1px solid var(--surface-border);
+  overflow-x: auto;
+  background: var(--bw-50);
+}
+
+.bw-pc__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.5rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+  transition: all var(--bw-transition-base) ease;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 60%;
+    height: 2px;
+    background: var(--bw-300);
+    border-radius: 1px;
+    transition:
+      transform var(--bw-transition-base) ease,
+      background var(--bw-transition-base) ease;
+  }
+
+  &:hover {
+    color: var(--bw-500);
+    background: rgba(4, 106, 244, 0.06);
+    border-radius: 6px 6px 0 0;
+  }
+}
+
+body.dark-theme {
+  .bw-pc__tabs {
+    background: rgba(4, 106, 244, 0.08);
+  }
+
+  .bw-pc__tab {
+    color: var(--text-color-secondary);
+
+    &::after {
+      background: var(--bw-300);
+    }
+
+    &:hover {
+      color: var(--bw-200);
+      background: rgba(4, 106, 244, 0.14);
+    }
+  }
+}
+
 // ── Mobile items button (tablet & below) ────────────────────────────────────
 
 .bw-pc__mobile-items {
@@ -557,46 +369,326 @@ body.dark-theme {
   font-weight: var(--bw-weight-bold);
 }
 
-.bw-pc__mobile-menu {
-  display: flex;
-  flex-direction: column;
-  padding: 0.25rem 0;
-  min-width: 180px;
+body.dark-theme {
+  .bw-pc__mobile-items-btn {
+    background: rgba(4, 106, 244, 0.08);
+
+    &:hover {
+      background: rgba(4, 106, 244, 0.14);
+    }
+  }
 }
 
-.bw-pc__mobile-menu-item {
+// ── Overlay ──────────────────────────────────────────────────────────────────
+
+.bw-pc__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+
+  &--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+// ── Slide-in panel ──────────────────────────────────────────────────────────
+
+.bw-pc__slide-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface-card, #fff);
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+
+  &--open {
+    transform: translateX(0);
+  }
+}
+
+// ── Panel header ────────────────────────────────────────────────────────────
+
+.bw-pc__panel-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-card, #fff);
+  flex-shrink: 0;
+}
+
+.bw-pc__back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--bw-font-body);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+  padding: 0;
+  width: 100%;
+  text-align: left;
+
+  &:hover {
+    color: var(--bw-500);
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// ── Panel tabs (always visible) ──────────────────────────────────────────────
+
+.bw-pc__panel-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0;
+  border-bottom: 1px solid var(--surface-border);
+  overflow-x: auto;
+  background: var(--bw-50);
+  flex-shrink: 0;
+}
+
+.bw-pc__panel-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+  transition: all var(--bw-transition-base) ease;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 60%;
+    height: 2px;
+    background: var(--bw-300);
+    border-radius: 1px;
+    transition:
+      transform var(--bw-transition-base) ease,
+      background var(--bw-transition-base) ease;
+  }
+
+  &:hover {
+    color: var(--bw-500);
+    background: rgba(4, 106, 244, 0.06);
+  }
+
+  &--active {
+    color: var(--bw-500);
+    font-weight: var(--bw-weight-bold);
+
+    &::after {
+      transform: translateX(-50%) scaleX(1);
+    }
+  }
+}
+
+.bw-pc__panel-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3rem;
+  border-radius: 9999px;
+  background: var(--surface-200, #e5e7eb);
+  color: var(--text-color-secondary);
+  font-size: 0.65rem;
+  font-weight: var(--bw-weight-bold);
+}
+
+.bw-pc__panel-tab--active .bw-pc__panel-tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+body.dark-theme {
+  .bw-pc__panel-tabs {
+    background: rgba(4, 106, 244, 0.08);
+  }
+
+  .bw-pc__panel-tab {
+    color: var(--text-color-secondary);
+
+    &::after {
+      background: var(--bw-300);
+    }
+
+    &:hover {
+      color: var(--bw-200);
+      background: rgba(4, 106, 244, 0.14);
+    }
+
+    &--active {
+      color: var(--bw-200);
+    }
+  }
+
+  .bw-pc__panel-tab-badge {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-color-secondary);
+  }
+
+  .bw-pc__panel-tab--active .bw-pc__panel-tab-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--bw-200);
+  }
+}
+
+// ── Panel content ───────────────────────────────────────────────────────────
+
+.bw-pc__panel-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+// ── Pack list ─────────────────────────────────────────────────────────────────
+
+.bw-pc__pack-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bw-pc__pack-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.bw-pc__pack-name {
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+}
+
+.bw-pc__pack-progress {
+  display: flex;
+  gap: 0.75rem;
+  font-size: var(--bw-font-table);
+  color: var(--text-color-secondary);
+}
+
+.bw-pc__pack-remaining {
+  font-size: 0.7rem;
+  color: var(--text-color-secondary);
+}
+
+// ── Sale list ─────────────────────────────────────────────────────────────────
+
+.bw-pc__sale-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bw-pc__sale-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.bw-pc__sale-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--bw-font-table);
+}
+
+.bw-pc__sale-label {
+  color: var(--text-color-secondary);
+}
+
+.bw-pc__sale-amount {
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+}
+
+// ── Booking list ──────────────────────────────────────────────────────────────
+
+.bw-pc__booking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bw-pc__booking-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.bw-pc__booking-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  width: 100%;
-  padding: 0.625rem 1rem;
-  background: none;
-  border: none;
-  cursor: pointer;
+}
+
+.bw-pc__booking-service {
   font-size: var(--bw-font-table);
   font-weight: var(--bw-weight-semibold);
   color: var(--text-color);
-  text-align: left;
-  transition: background var(--bw-transition-base) ease;
-
-  &:hover {
-    background: var(--surface-50, #fafafa);
-  }
 }
 
-.bw-pc__menu-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.375rem;
-  border-radius: 9999px;
-  background: var(--surface-200, #e5e7eb);
+.bw-pc__booking-time {
+  font-size: var(--bw-font-table);
   color: var(--text-color-secondary);
-  font-size: 0.7rem;
-  font-weight: var(--bw-weight-bold);
 }
 
 // ── Responsive: tablet & below ──────────────────────────────────────────────
@@ -611,23 +703,19 @@ body.dark-theme {
   }
 }
 
+// ── Dark theme: slide panel ──────────────────────────────────────────────────
+
 body.dark-theme {
-  .bw-pc__mobile-items-btn {
-    background: rgba(4, 106, 244, 0.08);
-
-    &:hover {
-      background: rgba(4, 106, 244, 0.14);
-    }
+  .bw-pc__slide-panel {
+    background: var(--surface-card, #1e293b);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
   }
 
-  .bw-pc__mobile-menu-item {
-    &:hover {
-      background: rgba(4, 106, 244, 0.14);
-    }
+  .bw-pc__panel-header {
+    background: var(--surface-card, #1e293b);
   }
 
-  .bw-pc__menu-badge {
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--text-color-secondary);
+  .bw-pc__overlay {
+    background: rgba(0, 0, 0, 0.6);
   }
 }

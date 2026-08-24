@@ -50,17 +50,86 @@
     </div>
   }
 
-  <!-- ── Tab area ─────────────────────────────────────────────────────────────── -->
-  <!-- Desktop: individual tabs -->
-  <nav
-    class="bw-pc__tabs"
-    [class.bw-pc__tabs--hidden]="activeTab() !== null"
-  >
+  <!-- ── Notifications collapsible ────────────────────────────────────────────── -->
+  @if (showNotifications()) {
+    <div class="bw-pc__notif">
+      <button type="button" class="bw-pc__notif-header" (click)="toggleNotif()">
+        <span class="bw-pc__notif-title">{{ lang.t('patient_card.notif.title') }}</span>
+        <i
+          class="pi"
+          [class.pi-chevron-down]="!notifOpen()"
+          [class.pi-chevron-up]="notifOpen()"
+        ></i>
+      </button>
+
+      @if (!notifOpen()) {
+        <p class="bw-pc__notif-subtitle">{{ lang.t('patient_card.notif.subtitle') }}</p>
+      }
+
+      @if (notifOpen()) {
+        <div class="bw-pc__notif-table">
+          <div class="bw-pc__notif-row bw-pc__notif-row--head">
+            <span>{{ lang.t('patient_card.notif.type_col') }}</span>
+            <span>{{ lang.t('patient_card.notif.email_col') }}</span>
+            <span>{{ lang.t('patient_card.notif.wa_col') }}</span>
+          </div>
+          <div class="bw-pc__notif-row">
+            <div class="bw-pc__notif-type">
+              <span>{{ lang.t('patient_card.notif.booking_notif') }}</span>
+              <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.immediate') }}</span>
+              <button
+                type="button"
+                class="bw-pc__notif-info-btn"
+                (click)="citaInfoPop.toggle($event)"
+              >
+                <i class="pi pi-question-circle"></i>
+              </button>
+            </div>
+            <p-checkbox
+              [ngModel]="notifCitaEmail()"
+              (ngModelChange)="notifCitaEmail.set($event)"
+              [binary]="true"
+            />
+            <p-checkbox
+              [ngModel]="notifCitaWa()"
+              (ngModelChange)="notifCitaWa.set($event)"
+              [binary]="true"
+            />
+          </div>
+          <div class="bw-pc__notif-row">
+            <div class="bw-pc__notif-type">
+              <span>{{ lang.t('patient_card.notif.reminder') }}</span>
+              <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.scheduled') }}</span>
+            </div>
+            <p-checkbox
+              [ngModel]="reminderEmail()"
+              (ngModelChange)="reminderEmail.set($event)"
+              [binary]="true"
+            />
+            <p-checkbox
+              [ngModel]="reminderWa()"
+              (ngModelChange)="reminderWa.set($event)"
+              [binary]="true"
+            />
+          </div>
+        </div>
+      }
+    </div>
+
+    <p-popover #citaInfoPop>
+      <p class="bw-pc__notif-popover">
+        {{ lang.t('patient_card.notif.popover_text') }}
+      </p>
+    </p-popover>
+  }
+
+  <!-- ── Items trigger ────────────────────────────────────────────────────────── -->
+  <!-- Desktop: individual tabs as triggers -->
+  <nav class="bw-pc__tabs">
     <button
       type="button"
       class="bw-pc__tab"
-      [class.bw-pc__tab--active]="activeTab() === 'planes'"
-      (click)="selectTab('planes')"
+      (click)="openPanel('planes')"
       data-testid="tab-planes"
     >
       {{ lang.t('patient_card.tab.plans') }}
@@ -69,8 +138,7 @@
     <button
       type="button"
       class="bw-pc__tab"
-      [class.bw-pc__tab--active]="activeTab() === 'sesiones'"
-      (click)="selectTab('sesiones')"
+      (click)="openPanel('sesiones')"
       data-testid="tab-sesiones"
     >
       {{ lang.t('patient_card.tab.sessions') }}
@@ -79,8 +147,7 @@
     <button
       type="button"
       class="bw-pc__tab"
-      [class.bw-pc__tab--active]="activeTab() === 'prepago'"
-      (click)="selectTab('prepago')"
+      (click)="openPanel('prepago')"
       data-testid="tab-prepago"
     >
       {{ lang.t('patient_card.tab.prepaid') }}
@@ -89,8 +156,7 @@
     <button
       type="button"
       class="bw-pc__tab"
-      [class.bw-pc__tab--active]="activeTab() === 'recientes'"
-      (click)="selectTab('recientes')"
+      (click)="openPanel('recientes')"
       data-testid="tab-recientes"
     >
       {{ lang.t('patient_card.tab.recent') }}
@@ -98,14 +164,11 @@
   </nav>
 
   <!-- Mobile/Tablet: consolidated button -->
-  <div
-    class="bw-pc__mobile-items"
-    [class.bw-pc__mobile-items--hidden]="activeTab() !== null"
-  >
+  <div class="bw-pc__mobile-items">
     <button
       type="button"
       class="bw-pc__mobile-items-btn"
-      (click)="mobileMenuPopover.toggle($event)"
+      (click)="openPanel('planes')"
       data-testid="tab-mobile-items"
     >
       <span>Items asociados al paciente</span>
@@ -115,48 +178,79 @@
     </button>
   </div>
 
-  <!-- Popover menu -->
-  <p-popover #mobileMenuPopover [style]="{ width: '100%' }">
-    <div class="bw-pc__mobile-menu">
-      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('planes'); mobileMenuPopover.hide()">
-        {{ lang.t('patient_card.tab.plans') }}
-        @if (plansCount() > 0) {
-          <span class="bw-pc__menu-badge">{{ plansCount() }}</span>
-        }
-      </button>
-      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('sesiones'); mobileMenuPopover.hide()">
-        {{ lang.t('patient_card.tab.sessions') }}
-        @if (sessionsCount() > 0) {
-          <span class="bw-pc__menu-badge">{{ sessionsCount() }}</span>
-        }
-      </button>
-      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('prepago'); mobileMenuPopover.hide()">
-        {{ lang.t('patient_card.tab.prepaid') }}
-        @if (prepaidCount() !== null && prepaidCount()! > 0) {
-          <span class="bw-pc__menu-badge">{{ prepaidCount() }}</span>
-        }
-      </button>
-      <button type="button" class="bw-pc__mobile-menu-item" (click)="selectTab('recientes'); mobileMenuPopover.hide()">
-        {{ lang.t('patient_card.tab.recent') }}
-        @if (recentCount() !== null && recentCount()! > 0) {
-          <span class="bw-pc__menu-badge">{{ recentCount() }}</span>
-        }
+  <!-- ── Slide-in panel ───────────────────────────────────────────────────────── -->
+  <div
+    class="bw-pc__overlay"
+    [class.bw-pc__overlay--open]="panelOpen()"
+    (click)="closePanel()"
+  ></div>
+
+  <div
+    class="bw-pc__slide-panel"
+    [class.bw-pc__slide-panel--open]="panelOpen()"
+  >
+    <!-- Panel header -->
+    <div class="bw-pc__panel-header">
+      <button type="button" class="bw-pc__back" (click)="closePanel()">
+        <i class="pi pi-arrow-left"></i>
+        Volver a la Reserva
       </button>
     </div>
-  </p-popover>
 
-  <!-- ── Panel view (always in DOM, hidden via CSS) ──────────────────────────── -->
-  <div
-    class="bw-pc__panel bw-pc__panel--enter"
-    [class.bw-pc__panel--hidden]="activeTab() === null"
-  >
-    <button type="button" class="bw-pc__back" (click)="backToTabs()">
-      <i class="pi pi-arrow-left"></i>
-      {{ lang.t('patient_card.back') }}
-    </button>
+    <!-- Panel tabs (always visible) -->
+    <nav class="bw-pc__panel-tabs">
+      <button
+        type="button"
+        class="bw-pc__panel-tab"
+        [class.bw-pc__panel-tab--active]="panelTab() === 'planes'"
+        (click)="switchPanelTab('planes')"
+      >
+        {{ lang.t('patient_card.tab.plans') }}
+        @if (plansCount() > 0) {
+          <span class="bw-pc__panel-tab-badge">{{ plansCount() }}</span>
+        }
+      </button>
 
+      <button
+        type="button"
+        class="bw-pc__panel-tab"
+        [class.bw-pc__panel-tab--active]="panelTab() === 'sesiones'"
+        (click)="switchPanelTab('sesiones')"
+      >
+        {{ lang.t('patient_card.tab.sessions') }}
+        @if (sessionsCount() > 0) {
+          <span class="bw-pc__panel-tab-badge">{{ sessionsCount() }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="bw-pc__panel-tab"
+        [class.bw-pc__panel-tab--active]="panelTab() === 'prepago'"
+        (click)="switchPanelTab('prepago')"
+      >
+        {{ lang.t('patient_card.tab.prepaid') }}
+        @if (prepaidCount() !== null && prepaidCount()! > 0) {
+          <span class="bw-pc__panel-tab-badge">{{ prepaidCount() }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="bw-pc__panel-tab"
+        [class.bw-pc__panel-tab--active]="panelTab() === 'recientes'"
+        (click)="switchPanelTab('recientes')"
+      >
+        {{ lang.t('patient_card.tab.recent') }}
+        @if (recentCount() !== null && recentCount()! > 0) {
+          <span class="bw-pc__panel-tab-badge">{{ recentCount() }}</span>
+        }
+      </button>
+    </nav>
+
+    <!-- Panel content -->
     <div class="bw-pc__panel-body">
-      @switch (activeTab()) {
+      @switch (panelTab()) {
 
         @case ('planes') {
           <ul class="bw-pc__pack-list">
@@ -266,77 +360,4 @@
       }
     </div>
   </div>
-
-  <!-- ── Notifications collapsible ────────────────────────────────────────────── -->
-  @if (showNotifications()) {
-    <div class="bw-pc__notif">
-      <button type="button" class="bw-pc__notif-header" (click)="toggleNotif()">
-        <span class="bw-pc__notif-title">{{ lang.t('patient_card.notif.title') }}</span>
-        <i
-          class="pi"
-          [class.pi-chevron-down]="!notifOpen()"
-          [class.pi-chevron-up]="notifOpen()"
-        ></i>
-      </button>
-
-      @if (!notifOpen()) {
-        <p class="bw-pc__notif-subtitle">{{ lang.t('patient_card.notif.subtitle') }}</p>
-      }
-
-      @if (notifOpen()) {
-        <div class="bw-pc__notif-table">
-          <div class="bw-pc__notif-row bw-pc__notif-row--head">
-            <span>{{ lang.t('patient_card.notif.type_col') }}</span>
-            <span>{{ lang.t('patient_card.notif.email_col') }}</span>
-            <span>{{ lang.t('patient_card.notif.wa_col') }}</span>
-          </div>
-          <div class="bw-pc__notif-row">
-            <div class="bw-pc__notif-type">
-              <span>{{ lang.t('patient_card.notif.booking_notif') }}</span>
-              <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.immediate') }}</span>
-              <button
-                type="button"
-                class="bw-pc__notif-info-btn"
-                (click)="citaInfoPop.toggle($event)"
-              >
-                <i class="pi pi-question-circle"></i>
-              </button>
-            </div>
-            <p-checkbox
-              [ngModel]="notifCitaEmail()"
-              (ngModelChange)="notifCitaEmail.set($event)"
-              [binary]="true"
-            />
-            <p-checkbox
-              [ngModel]="notifCitaWa()"
-              (ngModelChange)="notifCitaWa.set($event)"
-              [binary]="true"
-            />
-          </div>
-          <div class="bw-pc__notif-row">
-            <div class="bw-pc__notif-type">
-              <span>{{ lang.t('patient_card.notif.reminder') }}</span>
-              <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.scheduled') }}</span>
-            </div>
-            <p-checkbox
-              [ngModel]="reminderEmail()"
-              (ngModelChange)="reminderEmail.set($event)"
-              [binary]="true"
-            />
-            <p-checkbox
-              [ngModel]="reminderWa()"
-              (ngModelChange)="reminderWa.set($event)"
-              [binary]="true"
-            />
-          </div>
-        </div>
-      }
-    </div>
-
-    <p-popover #citaInfoPop>
-      <p class="bw-pc__notif-popover">
-        {{ lang.t('patient_card.notif.popover_text') }}
-      </p>
-    </p-popover>
-  }
 </section>
