@@ -51,7 +51,7 @@
         </div>
         <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs">
           <p-tablist>
-            @for (tab of TABS; track tab.value) {
+            @for (tab of visibleTabs(); track tab.value) {
               <p-tab [value]="tab.value">{{ tab.label }}</p-tab>
             }
           </p-tablist>

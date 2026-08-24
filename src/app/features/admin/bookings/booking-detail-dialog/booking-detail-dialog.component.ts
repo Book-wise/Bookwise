@@ -1,4 +1,4 @@
-import { Component, computed, signal, output, inject } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, OnDestroy, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -39,7 +39,7 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
   templateUrl: './booking-detail-dialog.component.html',
   styleUrl: './booking-detail-dialog.component.scss',
 })
-export class BookingDetailDialogComponent {
+export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   private bookingsApi = inject(BookingsApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
@@ -67,6 +67,28 @@ export class BookingDetailDialogComponent {
     { value: 'ficha', label: 'Ficha' },
     { value: 'historial', label: 'Historial' },
   ];
+
+  private readonly mobileTabsOnly = new Set<BookingTab>(['reserva', 'pago', 'ficha']);
+  private readonly breakpointQuery = window.matchMedia('(max-width: 1024px)');
+  readonly isMobile = signal(this.breakpointQuery.matches);
+
+  readonly visibleTabs = computed(() =>
+    this.isMobile()
+      ? this.TABS.filter(t => this.mobileTabsOnly.has(t.value))
+      : this.TABS
+  );
+
+  ngAfterViewInit(): void {
+    this.breakpointQuery.addEventListener('change', this.onBreakpointChange);
+  }
+
+  ngOnDestroy(): void {
+    this.breakpointQuery.removeEventListener('change', this.onBreakpointChange);
+  }
+
+  private onBreakpointChange = (e: MediaQueryListEvent): void => {
+    this.isMobile.set(e.matches);
+  };
 
   readonly mobileTabTitle = computed(
     () => this.TABS.find((t) => t.value === this.activeTab())?.label ?? '',
