@@ -64,7 +64,7 @@ export class BookingDetailDialogComponent {
     { value: 'pago', label: 'Pago' },
     { value: 'recordatorios', label: 'Recordatorios' },
     { value: 'paciente', label: 'Paciente' },
-    { value: 'ficha', label: 'Ficha médica' },
+    { value: 'ficha', label: 'Ficha' },
     { value: 'historial', label: 'Historial' },
   ];
 
