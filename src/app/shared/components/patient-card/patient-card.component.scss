@@ -1,36 +1,17 @@
-// ── Slide-in animation ────────────────────────────────────────────────────────
-
-@keyframes bw-pc-slide-in {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes bw-pc-slide-out {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(100%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bw-pc__slide-panel--open {
-    animation: none;
-  }
-}
-
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 .bw-pc {
   display: flex;
   flex-direction: column;
   gap: 0;
-  position: relative;
+}
+
+// ── Panel mode: fill entire card ──────────────────────────────────────────────
+
+.bw-pc--panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 // ── Avatar + Name row ─────────────────────────────────────────────────────────
@@ -205,7 +186,6 @@
     }
   }
 
-  // center the checkboxes
   p-checkbox {
     justify-self: center;
   }
@@ -379,51 +359,12 @@ body.dark-theme {
   }
 }
 
-// ── Overlay ──────────────────────────────────────────────────────────────────
-
-.bw-pc__overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-
-  &--open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-// ── Slide-in panel ──────────────────────────────────────────────────────────
-
-.bw-pc__slide-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  max-width: 480px;
-  background: var(--surface-card, #fff);
-  z-index: 1000;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
-
-  &--open {
-    transform: translateX(0);
-  }
-}
-
 // ── Panel header ────────────────────────────────────────────────────────────
 
 .bw-pc__panel-header {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--surface-border);
   background: var(--surface-card, #fff);
   flex-shrink: 0;
@@ -561,6 +502,10 @@ body.dark-theme {
   .bw-pc__panel-tab--active .bw-pc__panel-tab-badge {
     background: rgba(255, 255, 255, 0.2);
     color: var(--bw-200);
+  }
+
+  .bw-pc__panel-header {
+    background: var(--surface-card, #1e293b);
   }
 }
 
@@ -700,22 +645,5 @@ body.dark-theme {
 
   .bw-pc__mobile-items {
     display: flex;
-  }
-}
-
-// ── Dark theme: slide panel ──────────────────────────────────────────────────
-
-body.dark-theme {
-  .bw-pc__slide-panel {
-    background: var(--surface-card, #1e293b);
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
-  }
-
-  .bw-pc__panel-header {
-    background: var(--surface-card, #1e293b);
-  }
-
-  .bw-pc__overlay {
-    background: rgba(0, 0, 0, 0.6);
   }
 }
