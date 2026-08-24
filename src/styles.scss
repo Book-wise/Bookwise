@@ -75,8 +75,9 @@ a {
 }
 
 // ── Dialog footer — global padding (aplica a todos los p-dialog, incluido ConfirmDialog) ──
+// PrimeNG theme loads after our :root, so !important is required to override.
 :root {
-  --p-dialog-footer-padding: 1.25rem;
+  --p-dialog-footer-padding: 1.25rem !important;
 }
 
 // ============================================
