@@ -37,6 +37,11 @@
   --bw-chip-text-danger:    #991b1b;   // red-800
   --bw-chip-text-secondary: #374151;   // gray-700
 
+  // ── Tab text colors ─────────────────────────────────────────
+  // Light mode: primary blue (dark enough for WCAG AA on light surfaces)
+  // Dark mode: overridden to lighter blue for contrast
+  --bw-tab-color: var(--bw-500);  // #0b3d95
+
   // ── PrimeNG compat ────────────────────────────
   --primary-color: var(--bw-300);
 
