@@ -19,6 +19,9 @@ export class HistorialTabComponent {
   readonly booking = input.required<Booking>();
   readonly selectedView = signal<string>('paciente');
 
+  /** Extract client ID from the booking input. */
+  readonly clientId = computed(() => this.booking().client?.id ?? 0);
+
   readonly viewOptions = computed(() => [
     { label: 'Historial de paciente', value: 'paciente' },
     { label: 'Historial de pagos',    value: 'pagos' },

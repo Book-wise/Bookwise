@@ -1,5 +1,12 @@
 <div class="hr-list">
-  @if (loading()) {
+  <!-- Counter -->
+  <bw-paginated-counter
+    [showing]="bookingsShowingCount()"
+    [total]="bookingsPagination().total"
+    label="reservaciones"
+  />
+
+  @if (loadingBookingsPage() && bookings().length === 0) {
     <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
     <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
     <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
@@ -48,4 +55,27 @@
       </div>
     </div>
   }
+
+  <!-- Loading next page skeleton -->
+  @if (loadingBookingsPage() && bookings().length > 0) {
+    <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
+    <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
+    <div class="hr-sk-card"><p-skeleton width="100%" height="7rem" borderRadius="6px" /></div>
+  }
+
+  <!-- Sentinel for IntersectionObserver -->
+  <div class="hr-sentinel"></div>
+
+  <!-- Load more button -->
+  <bw-load-more-button
+    [hasMore]="bookingsPagination().hasMore"
+    [loading]="loadingBookingsPage()"
+    (loadMore)="onLoadMore()"
+  />
 </div>
+
+<!-- Scroll-to-top -->
+<bw-scroll-top-button
+  [visible]="showScrollTop()"
+  (clicked)="scrollToTop()"
+/>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, AfterViewInit, OnDestroy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { switchMap, of, map, catchError } from 'rxjs';
@@ -13,6 +13,9 @@ import { HistorialStore } from '@core/stores/historial.store';
 import { TimezoneService } from '@services/timezone.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { salePaymentChipClass } from '../../../constants/booking-statuses';
+import { PaginatedCounterComponent } from './paginated-counter.component';
+import { ScrollTopButtonComponent } from './scroll-top-button.component';
+import { LoadMoreButtonComponent } from './load-more-button.component';
 
 interface SaleItem {
   name: string;
@@ -28,19 +31,33 @@ type ViewMode = 'list' | 'detail' | 'loading';
 @Component({
   selector: 'bw-historial-pagos',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TableModule, SkeletonModule, BwCurrencyPipe],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    TableModule,
+    SkeletonModule,
+    BwCurrencyPipe,
+    PaginatedCounterComponent,
+    ScrollTopButtonComponent,
+    LoadMoreButtonComponent,
+  ],
   templateUrl: './historial-pagos.component.html',
   styleUrl: './historial-pagos.component.scss',
 })
-export class HistorialPagosComponent {
+export class HistorialPagosComponent implements AfterViewInit, OnDestroy {
   private readonly salesApi      = inject(SalesApiService);
   private readonly httpError      = inject(HttpErrorService);
   private readonly historialStore = inject(HistorialStore);
   private readonly tzService      = inject(TimezoneService);
 
-  /** Sales list comes from the shared store (cached per clientId). */
-  readonly sales        = this.historialStore.sales;
-  readonly salesLoading = this.historialStore.loading;
+  /** Client ID — read from the store's active client. */
+  readonly clientId = input.required<number>();
+
+  /** Paginated sales list from the shared store. */
+  readonly sales        = this.historialStore.paginatedSales;
+  readonly loadingSalesPage = this.historialStore.loadingSalesPage;
+  readonly salesPagination = this.historialStore.salesPagination;
+  readonly salesShowingCount = this.historialStore.salesShowingCount;
 
   readonly selectedSaleId = signal<number | null>(null);
 
@@ -69,6 +86,69 @@ export class HistorialPagosComponent {
     if (this.selectedSaleId() && this.saleDetail())  return 'detail';
     return 'list';
   });
+
+  // ── Scroll-to-top ─────────────────────────────────────────────────────────
+  readonly showScrollTop = signal(false);
+  private scrollContainer: HTMLElement | null = null;
+
+  // ── IntersectionObserver for infinite scroll ───────────────────────────────
+  private observer: IntersectionObserver | null = null;
+  private sentinelEl: HTMLElement | null = null;
+
+  ngAfterViewInit(): void {
+    this.scrollContainer = document.querySelector('.p-dialog-content') as HTMLElement | null;
+
+    if (this.scrollContainer) {
+      this.scrollContainer.addEventListener('scroll', this.onScroll);
+    }
+
+    this.setupObserver();
+  }
+
+  ngOnDestroy(): void {
+    this.scrollContainer?.removeEventListener('scroll', this.onScroll);
+    this.observer?.disconnect();
+  }
+
+  private setupObserver(): void {
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !this.loadingSalesPage() && this.salesPagination().hasMore) {
+          const id = this.clientId();
+          if (id) {
+            this.historialStore.loadNextSalesPage(id);
+          }
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    setTimeout(() => {
+      this.sentinelEl = document.querySelector('.hpg-sentinel');
+      if (this.sentinelEl) {
+        this.observer?.observe(this.sentinelEl);
+      }
+    });
+  }
+
+  onScroll = (): void => {
+    if (this.scrollContainer) {
+      this.showScrollTop.set(this.scrollContainer.scrollTop > 300);
+    }
+  };
+
+  scrollToTop(): void {
+    this.scrollContainer?.scrollTo({ top: 0, behavior: 'smooth' });
+    this.showScrollTop.set(false);
+  }
+
+  onLoadMore(): void {
+    const id = this.clientId();
+    if (id) {
+      this.historialStore.loadNextSalesPage(id);
+    }
+  }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 

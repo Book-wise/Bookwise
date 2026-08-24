@@ -71,3 +71,9 @@
     }
   }
 }
+
+// ── Sentinel (invisible trigger for IntersectionObserver) ─────────────────────
+.hr-sentinel {
+  height: 1px;
+  width: 100%;
+}

@@ -241,6 +241,9 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// Client-paginated response (flat structure from /clients/{id}/bookings, etc.)
+export type { ClientPaginatedResponse } from './responses/client-paginated-response';
+
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;

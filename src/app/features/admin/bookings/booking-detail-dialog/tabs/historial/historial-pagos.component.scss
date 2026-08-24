@@ -226,3 +226,9 @@
 .hpg-sk-gap {
   height: 0.75rem;
 }
+
+// ── Sentinel (invisible trigger for IntersectionObserver) ─────────────────────
+.hpg-sentinel {
+  height: 1px;
+  width: 100%;
+}

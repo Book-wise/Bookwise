@@ -2,7 +2,14 @@
 
   @case ('list') {
     <div class="hpg-list">
-      @if (salesLoading()) {
+      <!-- Counter -->
+      <bw-paginated-counter
+        [showing]="salesShowingCount()"
+        [total]="salesPagination().total"
+        label="pagos"
+      />
+
+      @if (loadingSalesPage() && sales().length === 0) {
         <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
         <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
         <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
@@ -41,6 +48,22 @@
             </div>
           </div>
         }
+
+        <!-- Loading next page skeleton -->
+        @if (loadingSalesPage() && sales().length > 0) {
+          <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+          <div class="bw-card hpg-sk-card"><p-skeleton width="100%" height="5.5rem" borderRadius="6px" /></div>
+        }
+
+        <!-- Sentinel for IntersectionObserver -->
+        <div class="hpg-sentinel"></div>
+
+        <!-- Load more button -->
+        <bw-load-more-button
+          [hasMore]="salesPagination().hasMore"
+          [loading]="loadingSalesPage()"
+          (loadMore)="onLoadMore()"
+        />
       }
     </div>
   }
@@ -160,3 +183,9 @@
   }
 
 }
+
+<!-- Scroll-to-top -->
+<bw-scroll-top-button
+  [visible]="showScrollTop()"
+  (clicked)="scrollToTop()"
+/>

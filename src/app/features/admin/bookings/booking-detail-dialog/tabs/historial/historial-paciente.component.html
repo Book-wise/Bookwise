@@ -1,4 +1,11 @@
 <div class="hp-container">
+  <!-- Counter -->
+  <bw-paginated-counter
+    [showing]="bookingsShowingCount()"
+    [total]="bookingsPagination().total"
+    label="reservaciones"
+  />
+
   <p-tabs [value]="activeSubTab()" (valueChange)="onTabChange($event)">
     <p-tablist>
       <p-tab value="atenciones">Últimas atenciones</p-tab>
@@ -6,7 +13,7 @@
     </p-tablist>
   </p-tabs>
 
-  @if (loading()) {
+  @if (loadingBookingsPage() && rawBookings().length === 0) {
     <div class="hp-sk-row"><p-skeleton width="100%" height="2.5rem" borderRadius="6px" /></div>
     <div class="hp-sk-row"><p-skeleton width="100%" height="3rem" borderRadius="6px" /></div>
     <div class="hp-sk-row"><p-skeleton width="100%" height="3rem" borderRadius="6px" /></div>
@@ -47,5 +54,28 @@
         </tr>
       </ng-template>
     </p-table>
+
+    <!-- Loading next page skeleton -->
+    @if (loadingBookingsPage() && rawBookings().length > 0) {
+      <div class="hp-sk-row"><p-skeleton width="100%" height="3rem" borderRadius="6px" /></div>
+      <div class="hp-sk-row"><p-skeleton width="100%" height="3rem" borderRadius="6px" /></div>
+      <div class="hp-sk-row"><p-skeleton width="100%" height="3rem" borderRadius="6px" /></div>
+    }
+
+    <!-- Sentinel for IntersectionObserver -->
+    <div class="hp-sentinel"></div>
+
+    <!-- Load more button -->
+    <bw-load-more-button
+      [hasMore]="bookingsPagination().hasMore"
+      [loading]="loadingBookingsPage()"
+      (loadMore)="onLoadMore()"
+    />
   }
 </div>
+
+<!-- Scroll-to-top -->
+<bw-scroll-top-button
+  [visible]="showScrollTop()"
+  (clicked)="scrollToTop()"
+/>

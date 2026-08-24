@@ -17,13 +17,13 @@
   <div class="historial-card">
     @switch (selectedView()) {
       @case ('paciente') {
-        <bw-historial-paciente />
+        <bw-historial-paciente [clientId]="clientId()" />
       }
       @case ('pagos') {
-        <bw-historial-pagos />
+        <bw-historial-pagos [clientId]="clientId()" />
       }
       @case ('reserva') {
-        <bw-historial-reserva />
+        <bw-historial-reserva [clientId]="clientId()" />
       }
     }
   </div>

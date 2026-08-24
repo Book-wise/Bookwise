@@ -85,3 +85,9 @@
   &__icon { font-size: 2rem; opacity: 0.35; }
   &__text { margin: 0; font-size: var(--bw-font-table); text-align: center; }
 }
+
+// ── Sentinel (invisible trigger for IntersectionObserver) ─────────────────────
+.hp-sentinel {
+  height: 1px;
+  width: 100%;
+}
