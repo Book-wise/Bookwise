@@ -293,10 +293,15 @@ export class PaymentTabComponent {
 
     this.confirmationService.confirm({
       header: 'Eliminar venta',
-      message: '¿Estás seguro que deseas eliminar esta venta? Esta acción no se puede revertir.',
+      message: '¿Estás seguro que desea eliminar esta venta? Esta acción no se puede revertir.',
+      icon: 'pi pi-trash bw-confirm-icon--danger',
       acceptLabel: 'Eliminar Venta',
       rejectLabel: 'Cancelar',
+      acceptIcon: 'pi pi-trash',
+      rejectIcon: 'pi pi-times',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined',
+      styleClass: 'bw-delete-confirm',
       accept: () => {
         this.deleteSale(sale.id);
       },
