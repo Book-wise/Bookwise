@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
       <span class="bw-counter__text">
         Mostrando <strong>{{ showing() }}</strong> de <strong>{{ total() }}</strong> {{ label() }}
         @if (filterBadge()) {
+          <span class="bw-counter__filter">con el criterio:</span>
           <span class="bw-counter__badge">{{ filterBadge() }}</span>
         }
       </span>
@@ -28,6 +29,12 @@ import { CommonModule } from '@angular/common';
     .bw-counter__text strong {
       font-weight: var(--bw-weight-semibold, 600);
       color: var(--text-color, #111827);
+    }
+
+    .bw-counter__filter {
+      color: var(--text-color-secondary, #6b7280);
+      font-style: italic;
+      margin-left: 0.375rem;
     }
 
     .bw-counter__badge {
