@@ -301,7 +301,6 @@ export class PaymentTabComponent {
       rejectIcon: 'pi pi-times',
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-outlined',
-      styleClass: 'bw-delete-confirm',
       accept: () => {
         this.deleteSale(sale.id);
       },
