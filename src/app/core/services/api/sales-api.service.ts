@@ -11,6 +11,7 @@ import {
   CreateTransactionResponse,
   TransactionListResponse,
   DeleteTransactionResponse,
+  DeleteSaleResponse,
   SendReceiptRequest,
   SendReceiptResponse,
   PaginatedResponse,
@@ -74,6 +75,12 @@ export class SalesApiService {
     return this.http.post<SendReceiptResponse>(
       `${this.baseUrl}/sales/${saleId}/receipt/send`,
       body,
+    );
+  }
+
+  deleteSale(saleId: number): Observable<DeleteSaleResponse> {
+    return this.http.delete<DeleteSaleResponse>(
+      `${this.baseUrl}/sales/${saleId}`,
     );
   }
 }

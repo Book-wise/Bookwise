@@ -13,7 +13,8 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { PopoverModule, Popover } from 'primeng/popover';
 import { InputTextModule } from 'primeng/inputtext';
-import { MenuItem, MenuItemCommandEvent, MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MenuItem, MenuItemCommandEvent, MessageService, ConfirmationService } from 'primeng/api';
 import { Booking, BookingPayment, CreateSaleRequest, Sale, SaleTransaction } from '@models';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -57,7 +58,7 @@ interface SaleVm {
     CommonModule, FormsModule,
     SkeletonModule, ButtonModule, MenuModule, TextareaModule,
     TableModule, InputNumberModule, SelectModule, TooltipModule,
-    PopoverModule, InputTextModule,
+    PopoverModule, InputTextModule, ConfirmDialogModule,
     BwCurrencyPipe,
   ],
   templateUrl: './payment-tab.component.html',
@@ -69,6 +70,7 @@ export class PaymentTabComponent {
   private readonly salesApi = inject(SalesApiService);
   private readonly httpError = inject(HttpErrorService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly el        = inject(ElementRef);
 
   readonly booking      = input.required<Booking>();
@@ -163,7 +165,7 @@ export class PaymentTabComponent {
     { label: 'Ver comprobante',    icon: 'pi pi-eye' },
     { label: 'Enviar comprobante', icon: 'pi pi-send', command: (e) => this.openSendReceipt(e) },
     { separator: true },
-    { label: 'Eliminar venta',     icon: 'pi pi-trash', styleClass: 'bw-menu-danger' },
+    { label: 'Eliminar venta',     icon: 'pi pi-trash', styleClass: 'bw-menu-danger', command: () => this.confirmDeleteSale() },
   ];
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -261,6 +263,40 @@ export class PaymentTabComponent {
       error: (err) => {
         this.httpError.handle(err, 'enviar comprobante');
         this.receiptSaving.set(false);
+      },
+    });
+  }
+
+  confirmDeleteSale(): void {
+    const sale = this.vm().sale;
+    if (!sale) return;
+
+    this.confirmationService.confirm({
+      header: 'Eliminar venta',
+      message: '¿Estás seguro que deseas eliminar esta venta? Esta acción no se puede revertir.',
+      acceptLabel: 'Eliminar Venta',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deleteSale(sale.id);
+      },
+    });
+  }
+
+  private deleteSale(saleId: number): void {
+    this.salesApi.deleteSale(saleId).subscribe({
+      next: () => {
+        this.overrideSaleId.set(null);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Venta eliminada',
+          detail: 'La venta se ha eliminado correctamente',
+          key: 'global',
+          life: 4000,
+        });
+      },
+      error: (err) => {
+        this.httpError.handle(err, 'eliminar venta');
       },
     });
   }

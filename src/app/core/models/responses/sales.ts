@@ -150,3 +150,8 @@ export interface DeleteTransactionResponse {
   message: string;
   sale: SaleSummary;
 }
+
+/** DELETE /sales/:id → 200 */
+export interface DeleteSaleResponse {
+  message: string;
+}
