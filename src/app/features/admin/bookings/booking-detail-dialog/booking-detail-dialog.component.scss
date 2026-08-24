@@ -2,6 +2,11 @@
 // p-tabs solo contiene p-tablist — sin p-tabpanels.
 // El @switch del template maneja el contenido activo.
 
+:host ::ng-deep .bw-payment-dialog {
+  display: flex;
+  flex-direction: column;
+}
+
 :host ::ng-deep .bw-payment-dialog .p-dialog-header {
   padding-bottom: 0;
 }
@@ -131,6 +136,13 @@
   border-radius: 0 !important;
 }
 
+:host ::ng-deep .p-dialog-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 :host ::ng-deep .p-dialog-footer {
   padding: 1.25rem;
 }
@@ -218,6 +230,7 @@
 .tab-content {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 0.75rem;
   padding: 0.5rem 0;
   min-height: 160px;

@@ -210,109 +210,127 @@
     <div class="bw-pc__panel-body">
       @switch (panelTab()) {
 
+        <!-- ── Planes ───────────────────────────────────────────────────────── -->
         @case ('planes') {
-          <ul class="bw-pc__pack-list">
-            <li class="bw-pc__pack-item">
-              <div class="bw-pc__pack-name">Plan Kinesiología 10 sesiones</div>
-              <div class="bw-pc__pack-progress">
-                <span>4 / 10 sesiones</span>
-                <span class="bw-pc__pack-remaining">6 restantes</span>
-              </div>
-              <span class="bw-chip bw-chip--success">Activo</span>
-            </li>
-            <li class="bw-pc__pack-item">
-              <div class="bw-pc__pack-name">Plan Neuromuscular 5 sesiones</div>
-              <div class="bw-pc__pack-progress">
-                <span>0 / 5 sesiones</span>
-                <span class="bw-pc__pack-remaining">5 restantes</span>
-              </div>
-              <span class="bw-chip bw-chip--success">Activo</span>
-            </li>
-            <li class="bw-pc__pack-item">
-              <div class="bw-pc__pack-name">Plan Post-operatorio</div>
-              <div class="bw-pc__pack-progress">
-                <span>8 / 8 sesiones</span>
-                <span class="bw-pc__pack-remaining">Completado</span>
-              </div>
-              <span class="bw-chip bw-chip--online">Completado</span>
-            </li>
-          </ul>
+          @if (detailStore.packs().loading) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3.5rem" />
+              <p-skeleton height="3.5rem" />
+              <p-skeleton height="3.5rem" />
+            </div>
+          } @else if (activePacks().length === 0) {
+            <div class="bw-pc__empty">
+              <i class="pi pi-box bw-pc__empty-icon"></i>
+              <span>Sin planes activos</span>
+            </div>
+          } @else {
+            <ul class="bw-pc__pack-list">
+              @for (pack of activePacks(); track pack.id) {
+                <li class="bw-pc__pack-item">
+                  <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? 'Plan' }}</div>
+                  <div class="bw-pc__pack-progress">
+                    <span>{{ pack.used_sessions }} / {{ pack.total_sessions }} sesiones</span>
+                    <span class="bw-pc__pack-remaining">{{ pack.remaining_sessions }} restantes</span>
+                  </div>
+                  <span class="bw-chip bw-chip--success">Activo</span>
+                </li>
+              }
+            </ul>
+          }
         }
 
+        <!-- ── Sesiones ─────────────────────────────────────────────────────── -->
         @case ('sesiones') {
-          <ul class="bw-pc__pack-list">
-            <li class="bw-pc__pack-item">
-              <div class="bw-pc__pack-name">Kinesiología Traumatológica</div>
-              <div class="bw-pc__pack-progress">
-                <span>14/04/2026 — 15:30</span>
-                <span class="bw-pc__pack-remaining">Confirmada</span>
-              </div>
-            </li>
-            <li class="bw-pc__pack-item">
-              <div class="bw-pc__pack-name">Kinesiología Deportiva</div>
-              <div class="bw-pc__pack-progress">
-                <span>12/04/2026 — 10:00</span>
-                <span class="bw-pc__pack-remaining">Completada</span>
-              </div>
-            </li>
-            <li class="bw-pc__pack-item">
-              <div class="bw-pc__pack-name">Neuromuscular</div>
-              <div class="bw-pc__pack-progress">
-                <span>10/04/2026 — 16:45</span>
-                <span class="bw-pc__pack-remaining">Completada</span>
-              </div>
-            </li>
-          </ul>
+          @if (detailStore.packs().loading) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3.5rem" />
+              <p-skeleton height="3.5rem" />
+              <p-skeleton height="3.5rem" />
+            </div>
+          } @else if (allPackSessions().length === 0) {
+            <div class="bw-pc__empty">
+              <i class="pi pi-calendar bw-pc__empty-icon"></i>
+              <span>Sin sesiones programadas</span>
+            </div>
+          } @else {
+            <ul class="bw-pc__pack-list">
+              @for (session of allPackSessions(); track session.session_number) {
+                <li class="bw-pc__pack-item">
+                  <div class="bw-pc__pack-name">{{ session.packName }}</div>
+                  <div class="bw-pc__pack-progress">
+                    @if (session.bookingTime) {
+                      <span>{{ session.bookingTime }}</span>
+                    }
+                    <span class="bw-pc__pack-remaining">{{ session.statusLabel }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
         }
 
+        <!-- ── Prepago ──────────────────────────────────────────────────────── -->
         @case ('prepago') {
-          <ul class="bw-pc__sale-list">
-            <li class="bw-pc__sale-item">
-              <div class="bw-pc__sale-row">
-                <span class="bw-pc__sale-label">Total</span>
-                <span class="bw-pc__sale-amount">$150.000</span>
-              </div>
-              <div class="bw-pc__sale-row">
-                <span class="bw-pc__sale-label">Pagado</span>
-                <span class="bw-pc__sale-amount">$150.000</span>
-              </div>
-              <span class="bw-chip bw-chip--success">Pagado</span>
-            </li>
-            <li class="bw-pc__sale-item">
-              <div class="bw-pc__sale-row">
-                <span class="bw-pc__sale-label">Total</span>
-                <span class="bw-pc__sale-amount">$80.000</span>
-              </div>
-              <div class="bw-pc__sale-row">
-                <span class="bw-pc__sale-label">Pagado</span>
-                <span class="bw-pc__sale-amount">$40.000</span>
-              </div>
-              <span class="bw-chip bw-chip--warning">Pago parcial</span>
-            </li>
-          </ul>
+          @if (detailStore.sales().loading) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3.5rem" />
+              <p-skeleton height="3.5rem" />
+            </div>
+          } @else if (detailStore.sales().data.length === 0) {
+            <div class="bw-pc__empty">
+              <i class="pi pi-wallet bw-pc__empty-icon"></i>
+              <span>Sin pagos prepagados</span>
+            </div>
+          } @else {
+            <ul class="bw-pc__sale-list">
+              @for (sale of detailStore.sales().data; track sale.id) {
+                <li class="bw-pc__sale-item">
+                  <div class="bw-pc__sale-row">
+                    <span class="bw-pc__sale-label">Total</span>
+                    <span class="bw-pc__sale-amount">{{ sale.total | currency: 'CLP': 'symbol': '1.0-0' }}</span>
+                  </div>
+                  <div class="bw-pc__sale-row">
+                    <span class="bw-pc__sale-label">Pagado</span>
+                    <span class="bw-pc__sale-amount">{{ sale.paid_amount | currency: 'CLP': 'symbol': '1.0-0' }}</span>
+                  </div>
+                  @if (sale.payment_status === 'paid') {
+                    <span class="bw-chip bw-chip--success">Pagado</span>
+                  } @else if (sale.payment_status === 'partial') {
+                    <span class="bw-chip bw-chip--warning">Pago parcial</span>
+                  } @else {
+                    <span class="bw-chip bw-chip--danger">Pendiente</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
         }
 
+        <!-- ── Recientes ────────────────────────────────────────────────────── -->
         @case ('recientes') {
-          <ul class="bw-pc__booking-list">
-            <li class="bw-pc__booking-item">
-              <div class="bw-pc__booking-row">
-                <span class="bw-pc__booking-service">Kinesiología Traumatológica</span>
-              </div>
-              <span class="bw-pc__booking-time">14/04/2026 15:30</span>
-            </li>
-            <li class="bw-pc__booking-item">
-              <div class="bw-pc__booking-row">
-                <span class="bw-pc__booking-service">Kinesiología Deportiva</span>
-              </div>
-              <span class="bw-pc__booking-time">12/04/2026 10:00</span>
-            </li>
-            <li class="bw-pc__booking-item">
-              <div class="bw-pc__booking-row">
-                <span class="bw-pc__booking-service">Neuromuscular</span>
-              </div>
-              <span class="bw-pc__booking-time">10/04/2026 16:45</span>
-            </li>
-          </ul>
+          @if (detailStore.recent().loading) {
+            <div class="bw-pc__skeleton-list">
+              <p-skeleton height="3rem" />
+              <p-skeleton height="3rem" />
+              <p-skeleton height="3rem" />
+            </div>
+          } @else if (detailStore.recent().data.length === 0) {
+            <div class="bw-pc__empty">
+              <i class="pi pi-history bw-pc__empty-icon"></i>
+              <span>Sin reservas recientes</span>
+            </div>
+          } @else {
+            <ul class="bw-pc__booking-list">
+              @for (booking of detailStore.recent().data; track booking.id) {
+                <li class="bw-pc__booking-item">
+                  <div class="bw-pc__booking-row">
+                    <span class="bw-pc__booking-service">{{ booking.service?.name ?? 'Servicio' }}</span>
+                  </div>
+                  <span class="bw-pc__booking-time">{{ formatBookingTime(booking.start_time) }}</span>
+                </li>
+              }
+            </ul>
+          }
         }
 
       }

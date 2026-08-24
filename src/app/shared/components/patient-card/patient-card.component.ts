@@ -9,6 +9,7 @@ import { Client } from '@models';
 import { LanguageService } from '@services/language.service';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { STATUS_COLOR_MAP } from '@features/admin/bookings/constants/booking-statuses';
+import { TimezoneService } from '@services/timezone.service';
 
 export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
 
@@ -22,6 +23,7 @@ export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
 export class PatientCardComponent implements AfterViewInit, OnDestroy {
   readonly detailStore = inject(ClientDetailStore);
   readonly lang = inject(LanguageService);
+  private readonly tz = inject(TimezoneService);
 
   // expose to template
   readonly STATUS_COLOR_MAP = STATUS_COLOR_MAP;
@@ -99,7 +101,7 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   readonly sessionsCount = computed(() =>
     this.detailStore.packs().data
       .filter(p => p.status === 'active')
-      .reduce((sum, p) => sum + (p.used_sessions ?? 0), 0)
+      .reduce((sum, p) => sum + (p.total_sessions ?? 0), 0)
   );
 
   readonly prepaidCount = computed(() =>
@@ -125,6 +127,35 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
     this.detailStore.packs().data.filter(p => p.status === 'active')
   );
 
+  /** Flattened sessions from all active packs */
+  readonly allPackSessions = computed(() => {
+    const sessions: {
+      session_number: number;
+      packName: string;
+      bookingTime: string | null;
+      statusLabel: string;
+    }[] = [];
+
+    for (const pack of this.activePacks()) {
+      const packName = pack.service_pack?.name ?? 'Plan';
+      const svc = pack.service_pack?.service?.name;
+      const label = svc ? `${svc}` : packName;
+
+      // Build sessions from pack data
+      for (let i = 1; i <= pack.total_sessions; i++) {
+        const isUsed = i <= pack.used_sessions;
+        sessions.push({
+          session_number: i,
+          packName: label,
+          bookingTime: null,
+          statusLabel: isUsed ? 'Completada' : 'Pendiente',
+        });
+      }
+    }
+
+    return sessions;
+  });
+
   // ── Methods ───────────────────────────────────────────────────────────────────
 
   openPanel(tab: PatientTab): void {
@@ -143,7 +174,7 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadTabData(tab: PatientTab): void {
-    if (tab === 'planes' && !this.detailStore.packs().loaded) {
+    if ((tab === 'planes' || tab === 'sesiones') && !this.detailStore.packs().loaded) {
       this.detailStore.loadPacks(this.client().id);
     }
     if (tab === 'prepago' && !this.detailStore.sales().loaded) {
@@ -156,6 +187,10 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   toggleNotif(): void {
     this.notifOpen.update(v => !v);
+  }
+
+  formatBookingTime(iso: string): string {
+    return this.tz.formatCardDate(iso);
   }
 
   onEditClick(): void {

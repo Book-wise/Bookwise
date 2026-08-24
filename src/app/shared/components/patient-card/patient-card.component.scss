@@ -516,6 +516,32 @@ body.dark-theme {
   overflow-y: auto;
 }
 
+// ── Empty state ─────────────────────────────────────────────────────────────
+
+.bw-pc__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-table);
+}
+
+.bw-pc__empty-icon {
+  font-size: 1.5rem;
+  opacity: 0.4;
+}
+
+// ── Skeleton list ───────────────────────────────────────────────────────────
+
+.bw-pc__skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
 // ── Pack list ─────────────────────────────────────────────────────────────────
 
 .bw-pc__pack-list {
