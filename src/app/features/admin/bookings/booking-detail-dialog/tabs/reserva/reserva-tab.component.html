@@ -174,20 +174,34 @@
   </div>
 
   <!-- ── Información adicional ─────────────────────────────────────────────────── -->
-  <p-panel header="Información adicional" [toggleable]="true" [collapsed]="true" class="rf-panel">
-    <div class="rf-field">
-      <label class="rf-label">Notas para el paciente</label>
-      <textarea
-        pTextarea
-        [ngModel]="notes()"
-        (ngModelChange)="notes.set($event)"
-        rows="3"
-        placeholder="Agregar notas..."
-        class="rf-notes"
-        autoResize="true"
-      ></textarea>
-    </div>
-  </p-panel>
+  <div class="rf-card rf-panel">
+    <button
+      type="button"
+      class="rf-panel__header"
+      [class.rf-panel__header--open]="infoOpen()"
+      (click)="infoOpen.set(!infoOpen())"
+    >
+      <span class="rf-panel__title">Información adicional</span>
+      <i class="pi" [class.pi-chevron-up]="infoOpen()" [class.pi-chevron-down]="!infoOpen()"></i>
+    </button>
+
+    @if (infoOpen()) {
+      <div class="rf-panel__body">
+        <div class="rf-field">
+          <label class="rf-label">Notas para el paciente</label>
+          <textarea
+            pTextarea
+            [ngModel]="notes()"
+            (ngModelChange)="notes.set($event)"
+            rows="3"
+            placeholder="Agregar notas..."
+            class="rf-notes"
+            autoResize="true"
+          ></textarea>
+        </div>
+      </div>
+    }
+  </div>
 
   <!-- ── Acciones ──────────────────────────────────────────────────────────────── -->
   <div class="rf-actions">

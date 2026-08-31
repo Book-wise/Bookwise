@@ -135,6 +135,10 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
     this.activeTab.set(tab);
     this.scrollToTxn.set(scrollToTxn);
     this.selectedStatusId.set(booking.status_id ?? 0);
+    // Reset the patient-detail sub-view to 'reserva' on every open so a stale
+    // activeView (e.g. a previous visit to 'sesiones') never leaks into a new
+    // dialog session for the same client.
+    this.detailStore.returnToReservation();
     this.visible.set(true);
   }
 
@@ -158,7 +162,7 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
 
   returnToReservation(): void {
     this.detailStore.returnToReservation();
-    document.querySelector<HTMLElement>('.bw-booking-detail-dialog .p-dialog-content')?.scrollTo({ top: 0 });
+    document.querySelector<HTMLElement>('.bw-booking-detail-dialog .p-tabpanels')?.scrollTo({ top: 0 });
   }
 
   // onStatusChange(newStatusId: number): void {

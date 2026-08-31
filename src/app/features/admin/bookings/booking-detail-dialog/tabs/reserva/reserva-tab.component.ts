@@ -7,7 +7,6 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
-import { PanelModule } from 'primeng/panel';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PopoverModule } from 'primeng/popover';
@@ -28,7 +27,7 @@ import { PatientCardComponent } from '@shared/components/patient-card/patient-ca
 @Component({
   selector: 'bw-reserva-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, DatePickerModule, TextareaModule, PanelModule, InputTextModule, CheckboxModule, PopoverModule, PhoneInputComponent, PatientCardComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, SelectModule, DatePickerModule, TextareaModule, InputTextModule, CheckboxModule, PopoverModule, PhoneInputComponent, PatientCardComponent],
   templateUrl: './reserva-tab.component.html',
   styleUrl: './reserva-tab.component.scss',
 })
@@ -69,6 +68,7 @@ export class ReservaTabComponent {
   readonly editPhone      = signal('');
   readonly reqOpen        = signal(true);
   readonly addOpen        = signal(true);
+  readonly infoOpen       = signal(false);
 
   // ── Options ───────────────────────────────────────────────────────────────────
 

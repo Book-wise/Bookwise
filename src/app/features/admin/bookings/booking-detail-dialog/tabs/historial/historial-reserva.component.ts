@@ -43,7 +43,7 @@ export class HistorialReservaComponent implements AfterViewInit, OnDestroy {
   private sentinelEl: HTMLElement | null = null;
 
   ngAfterViewInit(): void {
-    this.scrollContainer = document.querySelector('.p-dialog-content') as HTMLElement | null;
+    this.scrollContainer = document.querySelector('.bw-booking-detail-dialog .p-tabpanels') as HTMLElement | null;
 
     if (this.scrollContainer) {
       this.scrollContainer.addEventListener('scroll', this.onScroll);

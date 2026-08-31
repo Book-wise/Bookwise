@@ -9,7 +9,16 @@
 }
 
 :host ::ng-deep .bw-booking-detail-dialog .p-dialog-header {
-  padding-bottom: 0;
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+:host ::ng-deep .bw-booking-detail-dialog .booking-dialog-header {
+  align-items: center;
+}
+
+:host ::ng-deep .bw-booking-detail-dialog .booking-dialog-title-row {
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
 :host ::ng-deep .booking-dialog-tabs {
@@ -17,10 +26,10 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 
   .p-tablist {
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
     z-index: 5;
     background: var(--surface-ground) !important;
     border-bottom: none !important;
@@ -64,7 +73,9 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow-y: auto;
     padding: 0.5rem 0 0;
+    background: var(--surface-ground);
 
     &[hidden] {
       display: none !important;
@@ -76,6 +87,7 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    background: var(--surface-ground);
 
     &[hidden] {
       display: none !important;
@@ -126,16 +138,25 @@
 
 .booking-dialog-header {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
   width: 100%;
 }
 
 .booking-dialog-title-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 0.5rem;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+.booking-dialog-title-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 // ── Dialog header — Mobile ────────────────────────────────────────────────────
@@ -175,7 +196,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 :host ::ng-deep .p-dialog-footer {
@@ -203,6 +224,12 @@
   .bw-status-mobile {
     display: block;
     margin-bottom: var(--bw-space-md);
+  }
+
+  // Ocultar el select de estado del header en mobile (el estado se edita en
+  // el .bw-status-mobile del body)
+  .bw-status-select {
+    display: none !important;
   }
 
   // Dialog full-screen en mobile
@@ -241,12 +268,22 @@
 }
 
 .booking-service-tag {
-  align-self: flex-start;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.booking-client-rut {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
 }
 
 .bw-status-select {
   height: 2.25rem !important;
   font-size: var(--bw-font-table);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .bw-status-option {

@@ -106,7 +106,7 @@ export const ClientDetailStore = signalStore(
           salesApi.getSales({ client_id: clientId }).pipe(
             tap({
               next: (res) => patchState(store, {
-                sales: { data: res.data, loading: false, loaded: true, error: null },
+                sales: { data: Array.isArray(res) ? res : res.data ?? [], loading: false, loaded: true, error: null },
               }),
               error: () => patchState(store, {
                 sales: { data: [], loading: false, loaded: true, error: 'load_failed' },
@@ -127,7 +127,7 @@ export const ClientDetailStore = signalStore(
           bookingsApi.getBookings({ client_id: clientId, per_page: 10 }).pipe(
             tap({
               next: (res) => patchState(store, {
-                recent: { data: res.data, loading: false, loaded: true, error: null },
+                recent: { data: Array.isArray(res) ? res : res.data ?? [], loading: false, loaded: true, error: null },
               }),
               error: () => patchState(store, {
                 recent: { data: [], loading: false, loaded: true, error: 'load_failed' },

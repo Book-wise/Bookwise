@@ -55,7 +55,12 @@
     <!-- Notifications collapsible -->
     @if (showNotifications()) {
       <div class="bw-pc__notif">
-        <button type="button" class="bw-pc__notif-header" (click)="toggleNotif()">
+        <button
+          type="button"
+          class="bw-pc__notif-header"
+          [class.bw-pc__notif-header--open]="notifOpen()"
+          (click)="toggleNotif()"
+        >
           <span class="bw-pc__notif-title">{{ lang.t('patient_card.notif.title') }}</span>
           <i
             class="pi"

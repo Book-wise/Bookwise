@@ -75,7 +75,7 @@ export class HistorialPacienteComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     // Find the scrollable parent (the dialog body)
-    this.scrollContainer = document.querySelector('.p-dialog-content') as HTMLElement | null;
+    this.scrollContainer = document.querySelector('.bw-booking-detail-dialog .p-tabpanels') as HTMLElement | null;
 
     if (this.scrollContainer) {
       this.scrollContainer.addEventListener('scroll', this.onScroll);

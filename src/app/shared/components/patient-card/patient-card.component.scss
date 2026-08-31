@@ -136,6 +136,10 @@
     background: var(--surface-50, #fafafa);
   }
 
+  &--open {
+    background: var(--bw-50, var(--surface-50, #fafafa));
+  }
+
   i {
     flex-shrink: 0;
     font-size: 0.8rem;

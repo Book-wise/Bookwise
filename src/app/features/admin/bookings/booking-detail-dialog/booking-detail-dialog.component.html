@@ -18,13 +18,15 @@
       <!-- ── Desktop: título + estado ─────────────────────────────────────── -->
       <div class="booking-dialog-header bw-desktop-header">
         <div class="booking-dialog-title-row">
-          <span class="booking-dialog-title">
-            {{ booking.client?.first_name }} {{ booking.client?.last_name }}
-          </span>
-          @if (booking.client?.rut; as rut) {
-            <span class="bw-chip booking-client-rut">{{ rut }}</span>
-          }
-          <span class="bw-chip bw-chip--secondary booking-service-tag">{{ booking.service?.name || '' }}</span>
+          <div class="booking-dialog-title-group">
+            <span class="booking-dialog-title">
+              {{ booking.client?.first_name }} {{ booking.client?.last_name }}
+            </span>
+            @if (booking.client?.rut; as rut) {
+              <span class="bw-chip booking-client-rut">{{ rut }}</span>
+            }
+            <span class="bw-chip bw-chip--secondary booking-service-tag">{{ booking.service?.name || '' }}</span>
+          </div>
           <p-select
             [options]="statusOptions"
             [ngModel]="selectedStatusId()"
@@ -33,7 +35,6 @@
             optionValue="value"
             [appendTo]="'body'"
             class="bw-status-select"
-            [style]="{ marginLeft: 'auto' }"
           >
             <ng-template #item let-s>
               <div class="bw-status-option">
