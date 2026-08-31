@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
@@ -13,6 +13,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { PopoverModule } from 'primeng/popover';
 import { Booking } from '@models';
 import { BookingStore } from '@core/stores/booking.store';
+import { BookingDialogStore } from '@core/stores/booking-dialog.store';
+import { PatientTab } from '@core/stores/client-detail.store';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
@@ -39,8 +41,12 @@ export class ReservaTabComponent {
   private readonly refStore       = inject(ReferenceStore);
   private readonly tzService      = inject(TimezoneService);
   readonly store          = inject(BookingStore);
+  readonly dialogStore    = inject(BookingDialogStore);
 
   readonly statusId = input<number>(0);
+
+  /** Re-emits the patient card sub-tab selection so the dialog can switch to the full-content patient detail. */
+  readonly patientTabSelected = output<PatientTab>();
 
   // ── Form state ────────────────────────────────────────────────────────────────
 
@@ -74,7 +80,7 @@ export class ReservaTabComponent {
   // ── Remote data ───────────────────────────────────────────────────────────────
 
   readonly providers = toSignal(
-    toObservable(this.store.selectedBooking).pipe(
+    toObservable(this.dialogStore.booking).pipe(
       switchMap(b => {
         if (!b) return of([]);
         return this.providersApi.getProviders({ location_id: b.location_id ?? b.location?.id });
@@ -93,7 +99,7 @@ export class ReservaTabComponent {
   // ── Derived ───────────────────────────────────────────────────────────────────
 
   readonly serviceDisabled = computed(() => {
-    const booking = this.store.selectedBooking();
+    const booking = this.dialogStore.booking();
     if (!booking) return false;
     const p = booking.payment;
     return !!p && Object.keys(p as object).length > 0;
@@ -113,12 +119,12 @@ export class ReservaTabComponent {
 
   constructor() {
     // Only populate form fields when a NEW booking is selected (id changes).
-    // selectedBooking() is read via untracked so mergeBooking/refreshBooking
+    // dialogStore.booking() is read via untracked so replaceBooking/mergeBooking
     // after save does NOT re-trigger this effect and overwrite user edits.
     effect(() => {
-      const id = this.store.selectedBookingId();
+      const id = this.dialogStore.bookingId();
       if (id === null) return;
-      const b = untracked(() => this.store.selectedBooking());
+      const b = untracked(() => this.dialogStore.booking());
       if (!b) return;
 
       const start = new Date(b.start_time);
@@ -139,7 +145,7 @@ export class ReservaTabComponent {
   // ── Save ──────────────────────────────────────────────────────────────────────
 
   saveBookingTime(): void {
-    const b    = this.store.selectedBooking();
+    const b    = this.dialogStore.booking();
     if (!b) return;
     const date = this.selectedDate();
 
@@ -155,6 +161,9 @@ export class ReservaTabComponent {
         this.bookingsApi.getBooking(b.id).subscribe({
           next: (refreshed) => {
             this.saving.set(false);
+            // Dual write: dialog working copy (what the open dialog renders)
+            // + calendar-canonical root store (eventsForCalendar).
+            this.dialogStore.replaceBooking(refreshed);
             this.store.mergeBooking(refreshed);
             this.messageService.add({
               severity: 'success',
@@ -181,7 +190,7 @@ export class ReservaTabComponent {
   }
 
   startEditClient(): void {
-    const booking = this.store.selectedBooking();
+    const booking = this.dialogStore.booking();
     const c = booking?.client;
     this.editFirstName.set(c?.first_name ?? '');
     this.editLastName.set(c?.last_name ?? '');
@@ -197,7 +206,7 @@ export class ReservaTabComponent {
   }
 
   savePatientData(): void {
-    const booking = this.store.selectedBooking();
+    const booking = this.dialogStore.booking();
     const clientId = booking?.client?.id;
     if (!clientId || !booking) return;
 
@@ -211,6 +220,8 @@ export class ReservaTabComponent {
       next: () => {
         this.bookingsApi.getBooking(booking.id).subscribe({
           next: (refreshed) => {
+            // Dual write: dialog working copy + calendar-canonical root store.
+            this.dialogStore.replaceBooking(refreshed);
             this.store.mergeBooking(refreshed);
             this.refStore.invalidateClients();
             this.editingClient.set(false);

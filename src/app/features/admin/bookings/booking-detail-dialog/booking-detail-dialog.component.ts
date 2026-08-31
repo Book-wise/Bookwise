@@ -9,7 +9,11 @@ import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { Booking } from '@models';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
+import { BookingDialogStore } from '@core/stores/booking-dialog.store';
+import { PatientDetailContentComponent } from '@shared/components/patient-card/patient-detail-content.component';
+import { PatientTab } from '@core/stores/client-detail.store';
 import { BookingsApiService } from '@services/api/bookings-api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
@@ -34,17 +38,21 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     PaymentTabComponent,
     ReservaTabComponent,
     HistorialTabComponent,
+    PatientDetailContentComponent,
   ],
-  providers: [ClientDetailStore],
+  providers: [ClientDetailStore, BookingDialogStore],
   templateUrl: './booking-detail-dialog.component.html',
   styleUrl: './booking-detail-dialog.component.scss',
 })
 export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   private bookingsApi = inject(BookingsApiService);
+  private clientsApi = inject(ClientsApiService);
   private httpError = inject(HttpErrorService);
   private messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
   readonly store = inject(BookingStore);
+  readonly detailStore = inject(ClientDetailStore);
+  readonly dialogStore = inject(BookingDialogStore);
 
   visible = signal(false);
   activeTab = signal<BookingTab>('pago');
@@ -94,18 +102,63 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
     () => this.TABS.find((t) => t.value === this.activeTab())?.label ?? '',
   );
 
-  readonly booking = computed(() => this.store.selectedBooking());
+  readonly booking = this.dialogStore.booking;
+
+  /** Narrowed patient tab currently filling the content area (safe when `activeView() !== 'reserva'`). */
+  readonly activeDetailTab = computed<PatientTab>(() => {
+    const view = this.detailStore.activeView();
+    return view === 'reserva' ? 'planes' : view;
+  });
 
   open(booking: Booking, tab: BookingTab = 'pago', scrollToTxn = false): void {
     this.store.selectBooking(booking);
+    this.dialogStore.open(booking);
+    if (booking.client?.id) {
+      // Enrich the dialog copy with the full client (list payloads may carry a
+      // partial `client` without email/phone), then load fresh detail data.
+      this.clientsApi.getClient(booking.client.id).subscribe({
+        next: (fullClient) => {
+          const enriched = { ...booking, client: fullClient };
+          this.dialogStore.replaceBooking(enriched);
+          this.detailStore.initialize(fullClient);
+          this.store.mergeBooking(enriched);
+          this.loadDetailData(fullClient.id);
+        },
+        error: () => {
+          this.detailStore.initialize(booking.client!);
+          this.loadDetailData(booking.client!.id);
+        },
+      });
+    } else {
+      this.detailStore.reset();
+    }
     this.activeTab.set(tab);
     this.scrollToTxn.set(scrollToTxn);
     this.selectedStatusId.set(booking.status_id ?? 0);
     this.visible.set(true);
   }
 
+  /** Eagerly reload the patient detail domains so sub-tab disabled state is correct before first click. */
+  private loadDetailData(clientId: number): void {
+    this.detailStore.loadPacks(clientId);
+    this.detailStore.loadSales(clientId);
+    this.detailStore.loadRecent(clientId);
+  }
+
   onTabChange(value: string | number | undefined): void {
-    if (value !== undefined) this.activeTab.set(value as BookingTab);
+    if (value !== undefined) {
+      this.activeTab.set(value as BookingTab);
+      this.detailStore.returnToReservation();
+    }
+  }
+
+  onPatientTabSelected(tab: PatientTab): void {
+    this.detailStore.selectTab(tab);
+  }
+
+  returnToReservation(): void {
+    this.detailStore.returnToReservation();
+    document.querySelector<HTMLElement>('.bw-booking-detail-dialog .p-dialog-content')?.scrollTo({ top: 0 });
   }
 
   // onStatusChange(newStatusId: number): void {
@@ -148,6 +201,7 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
 
         // Ahora el Store sí recibirá el objeto con el id correcto y sus nuevos colores
         this.store.mergeBooking(updatedBooking);
+        this.dialogStore.replaceBooking(updatedBooking);
 
         this.messageService.add({
           severity: 'success',
@@ -200,6 +254,8 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
 
   close(): void {
     this.visible.set(false);
+    this.dialogStore.reset();
+    this.detailStore.reset();
     if (!this._skipCloseCleanup) {
       this.store.setSelectedBookingId(null);
       this.scrollToTxn.set(false);

@@ -35,9 +35,11 @@
   <!-- ── Cliente ───────────────────────────────────────────────────────────────── -->
   @if (!editingClient()) {
     <bw-patient-card
-      [client]="store.selectedBooking()!.client!"
+      [client]="dialogStore.booking()!.client!"
+      [dialogMode]="true"
       [showNotifications]="true"
       [showEdit]="true"
+      (patientTabSelected)="patientTabSelected.emit($event)"
       (editRequested)="onEditRequested()"
     />
   } @else {
@@ -152,9 +154,9 @@
       <div class="rf-field-row">
         <p-select
           [options]="[
-            { label: store.selectedBooking()?.service?.name ?? 'Sin servicio', value: store.selectedBooking()?.service_id },
+            { label: dialogStore.booking()?.service?.name ?? 'Sin servicio', value: dialogStore.booking()?.service_id },
           ]"
-          [ngModel]="store.selectedBooking()?.service_id"
+          [ngModel]="dialogStore.booking()?.service_id"
           [disabled]="true"
           [appendTo]="'body'"
           class="rf-select rf-select--locked"

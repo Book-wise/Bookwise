@@ -1,19 +1,28 @@
-// ── Tabs en el header del dialog ──────────────────────────────────────────────
-// p-tabs solo contiene p-tablist — sin p-tabpanels.
-// El @switch del template maneja el contenido activo.
+// ── Tabs del dialog (keep-alive) ──────────────────────────────────────────────
+// p-tabs envuelve tablist (header) + tabpanels (body). Los paneles quedan
+// montados con lazy=false; el tablist queda sticky bajo el header mientras
+// .p-dialog-content scrollea.
 
-:host ::ng-deep .bw-payment-dialog {
+:host ::ng-deep .bw-booking-detail-dialog {
   display: flex;
   flex-direction: column;
 }
 
-:host ::ng-deep .bw-payment-dialog .p-dialog-header {
+:host ::ng-deep .bw-booking-detail-dialog .p-dialog-header {
   padding-bottom: 0;
 }
 
 :host ::ng-deep .booking-dialog-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
   .p-tablist {
-    background: transparent !important;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface-ground) !important;
     border-bottom: none !important;
     padding: 0;
     margin-bottom: 0;
@@ -44,6 +53,32 @@
       color: #ffffff !important;
       background: var(--color-primary, #046af4) !important;
       font-weight: var(--bw-weight-semibold);
+    }
+  }
+
+  // Los paneles son flex para que .tab-content llene la altura; el hidden de
+  // PrimeNG (inactivos) y el hidden propio de p-tabpanels no deben ser
+  // pisados por el display:flex.
+  .p-tabpanels {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 0.5rem 0 0;
+
+    &[hidden] {
+      display: none !important;
+    }
+  }
+
+  .p-tabpanel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+
+    &[hidden] {
+      display: none !important;
     }
   }
 }
@@ -140,7 +175,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 :host ::ng-deep .p-dialog-footer {
@@ -171,7 +206,7 @@
   }
 
   // Dialog full-screen en mobile
-  :host ::ng-deep .bw-payment-dialog {
+  :host ::ng-deep .bw-booking-detail-dialog {
     width: 100vw !important;
     max-width: 100vw !important;
     min-height: 100dvh !important;

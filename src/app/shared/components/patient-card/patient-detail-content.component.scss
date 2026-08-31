@@ -1,0 +1,59 @@
+.patient-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 160px;
+}
+
+.patient-detail-content__back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 0;
+  color: var(--text-color);
+  font-weight: var(--bw-weight-semibold);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--surface-border);
+  cursor: pointer;
+}
+
+.patient-detail-content__back:hover { color: var(--bw-500); }
+
+.patient-detail-content__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0;
+  list-style: none;
+}
+
+.patient-detail-content__list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-table);
+}
+
+.patient-detail-content__list strong { color: var(--text-color); }
+
+.patient-detail-content__state,
+.patient-detail-content__skeleton-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: var(--text-color-secondary);
+  text-align: center;
+}
+
+.patient-detail-content__state i { font-size: 1.5rem; opacity: 0.4; }
+.patient-detail-content__skeleton-list { align-items: stretch; }
