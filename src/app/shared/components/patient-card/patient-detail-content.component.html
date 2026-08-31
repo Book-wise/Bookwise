@@ -1,0 +1,57 @@
+<section class="patient-detail-content">
+  <button type="button" class="patient-detail-content__back" (click)="requestReturn()">
+    <i class="pi pi-arrow-left"></i>
+    Volver a la reserva
+  </button>
+
+  @switch (view()) {
+    @case ('planes') {
+      @if (detailStore.packs().loading) {
+        <div class="patient-detail-content__skeleton-list"><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /></div>
+      } @else if (detailStore.packs().error) {
+        <div class="patient-detail-content__state"><i class="pi pi-exclamation-circle"></i><span>No se pudieron cargar los planes.</span></div>
+      } @else if (activePacks().length === 0) {
+        <div class="patient-detail-content__state"><i class="pi pi-box"></i><span>Sin planes activos</span></div>
+      } @else {
+        <ul class="patient-detail-content__list">
+          @for (pack of activePacks(); track pack.id) {
+            <li><strong>{{ pack.service_pack?.name ?? 'Plan' }}</strong><span>{{ pack.used_sessions }} / {{ pack.total_sessions }} sesiones · {{ pack.remaining_sessions }} restantes</span><span class="bw-chip bw-chip--success">Activo</span></li>
+          }
+        </ul>
+      }
+    }
+    @case ('sesiones') {
+      @if (detailStore.packs().loading) {
+        <div class="patient-detail-content__skeleton-list"><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /></div>
+      } @else if (detailStore.packs().error) {
+        <div class="patient-detail-content__state"><i class="pi pi-exclamation-circle"></i><span>No se pudieron cargar las sesiones.</span></div>
+      } @else if (sessions().length === 0) {
+        <div class="patient-detail-content__state"><i class="pi pi-calendar"></i><span>Sin sesiones programadas</span></div>
+      } @else {
+        <ul class="patient-detail-content__list">@for (session of sessions(); track $index) {<li><strong>{{ session.packName }}</strong><span>Sesión {{ session.sessionNumber }}</span><span>{{ session.status }}</span></li>}</ul>
+      }
+    }
+    @case ('prepago') {
+      @if (detailStore.sales().loading) {
+        <div class="patient-detail-content__skeleton-list"><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /></div>
+      } @else if (detailStore.sales().error) {
+        <div class="patient-detail-content__state"><i class="pi pi-exclamation-circle"></i><span>No se pudieron cargar los pagos prepagados.</span></div>
+      } @else if (detailStore.sales().data.length === 0) {
+        <div class="patient-detail-content__state"><i class="pi pi-wallet"></i><span>Sin pagos prepagados</span></div>
+      } @else {
+        <ul class="patient-detail-content__list">@for (sale of detailStore.sales().data; track sale.id) {<li><strong>Total {{ sale.total | currency: 'CLP': 'symbol': '1.0-0' }}</strong><span>Pagado {{ sale.paid_amount | currency: 'CLP': 'symbol': '1.0-0' }}</span><span>{{ sale.payment_status }}</span></li>}</ul>
+      }
+    }
+    @case ('recientes') {
+      @if (detailStore.recent().loading) {
+        <div class="patient-detail-content__skeleton-list"><p-skeleton height="3rem" /><p-skeleton height="3rem" /><p-skeleton height="3rem" /></div>
+      } @else if (detailStore.recent().error) {
+        <div class="patient-detail-content__state"><i class="pi pi-exclamation-circle"></i><span>No se pudieron cargar las reservas recientes.</span></div>
+      } @else if (detailStore.recent().data.length === 0) {
+        <div class="patient-detail-content__state"><i class="pi pi-history"></i><span>Sin reservas recientes</span></div>
+      } @else {
+        <ul class="patient-detail-content__list">@for (booking of detailStore.recent().data; track booking.id) {<li><strong>{{ booking.service?.name ?? 'Servicio' }}</strong><span>{{ formatBookingTime(booking.start_time) }}</span></li>}</ul>
+      }
+    }
+  }
+</section>

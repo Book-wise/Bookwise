@@ -8,23 +8,25 @@
   [resizable]="false"
   (onHide)="close()"
   [pt]="{
-    root: { class: 'bw-payment-dialog' },
+    root: { class: 'bw-booking-detail-dialog' },
     footer: { style: { padding: '1.25rem' } }
   }"
 >
   <ng-template pTemplate="header">
-    @if (store.selectedBooking(); as booking) {
+    @if (booking(); as booking) {
 
-      <!-- ── Desktop: título + tag + tabs ────────────────────────────── -->
+      <!-- ── Desktop: título + estado ─────────────────────────────────────── -->
       <div class="booking-dialog-header bw-desktop-header">
         <div class="booking-dialog-title-row">
-          <span class="booking-dialog-title">
-            {{ booking.client?.first_name }} {{ booking.client?.last_name }}
-          </span>
-          @if (booking.client?.rut; as rut) {
-            <span class="bw-chip booking-client-rut">{{ rut }}</span>
-          }
-          <span class="bw-chip bw-chip--secondary booking-service-tag">{{ booking.service?.name || '' }}</span>
+          <div class="booking-dialog-title-group">
+            <span class="booking-dialog-title">
+              {{ booking.client?.first_name }} {{ booking.client?.last_name }}
+            </span>
+            @if (booking.client?.rut; as rut) {
+              <span class="bw-chip booking-client-rut">{{ rut }}</span>
+            }
+            <span class="bw-chip bw-chip--secondary booking-service-tag">{{ booking.service?.name || '' }}</span>
+          </div>
           <p-select
             [options]="statusOptions"
             [ngModel]="selectedStatusId()"
@@ -33,7 +35,6 @@
             optionValue="value"
             [appendTo]="'body'"
             class="bw-status-select"
-            [style]="{ marginLeft: 'auto' }"
           >
             <ng-template #item let-s>
               <div class="bw-status-option">
@@ -49,16 +50,9 @@
             </ng-template>
           </p-select>
         </div>
-        <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs">
-          <p-tablist>
-            @for (tab of visibleTabs(); track tab.value) {
-              <p-tab [value]="tab.value">{{ tab.label }}</p-tab>
-            }
-          </p-tablist>
-        </p-tabs>
       </div>
 
-      <!-- ── Mobile: flecha + nombre del tab activo ───────────────────── -->
+      <!-- ── Mobile: flecha + nombre del tab activo ──────────────────────── -->
       <div class="bw-mobile-header">
         <button class="bw-icon-btn" (click)="goBack()" aria-label="Volver">
           <i class="pi pi-arrow-left"></i>
@@ -74,9 +68,9 @@
     }
   </ng-template>
 
-  <!-- ── Panel content — driven by activeTab() signal ──────────────────── -->
+  <!-- ── Panel content — keep-alive tabs + patient detail sibling ──────────── -->
   @if (visible()) {
-    @if (store.selectedBooking(); as booking) {
+    @if (booking(); as booking) {
 
       <!-- Estado (mobile only — in header on desktop) -->
       <div class="bw-status-mobile">
@@ -104,92 +98,98 @@
         </p-select>
       </div>
 
-      @switch (activeTab()) {
+      <!-- `p-tabs` envuelve tablist (header) + tabpanels (body). Los 6 paneles
+           permanecen montados (lazy=false → keep-alive nativo): el estado del
+           form de Reserva sobrevive al cambiar de tab principal. -->
+      <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs">
+        <p-tablist>
+          @for (tab of visibleTabs(); track tab.value) {
+            <p-tab [value]="tab.value">{{ tab.label }}</p-tab>
+          }
+        </p-tablist>
 
-        @case ('reserva') {
-          <div class="tab-content">
-            <bw-reserva-tab [statusId]="selectedStatusId()" />
-          </div>
-        }
-
-        @case ('pago') {
-          <div class="tab-content">
-            <bw-payment-tab [booking]="booking" [scrollToTxn]="scrollToTxn()" />
-          </div>
-        }
-
-        @case ('recordatorios') {
-          <div class="tab-content">
-            <div class="empty-state">
-              <i class="pi pi-bell empty-state__icon"></i>
-              <p class="empty-state__text">Sin recordatorios configurados.</p>
+        <p-tabpanels [hidden]="detailStore.activeView() !== 'reserva'">
+          <p-tabpanel value="reserva">
+            <div class="tab-content">
+              <bw-reserva-tab [statusId]="selectedStatusId()" (patientTabSelected)="onPatientTabSelected($event)" />
             </div>
-          </div>
-        }
+          </p-tabpanel>
 
-        @case ('paciente') {
-          <div class="tab-content">
-            @if (booking.client) {
-              <div class="info-row">
-                <span class="info-label">Nombre</span>
-                <span class="info-value">{{ booking.client.first_name }} {{ booking.client.last_name }}</span>
+          <p-tabpanel value="pago">
+            <div class="tab-content">
+              <bw-payment-tab [booking]="booking" [scrollToTxn]="scrollToTxn()" />
+            </div>
+          </p-tabpanel>
+
+          <p-tabpanel value="recordatorios">
+            <div class="tab-content">
+              <div class="empty-state">
+                <i class="pi pi-bell empty-state__icon"></i>
+                <p class="empty-state__text">Sin recordatorios configurados.</p>
               </div>
-              @if (booking.client.rut) {
+            </div>
+          </p-tabpanel>
+
+          <p-tabpanel value="paciente">
+            <div class="tab-content">
+              @if (booking.client) {
                 <div class="info-row">
-                  <span class="info-label">RUT</span>
-                  <span class="info-value">{{ booking.client.rut }}</span>
+                  <span class="info-label">Nombre</span>
+                  <span class="info-value">{{ booking.client.first_name }} {{ booking.client.last_name }}</span>
                 </div>
-              }
-              @if (booking.client.email) {
-                <div class="info-row">
-                  <span class="info-label">Email</span>
-                  <span class="info-value">{{ booking.client.email }}</span>
-                </div>
-              }
-              @if (booking.client.phone) {
-                <div class="info-row">
-                  <span class="info-label">Teléfono</span>
-                  <div class="info-inline">
-                    <span class="info-value">{{ booking.client.phone }}</span>
-                    <a
-                      [href]="'https://wa.me/' + booking.client.phone.replace('+', '').replace(' ', '')"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="whatsapp-link"
-                    >
-                      <p-button icon="pi pi-whatsapp" label="Hablar por WhatsApp" severity="success" [outlined]="true" size="small" />
-                    </a>
+                @if (booking.client.rut) {
+                  <div class="info-row">
+                    <span class="info-label">RUT</span>
+                    <span class="info-value">{{ booking.client.rut }}</span>
                   </div>
-                </div>
+                }
+                @if (booking.client.email) {
+                  <div class="info-row">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ booking.client.email }}</span>
+                  </div>
+                }
+                @if (booking.client.phone) {
+                  <div class="info-row">
+                    <span class="info-label">Teléfono</span>
+                    <div class="info-inline">
+                      <span class="info-value">{{ booking.client.phone }}</span>
+                      <a
+                        [href]="'https://wa.me/' + booking.client.phone.replace('+', '').replace(' ', '')"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="whatsapp-link"
+                      >
+                        <p-button icon="pi pi-whatsapp" label="Hablar por WhatsApp" severity="success" [outlined]="true" size="small" />
+                      </a>
+                    </div>
+                  </div>
+                }
               }
-            }
-          </div>
-        }
-
-        @case ('ficha') {
-          <div class="tab-content">
-            <div class="empty-state">
-              <i class="pi pi-file-edit empty-state__icon"></i>
-              <p class="empty-state__text">Ficha médica próximamente.</p>
             </div>
-          </div>
-        }
+          </p-tabpanel>
 
-        @case ('historial') {
-          <div class="tab-content">
-            <bw-historial-tab [booking]="booking" />
-          </div>
-        }
-
-        @default {
-          <div class="tab-content">
-            <div class="empty-state">
-              <i class="pi pi-exclamation-circle empty-state__icon"></i>
-              <p class="empty-state__text">Tab no encontrado.</p>
+          <p-tabpanel value="ficha">
+            <div class="tab-content">
+              <div class="empty-state">
+                <i class="pi pi-file-edit empty-state__icon"></i>
+                <p class="empty-state__text">Ficha médica próximamente.</p>
+              </div>
             </div>
-          </div>
-        }
+          </p-tabpanel>
 
+          <p-tabpanel value="historial">
+            <div class="tab-content">
+              <bw-historial-tab [booking]="booking" />
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+
+      <!-- Patient detail: hermano nivel 1 que llena todo el contenido.
+           Los tabpanels quedan ocultos ([hidden]) pero montados (keep-alive). -->
+      @if (detailStore.activeView() !== 'reserva') {
+        <bw-patient-detail-content [view]="activeDetailTab()" (returnRequested)="returnToReservation()" />
       }
     }
   }

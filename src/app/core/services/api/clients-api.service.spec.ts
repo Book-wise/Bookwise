@@ -56,7 +56,7 @@ describe('ClientsApiService', () => {
 
     const req = httpMock.expectOne(`${baseUrl}/clients/5`);
     expect(req.request.method).toBe('GET');
-    req.flush(dummy);
+    req.flush({ data: dummy });
   });
 
   it('POST /clients via createClient()', () => {
@@ -98,7 +98,7 @@ describe('ClientsApiService', () => {
 
     const req = httpMock.expectOne(`${baseUrl}/clients/1/packs`);
     expect(req.request.method).toBe('GET');
-    req.flush(dummy);
+    req.flush({ data: dummy });
   });
 
   it('GET /client-packs via getClientPacksList()', () => {

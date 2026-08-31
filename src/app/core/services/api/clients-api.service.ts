@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { Client, ClientPack, PaginatedResponse } from '@models';
 import { buildHttpParams } from './build-http-params';
@@ -22,7 +22,7 @@ export class ClientsApiService {
   }
 
   getClient(id: number): Observable<Client> {
-    return this.http.get<Client>(`${this.baseUrl}/clients/${id}`);
+    return this.http.get<{ data: Client }>(`${this.baseUrl}/clients/${id}`).pipe(map((r) => r.data));
   }
 
   createClient(client: Partial<Client>): Observable<Client> {
@@ -34,7 +34,9 @@ export class ClientsApiService {
   }
 
   getClientPacks(clientId: number): Observable<ClientPack[]> {
-    return this.http.get<ClientPack[]>(`${this.baseUrl}/clients/${clientId}/packs`);
+    return this.http
+      .get<{ data: ClientPack[] }>(`${this.baseUrl}/clients/${clientId}/packs`)
+      .pipe(map((r) => r.data));
   }
 
   getClientPacksList(params?: {

@@ -229,7 +229,7 @@ export class PaymentTabComponent {
   }
 
   saveNote(): void {
-    console.log('Note saved:', this.noteText());
+    // Note persistence handled by the API call in the caller.
   }
 
   // ── Ver comprobante ────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 <section class="bw-card bw-card--signature bw-pc" [class.bw-pc--panel]="panelOpen()">
   <!-- ── Normal card view ────────────────────────────────────────────────────── -->
-  @if (!panelOpen()) {
+  @if (!panelOpen() || dialogMode()) {
     <!-- Avatar + Name row -->
     <div class="bw-pc__row">
       <div class="bw-pc__left">
@@ -55,7 +55,12 @@
     <!-- Notifications collapsible -->
     @if (showNotifications()) {
       <div class="bw-pc__notif">
-        <button type="button" class="bw-pc__notif-header" (click)="toggleNotif()">
+        <button
+          type="button"
+          class="bw-pc__notif-header"
+          [class.bw-pc__notif-header--open]="notifOpen()"
+          (click)="toggleNotif()"
+        >
           <span class="bw-pc__notif-title">{{ lang.t('patient_card.notif.title') }}</span>
           <i
             class="pi"
@@ -88,13 +93,13 @@
                 </button>
               </div>
               <p-checkbox
-                [ngModel]="notifCitaEmail()"
-                (ngModelChange)="notifCitaEmail.set($event)"
+                [ngModel]="notificationValue('citaEmail')"
+                (ngModelChange)="setNotification('citaEmail', $event)"
                 [binary]="true"
               />
               <p-checkbox
-                [ngModel]="notifCitaWa()"
-                (ngModelChange)="notifCitaWa.set($event)"
+                [ngModel]="notificationValue('citaWa')"
+                (ngModelChange)="setNotification('citaWa', $event)"
                 [binary]="true"
               />
             </div>
@@ -104,13 +109,13 @@
                 <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.scheduled') }}</span>
               </div>
               <p-checkbox
-                [ngModel]="reminderEmail()"
-                (ngModelChange)="reminderEmail.set($event)"
+                [ngModel]="notificationValue('reminderEmail')"
+                (ngModelChange)="setNotification('reminderEmail', $event)"
                 [binary]="true"
               />
               <p-checkbox
-                [ngModel]="reminderWa()"
-                (ngModelChange)="reminderWa.set($event)"
+                [ngModel]="notificationValue('reminderWa')"
+                (ngModelChange)="setNotification('reminderWa', $event)"
                 [binary]="true"
               />
             </div>
@@ -127,16 +132,40 @@
 
     <!-- Items trigger -->
     <nav class="bw-pc__tabs">
-      <button type="button" class="bw-pc__tab" (click)="openPanel('planes')" data-testid="tab-planes">
+      <button
+        type="button"
+        class="bw-pc__tab"
+        (click)="openPanel('planes')"
+        data-testid="tab-planes"
+        [disabled]="detailStore.packs().loaded && activePacks().length === 0"
+      >
         {{ lang.t('patient_card.tab.plans') }}
       </button>
-      <button type="button" class="bw-pc__tab" (click)="openPanel('sesiones')" data-testid="tab-sesiones">
+      <button
+        type="button"
+        class="bw-pc__tab"
+        (click)="openPanel('sesiones')"
+        data-testid="tab-sesiones"
+        [disabled]="detailStore.packs().loaded && activePacks().length === 0"
+      >
         {{ lang.t('patient_card.tab.sessions') }}
       </button>
-      <button type="button" class="bw-pc__tab" (click)="openPanel('prepago')" data-testid="tab-prepago">
+      <button
+        type="button"
+        class="bw-pc__tab"
+        (click)="openPanel('prepago')"
+        data-testid="tab-prepago"
+        [disabled]="detailStore.sales().loaded && detailStore.sales().data.length === 0"
+      >
         {{ lang.t('patient_card.tab.prepaid') }}
       </button>
-      <button type="button" class="bw-pc__tab" (click)="openPanel('recientes')" data-testid="tab-recientes">
+      <button
+        type="button"
+        class="bw-pc__tab"
+        (click)="openPanel('recientes')"
+        data-testid="tab-recientes"
+        [disabled]="detailStore.recent().loaded && detailStore.recent().data.length === 0"
+      >
         {{ lang.t('patient_card.tab.recent') }}
       </button>
     </nav>
@@ -152,7 +181,7 @@
   }
 
   <!-- ── Panel view (fills entire card) ─────────────────────────────────────── -->
-  @if (panelOpen()) {
+  @if (panelOpen() && !dialogMode()) {
     <div class="bw-pc__panel-header">
       <button type="button" class="bw-pc__back" (click)="closePanel()">
         <i class="pi pi-arrow-left"></i>

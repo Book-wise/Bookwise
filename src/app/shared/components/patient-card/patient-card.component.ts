@@ -7,11 +7,11 @@ import { PopoverModule } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Client } from '@models';
 import { LanguageService } from '@services/language.service';
-import { ClientDetailStore } from '@core/stores/client-detail.store';
+import { ClientDetailStore, PatientTab as StorePatientTab, NotificationValues } from '@core/stores/client-detail.store';
 import { STATUS_COLOR_MAP } from '@features/admin/bookings/constants/booking-statuses';
 import { TimezoneService } from '@services/timezone.service';
 
-export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
+export type PatientTab = StorePatientTab;
 
 @Component({
   selector: 'bw-patient-card',
@@ -33,10 +33,12 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   readonly client            = input.required<Client>();
   readonly showNotifications = input<boolean>(false);
   readonly showEdit          = input<boolean>(true);
+  readonly dialogMode        = input<boolean>(false);
 
   // ── Outputs ──────────────────────────────────────────────────────────────────
 
   readonly editRequested = output<void>();
+  readonly patientTabSelected = output<PatientTab>();
 
   // ── Panel state ──────────────────────────────────────────────────────────────
 
@@ -159,6 +161,12 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   // ── Methods ───────────────────────────────────────────────────────────────────
 
   openPanel(tab: PatientTab): void {
+    if (this.dialogMode()) {
+      this.detailStore.selectTab(tab);
+      this.loadTabData(tab);
+      this.patientTabSelected.emit(tab);
+      return;
+    }
     this.panelTab.set(tab);
     this.panelOpen.set(true);
     this.loadTabData(tab);
@@ -187,6 +195,39 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   toggleNotif(): void {
     this.notifOpen.update(v => !v);
+  }
+
+  notificationValue(key: keyof NotificationValues): boolean {
+    if (this.dialogMode()) {
+      return this.detailStore.notifications()[key];
+    }
+    return this.localNotificationValue(key);
+  }
+
+  setNotification(key: keyof NotificationValues, value: boolean): void {
+    if (this.dialogMode()) {
+      this.detailStore.setNotification(key, value);
+    } else {
+      this.localNotificationValueSet(key, value);
+    }
+  }
+
+  private localNotificationValue(key: keyof NotificationValues): boolean {
+    return {
+      citaEmail: this.notifCitaEmail,
+      citaWa: this.notifCitaWa,
+      reminderEmail: this.reminderEmail,
+      reminderWa: this.reminderWa,
+    }[key]();
+  }
+
+  private localNotificationValueSet(key: keyof NotificationValues, value: boolean): void {
+    ({
+      citaEmail: this.notifCitaEmail,
+      citaWa: this.notifCitaWa,
+      reminderEmail: this.reminderEmail,
+      reminderWa: this.reminderWa,
+    }[key]).set(value);
   }
 
   formatBookingTime(iso: string): string {

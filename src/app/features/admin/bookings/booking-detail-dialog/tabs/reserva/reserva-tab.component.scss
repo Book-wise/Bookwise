@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.25rem 0;
+  padding: 0.75rem;
 }
 
 // ── Cards ─────────────────────────────────────────────────────────────────────
@@ -181,6 +181,49 @@
 }
 
 // ── Panel (Información adicional) ─────────────────────────────────────────────
+
+.rf-panel {
+  padding: 0;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    gap: 0.5rem;
+    text-align: left;
+
+    &:hover {
+      background: var(--surface-50, #fafafa);
+    }
+
+    &--open {
+      background: var(--bw-50, var(--surface-50, #fafafa));
+    }
+
+    i {
+      flex-shrink: 0;
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  &__title {
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color-secondary);
+    flex: 1;
+  }
+
+  &__body {
+    padding: 0 1rem 0.875rem;
+  }
+}
 
 .rf-notes {
   width: 100%;
