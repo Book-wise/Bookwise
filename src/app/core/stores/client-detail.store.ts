@@ -10,33 +10,57 @@ import { pipe, switchMap, tap, catchError, of } from 'rxjs';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
-import { ClientPack, Sale, Booking } from '@models';
+import { Client, ClientPack, Sale, Booking } from '@models';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface DomainState<T> {
+export interface DomainState<T> {
   data: T[];
   loading: boolean;
   loaded: boolean;
+  error: string | null;
 }
 
 function emptyDomain<T>(): DomainState<T> {
-  return { data: [], loading: false, loaded: false };
+  return { data: [], loading: false, loaded: false, error: null };
 }
 
-interface ClientDetailState {
+export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
+export type PatientView = 'reserva' | PatientTab;
+
+export interface NotificationValues {
+  citaEmail: boolean;
+  citaWa: boolean;
+  reminderEmail: boolean;
+  reminderWa: boolean;
+}
+
+export interface ClientDetailState {
+  client: Client | null;
+  activeView: PatientView;
+  notifications: NotificationValues;
   packs: DomainState<ClientPack>;
   sales: DomainState<Sale>;
   recent: DomainState<Booking>;
 }
+
+const emptyNotifications = (): NotificationValues => ({
+  citaEmail: false,
+  citaWa: false,
+  reminderEmail: false,
+  reminderWa: false,
+});
 
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
 
 const initialState: ClientDetailState = {
+  client: null,
+  activeView: 'reserva',
+  notifications: emptyNotifications(),
   packs: emptyDomain(),
   sales: emptyDomain(),
   recent: emptyDomain(),
@@ -47,6 +71,8 @@ const initialState: ClientDetailState = {
 // ---------------------------------------------------------------------------
 
 export const ClientDetailStore = signalStore(
+  { providedIn: 'root' },
+
   withState(initialState),
 
   withMethods((store, clientsApi = inject(ClientsApiService), salesApi = inject(SalesApiService), bookingsApi = inject(BookingsApiService)) => {
@@ -59,10 +85,10 @@ export const ClientDetailStore = signalStore(
           clientsApi.getClientPacks(clientId).pipe(
             tap({
               next: (data) => patchState(store, {
-                packs: { data, loading: false, loaded: true },
+                packs: { data, loading: false, loaded: true, error: null },
               }),
               error: () => patchState(store, {
-                packs: { data: [], loading: false, loaded: true },
+                packs: { data: [], loading: false, loaded: true, error: 'load_failed' },
               }),
             }),
             catchError(() => of(undefined)),
@@ -80,10 +106,10 @@ export const ClientDetailStore = signalStore(
           salesApi.getSales({ client_id: clientId }).pipe(
             tap({
               next: (res) => patchState(store, {
-                sales: { data: res.data, loading: false, loaded: true },
+                sales: { data: res.data, loading: false, loaded: true, error: null },
               }),
               error: () => patchState(store, {
-                sales: { data: [], loading: false, loaded: true },
+                sales: { data: [], loading: false, loaded: true, error: 'load_failed' },
               }),
             }),
             catchError(() => of(undefined)),
@@ -101,10 +127,10 @@ export const ClientDetailStore = signalStore(
           bookingsApi.getBookings({ client_id: clientId, per_page: 10 }).pipe(
             tap({
               next: (res) => patchState(store, {
-                recent: { data: res.data, loading: false, loaded: true },
+                recent: { data: res.data, loading: false, loaded: true, error: null },
               }),
               error: () => patchState(store, {
-                recent: { data: [], loading: false, loaded: true },
+                recent: { data: [], loading: false, loaded: true, error: 'load_failed' },
               }),
             }),
             catchError(() => of(undefined)),
@@ -118,8 +144,55 @@ export const ClientDetailStore = signalStore(
       loadSales,
       loadRecent,
 
+      initialize(client: Client): void {
+        const sameClient = store.client()?.id === client.id;
+        patchState(store, {
+          client: { ...client },
+          ...(sameClient ? {} : {
+            activeView: 'reserva' as PatientView,
+            notifications: emptyNotifications(),
+            packs: emptyDomain<ClientPack>(),
+            sales: emptyDomain<Sale>(),
+            recent: emptyDomain<Booking>(),
+          }),
+        });
+      },
+
+      selectTab(tab: PatientTab): void {
+        patchState(store, { activeView: tab });
+      },
+
+      returnToReservation(): void {
+        patchState(store, { activeView: 'reserva' });
+      },
+
+      setNotification(key: keyof NotificationValues, value: boolean): void {
+        patchState(store, {
+          notifications: { ...store.notifications(), [key]: value },
+        });
+      },
+
+      reset(): void {
+        patchState(store, {
+          client: null,
+          activeView: 'reserva',
+          notifications: emptyNotifications(),
+          packs: emptyDomain(),
+          sales: emptyDomain(),
+          recent: emptyDomain(),
+        });
+      },
+
+      /** @deprecated Use reset() to clear the dialog-scoped state. */
       resetData(): void {
-        patchState(store, initialState);
+        patchState(store, {
+          client: null,
+          activeView: 'reserva',
+          notifications: emptyNotifications(),
+          packs: emptyDomain(),
+          sales: emptyDomain(),
+          recent: emptyDomain(),
+        });
       },
     };
   }),
