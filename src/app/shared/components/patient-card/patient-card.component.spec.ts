@@ -2,13 +2,19 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { PatientCardComponent } from './patient-card.component';
+import { PatientCardComponent, PatientTab } from './patient-card.component';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
 import { LanguageService } from '@services/language.service';
 import type { Client, ClientPack, Booking, Sale } from '@models';
+
+if (!window.matchMedia) {
+  Object.defineProperty(window, 'matchMedia', {
+    value: () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
+  });
+}
 
 function makeClient(overrides: Partial<Client> = {}): Client {
   return {
@@ -176,44 +182,45 @@ describe('PatientCardComponent', () => {
   // ── tab switching ─────────────────────────────────────────────────────────────
 
   describe('tab switching', () => {
-    it('activeTab() is null on mount (tab list shown)', () => {
-      expect(component.activeTab()).toBeNull();
+    it('panel is closed on mount (tab list shown)', () => {
+      expect(component.panelOpen()).toBe(false);
     });
 
-    it('selectTab sets activeTab to the chosen tab', () => {
-      component.selectTab('planes');
-      expect(component.activeTab()).toBe('planes');
+    it('openPanel sets the selected panel tab', () => {
+      component.openPanel('planes');
+      expect(component.panelOpen()).toBe(true);
+      expect(component.panelTab()).toBe('planes');
     });
 
-    it('backToTabs resets activeTab to null', () => {
-      component.selectTab('planes');
-      component.backToTabs();
-      expect(component.activeTab()).toBeNull();
+    it('closePanel returns to the card tabs', () => {
+      component.openPanel('planes');
+      component.closePanel();
+      expect(component.panelOpen()).toBe(false);
     });
   });
 
   // ── lazy load via store ──────────────────────────────────────────────────────
 
   describe('lazy load — sales (prepago tab)', () => {
-    it('selectTab("prepago") triggers api.getSales via store', () => {
+    it('openPanel("prepago") triggers api.getSales via store', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 42 }));
       salesApi.getSales!.mockReturnValue(of({ data: [makeSale()], meta: {} }));
       salesApi.getSales!.mockClear();
 
-      component.selectTab('prepago');
+      component.openPanel('prepago');
 
       expect(salesApi.getSales!).toHaveBeenCalledTimes(1);
       expect(salesApi.getSales!).toHaveBeenCalledWith({ client_id: 42 });
     });
 
-    it('does NOT re-fetch getSales when tab is selected a second time', () => {
+    it('does NOT re-fetch getSales when the panel is reopened', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 42 }));
       salesApi.getSales!.mockReturnValue(of({ data: [], meta: {} }));
 
-      component.selectTab('prepago');
+      component.openPanel('prepago');
       salesApi.getSales!.mockClear();
-      component.backToTabs();
-      component.selectTab('prepago');
+      component.closePanel();
+      component.openPanel('prepago');
 
       expect(salesApi.getSales!).not.toHaveBeenCalled();
     });
@@ -222,7 +229,7 @@ describe('PatientCardComponent', () => {
       const sale = makeSale({ id: 99 });
       salesApi.getSales!.mockReturnValue(of({ data: [sale], meta: {} }));
 
-      component.selectTab('prepago');
+      component.openPanel('prepago');
 
       expect(component.detailStore.sales().data).toHaveLength(1);
       expect(component.detailStore.sales().data[0].id).toBe(99);
@@ -230,12 +237,12 @@ describe('PatientCardComponent', () => {
   });
 
   describe('lazy load — recent bookings (recientes tab)', () => {
-    it('selectTab("recientes") triggers api.getBookings via store', () => {
+    it('openPanel("recientes") triggers api.getBookings via store', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 7 }));
       bookingsApi.getBookings!.mockReturnValue(of({ data: [], meta: {} }));
       bookingsApi.getBookings!.mockClear();
 
-      component.selectTab('recientes');
+      component.openPanel('recientes');
 
       expect(bookingsApi.getBookings!).toHaveBeenCalledTimes(1);
       expect(bookingsApi.getBookings!).toHaveBeenCalledWith({ client_id: 7, per_page: 10 });
@@ -245,10 +252,10 @@ describe('PatientCardComponent', () => {
       fixture.componentRef.setInput('client', makeClient({ id: 7 }));
       bookingsApi.getBookings!.mockReturnValue(of({ data: [], meta: {} }));
 
-      component.selectTab('recientes');
+      component.openPanel('recientes');
       bookingsApi.getBookings!.mockClear();
-      component.backToTabs();
-      component.selectTab('recientes');
+      component.closePanel();
+      component.openPanel('recientes');
 
       expect(bookingsApi.getBookings!).not.toHaveBeenCalled();
     });
@@ -257,7 +264,7 @@ describe('PatientCardComponent', () => {
       const booking = makeBooking({ id: 55 });
       bookingsApi.getBookings!.mockReturnValue(of({ data: [booking], meta: {} }));
 
-      component.selectTab('recientes');
+      component.openPanel('recientes');
 
       expect(component.detailStore.recent().data).toHaveLength(1);
       expect(component.detailStore.recent().data[0].id).toBe(55);
@@ -275,7 +282,7 @@ describe('PatientCardComponent', () => {
       ]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
 
-      component.selectTab('planes');
+      component.openPanel('planes');
 
       expect(component.plansCount()).toBe(2);
     });
@@ -288,19 +295,89 @@ describe('PatientCardComponent', () => {
       ]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
 
-      component.selectTab('planes');
+      component.openPanel('planes');
 
-      expect(component.sessionsCount()).toBe(8);
+      expect(component.sessionsCount()).toBe(20);
     });
 
     it('plansCount() and sessionsCount() return 0 when packs are empty', () => {
       clientsApi.getClientPacks!.mockReturnValue(of([]));
       fixture.componentRef.setInput('client', makeClient({ id: 1 }));
 
-      component.selectTab('planes');
+      component.openPanel('planes');
 
       expect(component.plansCount()).toBe(0);
       expect(component.sessionsCount()).toBe(0);
+    });
+  });
+
+  // ── disabled sub-tab matrix (loaded && length === 0) ─────────────────────────
+
+  describe('disabled sub-tab buttons', () => {
+    function tabButton(testid: string): HTMLButtonElement {
+      const el = fixture.debugElement.query(By.css(`[data-testid="${testid}"]`));
+      expect(el).not.toBeNull();
+      return el.nativeElement as HTMLButtonElement;
+    }
+
+    it('keeps all sub-tabs enabled while data is not loaded yet', async () => {
+      fixture.componentRef.setInput('client', makeClient({ id: 42 }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tabButton('tab-planes').disabled).toBe(false);
+      expect(tabButton('tab-sesiones').disabled).toBe(false);
+      expect(tabButton('tab-prepago').disabled).toBe(false);
+      expect(tabButton('tab-recientes').disabled).toBe(false);
+    });
+
+    it('disables planes and sesiones when packs are loaded but empty', async () => {
+      fixture.componentRef.setInput('client', makeClient({ id: 42 }));
+      clientsApi.getClientPacks!.mockReturnValue(of([]));
+      component.detailStore.loadPacks(42);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tabButton('tab-planes').disabled).toBe(true);
+      expect(tabButton('tab-sesiones').disabled).toBe(true);
+      expect(tabButton('tab-prepago').disabled).toBe(false);
+    });
+
+    it('disables prepago when sales are loaded but empty', async () => {
+      fixture.componentRef.setInput('client', makeClient({ id: 42 }));
+      salesApi.getSales!.mockReturnValue(of({ data: [], meta: {} }));
+      component.detailStore.loadSales(42);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tabButton('tab-prepago').disabled).toBe(true);
+      expect(tabButton('tab-planes').disabled).toBe(false);
+    });
+
+    it('disables recientes when recent bookings are loaded but empty', async () => {
+      fixture.componentRef.setInput('client', makeClient({ id: 42 }));
+      bookingsApi.getBookings!.mockReturnValue(of({ data: [], meta: {} }));
+      component.detailStore.loadRecent(42);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tabButton('tab-recientes').disabled).toBe(true);
+      expect(tabButton('tab-prepago').disabled).toBe(false);
+    });
+
+    it('re-enables a sub-tab when its category gains data', async () => {
+      fixture.componentRef.setInput('client', makeClient({ id: 42 }));
+      clientsApi.getClientPacks!.mockReturnValue(of([]));
+      component.detailStore.loadPacks(42);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(tabButton('tab-planes').disabled).toBe(true);
+
+      clientsApi.getClientPacks!.mockReturnValue(of([makePack()]));
+      component.detailStore.loadPacks(42);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(tabButton('tab-planes').disabled).toBe(false);
     });
   });
 
@@ -387,6 +464,41 @@ describe('PatientCardComponent', () => {
       await fixture.whenStable();
       const notif = fixture.debugElement.query(By.css('.bw-pc__notif'));
       expect(notif).not.toBeNull();
+    });
+
+    it('stores notification values in dialog mode and keeps accordion expansion local', () => {
+      fixture.componentRef.setInput('dialogMode', true);
+      component.setNotification('citaEmail', true);
+      component.toggleNotif();
+
+      expect(component.notificationValue('citaEmail')).toBe(true);
+      expect(component.detailStore.notifications().citaEmail).toBe(true);
+      expect(component.notifOpen()).toBe(true);
+
+      component.closePanel();
+      expect(component.notifOpen()).toBe(true);
+    });
+
+    it('does not issue a notification backend request before the contract is confirmed', () => {
+      fixture.componentRef.setInput('dialogMode', true);
+      component.setNotification('citaWa', true);
+
+      expect(clientsApi).not.toHaveProperty('saveNotifications');
+      expect(clientsApi).not.toHaveProperty('updateNotifications');
+    });
+  });
+
+  describe('dialog navigation output', () => {
+    it('emits one typed output for every patient tab without opening a local panel', () => {
+      fixture.componentRef.setInput('dialogMode', true);
+      const selected: PatientTab[] = [];
+      const sub = component.patientTabSelected.subscribe(tab => selected.push(tab));
+
+      (['planes', 'sesiones', 'prepago', 'recientes'] as const).forEach(tab => component.openPanel(tab));
+
+      expect(selected).toEqual(['planes', 'sesiones', 'prepago', 'recientes']);
+      expect(component.panelOpen()).toBe(false);
+      sub.unsubscribe();
     });
   });
 });
