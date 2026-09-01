@@ -99,16 +99,18 @@ Each detail tab MUST provide loading, empty, and error states without hiding the
 - THEN the corresponding loading, empty, or error state is shown
 - AND staff can return to Reservation
 
-### Requirement: Maintain the pending notification persistence contract
+### Requirement: Persist notification preferences via client-notifications
 
-The system MUST retain each notification checkbox value and expose it for the agreed backend persistence contract. It MUST NOT assume an endpoint, payload, or save behavior before that contract is confirmed.
+The system MUST delegate notification preference persistence to the `client-notifications` capability: values MUST initialize from `client.notification_prefs` (GET /clients/{id}) and MUST be written via a partial PATCH /clients/{id} on toggle change. Dialog navigation MUST preserve these values across internal tabs per that capability.
 
-#### Scenario: Notification values await backend contract
+(Previously: the persistence contract was pending — the system retained values in memory without assuming an endpoint, payload, or save behavior.)
 
-- GIVEN staff changes notification checkbox values
+#### Scenario: Values persist via confirmed contract
+
+- GIVEN staff changes notification toggle values in the patient card
 - WHEN staff navigates internally or returns to Reservation
-- THEN the values remain available for the agreed persistence flow
-- AND no unconfirmed backend request is required by this specification
+- THEN the values remain available per the `client-notifications` capability
+- AND persistence follows that capability's GET/PATCH behavior
 
 ### Requirement: Reload detail data on dialog open
 
