@@ -143,6 +143,35 @@ export const ES: Record<string, string> = {
   'status.6': 'En espera',
   'status.7': 'Cancelado',
 
+  // Dashboard — rango de fechas
+  'dashboard.range.mode.mes': 'Mes',
+  'dashboard.range.mode.semana': 'Semana',
+  'dashboard.range.mode.libre': 'Rango libre',
+  'dashboard.range.standard': 'Mes actual → hoy',
+  'dashboard.range.from': 'Desde',
+  'dashboard.range.to': 'Hasta',
+  'dashboard.range.prev_week': 'Semana anterior',
+  'dashboard.range.next_week': 'Semana siguiente',
+  'dashboard.range.week': 'Semana {{n}}',
+  'dashboard.range.month.1': 'Enero',
+  'dashboard.range.month.2': 'Febrero',
+  'dashboard.range.month.3': 'Marzo',
+  'dashboard.range.month.4': 'Abril',
+  'dashboard.range.month.5': 'Mayo',
+  'dashboard.range.month.6': 'Junio',
+  'dashboard.range.month.7': 'Julio',
+  'dashboard.range.month.8': 'Agosto',
+  'dashboard.range.month.9': 'Septiembre',
+  'dashboard.range.month.10': 'Octubre',
+  'dashboard.range.month.11': 'Noviembre',
+  'dashboard.range.month.12': 'Diciembre',
+
+  // Dashboard — card de citas pendientes
+  'dashboard.pending.title': 'Citas Pendientes',
+  'dashboard.pending.label': 'Por asignar',
+  'dashboard.pending.toast': 'Mostrando citas pendientes — confirma, asigna o cancela',
+
+
 
   // Repeat options
   'repeat.daily': 'Diariamente',

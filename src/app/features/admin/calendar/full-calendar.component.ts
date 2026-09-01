@@ -411,6 +411,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const pending = this.calNav.consumePending();
     const pendingLocationId = pending.locationId;
     const pendingProviderId = pending.providerId;
+    const pendingStatusIds = pending.statusIds;
+
+    // Status-only navigation (e.g. the dashboard "Pending appointments" card)
+    // must apply the status filter even when the calendar loads a default/kept
+    // location (statusIds may arrive alongside null location/provider).
+    this.selectedStatusIds = [...pendingStatusIds];
 
     this.locationsApi.getLocations().subscribe({
       next: (data) => {
@@ -422,6 +428,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.previousLocationId = pendingLocationId;
           // Provider pre-selection + filter sync happen in the providers callback
           this.loadProviders(pendingLocationId, pendingProviderId);
+          // Status-only pending (no provider): sync the filter once here so the
+          // status intent is applied without a provider pre-selection.
+          if (pendingProviderId == null && pendingStatusIds.length) {
+            this.onFilterChange();
+          }
           return;
         }
 

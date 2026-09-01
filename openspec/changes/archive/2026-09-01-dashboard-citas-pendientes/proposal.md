@@ -59,10 +59,27 @@ Para que el front pueda filtrar el card de pendientes por `is_finalized`, se req
 ## Archivos probables
 
 - `src/app/features/admin/dashboard/admin-dashboard.component.{ts,html,scss}`
-- `src/app/core/models/responses/bookings.ts` (`is_finalized`)
-- `src/app/core/services/api/bookings-api.service.ts` (filtro status para el enlace al calendario)
-- `src/app/features/admin/calendar/full-calendar.component.ts` (receptor del filtro de estado vía query/param)
-- i18n es.ts/en.ts
+- `src/app/core/services/calendar-navigation.service.ts` (extender con `statusIds`)
+- `src/app/features/admin/calendar/full-calendar.component.ts` (consumir pending statusIds)
+- i18n es.ts/en.ts (labels del selector de rango, toast del card)
+
+## Approach — Card "Citas Pendientes" → calendario
+
+El backend ya soporta `getBookings({ status_id: 5 })` (Pendiente). No requiere `is_finalized` para el filtro inicial (ese flag es para el criterio semántico futuro). Implementación:
+
+1. **Extender `CalendarNavigationService`** para soportar `statusIds` (además de location/provider). Agregar `pendingStatusIds = signal<number[]>([])`; `navigateToCalendar(locationId, providerId, statusIds, router)`; `consumePending()` devuelve también `statusIds`. El `hasPendingNavigation` incluye statusIds no vacíos.
+2. **Calendario** consume pending: tras `consumePending()`, si `statusIds` no vacío → `this.selectedStatusIds = statusIds` + `this.onFilterChange()` (sincroniza store + refetch).
+3. **Dashboard**: card "Citas Pendientes" clickeable → `calNav.navigateToCalendar(...)` con `statusIds=[5]` + **toast** informativo ("Mostrando citas pendientes...") + badge con el rango visible.
+
+## Approach — Selector de rango de fechas
+
+1. **Estados**: `rangeMode: 'mes' | 'semana' | 'libre'`, `selectedMonth`, `selectedWeek`, `customStart`, `customEnd`.
+2. **Modo Mes**: `p-select` con los 12 meses; rango = `startOf('month')` → `endOf('month')`.
+3. **Modo Semana**: `p-select` con semanas del mes + flechas ◀ ▶; rango = semana.
+4. **Modo Libre**: dos `p-datepicker` (Desde/Hasta).
+5. **Estándar**: mes actual → hoy. Botón **limpiar filtros** → vuelve al estándar.
+6. El `rxResource` recibe el rango como input y recalcula `date_from`/`date_to` en las llamadas (hoy usa semana actual fija).
+7. "Citas Pendientes" filtra por el rango; la card muestra un **badge** con "rango estándar" o el rango elegido.
 
 ## Follow-up backend (coordinación)
 

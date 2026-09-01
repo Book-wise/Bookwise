@@ -143,6 +143,34 @@ export const EN: Record<string, string> = {
   'status.6': 'Waiting',
   'status.7': 'Cancelled',
 
+  // Dashboard — date range
+  'dashboard.range.mode.mes': 'Month',
+  'dashboard.range.mode.semana': 'Week',
+  'dashboard.range.mode.libre': 'Custom range',
+  'dashboard.range.standard': 'Current month → today',
+  'dashboard.range.from': 'From',
+  'dashboard.range.to': 'To',
+  'dashboard.range.prev_week': 'Previous week',
+  'dashboard.range.next_week': 'Next week',
+  'dashboard.range.week': 'Week {{n}}',
+  'dashboard.range.month.1': 'January',
+  'dashboard.range.month.2': 'February',
+  'dashboard.range.month.3': 'March',
+  'dashboard.range.month.4': 'April',
+  'dashboard.range.month.5': 'May',
+  'dashboard.range.month.6': 'June',
+  'dashboard.range.month.7': 'July',
+  'dashboard.range.month.8': 'August',
+  'dashboard.range.month.9': 'September',
+  'dashboard.range.month.10': 'October',
+  'dashboard.range.month.11': 'November',
+  'dashboard.range.month.12': 'December',
+
+  // Dashboard — pending card
+  'dashboard.pending.title': 'Pending Appointments',
+  'dashboard.pending.label': 'To assign',
+  'dashboard.pending.toast': 'Showing pending appointments — confirm, assign, or cancel',
+
   // Repeat options
   'repeat.daily': 'Daily',
   'repeat.weekly': 'Weekly',

@@ -23,9 +23,9 @@ describe('CalendarNavigationService', () => {
       expect(service.hasPendingNavigation()).toBe(false);
     });
 
-    it('consumePending returns nulls when nothing is pending', () => {
+    it('consumePending returns nulls and an empty status list when nothing is pending', () => {
       const result = service.consumePending();
-      expect(result).toEqual({ locationId: null, providerId: null });
+      expect(result).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
   });
 
@@ -33,15 +33,16 @@ describe('CalendarNavigationService', () => {
 
   describe('navigateToCalendar', () => {
     it('sets pending signals when called', () => {
-      service.navigateToCalendar(3, 7, mockRouter as unknown as Router);
+      service.navigateToCalendar(3, 7, [5], mockRouter as unknown as Router);
 
       const pending = service.consumePending();
       expect(pending.locationId).toBe(3);
       expect(pending.providerId).toBe(7);
+      expect(pending.statusIds).toEqual([5]);
     });
 
     it('calls router.navigate with /admin/calendar', () => {
-      service.navigateToCalendar(3, 7, mockRouter as unknown as Router);
+      service.navigateToCalendar(3, 7, [], mockRouter as unknown as Router);
 
       expect(mockRouter.navigate).toHaveBeenCalledTimes(1);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin', 'calendar']);
@@ -50,34 +51,58 @@ describe('CalendarNavigationService', () => {
     it('hasPendingNavigation is true after navigateToCalendar', () => {
       expect(service.hasPendingNavigation()).toBe(false);
 
-      service.navigateToCalendar(1, 2, mockRouter as unknown as Router);
+      service.navigateToCalendar(1, 2, [], mockRouter as unknown as Router);
 
       expect(service.hasPendingNavigation()).toBe(true);
+    });
+  });
+
+  // ── status-only navigation (dashboard pending card) ─────────────
+
+  describe('status-only navigation', () => {
+    it('is pending when only statusIds are provided (null location/provider)', () => {
+      service.navigateToCalendar(null, null, [5], mockRouter as unknown as Router);
+
+      expect(service.hasPendingNavigation()).toBe(true);
+      const pending = service.consumePending();
+      expect(pending.locationId).toBeNull();
+      expect(pending.providerId).toBeNull();
+      expect(pending.statusIds).toEqual([5]);
+    });
+
+    it('hasPendingNavigation is true when statusIds are non-empty even with no location/provider', () => {
+      service.navigateToCalendar(null, null, [5], mockRouter as unknown as Router);
+      expect(service.hasPendingNavigation()).toBe(true);
+    });
+
+    it('hasPendingNavigation is false when statusIds are empty', () => {
+      service.navigateToCalendar(null, null, [], mockRouter as unknown as Router);
+      expect(service.hasPendingNavigation()).toBe(false);
     });
   });
 
   // ── navigation rejection ───────────────────────────────────────
 
   describe('navigateToCalendar with a rejected navigation', () => {
-    it('clears both pending signals when router.navigate rejects', async () => {
+    it('clears all pending signals when router.navigate rejects', async () => {
       // Same promise observed from both sides: the test handles the rejection
       // (avoiding unhandled-rejection noise) and the service must also react.
       const nav = Promise.reject(new Error('lazy chunk failed'));
       nav.catch(() => {});
       const rejectedRouter = { navigate: vi.fn(() => nav) };
 
-      service.navigateToCalendar(3, 7, rejectedRouter as unknown as Router);
+      service.navigateToCalendar(3, 7, [5], rejectedRouter as unknown as Router);
       await new Promise((r) => setTimeout(r, 0));
 
       expect(service.hasPendingNavigation()).toBe(false);
-      expect(service.consumePending()).toEqual({ locationId: null, providerId: null });
+      expect(service.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
 
     it('keeps pending signals set when navigation resolves', async () => {
-      await service.navigateToCalendar(3, 7, mockRouter as unknown as Router);
+      await service.navigateToCalendar(3, 7, [5], mockRouter as unknown as Router);
 
       expect(service.hasPendingNavigation()).toBe(true);
-      expect(service.consumePending()).toEqual({ locationId: 3, providerId: 7 });
+      expect(service.consumePending()).toEqual({ locationId: 3, providerId: 7, statusIds: [5] });
     });
   });
 
@@ -85,17 +110,17 @@ describe('CalendarNavigationService', () => {
 
   describe('consumePending', () => {
     it('returns the pending values and clears them', () => {
-      service.navigateToCalendar(5, 10, mockRouter as unknown as Router);
+      service.navigateToCalendar(5, 10, [4, 6], mockRouter as unknown as Router);
 
       const first = service.consumePending();
-      expect(first).toEqual({ locationId: 5, providerId: 10 });
+      expect(first).toEqual({ locationId: 5, providerId: 10, statusIds: [4, 6] });
 
       const second = service.consumePending();
-      expect(second).toEqual({ locationId: null, providerId: null });
+      expect(second).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
 
     it('resets hasPendingNavigation after consumption', () => {
-      service.navigateToCalendar(5, 10, mockRouter as unknown as Router);
+      service.navigateToCalendar(5, 10, [5], mockRouter as unknown as Router);
       expect(service.hasPendingNavigation()).toBe(true);
 
       service.consumePending();
@@ -105,8 +130,8 @@ describe('CalendarNavigationService', () => {
     it('is idempotent when called multiple times with no new navigation', () => {
       const first = service.consumePending();
       const second = service.consumePending();
-      expect(first).toEqual({ locationId: null, providerId: null });
-      expect(second).toEqual({ locationId: null, providerId: null });
+      expect(first).toEqual({ locationId: null, providerId: null, statusIds: [] });
+      expect(second).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
   });
 });
