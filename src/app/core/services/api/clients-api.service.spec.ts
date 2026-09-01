@@ -84,7 +84,7 @@ describe('ClientsApiService', () => {
     const req = httpMock.expectOne(`${baseUrl}/clients/3`);
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual(payload);
-    req.flush(response);
+    req.flush({ data: response });
   });
 
   it('GET /clients/:id/packs via getClientPacks()', () => {
