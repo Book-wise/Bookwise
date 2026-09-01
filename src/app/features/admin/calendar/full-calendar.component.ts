@@ -28,7 +28,6 @@ import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
 import { Booking, BlockedSlot, Location, Provider } from '@models';
-import { BookingDialogComponent } from '../bookings/booking-dialog/booking-dialog.component';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
@@ -69,7 +68,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     MultiSelectModule,
     DialogModule,
     SkeletonModule,
-    BookingDialogComponent,
     BookingFormDialogComponent,
     PopoverModule,
     BlockTimeDialogComponent,
@@ -108,7 +106,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild('eventTooltip') eventTooltip!: Popover;
-  @ViewChild(BookingDialogComponent) bookingDialog!: BookingDialogComponent;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
   @ViewChild(BookingDetailDialogComponent) bookingDetailDialog!: BookingDetailDialogComponent;

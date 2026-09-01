@@ -143,11 +143,6 @@ export const ES: Record<string, string> = {
   'status.6': 'En espera',
   'status.7': 'Cancelado',
 
-  // Booking-dialog (legacy) statuses
-  'bd.status.1': 'Pendiente',
-  'bd.status.2': 'Confirmado',
-  'bd.status.3': 'Completado',
-  'bd.status.4': 'Cancelado',
 
   // Repeat options
   'repeat.daily': 'Diariamente',
