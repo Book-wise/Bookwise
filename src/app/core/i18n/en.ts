@@ -113,6 +113,7 @@ export const EN: Record<string, string> = {
   // Auth
   'auth.login_error': 'Incorrect credentials. Please try again.',
   'auth.register_error': 'Error creating the account. Please try again.',
+  'auth.register_check_email': 'Account created. Check your email to verify it.',
 
   // UI
   'ui.logout': 'Log out',

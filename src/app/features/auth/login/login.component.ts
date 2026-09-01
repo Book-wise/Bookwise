@@ -11,6 +11,7 @@ import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { translateValidationMessage } from '@i18n/validation-translator';
 import { LoginCredentials } from '@models';
+import { AuthLayoutComponent } from '@shared/components/auth-layout/auth-layout.component';
 
 @Component({
   selector: 'bw-login',
@@ -23,6 +24,7 @@ import { LoginCredentials } from '@models';
     PasswordModule,
     ButtonModule,
     MessageModule,
+    AuthLayoutComponent,
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],

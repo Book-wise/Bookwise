@@ -242,6 +242,12 @@ export interface RegisterData {
   role?: UserRole;
 }
 
+/** POST /auth/register → 201, sin token (el login queda bloqueado hasta verificar email) */
+export interface RegisterResponse {
+  data: { user: User };
+  message?: string;
+}
+
 // Paginación
 export interface PaginatedResponse<T> {
   data: T[];

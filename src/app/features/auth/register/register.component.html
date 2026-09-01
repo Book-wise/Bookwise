@@ -1,116 +1,114 @@
-<div class="auth-container">
-  <div class="auth-card">
-
-    <div class="auth-brand">
-      <h1 class="brand-name">Kinesilk</h1>
-      <p class="brand-subtitle">Crear cuenta</p>
-    </div>
-
-    <form class="auth-form" (ngSubmit)="onRegister(registerForm)" #registerForm="ngForm">
-
-      <div class="field">
-        <label for="name">Nombre completo</label>
-        <input
-          pInputText
-          id="name" name="name"
-          type="text"
-          placeholder="Juan Pérez"
-          [(ngModel)]="formData.name"
-          required
-          #name="ngModel"
-          class="w-full" />
-        @if (name.invalid && name.touched) {
-          <span class="field-error">El nombre es obligatorio</span>
-        }
-      </div>
-
-      <div class="field">
-        <label for="email">Email</label>
-        <input
-          pInputText
-          id="email" name="email"
-          type="email"
-          placeholder="tu@email.com"
-          [(ngModel)]="formData.email"
-          required
-          email
-          #emailField="ngModel"
-          class="w-full" />
-        @if (emailField.invalid && emailField.touched) {
-          @if (emailField.errors?.['required']) {
-            <span class="field-error">El email es obligatorio</span>
-          } @else if (emailField.errors?.['email']) {
-            <span class="field-error">El email no es válido</span>
-          }
-        }
-      </div>
-
-      <div class="field">
-        <label>Teléfono</label>
-        <bw-phone-input
-          name="phone"
-          [(ngModel)]="formData.phone"
-          required
-          #phone="ngModel"
-          placeholder="Teléfono" />
-        @if (phone.invalid && phone.touched) {
-          @if (phone.errors?.['required']) {
-            <span class="field-error">El teléfono es obligatorio</span>
-          } @else if (phone.errors?.['invalidPhone']) {
-            <span class="field-error">El número no es válido para este país</span>
-          }
-        }
-      </div>
-
-      <div class="field">
-        <label for="password">Contraseña</label>
-        <p-password
-          inputId="password" name="password"
-          placeholder="Mínimo 8 caracteres"
-          [(ngModel)]="formData.password"
-          [toggleMask]="true"
-          required
-          #password="ngModel"
-          class="w-full" />
-        @if (password.invalid && password.touched) {
-          <span class="field-error">La contraseña es obligatoria</span>
-        }
-      </div>
-
-      <div class="field">
-        <label for="passwordConfirm">Confirmar contraseña</label>
-        <p-password
-          inputId="passwordConfirm" name="passwordConfirm"
-          placeholder="Repetí tu contraseña"
-          [(ngModel)]="formData.password_confirmation"
-          [feedback]="false"
-          [toggleMask]="true"
-          required
-          #passwordConfirm="ngModel"
-          class="w-full" />
-        @if (passwordConfirm.touched && formData.password_confirmation && formData.password !== formData.password_confirmation) {
-          <span class="field-error">Las contraseñas no coinciden</span>
-        }
-      </div>
-
-      @if (error()) {
-        <p-message severity="error" class="w-full">{{ error() }}</p-message>
-      }
-
-      <p-button
-        type="submit"
-        label="Crear cuenta"
-        icon="pi pi-user-plus"
-        class="w-full"
-        [loading]="loading()"
-        [disabled]="registerForm.invalid || formData.password !== formData.password_confirmation" />
-
-    </form>
-
-    <div class="auth-footer">
-      <span>¿Ya tenés cuenta?</span>
-      <a routerLink="/login">Iniciar sesión</a>
-    </div>
-
+<bw-auth-layout>
+  <div class="form-header">
+    <h2>Crear cuenta</h2>
+    <p>Completá tus datos para comenzar</p>
   </div>
-</div>
+
+  <form class="auth-form" (ngSubmit)="onRegister(registerForm)" #registerForm="ngForm">
+    <div class="field">
+      <label for="name">Nombre completo</label>
+      <input
+        pInputText
+        id="name" name="name"
+        type="text"
+        placeholder="Juan Pérez"
+        [(ngModel)]="formData.name"
+        required
+        #name="ngModel"
+        class="w-full" />
+      @if (name.invalid && name.touched) {
+        <span class="field-error">El nombre es obligatorio</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input
+        pInputText
+        id="email" name="email"
+        type="email"
+        placeholder="tu@email.com"
+        [(ngModel)]="formData.email"
+        required
+        email
+        #emailField="ngModel"
+        class="w-full" />
+      @if (emailField.invalid && emailField.touched) {
+        @if (emailField.errors?.['required']) {
+          <span class="field-error">El email es obligatorio</span>
+        } @else if (emailField.errors?.['email']) {
+          <span class="field-error">El email no es válido</span>
+        }
+      }
+    </div>
+
+    <div class="field">
+      <label>Teléfono</label>
+      <bw-phone-input
+        name="phone"
+        [(ngModel)]="formData.phone"
+        required
+        #phone="ngModel"
+        placeholder="Teléfono" />
+      @if (phone.invalid && phone.touched) {
+        @if (phone.errors?.['required']) {
+          <span class="field-error">El teléfono es obligatorio</span>
+        } @else if (phone.errors?.['invalidPhone']) {
+          <span class="field-error">El número no es válido para este país</span>
+        }
+      }
+    </div>
+
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <p-password
+        inputId="password" name="password"
+        placeholder="Mínimo 8 caracteres"
+        [(ngModel)]="formData.password"
+        [toggleMask]="true"
+        required
+        #password="ngModel"
+        class="w-full" />
+      @if (password.invalid && password.touched) {
+        <span class="field-error">La contraseña es obligatoria</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="passwordConfirm">Confirmar contraseña</label>
+      <p-password
+        inputId="passwordConfirm" name="passwordConfirm"
+        placeholder="Repetí tu contraseña"
+        [(ngModel)]="formData.password_confirmation"
+        [feedback]="false"
+        [toggleMask]="true"
+        required
+        #passwordConfirm="ngModel"
+        class="w-full" />
+      @if (passwordConfirm.touched && formData.password_confirmation && formData.password !== formData.password_confirmation) {
+        <span class="field-error">Las contraseñas no coinciden</span>
+      }
+    </div>
+
+    @if (error()) {
+      <p-message severity="error" class="w-full">{{ error() }}</p-message>
+    }
+
+    @if (successMessage()) {
+      <p-message severity="success" class="w-full">{{ successMessage() }}</p-message>
+    }
+
+    <p-button
+      type="submit"
+      label="Crear cuenta"
+      icon="pi pi-user-plus"
+      class="w-full submit-btn"
+      [loading]="loading()"
+      [disabled]="registerForm.invalid || formData.password !== formData.password_confirmation" />
+  </form>
+
+  <div class="auth-footer">
+    <span>¿Ya tenés cuenta?</span>
+    <a routerLink="/login">Iniciar sesión</a>
+  </div>
+</bw-auth-layout>

@@ -113,6 +113,7 @@ export const ES: Record<string, string> = {
   // Auth
   'auth.login_error': 'Credenciales incorrectas. Intentá de nuevo.',
   'auth.register_error': 'Error al crear la cuenta. Intentá de nuevo.',
+  'auth.register_check_email': 'Cuenta creada. Revisá tu correo para verificar tu email.',
 
   // UI
   'ui.logout': 'Salir',
