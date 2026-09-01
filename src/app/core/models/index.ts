@@ -46,6 +46,7 @@ export interface Provider {
   active: boolean;
   location?: Location | null;
   services?: Service[];
+  roles?: Role[];
   created_at?: string;
   updated_at?: string;
 }
@@ -246,6 +247,62 @@ export interface RegisterData {
 export interface RegisterResponse {
   data: { user: User };
   message?: string;
+}
+
+// Business onboarding / profile / roles
+/** Plan de negocio. El contrato confirma valores tipo 'starter' | 'professional' | 'enterprise'. */
+export type BusinessPlan = string;
+
+export interface Business {
+  id: number;
+  name: string;
+  rut: string;
+  email: string;
+  address: string;
+  phone?: string | null;
+  plan: BusinessPlan;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** GET /auth/me (Bearer) → datos de sesión + onboarding. El email del negocio no es editable. */
+export interface AuthMeData {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: UserRole;
+  tenant_id: number | null;
+  email_verified_at: string | null;
+  onboarding_complete: boolean;
+  business: Business | null;
+}
+
+export interface AuthMeResponse {
+  data: AuthMeData;
+}
+
+/** Rol de negocio (capa separada de `UserRole`). name ∈ admin_general|admin_local|recepcionista|recepcionista_readonly|staff|staff_readonly */
+export interface Role {
+  id: number;
+  name: string;
+  label?: string;
+}
+
+/** POST /businesses (Bearer) → cuerpo que SIEMPRE se valida en el front. */
+export interface CreateBusinessData {
+  name: string;
+  rut: string;
+  email: string;
+  address: string;
+  phone: string;
+  plan: BusinessPlan;
+}
+
+/** POST /businesses → 201 { data: { business }, user } (user: me actualizado, onboarding_complete=true). */
+export interface CreateBusinessResponse {
+  data: { business: Business };
+  user: User;
 }
 
 // Paginación
