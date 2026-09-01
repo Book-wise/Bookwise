@@ -37,10 +37,10 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2: Auth Service + Guard
 
-- [ ] 2.1 `auth.service.ts`: add `me`/`meLoaded` signals + `loadMe()` (inject `AuthApiService`); keep `login()` synchronous.
-- [ ] 2.2 Create `guards/onboarding.guard.ts`: call `loadMe()`; if `!onboarding_complete` → `/onboarding`, else allow; never authorize onward.
-- [ ] 2.3 Add `auth.service.spec.ts`: `loadMe()` caches `me`.
-- [ ] 2.4 Add `onboarding.guard.spec.ts`: redirects when `!onboarding_complete`, allows when complete.
+- [x] 2.1 `auth.service.ts`: add `me`/`meLoaded` signals + `loadMe()` (inject `AuthApiService`); keep `login()` synchronous.
+- [x] 2.2 Create `guards/onboarding.guard.ts`: call `loadMe()`; if `!onboarding_complete` → `/onboarding`, else allow; never authorize onward.
+- [x] 2.3 Add `auth.service.spec.ts`: `loadMe()` caches `me`.
+- [x] 2.4 Add `onboarding.guard.spec.ts`: redirects when `!onboarding_complete`, allows when complete.
 
 ## Phase 3: Views
 
