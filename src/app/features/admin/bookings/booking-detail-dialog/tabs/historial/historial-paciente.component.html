@@ -10,7 +10,7 @@
   <p-tabs [value]="activeSubTab()" (valueChange)="onTabChange($event)">
     <p-tablist>
       <p-tab value="atenciones">Últimas atenciones</p-tab>
-      <p-tab value="creaciones">Últimas creaciones</p-tab>
+      <p-tab value="creaciones">Últimas creaciones de reserva</p-tab>
     </p-tablist>
   </p-tabs>
 
@@ -36,7 +36,8 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Fecha</th>
+          <th>Fecha de atención</th>
+          <th>Fecha de creación</th>
           <th>Servicio</th>
           <th>Profesional</th>
           <th>Estado</th>
@@ -45,6 +46,7 @@
       <ng-template pTemplate="body" let-item>
         <tr>
           <td class="hp-cell--date">{{ formatCardDate(item.start_time) }}</td>
+          <td class="hp-cell--date">{{ formatCreatedAt(item.created_at) }}</td>
           <td>{{ item.service?.name ?? '—' }}</td>
           <td>{{ providerLabel(item) }}</td>
           <td>

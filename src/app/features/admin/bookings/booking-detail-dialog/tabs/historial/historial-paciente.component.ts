@@ -42,6 +42,11 @@ export class HistorialPacienteComponent implements AfterViewInit, OnDestroy {
     return this.tzService.formatCardDate(iso);
   }
 
+  /** Booking creation date, or an em dash when absent */
+  formatCreatedAt(iso: string | undefined): string {
+    return iso ? this.tzService.formatCardDate(iso) : '—';
+  }
+
   readonly activeSubTab = signal<'atenciones' | 'creaciones'>('atenciones');
 
   /** Bookings with status_id === 3 (Asiste), newest first */
