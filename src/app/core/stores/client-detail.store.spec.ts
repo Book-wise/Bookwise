@@ -1,17 +1,25 @@
 import { TestBed } from '@angular/core/testing';
 import { createEnvironmentInjector, EnvironmentInjector, inject, provideZonelessChangeDetection, runInInjectionContext } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, Subject, throwError } from 'rxjs';
 import { ClientDetailStore } from './client-detail.store';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
 import { HttpErrorService } from '@services/http-error.service';
-import type { Client, ClientPack, Sale, Booking } from '@models';
+import type { Client, ClientPack, NotificationPrefs, Sale, Booking } from '@models';
 
 const client = { id: 7, first_name: 'Ana', last_name: 'Pérez', email: 'ana@test.com', phone: '+56912345678', active: true } as Client;
 const pack = { id: 1, client_id: 7, service_pack_id: 2, total_sessions: 4, used_sessions: 1, remaining_sessions: 3, status: 'active' } as ClientPack;
 const sale = { id: 2, total: 10000, paid_amount: 10000, remaining_amount: 0, payment_status: 'paid', transactions: [] } as Sale;
 const booking = { id: 3, status_id: 1, start_time: '2026-08-24T10:00:00Z', end_time: '2026-08-24T11:00:00Z', price: 10000 } as Booking;
+const allFalsePrefs: NotificationPrefs = {
+  email_new_booking: false,
+  email_booking_confirmation: false,
+  email_booking_cancellation: false,
+  whatsapp_reminder: false,
+  whatsapp_cancellation_confirmation: false,
+};
 
 describe('ClientDetailStore', () => {
   let store: InstanceType<typeof ClientDetailStore>;
@@ -155,5 +163,59 @@ describe('ClientDetailStore', () => {
     expect(second.client()?.id).toBe(8);
     expect(second.notifications().email_new_booking).toBe(false);
     child.destroy();
+  });
+
+  it('initializes the five toggles from client.notification_prefs on open', () => {
+    store.initialize({
+      ...client,
+      notification_prefs: {
+        ...allFalsePrefs,
+        email_new_booking: true,
+        whatsapp_reminder: true,
+      },
+    });
+
+    expect(store.notifications()).toEqual({
+      ...allFalsePrefs,
+      email_new_booking: true,
+      whatsapp_reminder: true,
+    });
+  });
+
+  it('repopulates prefs from GET when the same client reopens — no stale state', () => {
+    store.initialize({ ...client, notification_prefs: { ...allFalsePrefs, email_new_booking: true } });
+    // User flips the toggle during the session — must not survive the reopen.
+    store.setNotification('email_new_booking', false);
+
+    store.initialize({ ...client, notification_prefs: { ...allFalsePrefs, email_new_booking: true } });
+
+    expect(store.notifications().email_new_booking).toBe(true);
+    expect(store.notifications().whatsapp_reminder).toBe(false);
+  });
+
+  it('sends a partial PATCH containing only the changed flag on toggle', () => {
+    store.initialize(client);
+    clientsApi.updateClient.mockClear();
+
+    store.setNotification('whatsapp_reminder', false);
+
+    expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
+    expect(clientsApi.updateClient).toHaveBeenCalledWith(7, {
+      notification_prefs: { whatsapp_reminder: false },
+    });
+  });
+
+  it('reverts the toggle and shows a toast when the PATCH fails', () => {
+    const err = new HttpErrorResponse({ status: 500, statusText: 'Server Error' });
+    clientsApi.updateClient.mockReturnValue(throwError(() => err));
+    store.initialize(client);
+    clientsApi.updateClient.mockClear();
+    httpError.handle.mockClear();
+
+    store.setNotification('email_new_booking', true);
+
+    expect(store.notifications().email_new_booking).toBe(false);
+    expect(httpError.handle).toHaveBeenCalledTimes(1);
+    expect(httpError.handle).toHaveBeenCalledWith(err, 'actualizar notificaciones');
   });
 });

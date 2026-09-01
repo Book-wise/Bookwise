@@ -485,12 +485,65 @@ describe('PatientCardComponent', () => {
       expect(component.notifOpen()).toBe(true);
     });
 
-    it('does not issue a notification backend request before the contract is confirmed', () => {
+    it('sends a partial PATCH with only the changed flag on toggle', () => {
       fixture.componentRef.setInput('dialogMode', true);
-      component.setNotification('whatsapp_reminder', true);
+      component.detailStore.initialize(makeClient());
+      clientsApi.updateClient!.mockClear();
 
-      expect(clientsApi).not.toHaveProperty('saveNotifications');
-      expect(clientsApi).not.toHaveProperty('updateNotifications');
+      component.setNotification('whatsapp_reminder', false);
+
+      expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
+      expect(clientsApi.updateClient).toHaveBeenCalledWith(1, {
+        notification_prefs: { whatsapp_reminder: false },
+      });
+    });
+
+    it('renders exactly five flags grouped by channel and no citaWa', async () => {
+      fixture.componentRef.setInput('showNotifications', true);
+      fixture.componentRef.setInput('dialogMode', true);
+      component.detailStore.initialize(makeClient());
+      component.toggleNotif();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const expected = [
+        'notif-flag-email_new_booking',
+        'notif-flag-email_booking_confirmation',
+        'notif-flag-email_booking_cancellation',
+        'notif-flag-whatsapp_reminder',
+        'notif-flag-whatsapp_cancellation_confirmation',
+      ];
+      const flags = fixture.debugElement.queryAll(By.css('[data-testid^="notif-flag-"]'));
+      const rendered = flags.map(f => f.attributes['data-testid']);
+
+      expect(rendered).toEqual(expected);
+      expect(rendered).not.toContain('notif-flag-citaWa');
+
+      const groups = fixture.debugElement.queryAll(By.css('.bw-pc__notif-group-title'));
+      expect(groups.length).toBe(2);
+      expect(flags.length).toBe(5);
+    });
+
+    it('exposes a keyboard-reachable info button with a tooltip per flag', async () => {
+      fixture.componentRef.setInput('showNotifications', true);
+      fixture.componentRef.setInput('dialogMode', true);
+      component.detailStore.initialize(makeClient());
+      component.toggleNotif();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const infoButtons = fixture.debugElement.queryAll(By.css('.bw-pc__notif-info-btn'));
+      expect(infoButtons.length).toBe(5);
+      for (const btn of infoButtons) {
+        expect(btn.nativeElement.tagName).toBe('BUTTON');
+      }
+
+      // Tooltip content appears when the info button gains hover/focus.
+      infoButtons[0].nativeElement.dispatchEvent(new MouseEvent('mouseenter'));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const tooltip = document.body.querySelector('.p-tooltip .p-tooltip-text');
+      expect(tooltip?.textContent?.trim()).toBe('Email inmediato al crear una reserva.');
     });
   });
 
