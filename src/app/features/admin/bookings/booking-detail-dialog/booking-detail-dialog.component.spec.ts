@@ -60,7 +60,7 @@ describe('BookingDetailDialogComponent', () => {
   let fixture: ComponentFixture<BookingDetailDialogComponent>;
   let component: BookingDetailDialogComponent;
   let bookingStore: InstanceType<typeof BookingStore>;
-  let clientsApi: { getClient: ReturnType<typeof vi.fn>; getClientPacks: ReturnType<typeof vi.fn> };
+  let clientsApi: { getClient: ReturnType<typeof vi.fn>; getClientPacks: ReturnType<typeof vi.fn>; updateClient: ReturnType<typeof vi.fn> };
   let messageService: { add: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
@@ -68,6 +68,7 @@ describe('BookingDetailDialogComponent', () => {
     clientsApi = {
       getClient: vi.fn((id: number) => of({ ...client, id })),
       getClientPacks: vi.fn().mockReturnValue(of([])),
+      updateClient: vi.fn().mockReturnValue(of({ data: { ...client } })),
     };
     TestBed.configureTestingModule({
       imports: [BookingDetailDialogComponent],
@@ -120,14 +121,14 @@ describe('BookingDetailDialogComponent', () => {
 
   it('discards detail state on close so a later reservation cannot see it', () => {
     component.open(booking, 'reserva');
-    component.detailStore.setNotification('citaEmail', true);
+    component.detailStore.setNotification('email_new_booking', true);
     component.onPatientTabSelected('planes');
     component.close();
 
     expect(component.detailStore.client()).toBeNull();
     component.open({ ...booking, id: 13, client: { ...client, id: 8 } }, 'reserva');
     expect(component.detailStore.client()?.id).toBe(8);
-    expect(component.detailStore.notifications().citaEmail).toBe(false);
+    expect(component.detailStore.notifications().email_new_booking).toBe(false);
     expect(component.detailStore.activeView()).toBe('reserva');
   });
 

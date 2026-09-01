@@ -161,85 +161,75 @@
   margin: 0;
 }
 
-.bw-pc__notif-table {
+.bw-pc__notif-groups {
   padding: 0 1rem 0.875rem;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.75rem;
 }
 
-.bw-pc__notif-row {
-  display: grid;
-  grid-template-columns: 1fr 56px 56px;
+.bw-pc__notif-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bw-pc__notif-group-title {
+  font-size: 0.7rem;
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 0.125rem;
+}
+
+.bw-pc__notif-flag {
+  display: flex;
   align-items: center;
-  padding: 0.5rem 0;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
   border-bottom: 1px solid var(--surface-border);
 
   &:last-child {
     border-bottom: none;
   }
-
-  &--head {
-    font-size: var(--bw-font-table);
-    font-weight: var(--bw-weight-semibold);
-    color: var(--text-color-secondary);
-    padding-bottom: 0.375rem;
-
-    span:not(:first-child) {
-      text-align: center;
-    }
-  }
-
-  p-checkbox {
-    justify-self: center;
-  }
 }
 
-.bw-pc__notif-type {
+.bw-pc__notif-flag-label {
+  font-size: var(--bw-font-table);
+  color: var(--text-color);
+  flex: 1;
+  min-width: 0;
+}
+
+.bw-pc__notif-flag-actions {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  flex-wrap: wrap;
-  font-size: var(--bw-font-table);
-  color: var(--text-color);
-}
-
-.bw-pc__notif-tag {
-  font-size: 0.7rem;
-  font-weight: var(--bw-weight-semibold);
-  color: var(--text-color-secondary);
-  background: var(--surface-100, #f5f5f5);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--bw-radius-sm);
-  padding: 0.1rem 0.4rem;
-  white-space: nowrap;
 }
 
 .bw-pc__notif-info-btn {
   background: none;
   border: none;
-  padding: 0;
+  padding: 0.25rem;
   cursor: pointer;
   color: var(--text-color-secondary);
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  border-radius: var(--bw-radius-sm, 4px);
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     color: var(--text-color);
+    outline: 2px solid var(--bw-300, #7fb8f5);
+    outline-offset: 1px;
   }
 
   i {
     font-size: 0.875rem;
   }
-}
-
-.bw-pc__notif-popover {
-  font-size: var(--bw-font-table);
-  color: var(--text-color);
-  margin: 0;
-  max-width: 220px;
-  line-height: 1.5;
 }
 
 // ── Tab navigation (desktop triggers) ────────────────────────────────────────

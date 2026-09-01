@@ -7,6 +7,7 @@ import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
+import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import type { Client, ClientPack, Booking, Sale } from '@models';
 
@@ -73,7 +74,10 @@ describe('PatientCardComponent', () => {
   let bookingsApi: Partial<Record<keyof BookingsApiService, ReturnType<typeof vi.fn>>>;
 
   beforeEach(async () => {
-    clientsApi = { getClientPacks: vi.fn().mockReturnValue(of([])) } as any;
+    clientsApi = {
+      getClientPacks: vi.fn().mockReturnValue(of([])),
+      updateClient: vi.fn().mockReturnValue(of({ ...makeClient(), notification_prefs: {} })),
+    } as any;
     salesApi = { getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
     bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
 
@@ -85,6 +89,7 @@ describe('PatientCardComponent', () => {
         { provide: ClientsApiService, useValue: clientsApi },
         { provide: SalesApiService, useValue: salesApi },
         { provide: BookingsApiService, useValue: bookingsApi },
+        { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         LanguageService,
       ],
     }).compileComponents();
@@ -468,11 +473,12 @@ describe('PatientCardComponent', () => {
 
     it('stores notification values in dialog mode and keeps accordion expansion local', () => {
       fixture.componentRef.setInput('dialogMode', true);
-      component.setNotification('citaEmail', true);
+      component.detailStore.initialize(makeClient());
+      component.setNotification('email_new_booking', true);
       component.toggleNotif();
 
-      expect(component.notificationValue('citaEmail')).toBe(true);
-      expect(component.detailStore.notifications().citaEmail).toBe(true);
+      expect(component.notificationValue('email_new_booking')).toBe(true);
+      expect(component.detailStore.notifications().email_new_booking).toBe(true);
       expect(component.notifOpen()).toBe(true);
 
       component.closePanel();
@@ -481,7 +487,7 @@ describe('PatientCardComponent', () => {
 
     it('does not issue a notification backend request before the contract is confirmed', () => {
       fixture.componentRef.setInput('dialogMode', true);
-      component.setNotification('citaWa', true);
+      component.setNotification('whatsapp_reminder', true);
 
       expect(clientsApi).not.toHaveProperty('saveNotifications');
       expect(clientsApi).not.toHaveProperty('updateNotifications');

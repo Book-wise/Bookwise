@@ -74,60 +74,58 @@
         }
 
         @if (notifOpen()) {
-          <div class="bw-pc__notif-table">
-            <div class="bw-pc__notif-row bw-pc__notif-row--head">
-              <span>{{ lang.t('patient_card.notif.type_col') }}</span>
-              <span>{{ lang.t('patient_card.notif.email_col') }}</span>
-              <span>{{ lang.t('patient_card.notif.wa_col') }}</span>
+          <div class="bw-pc__notif-groups">
+            <div class="bw-pc__notif-group">
+              <span class="bw-pc__notif-group-title">{{ lang.t('patient_card.notif.group.email') }}</span>
+              @for (flag of emailNotificationFlags; track flag) {
+                <div class="bw-pc__notif-flag">
+                  <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
+                  <div class="bw-pc__notif-flag-actions">
+                    <button
+                      type="button"
+                      class="bw-pc__notif-info-btn"
+                      [pTooltip]="lang.t('patient_card.notif.tip.' + flag)"
+                      tooltipPosition="top"
+                      [escape]="true"
+                    >
+                      <i class="pi pi-question-circle"></i>
+                    </button>
+                    <p-checkbox
+                      [ngModel]="notificationValue(flag)"
+                      (ngModelChange)="setNotification(flag, $event)"
+                      [binary]="true"
+                    />
+                  </div>
+                </div>
+              }
             </div>
-            <div class="bw-pc__notif-row">
-              <div class="bw-pc__notif-type">
-                <span>{{ lang.t('patient_card.notif.booking_notif') }}</span>
-                <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.immediate') }}</span>
-                <button
-                  type="button"
-                  class="bw-pc__notif-info-btn"
-                  (click)="citaInfoPop.toggle($event)"
-                >
-                  <i class="pi pi-question-circle"></i>
-                </button>
-              </div>
-              <p-checkbox
-                [ngModel]="notificationValue('citaEmail')"
-                (ngModelChange)="setNotification('citaEmail', $event)"
-                [binary]="true"
-              />
-              <p-checkbox
-                [ngModel]="notificationValue('citaWa')"
-                (ngModelChange)="setNotification('citaWa', $event)"
-                [binary]="true"
-              />
-            </div>
-            <div class="bw-pc__notif-row">
-              <div class="bw-pc__notif-type">
-                <span>{{ lang.t('patient_card.notif.reminder') }}</span>
-                <span class="bw-pc__notif-tag">{{ lang.t('patient_card.notif.scheduled') }}</span>
-              </div>
-              <p-checkbox
-                [ngModel]="notificationValue('reminderEmail')"
-                (ngModelChange)="setNotification('reminderEmail', $event)"
-                [binary]="true"
-              />
-              <p-checkbox
-                [ngModel]="notificationValue('reminderWa')"
-                (ngModelChange)="setNotification('reminderWa', $event)"
-                [binary]="true"
-              />
+            <div class="bw-pc__notif-group">
+              <span class="bw-pc__notif-group-title">{{ lang.t('patient_card.notif.group.whatsapp') }}</span>
+              @for (flag of whatsappNotificationFlags; track flag) {
+                <div class="bw-pc__notif-flag">
+                  <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
+                  <div class="bw-pc__notif-flag-actions">
+                    <button
+                      type="button"
+                      class="bw-pc__notif-info-btn"
+                      [pTooltip]="lang.t('patient_card.notif.tip.' + flag)"
+                      tooltipPosition="top"
+                      [escape]="true"
+                    >
+                      <i class="pi pi-question-circle"></i>
+                    </button>
+                    <p-checkbox
+                      [ngModel]="notificationValue(flag)"
+                      (ngModelChange)="setNotification(flag, $event)"
+                      [binary]="true"
+                    />
+                  </div>
+                </div>
+              }
             </div>
           </div>
         }
       </div>
-
-      <p-popover #citaInfoPop>
-        <p class="bw-pc__notif-popover">
-          {{ lang.t('patient_card.notif.popover_text') }}
-        </p>
-      </p-popover>
     }
 
     <!-- Items trigger -->
