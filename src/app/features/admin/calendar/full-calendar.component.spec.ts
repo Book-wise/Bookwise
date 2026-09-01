@@ -23,6 +23,35 @@ import { Location, Provider } from '@models';
  * end-to-end at the component layer. The FullCalendar instance is not part of the
  * assertions — the loadLocations/loadProviders data flow is what these tests verify.
  */
+
+// Browser APIs not implemented in jsdom — stubbed so PrimeNG/dialog/scroll
+// components used by FullCalendarComponent can be instantiated under test.
+beforeAll(() => {
+  (window as any).matchMedia ??= (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  });
+  (globalThis as any).ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  (globalThis as any).IntersectionObserver ??= class {
+    root = null;
+    rootMargin = '';
+    thresholds = [];
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
+
 describe('FullCalendarComponent — calendar navigation integration', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<FullCalendarComponent>>;
   let component: FullCalendarComponent;
@@ -120,7 +149,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
 
   describe('pending navigation consumption', () => {
     it('pre-selects pending location and provider and clears pending state transactionally', () => {
-      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 7, [], mockRouter as unknown as Router);
       expect(calNav.hasPendingNavigation()).toBe(true);
 
       component.loadLocations();
@@ -133,11 +162,11 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 2 });
       // Transactional: pending state consumed and cleared in the same flow
       expect(calNav.hasPendingNavigation()).toBe(false);
-      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null });
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
 
     it('syncs the pre-selected filters into the BookingStore', () => {
-      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 7, [], mockRouter as unknown as Router);
 
       component.loadLocations();
 
@@ -146,7 +175,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     });
 
     it('shows the welcome toast with provider and location names', () => {
-      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 7, [], mockRouter as unknown as Router);
 
       component.loadLocations();
 
@@ -162,32 +191,49 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     });
 
     it('pre-selects the provider even when it is missing from the loaded list, without toast', () => {
-      calNav.navigateToCalendar(2, 999, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 999, [], mockRouter as unknown as Router);
 
       component.loadLocations();
 
       expect(component.selectedProviderId).toBe(999);
       expect(mockMessageService.add).not.toHaveBeenCalled();
     });
+
+    it('applies a status-only pending navigation (e.g. dashboard pending card) to the status filter', () => {
+      // location/provider null — only statusIds pending (dashboard pending card path).
+      calNav.navigateToCalendar(null, null, [5], mockRouter as unknown as Router);
+      expect(calNav.hasPendingNavigation()).toBe(true);
+
+      component.loadLocations();
+
+      // Status filter applied even though the calendar used the default first location
+      expect(component.selectedStatusIds).toEqual([5]);
+      expect(component.selectedLocationId).toBe(1);
+      expect(store.filters().selectedStatusIds).toEqual([5]);
+      expect(store.filters().selectedLocationId).toBe(1);
+      // Transactional: pending state consumed and cleared in the same flow
+      expect(calNav.hasPendingNavigation()).toBe(false);
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
+    });
   });
 
   describe('pending navigation edge cases', () => {
     it('consumes and clears pending navigation when the locations API returns an empty list', () => {
       mockLocationsApi.getLocations.mockReturnValue(of([]));
-      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 7, [], mockRouter as unknown as Router);
       expect(calNav.hasPendingNavigation()).toBe(true);
 
       component.loadLocations();
 
       expect(calNav.hasPendingNavigation()).toBe(false);
-      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null });
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
 
     it('applies the pending provider filter and surfaces a toast when loading providers fails', () => {
       mockProvidersApi.getProviders.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
       );
-      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 7, [], mockRouter as unknown as Router);
 
       component.loadLocations();
 
@@ -198,7 +244,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     });
 
     it('clears unconsumed pending navigation when the component is destroyed', () => {
-      calNav.navigateToCalendar(2, 7, mockRouter as unknown as Router);
+      calNav.navigateToCalendar(2, 7, [], mockRouter as unknown as Router);
       expect(calNav.hasPendingNavigation()).toBe(true);
 
       fixture.destroy();

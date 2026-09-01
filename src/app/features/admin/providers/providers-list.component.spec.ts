@@ -78,7 +78,7 @@ describe('ProvidersListComponent', () => {
       component.goToAgenda(provider);
 
       expect(mockCalNav.navigateToCalendar).toHaveBeenCalledTimes(1);
-      expect(mockCalNav.navigateToCalendar).toHaveBeenCalledWith(5, 1, mockRouter);
+      expect(mockCalNav.navigateToCalendar).toHaveBeenCalledWith(5, 1, [], mockRouter);
     });
 
     it('does nothing when provider has no location', () => {

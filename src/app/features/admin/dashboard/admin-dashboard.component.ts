@@ -2,10 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DatePickerModule } from 'primeng/datepicker';
+import { ButtonModule } from 'primeng/button';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -16,7 +19,10 @@ import { BookingsApiService } from '@services/api/bookings-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { AuthService } from '@services/auth.service';
 import { TimezoneService } from '@services/timezone.service';
+import { LanguageService } from '@services/language.service';
+import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { MessageService } from 'primeng/api';
 import { Booking } from '@models';
 import { BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-statuses';
 
@@ -56,20 +62,33 @@ interface LocationOption {
   value: number | null;
 }
 
+type RangeMode = 'mes' | 'semana' | 'libre';
+
+interface RangeOption {
+  label: string;
+  value: RangeMode;
+}
+
 const CHART_COLORS = ['#046af4', '#0b3d95', '#94a3b8', '#fcd34d', '#86efac', '#fb923c', '#a78bfa', '#ec4899'];
 const PRIMARY_COLOR = CHART_COLORS[0];
 const DAY_LABELS    = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const PENDING_STATUS_ID = BOOKING_STATUSES.find((s) => s.label === 'Pendiente')!.value;
 
 /** Normalize API response: may be a plain array or { data: [...] } */
 function normalizeBookings(res: unknown): Booking[] {
   return Array.isArray(res) ? res : (res as any)?.data ?? [];
 }
 
+/** Week labels index — used to keep the "week" select stable across months. */
+function mondayOf(iso: string, tz: string): DateTime {
+  return DateTime.fromISO(iso, { zone: tz }).startOf('week');
+}
+
 @Component({
   selector: 'bw-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ChartModule, SelectModule, SkeletonModule],
+  imports: [CommonModule, FormsModule, CardModule, ChartModule, SelectModule, SkeletonModule, DatePickerModule, ButtonModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
@@ -78,6 +97,10 @@ export class AdminDashboardComponent {
   private httpError   = inject(HttpErrorService);
   private auth        = inject(AuthService);
   private tzService = inject(TimezoneService);
+  readonly lang = inject(LanguageService);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private calNav = inject(CalendarNavigationService);
 
   /** ReferenceStore: datos maestros reactivos */
   private refStore  = inject(ReferenceStore);
@@ -91,6 +114,15 @@ export class AdminDashboardComponent {
   /** ── Filtro de location ── */
   readonly selectedLocationId = signal<number | null>(null);
 
+  /** ── Selector de rango de fechas ── */
+  readonly rangeMode = signal<RangeMode>('mes');
+  readonly selectedMonth = signal<number>(DateTime.now().setZone(this.tzService.activeTimezone()).month);
+  readonly selectedWeekStart = signal<string>(
+    DateTime.now().setZone(this.tzService.activeTimezone()).startOf('week').toISODate()!,
+  );
+  readonly customStart = signal<Date | null>(null);
+  readonly customEnd = signal<Date | null>(null);
+
   readonly chartPlugins = [ChartDataLabels];
 
   readonly locationOptions = computed<LocationOption[]>(() => [
@@ -98,23 +130,94 @@ export class AdminDashboardComponent {
     ...this.locations().map(l => ({ label: l.name, value: l.id })),
   ]);
 
-  /** ── rango de fechas mostrado (formateado en timezone activo) ── */
-  readonly dateRangeText = computed(() => {
-    const tz  = this.tzService.activeTimezone();
-    const now = DateTime.now().setZone(tz);
-    const today    = now.toFormat("dd/MM/yyyy");
-    const weekFrom = now.startOf('week').toFormat("dd/MM");
-    const weekTo   = now.endOf('week').toFormat("dd/MM/yyyy");
-    return `Hoy ${today} · Semana del ${weekFrom} al ${weekTo}`;
+  /** ── opciones del selector de rango ── */
+  readonly rangeModeOptions = computed<RangeOption[]>(() => [
+    { label: this.lang.t('dashboard.range.mode.mes'), value: 'mes' },
+    { label: this.lang.t('dashboard.range.mode.semana'), value: 'semana' },
+    { label: this.lang.t('dashboard.range.mode.libre'), value: 'libre' },
+  ]);
+
+  readonly monthOptions = computed(() =>
+    Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({
+      label: this.lang.t(`dashboard.range.month.${m}`),
+      value: m,
+    })),
+  );
+
+  /** Weeks of the month that owns the currently-selected week (Semana 1..5). */
+  readonly weekOptions = computed(() => {
+    const tz = this.tzService.activeTimezone();
+    const selWeek = mondayOf(this.selectedWeekStart(), tz);
+    let monday = selWeek.startOf('month').startOf('week');
+    const weeks: { label: string; value: string }[] = [];
+    for (let i = 1; i <= 5; i++) {
+      weeks.push({
+        label: this.lang.t('dashboard.range.week', { n: String(i) }),
+        value: monday.toISODate()!,
+      });
+      monday = monday.plus({ weeks: 1 });
+    }
+    return weeks;
   });
 
-  /** Texto de periodo para la card de Citas por Día */
-  readonly weekPeriodText = computed(() => {
-    const tz       = this.tzService.activeTimezone();
-    const now      = DateTime.now().setZone(tz);
-    const weekFrom = now.startOf('week').toFormat("dd/MM");
-    const weekTo   = now.endOf('week').toFormat("dd/MM/yyyy");
-    return `Semana ${weekFrom} → ${weekTo}`;
+  /** ── rango resuelto (start/end/anchor) según el modo activo ── */
+  readonly rangeDetails = computed<{ start: DateTime; end: DateTime; anchor: DateTime }>(() => {
+    const tz  = this.tzService.activeTimezone();
+    const now = DateTime.now().setZone(tz);
+    const today = now.startOf('day');
+    const mode = this.rangeMode();
+
+    let start: DateTime;
+    let end: DateTime;
+
+    if (mode === 'mes') {
+      const month = this.selectedMonth();
+      start = now.set({ month, day: 1 }).startOf('day');
+      end = start.endOf('month');
+      if (month === now.month) end = today; // mes actual → hoy
+    } else if (mode === 'semana') {
+      start = mondayOf(this.selectedWeekStart(), tz).startOf('day');
+      end = start.endOf('week'); // lunes → domingo
+    } else {
+      // Modo libre: dos datepickers Desde/Hasta
+      const startDt = this.customStart()
+        ? DateTime.fromJSDate(this.customStart()!, { zone: tz }).startOf('day') : null;
+      const endDt = this.customEnd()
+        ? DateTime.fromJSDate(this.customEnd()!, { zone: tz }).startOf('day') : null;
+      if (startDt && endDt) {
+        const [early, late] = startDt <= endDt ? [startDt, endDt] : [endDt, startDt];
+        start = early;
+        end = late;
+      } else {
+        // Rango incompleto → vuelve al estándar (mes actual → hoy)
+        start = now.startOf('month');
+        end = today;
+      }
+    }
+
+    // "Hoy": día actual si cae dentro del rango; si no, el primer día del rango.
+    const anchor = (today >= start && today <= end) ? today : start;
+    return { start, end, anchor };
+  });
+
+  /** Params para el rxResource (ISODate) */
+  readonly rangeParams = computed(() => {
+    const { start, end, anchor } = this.rangeDetails();
+    return {
+      start: start.toISODate()!,
+      end: end.toISODate()!,
+      anchor: anchor.toISODate()!,
+    };
+  });
+
+  /** Texto del badge que muestra el rango activo (estándar o elegido). */
+  readonly rangeBadgeText = computed<string>(() => {
+    const tz  = this.tzService.activeTimezone();
+    const now = DateTime.now().setZone(tz);
+    const { start, end } = this.rangeDetails();
+    const isStandard = this.rangeMode() === 'mes' && this.selectedMonth() === now.month;
+    if (isStandard) return this.lang.t('dashboard.range.standard');
+    return `${start.toFormat('dd/MM/yyyy')} – ${end.toFormat('dd/MM/yyyy')}`;
   });
 
   /** ── rxResource: carga reactiva del dashboard ── */
@@ -123,14 +226,12 @@ export class AdminDashboardComponent {
       const tz  = this.tzService.activeTimezone();
       const now = DateTime.now().setZone(tz);
       const today     = now.toISODate()!;
-      const weekStart = now.startOf('week').toISODate()!;
-      const weekEnd   = now.endOf('week').toISODate()!;
-      const pendingStatusId = BOOKING_STATUSES.find(s => s.label === 'Pendiente')!.value;
+      const { start, end, anchor } = this.rangeParams();
 
       return forkJoin({
-        today:   this.bookingsApi.getBookings({ date_from: today, date_to: today,       per_page: 200 }),
-        pending: this.bookingsApi.getBookings({ status_id: pendingStatusId,              per_page: 200 }),
-        week:    this.bookingsApi.getBookings({ date_from: weekStart, date_to: weekEnd, per_page: 500 }),
+        today:   this.bookingsApi.getBookings({ date_from: anchor, date_to: anchor, per_page: 200 }),
+        pending: this.bookingsApi.getBookings({ status_id: PENDING_STATUS_ID, date_from: start, date_to: end, per_page: 200 }),
+        week:    this.bookingsApi.getBookings({ date_from: start, date_to: end, per_page: 500 }),
       }).pipe(
         map(({ today, pending, week }) => {
           const todayList   = normalizeBookings(today);
@@ -234,6 +335,38 @@ export class AdminDashboardComponent {
       this.httpError.handle(err, 'cargar dashboard');
     }
   });
+
+  // ── selectores de rango ─────────────────────────────────────
+
+  /** Card "Citas Pendientes": link al calendario filtrado + toast. */
+  onPendingCardClick(): void {
+    this.calNav.navigateToCalendar(null, null, [PENDING_STATUS_ID], this.router);
+    this.messageService.add({
+      severity: 'info',
+      summary: this.lang.t('dashboard.pending.title'),
+      detail: this.lang.t('dashboard.pending.toast'),
+      key: 'global',
+      life: 5000,
+    });
+  }
+
+  /** Desplaza la semana seleccionada ±1 (modo semana). */
+  shiftWeek(delta: number): void {
+    const tz = this.tzService.activeTimezone();
+    const base = mondayOf(this.selectedWeekStart(), tz);
+    this.selectedWeekStart.set(base.plus({ weeks: delta }).toISODate()!);
+  }
+
+  /** Vuelve al rango estándar (mes actual → hoy). */
+  clearFilters(): void {
+    const tz  = this.tzService.activeTimezone();
+    const now = DateTime.now().setZone(tz);
+    this.rangeMode.set('mes');
+    this.selectedMonth.set(now.month);
+    this.selectedWeekStart.set(now.startOf('week').toISODate()!);
+    this.customStart.set(null);
+    this.customEnd.set(null);
+  }
 
   // ── helpers ─────────────────────────────────────────
 

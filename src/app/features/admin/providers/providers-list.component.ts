@@ -197,7 +197,7 @@ export class ProvidersListComponent implements OnInit {
 
   goToAgenda(provider: Provider): void {
     if (!provider.location) return;
-    this.calNav.navigateToCalendar(provider.location.id, provider.id, this.router);
+    this.calNav.navigateToCalendar(provider.location.id, provider.id, [], this.router);
   }
 
   // ── Filter handlers ──────────────────────────────────────────────────────
