@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { PopoverModule } from 'primeng/popover';
+import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Client } from '@models';
 import { LanguageService } from '@services/language.service';
@@ -16,7 +16,7 @@ export type PatientTab = StorePatientTab;
 @Component({
   selector: 'bw-patient-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, CheckboxModule, PopoverModule, SkeletonModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CheckboxModule, TooltipModule, SkeletonModule],
   templateUrl: './patient-card.component.html',
   styleUrl: './patient-card.component.scss',
 })
@@ -71,11 +71,18 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   // ── Notifications state ───────────────────────────────────────────────────────
 
-  readonly notifOpen       = signal(false);
-  readonly notifCitaEmail  = signal(false);
-  readonly notifCitaWa     = signal(false);
-  readonly reminderEmail   = signal(false);
-  readonly reminderWa      = signal(false);
+  readonly notifOpen = signal(false);
+
+  /** Backend flags grouped by channel — the 5-key contract, 1:1. */
+  readonly emailNotificationFlags: (keyof NotificationValues)[] = [
+    'email_new_booking',
+    'email_booking_confirmation',
+    'email_booking_cancellation',
+  ];
+  readonly whatsappNotificationFlags: (keyof NotificationValues)[] = [
+    'whatsapp_reminder',
+    'whatsapp_cancellation_confirmation',
+  ];
 
   // ── Computed: identity ────────────────────────────────────────────────────────
 
@@ -198,36 +205,11 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   }
 
   notificationValue(key: keyof NotificationValues): boolean {
-    if (this.dialogMode()) {
-      return this.detailStore.notifications()[key];
-    }
-    return this.localNotificationValue(key);
+    return this.detailStore.notifications()[key];
   }
 
   setNotification(key: keyof NotificationValues, value: boolean): void {
-    if (this.dialogMode()) {
-      this.detailStore.setNotification(key, value);
-    } else {
-      this.localNotificationValueSet(key, value);
-    }
-  }
-
-  private localNotificationValue(key: keyof NotificationValues): boolean {
-    return {
-      citaEmail: this.notifCitaEmail,
-      citaWa: this.notifCitaWa,
-      reminderEmail: this.reminderEmail,
-      reminderWa: this.reminderWa,
-    }[key]();
-  }
-
-  private localNotificationValueSet(key: keyof NotificationValues, value: boolean): void {
-    ({
-      citaEmail: this.notifCitaEmail,
-      citaWa: this.notifCitaWa,
-      reminderEmail: this.reminderEmail,
-      reminderWa: this.reminderWa,
-    }[key]).set(value);
+    this.detailStore.setNotification(key, value);
   }
 
   formatBookingTime(iso: string): string {

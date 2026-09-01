@@ -5,6 +5,7 @@ import { ClientDetailStore } from './client-detail.store';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
+import { HttpErrorService } from '@services/http-error.service';
 import type { Client, ClientPack, Sale, Booking } from '@models';
 
 const client = { id: 7, first_name: 'Ana', last_name: 'Pérez', email: 'ana@test.com', phone: '+56912345678', active: true } as Client;
@@ -14,9 +15,10 @@ const booking = { id: 3, status_id: 1, start_time: '2026-08-24T10:00:00Z', end_t
 
 describe('ClientDetailStore', () => {
   let store: InstanceType<typeof ClientDetailStore>;
-  let clientsApi: { getClientPacks: ReturnType<typeof vi.fn> };
+  let clientsApi: { getClientPacks: ReturnType<typeof vi.fn>; updateClient: ReturnType<typeof vi.fn> };
   let salesApi: { getSales: ReturnType<typeof vi.fn> };
   let bookingsApi: { getBookings: ReturnType<typeof vi.fn> };
+  let httpError: { handle: ReturnType<typeof vi.fn> };
 
   function createStore() {
     TestBed.configureTestingModule({
@@ -26,15 +28,17 @@ describe('ClientDetailStore', () => {
         { provide: ClientsApiService, useValue: clientsApi },
         { provide: SalesApiService, useValue: salesApi },
         { provide: BookingsApiService, useValue: bookingsApi },
+        { provide: HttpErrorService, useValue: httpError },
       ],
     });
     store = TestBed.inject(ClientDetailStore);
   }
 
   beforeEach(() => {
-    clientsApi = { getClientPacks: vi.fn().mockReturnValue(of([])) };
+    clientsApi = { getClientPacks: vi.fn().mockReturnValue(of([])), updateClient: vi.fn().mockReturnValue(of({ data: client })) };
     salesApi = { getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })) };
     bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })) };
+    httpError = { handle: vi.fn() };
     createStore();
   });
 
@@ -49,7 +53,13 @@ describe('ClientDetailStore', () => {
     expect(store.packs().loaded).toBe(false);
     expect(store.sales().loaded).toBe(false);
     expect(store.recent().loaded).toBe(false);
-    expect(store.notifications()).toEqual({ citaEmail: false, citaWa: false, reminderEmail: false, reminderWa: false });
+    expect(store.notifications()).toEqual({
+      email_new_booking: false,
+      email_booking_confirmation: false,
+      email_booking_cancellation: false,
+      whatsapp_reminder: false,
+      whatsapp_cancellation_confirmation: false,
+    });
   });
 
   it('loads and caches planes and sesiones from the shared packs cache', () => {
@@ -97,47 +107,53 @@ describe('ClientDetailStore', () => {
 
   it('retains notification values through internal navigation and return', () => {
     store.initialize(client);
-    store.setNotification('citaEmail', true);
-    store.setNotification('reminderWa', true);
+    store.setNotification('email_new_booking', true);
+    store.setNotification('whatsapp_reminder', true);
     store.selectTab('recientes');
     store.returnToReservation();
 
-    expect(store.notifications()).toEqual({ citaEmail: true, citaWa: false, reminderEmail: false, reminderWa: true });
+    expect(store.notifications()).toEqual({
+      email_new_booking: true,
+      email_booking_confirmation: false,
+      email_booking_cancellation: false,
+      whatsapp_reminder: true,
+      whatsapp_cancellation_confirmation: false,
+    });
     expect(store.client()).toEqual(client);
   });
 
   it('resets navigation, notifications, and all caches on close or new reservation', () => {
     store.initialize(client);
     store.selectTab('planes');
-    store.setNotification('citaWa', true);
+    store.setNotification('whatsapp_reminder', true);
     store.loadPacks(client.id);
     store.reset();
     expect(store.client()).toBeNull();
     expect(store.activeView()).toBe('reserva');
     expect(store.packs().loaded).toBe(false);
-    expect(store.notifications().citaWa).toBe(false);
+    expect(store.notifications().whatsapp_reminder).toBe(false);
 
     store.initialize(client);
-    store.setNotification('citaEmail', true);
+    store.setNotification('email_new_booking', true);
     store.initialize({ ...client, id: 8 });
     expect(store.client()?.id).toBe(8);
-    expect(store.notifications().citaEmail).toBe(false);
+    expect(store.notifications().email_new_booking).toBe(false);
     expect(store.activeView()).toBe('reserva');
   });
 
   it('keeps two injected dialog stores isolated', () => {
     const first = store;
     first.initialize(client);
-    first.setNotification('citaEmail', true);
+    first.setNotification('email_new_booking', true);
 
     const child = createEnvironmentInjector([ClientDetailStore], TestBed.inject(EnvironmentInjector));
     const second = runInInjectionContext(child, () => inject(ClientDetailStore));
     second.initialize({ ...client, id: 8 });
 
     expect(first.client()?.id).toBe(7);
-    expect(first.notifications().citaEmail).toBe(true);
+    expect(first.notifications().email_new_booking).toBe(true);
     expect(second.client()?.id).toBe(8);
-    expect(second.notifications().citaEmail).toBe(false);
+    expect(second.notifications().email_new_booking).toBe(false);
     child.destroy();
   });
 });
