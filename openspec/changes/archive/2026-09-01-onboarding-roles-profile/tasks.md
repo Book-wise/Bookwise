@@ -37,27 +37,27 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2: Auth Service + Guard
 
-- [ ] 2.1 `auth.service.ts`: add `me`/`meLoaded` signals + `loadMe()` (inject `AuthApiService`); keep `login()` synchronous.
-- [ ] 2.2 Create `guards/onboarding.guard.ts`: call `loadMe()`; if `!onboarding_complete` → `/onboarding`, else allow; never authorize onward.
-- [ ] 2.3 Add `auth.service.spec.ts`: `loadMe()` caches `me`.
-- [ ] 2.4 Add `onboarding.guard.spec.ts`: redirects when `!onboarding_complete`, allows when complete.
+- [x] 2.1 `auth.service.ts`: add `me`/`meLoaded` signals + `loadMe()` (inject `AuthApiService`); keep `login()` synchronous.
+- [x] 2.2 Create `guards/onboarding.guard.ts`: call `loadMe()`; if `!onboarding_complete` → `/onboarding`, else allow; never authorize onward.
+- [x] 2.3 Add `auth.service.spec.ts`: `loadMe()` caches `me`.
+- [x] 2.4 Add `onboarding.guard.spec.ts`: redirects when `!onboarding_complete`, allows when complete.
 
 ## Phase 3: Views
 
-- [ ] 3.1 Create `features/auth/verify-email/` (ts/html/scss): `bw-auth-layout`; token from `ActivatedRoute`; loading/success/error states + login link.
-- [ ] 3.2 Create `features/admin/onboarding/` (ts/html/scss): `NgForm` business form; front validation (Chilean RUT, email, phone, required); submit valid → `POST /businesses` → `/admin`.
-- [ ] 3.3 Create `features/admin/profile/` (ts/html/scss): `GET /auth/me`; personal (name, email RO, phone) + business (RUT/email RO + warning) or CTA if `business=null`.
-- [ ] 3.4 Create `features/admin/roles/` (ts/html/scss): `GET /roles`; provider selector + multi-select; `admin_general` non-removable for owner; save via `PATCH`.
+- [x] 3.1 Create `features/auth/verify-email/` (ts/html/scss): `bw-auth-layout`; token from `ActivatedRoute`; loading/success/error states + login link.
+- [x] 3.2 Create `features/admin/onboarding/` (ts/html/scss): `NgForm` business form; front validation (Chilean RUT, email, phone, required); submit valid → `POST /businesses` → `/admin`.
+- [x] 3.3 Create `features/admin/profile/` (ts/html/scss): `GET /auth/me`; personal (name, email RO, phone) + business (RUT/email RO + warning) or CTA if `business=null`.
+- [x] 3.4 Create `features/admin/roles/` (ts/html/scss): `GET /roles`; provider selector + multi-select; `admin_general` non-removable for owner; save via `PATCH`.
 
 ## Phase 4: Routing + i18n
 
-- [ ] 4.1 `app.routes.ts`: add `/verificar-email`, `/onboarding`; add `onboardingGuard` on `/admin`; add `profile`, `roles` children.
-- [ ] 4.2 `admin-layout.component.ts`: add `nav.profile` + `nav.roles` menu items.
-- [ ] 4.3 `es.ts`/`en.ts`: add verify-email, onboarding, profile, roles, business-warning keys.
+- [x] 4.1 `app.routes.ts`: add `/verificar-email`, `/onboarding`; add `onboardingGuard` on `/admin`; add `profile`, `roles` children.
+- [x] 4.2 `admin-layout.component.ts`: add `nav.profile` + `nav.roles` menu items.
+- [x] 4.3 `es.ts`/`en.ts`: add verify-email, onboarding, profile, roles, business-warning keys.
 
 ## Phase 5: Testing
 
-- [ ] 5.1 `verify-email` spec: valid token → success state; invalid → error state, no onboarding.
-- [ ] 5.2 `onboarding` spec: invalid form blocks submit (no POST); valid submits + navigates.
-- [ ] 5.3 `profile` spec: `business=null` → CTA; RUT/email read-only, no update request.
-- [ ] 5.4 `roles` spec: renders 6 roles; empty/invalid selection blocked; `admin_general` removal blocked (no PATCH).
+- [x] 5.1 `verify-email` spec: valid token → success state; invalid → error state, no onboarding.
+- [x] 5.2 `onboarding` spec: invalid form blocks submit (no POST); valid submits + navigates.
+- [x] 5.3 `profile` spec: `business=null` → CTA; RUT/email read-only, no update request.
+- [x] 5.4 `roles` spec: renders 6 roles; empty/invalid selection blocked; `admin_general` removal blocked (no PATCH).

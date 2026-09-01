@@ -1,0 +1,63 @@
+.onboard-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 2.5rem 1.25rem;
+  background: var(--bw-50, #f8fafc);
+}
+
+.onboard-card {
+  width: 100%;
+  max-width: 28rem;
+  background: #fff;
+  border: 1px solid var(--bw-100, #e2e8f0);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.form-header {
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--bw-900);
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.onboard-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+  }
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+.w-full {
+  width: 100%;
+}

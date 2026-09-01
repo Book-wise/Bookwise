@@ -1,0 +1,118 @@
+<div class="onboard-wrap">
+  <div class="onboard-card">
+    <div class="form-header">
+      <h2>{{ lang.t('onboard.title') }}</h2>
+      <p>{{ lang.t('onboard.subtitle') }}</p>
+    </div>
+
+    <form #onboardForm="ngForm" (ngSubmit)="onSubmit(onboardForm)" class="onboard-form">
+      <div class="field">
+        <label for="bizName">{{ lang.t('onboard.business_name') }}</label>
+        <input
+          pInputText
+          id="bizName" name="bizName"
+          type="text"
+          [(ngModel)]="formData.name"
+          required
+          #bizName="ngModel"
+          class="w-full" />
+        @if (bizName.invalid && bizName.touched) {
+          <span class="field-error">{{ lang.t('onboard.error.name_required') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="bizRut">{{ lang.t('onboard.business_rut') }}</label>
+        <input
+          pInputText
+          id="bizRut" name="bizRut"
+          type="text"
+          bwRut
+          [(ngModel)]="formData.rut"
+          required
+          #bizRut="ngModel"
+          class="w-full" />
+        @if (bizRut.invalid && bizRut.touched) {
+          <span class="field-error">{{ lang.t('onboard.error.rut_invalid') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="bizEmail">{{ lang.t('onboard.business_email') }}</label>
+        <input
+          pInputText
+          id="bizEmail" name="bizEmail"
+          type="email"
+          [(ngModel)]="formData.email"
+          required
+          email
+          #bizEmail="ngModel"
+          class="w-full" />
+        @if (bizEmail.invalid && bizEmail.touched) {
+          <span class="field-error">
+            @if (bizEmail.errors?.['required']) {
+              {{ lang.t('onboard.error.email_required') }}
+            } @else {
+              {{ lang.t('onboard.error.email_invalid') }}
+            }
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="bizAddress">{{ lang.t('onboard.business_address') }}</label>
+        <input
+          pInputText
+          id="bizAddress" name="bizAddress"
+          type="text"
+          [(ngModel)]="formData.address"
+          required
+          #bizAddress="ngModel"
+          class="w-full" />
+        @if (bizAddress.invalid && bizAddress.touched) {
+          <span class="field-error">{{ lang.t('onboard.error.address_required') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label>{{ lang.t('onboard.business_phone') }}</label>
+        <bw-phone-input
+          name="phone"
+          [(ngModel)]="formData.phone"
+          required
+          #phone="ngModel"
+          [placeholder]="lang.t('onboard.business_phone')" />
+        @if (phone.invalid && phone.touched) {
+          <span class="field-error">
+            @if (phone.errors?.['required']) {
+              {{ lang.t('onboard.error.phone_required') }}
+            } @else {
+              {{ lang.t('onboard.error.phone_invalid') }}
+            }
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="bizPlan">{{ lang.t('onboard.plan') }}</label>
+        <p-select
+          id="bizPlan" name="plan"
+          [options]="planOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="formData.plan"
+          required
+          #plan="ngModel"
+          class="w-full" />
+      </div>
+
+      <p-button
+        type="submit"
+        [label]="lang.t('onboard.submit')"
+        icon="pi pi-building"
+        class="w-full submit-btn"
+        [loading]="loading()"
+        [disabled]="onboardForm.invalid" />
+    </form>
+  </div>
+</div>

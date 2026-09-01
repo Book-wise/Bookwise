@@ -1,0 +1,80 @@
+<div class="profile-wrap">
+  <div class="profile-header">
+    <h1>{{ lang.t('profile.title') }}</h1>
+    <p>
+      {{ me()?.name ?? lang.t('profile.not_available') }}
+      <span class="role-chip">{{ lang.t('profile.role_admin_general') }}</span>
+    </p>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>{{ lang.t('onboard.verifying') }}</span>
+    </div>
+  }
+
+  <div class="profile-grid">
+    <p-card [header]="lang.t('profile.section.personal')" class="profile-card">
+      <div class="info-grid">
+        <div class="info-field">
+          <label>{{ lang.t('profile.personal.name') }}</label>
+          <input pInputText [value]="me()?.name" readonly class="w-full" />
+        </div>
+        <div class="info-field">
+          <label>{{ lang.t('profile.personal.email') }}</label>
+          <input pInputText [value]="me()?.email" readonly class="w-full" />
+          <span class="hint">{{ lang.t('profile.personal.email_note') }}</span>
+        </div>
+        <div class="info-field">
+          <label>{{ lang.t('profile.personal.phone') }}</label>
+          <input pInputText [value]="me()?.phone ?? ''" readonly class="w-full" />
+        </div>
+      </div>
+
+      <div class="password-placeholder">
+        <h3>{{ lang.t('profile.section.change_password') }}</h3>
+        <div class="password-fields">
+          <input pInputText type="password" [value]="''" [placeholder]="lang.t('profile.change_password.current')" disabled class="w-full" />
+          <input pInputText type="password" [value]="''" [placeholder]="lang.t('profile.change_password.new')" disabled class="w-full" />
+          <input pInputText type="password" [value]="''" [placeholder]="lang.t('profile.change_password.confirm')" disabled class="w-full" />
+        </div>
+        <p-button [label]="lang.t('profile.change_password.submit')" icon="pi pi-lock" [disabled]="true" class="pw-btn" />
+      </div>
+    </p-card>
+
+    <p-card [header]="lang.t('profile.section.business')" class="profile-card">
+      @if (me()?.business) {
+        <div class="info-grid">
+          <div class="info-field">
+            <label>{{ lang.t('profile.business.name') }}</label>
+            <input pInputText [value]="me()?.business?.name" readonly class="w-full" />
+          </div>
+          <div class="info-field">
+            <label>{{ lang.t('profile.business.rut') }}</label>
+            <input pInputText [value]="me()?.business?.rut" readonly class="w-full" />
+          </div>
+          <div class="info-field">
+            <label>{{ lang.t('profile.business.email') }}</label>
+            <input pInputText [value]="me()?.business?.email" readonly class="w-full" />
+          </div>
+          <div class="info-field">
+            <label>{{ lang.t('profile.business.address') }}</label>
+            <input pInputText [value]="me()?.business?.address" readonly class="w-full" />
+          </div>
+          <div class="info-field">
+            <label>{{ lang.t('profile.business.phone') }}</label>
+            <input pInputText [value]="me()?.business?.phone ?? ''" readonly class="w-full" />
+          </div>
+        </div>
+        <p-message severity="warn" class="w-full warn" [text]="lang.t('profile.business.warning')" />
+      } @else {
+        <div class="business-cta">
+          <i class="pi pi-building"></i>
+          <p>{{ lang.t('profile.business.cta_hint') }}</p>
+          <p-button [label]="lang.t('profile.business.cta')" icon="pi pi-arrow-right" [routerLink]="'/onboarding'" />
+        </div>
+      }
+    </p-card>
+  </div>
+</div>

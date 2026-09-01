@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
+import { onboardingGuard } from './core/guards/onboarding.guard';
 
 export const routes: Routes = [
   {
@@ -16,8 +17,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent)
   },
   {
-    path: 'admin',
+    path: 'verificar-email',
+    loadComponent: () => import('./features/auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
+    path: 'onboarding',
     canActivate: [roleGuard(['admin'])],
+    loadComponent: () => import('./features/admin/onboarding/onboarding.component').then(m => m.OnboardingComponent)
+  },
+  {
+    path: 'admin',
+    canActivate: [roleGuard(['admin']), onboardingGuard],
     loadComponent: () => import('./layouts/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
     children: [
       {
@@ -43,6 +53,14 @@ export const routes: Routes = [
       {
         path: 'packs',
         loadComponent: () => import('./features/admin/packs/packs-list.component').then(m => m.PacksListComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/admin/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'roles',
+        loadComponent: () => import('./features/admin/roles/roles.component').then(m => m.RolesComponent)
       }
     ]
   },

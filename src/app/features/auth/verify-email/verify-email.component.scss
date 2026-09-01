@@ -1,0 +1,66 @@
+.form-header {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--bw-900);
+    margin: 0 0 0.375rem;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.state-panel.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+
+  .spinner {
+    font-size: 2rem;
+    color: #046af4;
+  }
+}
+
+.state-message {
+  margin-bottom: 1rem;
+}
+
+.state-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .state-icon {
+    font-size: 1.5rem;
+
+    &.pi-check-circle {
+      color: #16a34a;
+    }
+
+    &.pi-times-circle {
+      color: #dc2626;
+    }
+  }
+
+  .state-title {
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+  }
+
+  .state-text {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+}
+
+.w-full {
+  width: 100%;
+}

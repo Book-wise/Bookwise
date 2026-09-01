@@ -1,0 +1,63 @@
+<div class="roles-wrap">
+  <div class="roles-header">
+    <h1>{{ lang.t('roles.title') }}</h1>
+    <p>{{ lang.t('roles.subtitle') }}</p>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+  } @else {
+    <p-card class="roles-card">
+      <div class="roles-body">
+        <div class="field">
+          <label>{{ lang.t('roles.provider') }}</label>
+          <p-select
+            [options]="providers()"
+            optionLabel="email"
+            optionValue="id"
+            [ngModel]="selectedProviderId()"
+            (ngModelChange)="onProviderChange($event)"
+            [placeholder]="lang.t('roles.provider_placeholder')"
+            class="w-full" />
+        </div>
+
+        @if (selectedProvider(); as provider) {
+          <div class="provider-summary">
+            <span class="provider-name">{{ provider.first_name }} {{ provider.last_name }}</span>
+            <span class="provider-email">{{ provider.email }}</span>
+          </div>
+        }
+
+        @if (roles().length > 0) {
+          <div class="roles-list">
+            @for (role of roles(); track role.name) {
+              <div class="role-item" [class.locked]="isRoleLocked(role.name)">
+                <p-checkbox
+                  [ngModel]="isRoleChecked(role.name)"
+                  (ngModelChange)="onRoleChange($event, role.name)"
+                  [binary]="true"
+                  [disabled]="isRoleLocked(role.name)" />
+                <span class="role-label">{{ roleLabel(role.name) }}</span>
+                @if (isRoleLocked(role.name)) {
+                  <i class="pi pi-lock role-lock" [title]="lang.t('roles.admin_general_locked')"></i>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (error()) {
+          <p-message severity="warn" class="w-full" [text]="error() ?? ''" />
+        }
+
+        <p-button
+          [label]="lang.t('roles.save')"
+          icon="pi pi-save"
+          class="save-btn"
+          [loading]="saving()"
+          [disabled]="!selectedProvider()"
+          (onClick)="save()" />
+      </div>
+    </p-card>
+  }
+</div>

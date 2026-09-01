@@ -41,6 +41,8 @@ export class AdminLayoutComponent {
     { label: 'nav.calendar',  icon: 'pi pi-calendar',  routerLink: '/admin/calendar',  command: () => this.closeMenus() },
     { label: 'nav.clients',   icon: 'pi pi-user',      routerLink: '/admin/clients',   command: () => this.closeMenus() },
     { label: 'nav.packs',     icon: 'pi pi-box',       routerLink: '/admin/packs',     command: () => this.closeMenus() },
+    { label: 'nav.profile',   icon: 'pi pi-id-card',   routerLink: '/admin/profile',   command: () => this.closeMenus() },
+    { label: 'nav.roles',     icon: 'pi pi-shield',    routerLink: '/admin/roles',     command: () => this.closeMenus() },
   ];
 
   constructor() {

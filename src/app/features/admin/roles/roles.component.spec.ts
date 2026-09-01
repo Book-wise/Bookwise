@@ -1,0 +1,108 @@
+import { TestBed } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { of } from 'rxjs';
+import { RolesComponent } from './roles.component';
+import { RolesApiService } from '@services/api/roles-api.service';
+import { ProvidersApiService } from '@services/api/providers-api.service';
+import { HttpErrorService } from '@services/http-error.service';
+import type { Provider, Role } from '@models';
+
+const allRoles: Role[] = [
+  { id: 1, name: 'admin_general', label: 'Admin General' },
+  { id: 2, name: 'admin_local', label: 'Admin Local' },
+  { id: 3, name: 'recepcionista', label: 'Recepcionista' },
+  { id: 4, name: 'recepcionista_readonly', label: 'Recepcionista (solo lectura)' },
+  { id: 5, name: 'staff', label: 'Staff' },
+  { id: 6, name: 'staff_readonly', label: 'Staff (solo lectura)' },
+];
+
+function makeProvider(overrides: Partial<Provider> = {}): Provider {
+  return {
+    id: 1,
+    first_name: 'Ana',
+    last_name: 'García',
+    email: 'ana@test.com',
+    active: true,
+    ...overrides,
+  };
+}
+
+describe('RolesComponent', () => {
+  let rolesApi: {
+    getRoles: ReturnType<typeof vi.fn>;
+    assignProviderRoles: ReturnType<typeof vi.fn>;
+  };
+  let providersApi: { getProviders: ReturnType<typeof vi.fn> };
+  let fixture: ReturnType<typeof TestBed.createComponent<RolesComponent>>;
+  let component: RolesComponent;
+
+  beforeEach(async () => {
+    rolesApi = {
+      getRoles: vi.fn(() => of(allRoles)),
+      assignProviderRoles: vi.fn(),
+    };
+    providersApi = { getProviders: vi.fn(() => of([])) };
+
+    await TestBed.configureTestingModule({
+      imports: [RolesComponent],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: RolesApiService, useValue: rolesApi },
+        { provide: ProvidersApiService, useValue: providersApi },
+        { provide: HttpErrorService, useValue: { handle: vi.fn() } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(RolesComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('renders the six business roles', () => {
+    fixture.detectChanges();
+
+    expect(component.roles().length).toBe(6);
+    const labels = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.role-label'),
+    ).map((el) => el.textContent?.trim());
+    expect(labels).toHaveLength(6);
+  });
+
+  it('blocks saving an empty selection (no PATCH)', () => {
+    providersApi.getProviders.mockReturnValue(of([makeProvider()]));
+    fixture.detectChanges();
+
+    component.onProviderChange(1);
+    component.selectedRoleNames.set([]);
+    component.save();
+
+    expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
+    expect(component.error()).toBeTruthy();
+  });
+
+  it('blocks removing admin_general (no PATCH)', () => {
+    const owner = makeProvider({ roles: [allRoles[0]] });
+    providersApi.getProviders.mockReturnValue(of([owner]));
+    fixture.detectChanges();
+
+    component.onProviderChange(1);
+    // Intento de quitar admin_general del set seleccionado.
+    component.selectedRoleNames.set(['admin_local']);
+    component.save();
+
+    expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
+    expect(component.error()).toBeTruthy();
+  });
+
+  it('assigns roles successfully via PATCH', () => {
+    const owner = makeProvider({ roles: [allRoles[0]] });
+    providersApi.getProviders.mockReturnValue(of([owner]));
+    rolesApi.assignProviderRoles.mockReturnValue(of({ data: [allRoles[0], allRoles[1]] }));
+    fixture.detectChanges();
+
+    component.onProviderChange(1);
+    component.selectedRoleNames.set(['admin_general', 'admin_local']);
+    component.save();
+
+    expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['admin_general', 'admin_local']);
+  });
+});
