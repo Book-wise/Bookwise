@@ -8,11 +8,11 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { AuthApiService } from '@services/api/auth-api.service';
-import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { translateValidationMessage } from '@i18n/validation-translator';
 import { RegisterData } from '@models';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
+import { AuthLayoutComponent } from '@shared/components/auth-layout/auth-layout.component';
 
 @Component({
   selector: 'bw-register',
@@ -26,17 +26,18 @@ import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.
     ButtonModule,
     MessageModule,
     PhoneInputComponent,
+    AuthLayoutComponent,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
   private authApi = inject(AuthApiService);
-  private auth = inject(AuthService);
   private lang = inject(LanguageService);
 
   loading = signal(false);
   error = signal<string | null>(null);
+  successMessage = signal<string | null>(null);
 
   // intl-tel-input emits the full E.164 phone string directly
 
@@ -68,11 +69,16 @@ export class RegisterComponent {
 
     this.loading.set(true);
     this.error.set(null);
+    this.successMessage.set(null);
 
+    // POST /auth/register → 201 + user, SIN token. El login queda bloqueado
+    // hasta que el usuario verifique su email vía el link (carlitox).
     this.authApi.register(this.formData).subscribe({
-      next: ({ token, user }) => {
-        this.auth.login(token, user);
+      next: (res) => {
         this.loading.set(false);
+        this.successMessage.set(
+          res.message ?? this.lang.t('auth.register_check_email'),
+        );
       },
       error: (err) => {
         this.loading.set(false);

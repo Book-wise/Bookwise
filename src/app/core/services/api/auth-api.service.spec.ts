@@ -29,7 +29,7 @@ describe('AuthApiService', () => {
     expect(req.request.body).toEqual(credentials);
   });
 
-  it('register calls POST /register', () => {
+  it('register calls POST /auth/register', () => {
     const data: RegisterData = {
       name: 'Test User',
       email: 'test@test.com',
@@ -40,7 +40,7 @@ describe('AuthApiService', () => {
 
     service.register(data).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiUrl}/register`);
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/register`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(data);
   });

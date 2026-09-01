@@ -1,0 +1,136 @@
+.auth-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+// ── Brand panel (left) ──────────────────────────────────────────────────────
+
+.brand-panel {
+  flex: 1;
+  background: linear-gradient(160deg, var(--bw-900) 0%, var(--bw-500) 55%, var(--bw-300) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    top: -140px;
+    right: -140px;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    bottom: -80px;
+    left: -80px;
+    pointer-events: none;
+  }
+}
+
+.brand-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-logo-wrapper {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  display: inline-flex;
+}
+
+.brand-logo {
+  width: 240px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-tagline {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1rem;
+    color: #60a7f0;
+    width: 1.25rem;
+  }
+}
+
+// ── Form panel (right) ──────────────────────────────────────────────────────
+
+.form-panel {
+  width: 460px;
+  min-width: 460px;
+  background: #f8fafd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2.5rem;
+}
+
+.form-content {
+  width: 100%;
+  max-width: 360px;
+}
+
+// ── Mobile ──────────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .auth-wrapper {
+    flex-direction: column;
+  }
+
+  .brand-panel {
+    flex: none;
+    padding: 2.5rem 2rem;
+  }
+
+  .brand-logo {
+    width: 180px;
+  }
+
+  .brand-features {
+    display: none;
+  }
+
+  .form-panel {
+    width: 100%;
+    min-width: unset;
+    padding: 2rem 1.5rem;
+  }
+}
