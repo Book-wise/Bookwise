@@ -78,7 +78,7 @@
             <div class="bw-pc__notif-group">
               <span class="bw-pc__notif-group-title">{{ lang.t('patient_card.notif.group.email') }}</span>
               @for (flag of emailNotificationFlags; track flag) {
-                <div class="bw-pc__notif-flag">
+                <div class="bw-pc__notif-flag" [attr.data-testid]="'notif-flag-' + flag">
                   <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
                   <div class="bw-pc__notif-flag-actions">
                     <button
@@ -102,7 +102,7 @@
             <div class="bw-pc__notif-group">
               <span class="bw-pc__notif-group-title">{{ lang.t('patient_card.notif.group.whatsapp') }}</span>
               @for (flag of whatsappNotificationFlags; track flag) {
-                <div class="bw-pc__notif-flag">
+                <div class="bw-pc__notif-flag" [attr.data-testid]="'notif-flag-' + flag">
                   <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
                   <div class="bw-pc__notif-flag-actions">
                     <button
