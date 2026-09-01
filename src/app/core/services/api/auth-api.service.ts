@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { AuthResponse, LoginCredentials, RegisterData, RegisterResponse } from '@models';
+import { AuthMeData, AuthMeResponse, AuthResponse, LoginCredentials, RegisterData, RegisterResponse } from '@models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
@@ -15,5 +15,18 @@ export class AuthApiService {
 
   register(data: RegisterData): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(`${this.baseUrl}/auth/register`, data);
+  }
+
+  /** PATCH /auth/verify-email (público) { token } → { data: { email_verified_at } } */
+  verifyEmail(token: string): Observable<{ data: { email_verified_at: string } }> {
+    return this.http.patch<{ data: { email_verified_at: string } }>(
+      `${this.baseUrl}/auth/verify-email`,
+      { token },
+    );
+  }
+
+  /** GET /auth/me (Bearer) → unwrap { data: AuthMeData } */
+  getMe(): Observable<AuthMeData> {
+    return this.http.get<AuthMeResponse>(`${this.baseUrl}/auth/me`).pipe(map((r) => r.data));
   }
 }
