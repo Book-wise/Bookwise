@@ -30,7 +30,9 @@ export class ClientsApiService {
   }
 
   updateClient(id: number, data: Partial<Client>): Observable<Client> {
-    return this.http.patch<Client>(`${this.baseUrl}/clients/${id}`, data);
+    return this.http
+      .patch<{ data: Client }>(`${this.baseUrl}/clients/${id}`, data)
+      .pipe(map((r) => r.data));
   }
 
   getClientPacks(clientId: number): Observable<ClientPack[]> {

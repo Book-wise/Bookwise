@@ -81,6 +81,18 @@ export interface ServicePack {
   updated_at?: string;
 }
 
+/**
+ * Per-client notification preferences — 1:1 with the backend contract (5 flags).
+ * Sending is handled by the backend (carlitox + cron); the frontend only reads/writes.
+ */
+export interface NotificationPrefs {
+  email_new_booking: boolean;
+  email_booking_confirmation: boolean;
+  email_booking_cancellation: boolean;
+  whatsapp_reminder: boolean;
+  whatsapp_cancellation_confirmation: boolean;
+}
+
 export interface Client {
   id: number;
   first_name: string;
@@ -92,6 +104,8 @@ export interface Client {
   wc_customer_id?: number | null;
   active: boolean;
   custom_attributes?: Record<string, unknown>;
+  notifications_enabled?: boolean;
+  notification_prefs?: NotificationPrefs;
   created_at?: string;
   updated_at?: string;
 }
