@@ -481,4 +481,172 @@ describe('ReferenceStore', () => {
       expect(received).not.toBeNull();
     });
   });
+
+  // ── Location mutations (U6: store write methods sucursales) ─────────────
+
+  describe('location mutations', () => {
+    beforeEach(() => {
+      clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
+      locationsApi = {
+        getLocations: vi.fn().mockReturnValue(of([makeLocation({ active: true })])),
+        getRegions: vi.fn().mockReturnValue(of({ data: [] })),
+        getAllComunas: vi.fn().mockReturnValue(of({ data: [] })),
+      } as any;
+      providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
+      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
+      rolesApi = {
+        getRoles: vi.fn().mockReturnValue(of([])),
+        assignProviderRoles: vi.fn(),
+      } as any;
+      createStore();
+    });
+
+    it('createLocation POSTs and appends the server response to locations', () => {
+      const created = makeLocation({ id: 2, name: 'Sala 2' });
+      locationsApi.createLocation = vi.fn().mockReturnValue(of({ message: 'ok', data: created }));
+
+      store.createLocation({ name: 'Sala 2' }).subscribe();
+
+      expect(locationsApi.createLocation).toHaveBeenCalledWith({ name: 'Sala 2' });
+      expect(store.locations()).toHaveLength(2);
+      expect(store.locations()[1]).toEqual(created);
+    });
+
+    it('createLocation re-throws the error and does not append on failure', () => {
+      locationsApi.createLocation = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 422 })));
+
+      let received: unknown = null;
+      store.createLocation({ name: 'Sala X' }).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect(store.locations()).toHaveLength(1);
+    });
+
+    it('updateLocation PATCHes (force passthrough) and merges the canonical server response', () => {
+      const server = makeLocation({ id: 1, active: false, city: 'Santiago', name: 'Sala 1' });
+      locationsApi.updateLocation = vi.fn().mockReturnValue(of({ message: 'ok', data: server }));
+
+      store.updateLocation(1, { active: false, force: true }).subscribe();
+
+      expect(locationsApi.updateLocation).toHaveBeenCalledWith(1, { active: false, force: true });
+      expect(store.locations()).toHaveLength(1);
+      expect(store.locations()[0].active).toBe(false);
+      // Canonical fields come from the server response
+      expect(store.locations()[0].city).toBe('Santiago');
+    });
+
+    it('updateLocation re-throws the error and leaves the location untouched', () => {
+      locationsApi.updateLocation = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+
+      let received: unknown = null;
+      store.updateLocation(1, { active: false, force: true }).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect(store.locations()[0].active).toBe(true);
+    });
+  });
+
+  // ── toggleLocationActive (U6: mirror exacto de toggleProviderActive) ─────
+
+  describe('toggleLocationActive', () => {
+    beforeEach(() => {
+      clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
+      locationsApi = {
+        getLocations: vi.fn().mockReturnValue(of([makeLocation({ active: true })])),
+        getRegions: vi.fn().mockReturnValue(of({ data: [] })),
+        getAllComunas: vi.fn().mockReturnValue(of({ data: [] })),
+      } as any;
+      providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
+      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
+      rolesApi = {
+        getRoles: vi.fn().mockReturnValue(of([])),
+        assignProviderRoles: vi.fn(),
+      } as any;
+      createStore();
+    });
+
+    it('flips optimistically before the PATCH resolves, then merges the canonical response', () => {
+      const pending = new Subject<{ message: string; data: Location }>();
+      locationsApi.updateLocation = vi.fn().mockReturnValue(pending.asObservable());
+
+      const responses: { message: string; data: Location }[] = [];
+      store.toggleLocationActive(1, false).subscribe((res) => responses.push(res));
+
+      // Optimistic flip: state changed synchronously before the server answers
+      expect(store.locations()[0].active).toBe(false);
+      expect(locationsApi.updateLocation).toHaveBeenCalledWith(1, { active: false });
+
+      const canonical = makeLocation({ id: 1, active: false, city: 'Santiago' });
+      pending.next({ message: 'ok', data: canonical });
+      pending.complete();
+
+      expect(responses).toHaveLength(1);
+      expect(responses[0].message).toBe('ok');
+      expect(store.locations()[0].active).toBe(false);
+      // Canonical fields come from the server response
+      expect(store.locations()[0].city).toBe('Santiago');
+    });
+
+    it('passes force through to the PATCH payload when provided', () => {
+      locationsApi.updateLocation = vi.fn().mockReturnValue(
+        of({ message: 'ok', data: makeLocation({ id: 1, active: false }) }),
+      );
+
+      store.toggleLocationActive(1, false, true).subscribe();
+
+      expect(locationsApi.updateLocation).toHaveBeenCalledWith(1, { active: false, force: true });
+      expect(store.locations()[0].active).toBe(false);
+    });
+
+    it('rolls back to the previous state and re-throws on a generic error (500)', () => {
+      locationsApi.updateLocation = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+
+      let received: unknown = null;
+      store.toggleLocationActive(1, false).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect((received as HttpErrorResponse).status).toBe(500);
+      // Rollback: location is active again
+      expect(store.locations()[0].active).toBe(true);
+    });
+
+    it('re-throws a 409 requires_confirmation without swallowing it, after rollback', () => {
+      const conflictBody = {
+        message: 'conflicto',
+        requires_confirmation: true,
+        affects: { bookings: [{ id: 1, date: '2026-09-10', time: '10:00', provider_name: 'Ana' }] },
+      };
+      locationsApi.updateLocation = vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 409, error: conflictBody })),
+      );
+
+      let received: unknown = null;
+      store.toggleLocationActive(1, false).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      const err = received as HttpErrorResponse;
+      expect(err.status).toBe(409);
+      expect(err.error).toEqual(conflictBody);
+      // Rollback happened before re-throw
+      expect(store.locations()[0].active).toBe(true);
+    });
+
+    it('reactivates without any gating (PATCH {active:true}, 200 merge)', () => {
+      // Location starts inactive: re-mock the loader and refetch
+      locationsApi.getLocations!.mockReturnValue(of([makeLocation({ id: 1, active: false })]));
+      store.invalidateLocations();
+      expect(store.locations()[0].active).toBe(false);
+
+      locationsApi.updateLocation = vi.fn().mockReturnValue(
+        of({ message: 'ok', data: makeLocation({ id: 1, active: true }) }),
+      );
+
+      let received: unknown = null;
+      store.toggleLocationActive(1, true).subscribe({ next: (res) => (received = res) });
+
+      expect(locationsApi.updateLocation).toHaveBeenCalledWith(1, { active: true });
+      expect(store.locations()[0].active).toBe(true);
+      expect(received).not.toBeNull();
+    });
+  });
 });

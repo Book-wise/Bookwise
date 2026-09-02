@@ -327,6 +327,58 @@ export const ReferenceStore = signalStore(
         ),
       );
 
+    // ── Location mutations (U6: mirror de los métodos de providers) ───────
+
+    const createLocation = (data: Partial<Location>) =>
+      locationsApi.createLocation(data).pipe(
+        tap((res) => patchState(store, { locations: [...store.locations(), res.data] })),
+      );
+
+    /**
+     * PATCH /locations/{id} con `data` (acepta `force` para el flujo de
+     * desactivación forzada). 200 → merge canónico con res.data; error → re-throw
+     * sin tocar el estado (no es optimista).
+     */
+    const updateLocation = (id: number, data: Partial<Location> & { force?: boolean }) =>
+      locationsApi.updateLocation(id, data).pipe(
+        tap((res) => {
+          const locations = store.locations();
+          const index = locations.findIndex((l) => l.id === id);
+          patchState(store, {
+            locations:
+              index >= 0
+                ? locations.map((l) => (l.id === id ? { ...l, ...res.data } : l))
+                : [...locations, res.data],
+          });
+        }),
+      );
+
+    /**
+     * Flip optimista síncrono sobre `locations` + PATCH {active[, force]}.
+     * 200 → merge canónico con res.data; error → rollback al snapshot previo y
+     * RE-THROW del HttpErrorResponse (incluye el 409 requires_confirmation).
+     * Mirror exacto de toggleProviderActive (U3).
+     */
+    const toggleLocationActive = (id: number, active: boolean, force?: boolean) => {
+      const snapshot = store.locations();
+      patchState(store, {
+        locations: snapshot.map((l) => (l.id === id ? { ...l, active } : l)),
+      });
+      return locationsApi.updateLocation(id, force ? { active, force: true } : { active }).pipe(
+        tap((res) =>
+          patchState(store, {
+            locations: store.locations().map((l) =>
+              l.id === id ? { ...l, ...res.data } : l,
+            ),
+          }),
+        ),
+        catchError((err: HttpErrorResponse) => {
+          patchState(store, { locations: snapshot });
+          return throwError(() => err);
+        }),
+      );
+    };
+
     return {
       // Load individual
       loadLocations,
@@ -372,6 +424,10 @@ export const ReferenceStore = signalStore(
       saveProviderBasics,
       toggleProviderActive,
       assignProviderRoles,
+      // Location mutations (U6)
+      createLocation,
+      updateLocation,
+      toggleLocationActive,
     };
   }),
 
