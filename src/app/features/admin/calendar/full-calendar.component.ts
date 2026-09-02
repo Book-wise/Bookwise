@@ -35,7 +35,9 @@ import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
+import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
+import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
 import {
@@ -103,6 +105,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     newStart: string;
     meta: string | null;
   } | null = null;
+
+  /**
+   * View/date requested by a pending navigation (dashboard "Pending
+   * appointments" card). Set when consumePending() returns a view context and
+   * applied one-shot once the FullCalendar instance exists — the locations HTTP
+   * response and ngAfterViewInit/initCalendar can resolve in either order.
+   */
+  private pendingViewRequest: CalendarViewContext | null = null;
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild('eventTooltip') eventTooltip!: Popover;
@@ -355,6 +365,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.calendar.render();
       this.startNowLabel();
       this.setupHoverSelect();
+      // A pending navigation (dashboard card) may have requested a view/date
+      // before the calendar existed — apply it now that render() completed.
+      this.applyPendingView();
     });
   }
 
@@ -413,6 +426,20 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     const pendingProviderId = pending.providerId;
     const pendingStatusIds = pending.statusIds;
 
+    // View context is optional (e.g. the providers-list navigation sends none and
+    // keeps the default week behaviour). Only a pending navigation requesting a
+    // view sets pendingViewRequest — normal visits stay unaffected.
+    const pendingViewContext: CalendarViewContext | null = pending.view
+      ? {
+          view: pending.view,
+          gotoDate: pending.gotoDate ?? undefined,
+          rangeEnd: pending.rangeEnd ?? undefined,
+        }
+      : null;
+    if (pendingViewContext) {
+      this.pendingViewRequest = pendingViewContext;
+    }
+
     // Status-only navigation (e.g. the dashboard "Pending appointments" card)
     // must apply the status filter even when the calendar loads a default/kept
     // location (statusIds may arrive alongside null location/provider).
@@ -442,11 +469,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.loadProviders(data[0].id);
         this.onFilterChange();
         // Status-only pending navigation (dashboard "Pending appointments" card):
-        // one-shot toast explaining the active Pending filter on the current week.
-        // pendingLocationId is null in this branch; only a provider pre-selection
-        // (which shows showWelcomeToast instead) must suppress it.
+        // one-shot toast explaining the active Pending filter and the view/range
+        // mirroring the dashboard's active range. pendingLocationId is null in
+        // this branch; only a provider pre-selection (which shows showWelcomeToast
+        // instead) must suppress it.
         if (pendingStatusIds.length > 0 && pendingProviderId == null) {
-          this.showPendingContextToast(pendingStatusIds);
+          // Apply the requested view first (one-shot; no-op if already applied or
+          // if the calendar instance does not exist yet — the request survives in
+          // pendingViewRequest until initCalendar() completes).
+          this.applyPendingView();
+          this.showPendingContextToast(pendingStatusIds, pendingViewContext);
         }
       },
       error: () => {
@@ -498,19 +530,92 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  /**
+   * One-shot application of a pending view/date request (dashboard card). No-op
+   * when no navigation requested a view, or when the FullCalendar instance does
+   * not exist yet — in that case the request survives in pendingViewRequest until
+   * initCalendar() finishes and calls this again. Never invoked before render().
+   */
+  private applyPendingView(): void {
+    const request = this.pendingViewRequest;
+    if (!request) return;
+    const cal = this.calendar;
+    if (!cal) return; // calendar not initialized yet — keep the request pending
+    this.pendingViewRequest = null; // one-shot
+    this.ngZone.runOutsideAngular(() => {
+      // changeView(view, date) re-positions the calendar in a single call; the
+      // ISO gotoDate is interpreted in the calendar's configured timezone.
+      cal.changeView(request.view, request.gotoDate ?? undefined);
+    });
+  }
+
   /** One-shot info toast explaining the active view when the calendar was opened
    *  by a status-only pending navigation (dashboard "Pending appointments" card):
-   *  the current week is shown with the Pending filter applied, and other dates
-   *  are reachable through the calendar's own navigation controls. */
-  private showPendingContextToast(statusIds: number[]): void {
+   *  the detail describes the view/range mirroring the dashboard's active range
+   *  (month, week or custom/libre). When no view context was carried, a generic
+   *  message describes the default current-week view. */
+  private showPendingContextToast(
+    statusIds: number[],
+    context: CalendarViewContext | null,
+  ): void {
     if (!statusIds.length) return;
+
+    let detail: string;
+    if (context && context.view === 'dayGridMonth' && context.gotoDate) {
+      detail = this.lang.t('cal.pending_context_mes', {
+        month: this.monthLabel(context.gotoDate),
+      });
+    } else if (context && context.view === 'timeGridWeek' && context.gotoDate) {
+      const visibleWeekEnd = this.addDays(context.gotoDate, 6);
+      if (context.rangeEnd && context.rangeEnd > visibleWeekEnd) {
+        // Custom/libre range wider than the visible week (e.g. spanning two
+        // months): the calendar opens the week of the range start as a useful
+        // fallback, and the toast describes the selected period itself.
+        detail = this.lang.t('cal.pending_context_libre', {
+          start: this.rangeDayLabel(context.gotoDate),
+          end: this.rangeDayLabel(context.rangeEnd),
+        });
+      } else {
+        detail = this.lang.t('cal.pending_context_semana', {
+          start: this.rangeDayLabel(context.gotoDate),
+          end: this.rangeDayLabel(context.rangeEnd ?? visibleWeekEnd),
+        });
+      }
+    } else {
+      // No view context (legacy/other status-only callers): default week view.
+      detail = this.lang.t('cal.pending_context_toast');
+    }
+
     this.messageService.add({
       severity: 'info',
       summary: this.lang.t('cal.pending_title'),
-      detail: this.lang.t('cal.pending_context_toast'),
+      detail,
       key: 'global',
       life: 6000,
     });
+  }
+
+  /** Localized "month year" label (e.g. "septiembre de 2026" / "September 2026"). */
+  private monthLabel(iso: string): string {
+    const lang = this.lang.lang();
+    const locale = lang === 'es' ? 'es' : 'en';
+    const format = lang === 'es' ? "LLLL 'de' yyyy" : 'LLLL yyyy';
+    return DateTime.fromISO(iso, { zone: this.tzService.activeTimezone() })
+      .setLocale(locale)
+      .toFormat(format);
+  }
+
+  /** App-wide day label, matching the dashboard badge convention (dd/MM/yyyy). */
+  private rangeDayLabel(iso: string): string {
+    return DateTime.fromISO(iso, { zone: this.tzService.activeTimezone() }).toFormat(
+      'dd/MM/yyyy',
+    );
+  }
+
+  private addDays(iso: string, days: number): string {
+    return DateTime.fromISO(iso, { zone: this.tzService.activeTimezone() })
+      .plus({ days })
+      .toISODate()!;
   }
 
   onLocationChange(): void {

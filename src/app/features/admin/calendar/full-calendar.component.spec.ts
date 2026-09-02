@@ -15,6 +15,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
 import { Location, Provider } from '@models';
+import { DateTime } from 'luxon';
 
 /**
  * Integration tests for the calendar-navigation flow inside FullCalendarComponent.
@@ -70,6 +71,18 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
   let mockClientsApi: { getClients: ReturnType<typeof vi.fn> };
   let mockMessageService: { add: ReturnType<typeof vi.fn> };
   let mockHttpError: { handle: ReturnType<typeof vi.fn>; toToastConfig: ReturnType<typeof vi.fn> };
+
+  /**
+   * The FullCalendar instance is created in ngAfterViewInit/initCalendar, which
+   * does not run in this test environment (no rendered view). Stub the instance
+   * so applyPendingView() can exercise its changeView call — the data flow under
+   * test, not FullCalendar internals.
+   */
+  function stubCalendar(): { changeView: ReturnType<typeof vi.fn> } {
+    const calendarMock = { changeView: vi.fn(), refetchEvents: vi.fn(), destroy: vi.fn() };
+    (component as unknown as { calendar: unknown }).calendar = calendarMock as never;
+    return calendarMock;
+  }
 
   const locCentro: Location = {
     id: 1,
@@ -162,7 +175,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 2 });
       // Transactional: pending state consumed and cleared in the same flow
       expect(calNav.hasPendingNavigation()).toBe(false);
-      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [], view: null, gotoDate: null, rangeEnd: null });
     });
 
     it('syncs the pre-selected filters into the BookingStore', () => {
@@ -213,7 +226,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(store.filters().selectedLocationId).toBe(1);
       // Transactional: pending state consumed and cleared in the same flow
       expect(calNav.hasPendingNavigation()).toBe(false);
-      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [], view: null, gotoDate: null, rangeEnd: null });
     });
 
     it('shows the pending-context info toast on a status-only pending navigation', () => {
@@ -238,7 +251,83 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(toast.severity).toBe('info');
       expect(toast.life).toBe(6000);
       expect(toast.summary).toBe(component.lang.t('cal.pending_title'));
+      // No view context carried → the default (current week) fallback message
       expect(toast.detail).toBe(component.lang.t('cal.pending_context_toast'));
+    });
+
+    it('applies a month view context via changeView and explains the month in the toast', () => {
+      // Dashboard "Pending appointments" card in 'mes' range mode: month view
+      // (dayGridMonth) positioned on the first day of the selected month.
+      const calendarMock = stubCalendar();
+
+      calNav.navigateToCalendar(null, null, [5], mockRouter as unknown as Router, {
+        view: 'dayGridMonth',
+        gotoDate: '2026-09-01',
+      });
+
+      component.loadLocations();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(component.selectedStatusIds).toEqual([5]);
+      // The pending view request is applied one-shot on the calendar instance
+      expect(calendarMock.changeView).toHaveBeenCalledTimes(1);
+      expect(calendarMock.changeView).toHaveBeenCalledWith('dayGridMonth', '2026-09-01');
+
+      expect(mockMessageService.add).toHaveBeenCalledTimes(1);
+      const toast = mockMessageService.add.mock.calls[0][0] as { summary: string; detail: string };
+      expect(toast.summary).toBe(component.lang.t('cal.pending_title'));
+      const monthLabel = DateTime.fromISO('2026-09-01').setLocale('es').toFormat("LLLL 'de' yyyy");
+      expect(toast.detail).toBe(component.lang.t('cal.pending_context_mes', { month: monthLabel }));
+    });
+
+    it('applies a week view context and explains the week range in the toast', () => {
+      // Dashboard "Pending appointments" card in 'semana' range mode.
+      const calendarMock = stubCalendar();
+
+      calNav.navigateToCalendar(null, null, [5], mockRouter as unknown as Router, {
+        view: 'timeGridWeek',
+        gotoDate: '2026-08-31',
+        rangeEnd: '2026-09-06',
+      });
+
+      component.loadLocations();
+
+      expect(calendarMock.changeView).toHaveBeenCalledTimes(1);
+      expect(calendarMock.changeView).toHaveBeenCalledWith('timeGridWeek', '2026-08-31');
+
+      const toast = mockMessageService.add.mock.calls[0][0] as { detail: string };
+      expect(toast.detail).toBe(
+        component.lang.t('cal.pending_context_semana', {
+          start: '31/08/2026',
+          end: '06/09/2026',
+        }),
+      );
+    });
+
+    it('falls back to a week view for a custom (libre) range and explains the period', () => {
+      // Dashboard "Pending appointments" card in 'libre' range mode: a custom
+      // range may span two months — the calendar must NOT try to render both,
+      // it opens the week of the range start and describes the selected period.
+      const calendarMock = stubCalendar();
+
+      calNav.navigateToCalendar(null, null, [5], mockRouter as unknown as Router, {
+        view: 'timeGridWeek',
+        gotoDate: '2026-08-15',
+        rangeEnd: '2026-09-30',
+      });
+
+      component.loadLocations();
+
+      expect(calendarMock.changeView).toHaveBeenCalledTimes(1);
+      expect(calendarMock.changeView).toHaveBeenCalledWith('timeGridWeek', '2026-08-15');
+
+      const toast = mockMessageService.add.mock.calls[0][0] as { detail: string };
+      expect(toast.detail).toBe(
+        component.lang.t('cal.pending_context_libre', {
+          start: '15/08/2026',
+          end: '30/09/2026',
+        }),
+      );
     });
   });
 
@@ -251,7 +340,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       component.loadLocations();
 
       expect(calNav.hasPendingNavigation()).toBe(false);
-      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
+      expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [], view: null, gotoDate: null, rangeEnd: null });
     });
 
     it('applies the pending provider filter and surfaces a toast when loading providers fails', () => {
