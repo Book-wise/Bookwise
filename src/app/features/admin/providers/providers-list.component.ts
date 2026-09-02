@@ -10,7 +10,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { ProvidersApiService } from '@services/api/providers-api.service';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { DialogModule } from 'primeng/dialog';
+import { MessageService } from 'primeng/api';
 import { RolesApiService } from '@services/api/roles-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
@@ -18,6 +20,7 @@ import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location, Provider, Role } from '@models';
 import { roleMeta } from '../roles/role-meta';
+import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
 
 // ── Color palette for location grouping ────────────────────────────────
@@ -36,6 +39,21 @@ const LOCATION_PALETTE = [
   '#f43f5e', // rose
 ];
 
+/** Shape de un booking afectado por la desactivación (contrato 409 obs #217). */
+interface ConflictBooking {
+  id: number;
+  date: string;
+  time: string;
+  client_name: string;
+  status: number | string;
+}
+
+/** Body del 409 `requires_confirmation` (contrato #217, shape local por ahora). */
+interface ConflictData {
+  message: string;
+  affects: { bookings: ConflictBooking[] };
+}
+
 @Component({
   selector: 'bw-providers-list',
   standalone: true,
@@ -43,17 +61,18 @@ const LOCATION_PALETTE = [
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
     SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, MultiSelectModule,
+    ToggleSwitchModule, DialogModule,
     ProviderDialogComponent,
   ],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss'],
 })
 export class ProvidersListComponent implements OnInit {
-  private providersApi = inject(ProvidersApiService);
   private rolesApi = inject(RolesApiService);
   private httpError = inject(HttpErrorService);
   private router = inject(Router);
   private calNav = inject(CalendarNavigationService);
+  private messageService = inject(MessageService);
   protected refStore = inject(ReferenceStore);
   protected readonly lang = inject(LanguageService);
 
@@ -61,9 +80,12 @@ export class ProvidersListComponent implements OnInit {
   protected readonly roleMeta = roleMeta;
 
   // ── Data ────────────────────────────────────────────────────────────────
-  providers = signal<Provider[]>([]);
+  // Los providers se leen de ReferenceStore (fuente canónica; U3 cierra el
+  // gap de PR2). El store carga en su onInit root y patcha tras cada mutación.
+  readonly providers = computed(() => this.refStore.providers());
   roles = signal<Role[]>([]);
-  loading = signal(true);
+  /** Skeleton mientras el store no termina de cargar providers. */
+  readonly loading = computed(() => this.refStore.loading().providers);
 
   // ── Filters ─────────────────────────────────────────────────────────────
   searchQuery = signal('');
@@ -165,25 +187,15 @@ export class ProvidersListComponent implements OnInit {
       }),
   );
 
+  // ── Toggle state (UI local, A1–A4) ───────────────────────────────────
+  toggling = signal<Set<number>>(new Set());
+  conflictDialogVisible = signal(false);
+  conflictData = signal<ConflictData | null>(null);
+  pendingToggleProvider = signal<Provider | null>(null);
+
   // ── Lifecycle ────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadProviders();
     this.loadRoles();
-  }
-
-  loadProviders(): void {
-    this.loading.set(true);
-    this.providersApi.getProviders().subscribe({
-      next: (data) => {
-        this.providers.set(data);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.providers.set([]);
-        this.loading.set(false);
-        this.httpError.handle(err, 'cargar profesionales');
-      },
-    });
   }
 
   loadRoles(): void {
@@ -201,6 +213,52 @@ export class ProvidersListComponent implements OnInit {
   /** Tipado seguro: `provider.roles` puede ser undefined. */
   providerRoles(provider: Provider): Role[] {
     return provider.roles ?? [];
+  }
+
+  /** Etiqueta de estado de un booking del conflicto vía BOOKING_STATUSES labelKey. */
+  bookingStatusLabel(status: number | string): string {
+    const value = Number(status);
+    const match = BOOKING_STATUSES.find((s) => s.value === value || s.label === status);
+    return match ? this.lang.t(match.labelKey) : String(status);
+  }
+
+  // ── Toggle active (store-routed, A1–A4) ─────────────────────────────
+
+  toggleActive(provider: Provider): void {
+    const id = provider.id;
+    const newActive = !provider.active;
+    if (this.toggling().has(id)) return;
+
+    this.toggling.update((set) => new Set(set).add(id));
+    this.refStore.toggleProviderActive(id, newActive).subscribe({
+      next: (res) => {
+        this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
+        this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
+      },
+      error: (err) => {
+        this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
+        // A2: gate 409 SOLO en desactivación; reactivación nunca gatea.
+        if (!newActive && err.status === 409 && err.error?.requires_confirmation) {
+          this.showConflictDialog(provider, err.error);
+        } else {
+          // A4 interino: 409 no live aún → error genérico (rollback ya lo hizo el store)
+          this.httpError.handle(err, 'cambiar estado');
+        }
+      },
+    });
+  }
+
+  /** Abre el diálogo bloqueante con el body del 409 (sin force; única salida: Cerrar). */
+  showConflictDialog(provider: Provider, data: ConflictData): void {
+    this.pendingToggleProvider.set(provider);
+    this.conflictData.set(data);
+    this.conflictDialogVisible.set(true);
+  }
+
+  /** Cierra el diálogo sin emitir ningún request; el provider quedó activo por el rollback. */
+  closeConflictDialog(): void {
+    this.conflictDialogVisible.set(false);
+    this.pendingToggleProvider.set(null);
   }
 
   // ── Dialog ────────────────────────────────────────────────────────────────

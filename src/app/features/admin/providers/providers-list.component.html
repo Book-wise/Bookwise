@@ -172,9 +172,17 @@
               }
             </td>
             <td>
-              <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
-                {{ provider.active ? 'Activo' : 'Inactivo' }}
-              </span>
+              <div class="status-cell">
+                <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                  {{ provider.active ? 'Activo' : 'Inactivo' }}
+                </span>
+                <p-toggleswitch
+                  [ngModel]="provider.active"
+                  (ngModelChange)="toggleActive(provider)"
+                  [disabled]="toggling().has(provider.id)"
+                  [pTooltip]="provider.active ? lang.t('providers.toggle_deactivate') : lang.t('providers.toggle_activate')"
+                />
+              </div>
             </td>
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
@@ -242,9 +250,17 @@
 
             <div class="prov-card__row">
               <span class="prov-card__label">Estado</span>
-              <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
-                {{ provider.active ? 'Activo' : 'Inactivo' }}
-              </span>
+              <div class="status-cell">
+                <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
+                  {{ provider.active ? 'Activo' : 'Inactivo' }}
+                </span>
+                <p-toggleswitch
+                  [ngModel]="provider.active"
+                  (ngModelChange)="toggleActive(provider)"
+                  [disabled]="toggling().has(provider.id)"
+                  [pTooltip]="provider.active ? lang.t('providers.toggle_deactivate') : lang.t('providers.toggle_activate')"
+                />
+              </div>
             </div>
           </div>
 
@@ -270,3 +286,58 @@
   (saved)="onDialogSaved()"
   (editRequested)="onEditRequested()"
 />
+
+<!-- A2: diálogo bloqueante de conflicto al desactivar (409 requires_confirmation).
+     Sin botón de fuerza: única salida Cerrar; el store ya hizo rollback. -->
+<p-dialog
+  [(visible)]="conflictDialogVisible"
+  [modal]="true"
+  [style]="{ width: '540px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="false"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+  <ng-template pTemplate="header">
+    <div class="providers-dialog-header">
+      <span class="providers-dialog-title">{{ lang.t('providers.conflict.title') }}</span>
+    </div>
+  </ng-template>
+
+  @if (conflictData(); as data) {
+    <div class="conflict-content">
+      <p class="conflict-lead">{{ lang.t('providers.conflict.lead') }}</p>
+      <div class="conflict-warning">⚠️ {{ data.message }}</div>
+      <p-table [value]="data.affects.bookings" [tableStyle]="{ 'min-width': '30rem' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ lang.t('providers.conflict.col_id') }}</th>
+            <th>{{ lang.t('providers.conflict.col_date') }}</th>
+            <th>{{ lang.t('providers.conflict.col_time') }}</th>
+            <th>{{ lang.t('providers.conflict.col_client') }}</th>
+            <th>{{ lang.t('providers.conflict.col_status') }}</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-booking>
+          <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.date }}</td>
+            <td>{{ booking.time }}</td>
+            <td>{{ booking.client_name }}</td>
+            <td>{{ bookingStatusLabel(booking.status) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="5" class="text-center">—</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button label="{{ lang.t('providers.conflict.close') }}" (onClick)="closeConflictDialog()" />
+    </div>
+  </ng-template>
+</p-dialog>
