@@ -260,6 +260,14 @@ export interface ChangePasswordData {
   password_confirmation: string;
 }
 
+/** POST /auth/reset-password (público) { token, password, password_confirmation }
+ *  → 200 { message } | 400 { error: 'invalid_token' | 'token_expired' | 'token_already_used' } | 422 { message, errors }. */
+export interface ResetPasswordData {
+  token: string;
+  password: string;
+  password_confirmation: string;
+}
+
 // Business onboarding / profile / roles
 /** Plan de negocio. El contrato confirma valores tipo 'starter' | 'professional' | 'enterprise'. */
 export type BusinessPlan = string;

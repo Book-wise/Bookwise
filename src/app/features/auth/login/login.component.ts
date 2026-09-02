@@ -32,7 +32,7 @@ import { AuthLayoutComponent } from '@shared/components/auth-layout/auth-layout.
 export class LoginComponent {
   private authApi = inject(AuthApiService);
   private auth = inject(AuthService);
-  private lang = inject(LanguageService);
+  readonly lang = inject(LanguageService);
 
   loading = signal(false);
   error   = signal<string | null>(null);

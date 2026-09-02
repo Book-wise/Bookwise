@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { AuthMeData, AuthMeResponse, AuthResponse, ChangePasswordData, LoginCredentials, RegisterData, RegisterResponse, User } from '@models';
+import { AuthMeData, AuthMeResponse, AuthResponse, ChangePasswordData, LoginCredentials, RegisterData, RegisterResponse, ResetPasswordData, User } from '@models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
@@ -33,6 +33,18 @@ export class AuthApiService {
   /** POST /auth/password (Bearer) → { message } — cambio de contraseña del usuario autenticado. */
   changePassword(data: ChangePasswordData): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/auth/password`, data);
+  }
+
+  /** POST /auth/forgot-password (público, sin auth) { email } → 200 { message }
+   *  — respuesta genérica (anti-enumeración): siempre 200 aunque el email no exista. */
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/forgot-password`, { email });
+  }
+
+  /** POST /auth/reset-password (público) { token, password, password_confirmation }
+   *  → 200 { message } | 400 { error: 'invalid_token' | 'token_expired' | 'token_already_used' } | 422 { message, errors }. */
+  resetPassword(data: ResetPasswordData): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/reset-password`, data);
   }
 
   /** PATCH /auth/me (Bearer) → { user } — actualiza el perfil del usuario autenticado (hoy solo phone). */

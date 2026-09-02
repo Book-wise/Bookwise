@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { AuthApiService } from './auth-api.service';
 import { environment } from '@env/environment';
-import { AuthMeData, LoginCredentials, RegisterData } from '@models';
+import { AuthMeData, LoginCredentials, RegisterData, ResetPasswordData } from '@models';
 
 describe('AuthApiService', () => {
   let service: AuthApiService;
@@ -59,6 +59,31 @@ describe('AuthApiService', () => {
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ token: 'tok-123' });
     req.flush(response);
+  });
+
+  it('forgotPassword calls POST /auth/forgot-password with { email }', () => {
+    service.forgotPassword('user@test.com').subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/forgot-password`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ email: 'user@test.com' });
+  });
+
+  it('resetPassword calls POST /auth/reset-password with token and the new passwords', () => {
+    const data: ResetPasswordData = {
+      token: 'tok-123',
+      password: 'NewPass1',
+      password_confirmation: 'NewPass1',
+    };
+
+    service.resetPassword(data).subscribe((res) => {
+      expect(res).toEqual({ message: 'ok' });
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/reset-password`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(data);
+    req.flush({ message: 'ok' });
   });
 
   it('getMe calls GET /auth/me and unwraps { user }', () => {

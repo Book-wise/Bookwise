@@ -43,6 +43,10 @@
       [disabled]="!credentials.email || !credentials.password" />
   </form>
 
+  <div class="forgot-password">
+    <a routerLink="/forgot-password">{{ lang.t('auth.login.forgot') }}</a>
+  </div>
+
   <div class="auth-footer">
     <span>¿No tenés cuenta?</span>
     <a routerLink="/register">Registrarse</a>
