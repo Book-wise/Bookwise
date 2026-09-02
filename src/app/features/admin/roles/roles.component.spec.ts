@@ -4,7 +4,11 @@ import { of } from 'rxjs';
 import { RolesComponent } from './roles.component';
 import { RolesApiService } from '@services/api/roles-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
+import { LocationsApiService } from '@services/api/locations-api.service';
+import { ServicesApiService } from '@services/api/services-api.service';
+import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import type { Provider, Role } from '@models';
 
 const allRoles: Role[] = [
@@ -33,6 +37,7 @@ describe('RolesComponent', () => {
     assignProviderRoles: ReturnType<typeof vi.fn>;
   };
   let providersApi: { getProviders: ReturnType<typeof vi.fn> };
+  let store: InstanceType<typeof ReferenceStore>;
   let fixture: ReturnType<typeof TestBed.createComponent<RolesComponent>>;
   let component: RolesComponent;
 
@@ -49,13 +54,36 @@ describe('RolesComponent', () => {
         provideZonelessChangeDetection(),
         { provide: RolesApiService, useValue: rolesApi },
         { provide: ProvidersApiService, useValue: providersApi },
+        {
+          provide: LocationsApiService,
+          useValue: {
+            getLocations: vi.fn(() => of([])),
+            getRegions: vi.fn(() => of({ data: [] })),
+            getAllComunas: vi.fn(() => of({ data: [] })),
+          },
+        },
+        {
+          provide: ServicesApiService,
+          useValue: { getServices: vi.fn(() => of([])), getPacks: vi.fn(() => of({ data: [] })) },
+        },
+        { provide: ClientsApiService, useValue: { getClients: vi.fn(() => of([])) } },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
       ],
     }).compileComponents();
 
+    store = TestBed.inject(ReferenceStore);
     fixture = TestBed.createComponent(RolesComponent);
     component = fixture.componentInstance;
   });
+
+  /**
+   * Seeds providers in the real ReferenceStore (U6: canonical source for this
+   * screen — the component no longer fetches providers on its own).
+   */
+  function seedProviders(providers: Provider[]): void {
+    providersApi.getProviders.mockReturnValue(of(providers));
+    store.invalidateProviders();
+  }
 
   it('renders the six business roles', () => {
     fixture.detectChanges();
@@ -83,8 +111,18 @@ describe('RolesComponent', () => {
     expect(descs[0]).not.toBe(component.roleLabel(allRoles[0].name));
   });
 
+  it('reads providers from ReferenceStore (no local providersApi load)', () => {
+    seedProviders([makeProvider({ id: 7 })]);
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    expect(component.providers()).toEqual([makeProvider({ id: 7 })]);
+    // Only the store loader called the API — the component never fetched on its own.
+    expect(providersApi.getProviders).toHaveBeenCalled();
+  });
+
   it('blocks saving an empty selection (no PATCH)', () => {
-    providersApi.getProviders.mockReturnValue(of([makeProvider()]));
+    seedProviders([makeProvider()]);
     fixture.detectChanges();
 
     component.onProviderChange(1);
@@ -97,7 +135,7 @@ describe('RolesComponent', () => {
 
   it('blocks removing admin_general (no PATCH)', () => {
     const owner = makeProvider({ roles: [allRoles[0]] });
-    providersApi.getProviders.mockReturnValue(of([owner]));
+    seedProviders([owner]);
     fixture.detectChanges();
 
     component.onProviderChange(1);
@@ -109,9 +147,9 @@ describe('RolesComponent', () => {
     expect(component.error()).toBeTruthy();
   });
 
-  it('assigns roles successfully via PATCH', () => {
+  it('assigns roles via the store and updates the canonical store state', () => {
     const owner = makeProvider({ roles: [allRoles[0]] });
-    providersApi.getProviders.mockReturnValue(of([owner]));
+    seedProviders([owner]);
     rolesApi.assignProviderRoles.mockReturnValue(of({ data: [allRoles[0], allRoles[1]] }));
     fixture.detectChanges();
 
@@ -120,5 +158,8 @@ describe('RolesComponent', () => {
     component.save();
 
     expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['admin_general', 'admin_local']);
+    // El store patcha `providers` con el set canónico del server (sin patch manual).
+    expect(store.providers()[0].roles).toEqual([allRoles[0], allRoles[1]]);
+    expect(component.saving()).toBe(false);
   });
 });

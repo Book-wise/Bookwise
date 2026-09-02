@@ -7,10 +7,10 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { RolesApiService } from '@services/api/roles-api.service';
-import { ProvidersApiService } from '@services/api/providers-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
-import { Provider, Role } from '@models';
+import { ReferenceStore } from '@core/stores/reference.store';
+import { Role } from '@models';
 import { roleMeta } from './role-meta';
 import { applyAdminGeneralInvariant, isAdminGeneralLocked } from './role-guards';
 
@@ -31,15 +31,20 @@ import { applyAdminGeneralInvariant, isAdminGeneralLocked } from './role-guards'
 })
 export class RolesComponent implements OnInit {
   private rolesApi = inject(RolesApiService);
-  private providersApi = inject(ProvidersApiService);
   private httpError = inject(HttpErrorService);
+  private refStore = inject(ReferenceStore);
   readonly lang = inject(LanguageService);
 
   /** Resuelve color/icono de un rol (fallback gris + pi-user). */
   protected readonly roleMeta = roleMeta;
 
   roles = signal<Role[]>([]);
-  providers = signal<Provider[]>([]);
+  /**
+   * Providers leídos de ReferenceStore (fuente canónica): el store patcha
+   * `providers` con la respuesta del server tras asignar roles (U6), por lo que
+   * esta pantalla no mantiene lista local ni recarga post-guardado.
+   */
+  readonly providers = computed(() => this.refStore.providers());
   loading = signal(true);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -73,10 +78,6 @@ export class RolesComponent implements OnInit {
         this.loading.set(false);
         this.httpError.handle(err, this.lang.t('roles.title'));
       },
-    });
-    this.providersApi.getProviders().subscribe({
-      next: (providers) => this.providers.set(providers),
-      error: (err) => this.httpError.handle(err, this.lang.t('roles.title')),
     });
   }
 
@@ -153,12 +154,11 @@ export class RolesComponent implements OnInit {
 
     this.error.set(null);
     this.saving.set(true);
-    this.rolesApi.assignProviderRoles(provider.id, selected).subscribe({
-      next: ({ data }) => {
+    // Mutación vía store: ReferenceStore PATCHea roles y setea el set canónico
+    // (res.data) sobre el provider en `providers` — sin patch manual de lista.
+    this.refStore.assignProviderRoles(provider.id, selected).subscribe({
+      next: () => {
         this.saving.set(false);
-        this.providers.update((list) =>
-          list.map((p) => (p.id === provider.id ? { ...p, roles: data } : p)),
-        );
       },
       error: (err) => {
         this.saving.set(false);
