@@ -50,29 +50,29 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Component Migrations
 
-- [ ] T-15 `login.component.ts` → AuthApiService
-- [ ] T-16 `register.component.ts` → AuthApiService
-- [ ] T-17 `full-calendar.component.ts` → LocationsApiService, ProvidersApiService, BlockedSlotsApiService
-- [ ] T-18 `admin-dashboard.component.ts` → BookingsApiService
-- [ ] T-19 `clients-list.component.ts` → ClientsApiService
-- [ ] T-20 `booking-dialog.component.ts` → BookingsApiService
-- [ ] T-21 `booking-form-dialog.component.ts` → BookingsApiService, ProvidersApiService, ClientsApiService, ServicesApiService
-- [ ] T-22 `block-time-dialog.component.ts` → BlockedSlotsApiService
-- [ ] T-23 `payment-detail-dialog.component.ts` → BookingsApiService
-- [ ] T-24 `similar-patients.service.ts` → ClientsApiService
-- [ ] T-25 `payment-tab.component.ts` → BookingsApiService
-- [ ] T-26 `reserva-tab.component.ts` → BookingsApiService, ProvidersApiService, ClientsApiService
-- [ ] T-27 `historial-pagos.component.ts` → BookingsApiService
-- [ ] T-28 `provider-calendar.component.ts` → BlockedSlotsApiService
-- [ ] T-29 `provider-availability.component.ts` → remove unused ApiService import
-- [ ] T-30 `locations-list.component.ts` → LocationsApiService
-- [ ] T-31 `location-dialog.component.ts` → LocationsApiService
-- [ ] T-32 `providers-list.component.ts` → ProvidersApiService
-- [ ] T-33 `provider-dialog.component.ts` → ProvidersApiService
-- [ ] T-34 `packs-list.component.ts` → ServicesApiService
+- [x] T-15 `login.component.ts` → AuthApiService
+- [x] T-16 `register.component.ts` → AuthApiService
+- [x] T-17 `full-calendar.component.ts` → LocationsApiService, ProvidersApiService, BlockedSlotsApiService
+- [x] T-18 `admin-dashboard.component.ts` → BookingsApiService
+- [x] T-19 `clients-list.component.ts` → ClientsApiService
+- [x] T-20 `booking-dialog.component.ts` → BookingsApiService (componente consolidado en `booking-dialog.store.ts`)
+- [x] T-21 `booking-form-dialog.component.ts` → BookingsApiService, ProvidersApiService, ClientsApiService, ServicesApiService
+- [x] T-22 `block-time-dialog.component.ts` → BlockedSlotsApiService
+- [x] T-23 `payment-detail-dialog.component.ts` → BookingsApiService (consolidado en `payment-tab.component.ts`, usa SalesApiService)
+- [x] T-24 `similar-patients.service.ts` → ClientsApiService
+- [x] T-25 `payment-tab.component.ts` → BookingsApiService (usa SalesApiService)
+- [x] T-26 `reserva-tab.component.ts` → BookingsApiService, ProvidersApiService, ClientsApiService
+- [x] T-27 `historial-pagos.component.ts` → BookingsApiService (usa SalesApiService)
+- [x] T-28 `provider-calendar.component.ts` → BlockedSlotsApiService
+- [x] T-29 `provider-availability.component.ts` → remove unused ApiService import
+- [x] T-30 `locations-list.component.ts` → LocationsApiService
+- [x] T-31 `location-dialog.component.ts` → LocationsApiService
+- [x] T-32 `providers-list.component.ts` → ProvidersApiService
+- [x] T-33 `provider-dialog.component.ts` → ProvidersApiService
+- [x] T-34 `packs-list.component.ts` → ServicesApiService
 
 ## Phase 4: Cleanup
 
-- [ ] T-35 Delete `api.service.ts` after `grep -r 'ApiService' src/` returns no source matches.
-- [ ] T-36 Remove barrel alias if ApiService was re-exported from an index file.
-- [ ] T-37 Run `ng build` to confirm zero errors.
+- [x] T-35 Delete `api.service.ts` after `grep -r 'ApiService' src/` returns no source matches.
+- [x] T-36 Remove barrel alias if ApiService was re-exported from an index file.
+- [x] T-37 Run `ng build` to confirm zero errors.
