@@ -93,6 +93,18 @@
       display: none !important;
     }
   }
+
+  // Cuando la vista activa es un tab de paciente (planes/sesiones/prepago/
+  // recientes), el tabpanels se oculta; el p-tabs no debe conservar su flex:1
+  // (dejaría un hueco vacío entre el tablist y el contenido del paciente).
+  // Se colapsa a solo el tablist y el contenido del paciente llena el alto.
+  &--patient {
+    flex: 0 0 auto;
+
+    .p-tabpanels {
+      display: none !important;
+    }
+  }
 }
 
 // ── Skeleton layouts ──────────────────────────────────────────────────────────

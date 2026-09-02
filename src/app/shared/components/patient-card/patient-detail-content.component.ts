@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ClientDetailStore, PatientTab } from '@core/stores/client-detail.store';
 import { TimezoneService } from '@services/timezone.service';
+import { LanguageService } from '@services/language.service';
 
 @Component({
   selector: 'bw-patient-detail-content',
@@ -15,6 +16,7 @@ import { TimezoneService } from '@services/timezone.service';
 export class PatientDetailContentComponent {
   readonly detailStore = inject(ClientDetailStore);
   private readonly timezone = inject(TimezoneService);
+  readonly lang = inject(LanguageService);
 
   readonly view = input.required<PatientTab>();
   readonly returnRequested = output<void>();
@@ -31,6 +33,35 @@ export class PatientDetailContentComponent {
       status: index + 1 <= pack.used_sessions ? 'Completada' : 'Pendiente',
     }));
   }));
+
+  readonly plansCount = computed(() => this.activePacks().length);
+  readonly sessionsCount = computed(() =>
+    this.activePacks().reduce((sum, p) => sum + (p.total_sessions ?? 0), 0),
+  );
+  readonly prepaidCount = computed(() =>
+    this.detailStore.sales().loaded ? this.detailStore.sales().data.length : null,
+  );
+  readonly recentCount = computed(() =>
+    this.detailStore.recent().loaded ? this.detailStore.recent().data.length : null,
+  );
+
+  /** Cuenta visible por sección (null si aún no cargó → sin badge). */
+  countFor(tab: PatientTab): number | null {
+    switch (tab) {
+      case 'planes':    return this.plansCount();
+      case 'sesiones':  return this.sessionsCount();
+      case 'prepago':   return this.prepaidCount();
+      case 'recientes': return this.recentCount();
+    }
+  }
+
+  isActive(tab: PatientTab): boolean {
+    return this.view() === tab;
+  }
+
+  selectTab(tab: PatientTab): void {
+    this.detailStore.selectTab(tab);
+  }
 
   formatBookingTime(iso: string): string {
     return this.timezone.formatCardDate(iso);

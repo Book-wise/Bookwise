@@ -4,6 +4,61 @@
     Volver a la reserva
   </button>
 
+  <nav class="patient-detail-content__tabs">
+    <button
+      type="button"
+      class="patient-detail-content__tab"
+      [class.patient-detail-content__tab--active]="isActive('planes')"
+      (click)="selectTab('planes')"
+    >
+      {{ lang.t('patient_card.tab.plans') }}
+      @if (countFor('planes'); as c) {
+        @if (c > 0) {
+          <span class="patient-detail-content__badge">{{ c }}</span>
+        }
+      }
+    </button>
+    <button
+      type="button"
+      class="patient-detail-content__tab"
+      [class.patient-detail-content__tab--active]="isActive('sesiones')"
+      (click)="selectTab('sesiones')"
+    >
+      {{ lang.t('patient_card.tab.sessions') }}
+      @if (countFor('sesiones'); as c) {
+        @if (c > 0) {
+          <span class="patient-detail-content__badge">{{ c }}</span>
+        }
+      }
+    </button>
+    <button
+      type="button"
+      class="patient-detail-content__tab"
+      [class.patient-detail-content__tab--active]="isActive('prepago')"
+      (click)="selectTab('prepago')"
+    >
+      {{ lang.t('patient_card.tab.prepaid') }}
+      @if (countFor('prepago'); as c) {
+        @if (c !== null && c > 0) {
+          <span class="patient-detail-content__badge">{{ c }}</span>
+        }
+      }
+    </button>
+    <button
+      type="button"
+      class="patient-detail-content__tab"
+      [class.patient-detail-content__tab--active]="isActive('recientes')"
+      (click)="selectTab('recientes')"
+    >
+      {{ lang.t('patient_card.tab.recent') }}
+      @if (countFor('recientes'); as c) {
+        @if (c !== null && c > 0) {
+          <span class="patient-detail-content__badge">{{ c }}</span>
+        }
+      }
+    </button>
+  </nav>
+
   @switch (view()) {
     @case ('planes') {
       @if (detailStore.packs().loading) {

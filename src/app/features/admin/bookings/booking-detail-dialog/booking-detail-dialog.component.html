@@ -101,7 +101,8 @@
       <!-- `p-tabs` envuelve tablist (header) + tabpanels (body). Los 6 paneles
            permanecen montados (lazy=false → keep-alive nativo): el estado del
            form de Reserva sobrevive al cambiar de tab principal. -->
-      <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs">
+      <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="booking-dialog-tabs"
+        [class.booking-dialog-tabs--patient]="detailStore.activeView() !== 'reserva'">
         <p-tablist>
           @for (tab of visibleTabs(); track tab.value) {
             <p-tab [value]="tab.value">{{ tab.label }}</p-tab>

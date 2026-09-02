@@ -23,6 +23,59 @@
 
 .patient-detail-content__back:hover { color: var(--bw-500); }
 
+// ── Tabs internos de navegación (planes/sesiones/prepago/recientes) ──────────
+
+.patient-detail-content__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0 0.5rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.patient-detail-content__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold, 600);
+  color: var(--bw-tab-color, var(--text-color-secondary));
+  background: transparent;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: rgba(4, 106, 244, 0.08);
+  }
+
+  &--active {
+    color: #ffffff;
+    background: var(--color-primary, #046af4);
+    border-color: var(--color-primary, #046af4);
+  }
+}
+
+.patient-detail-content__badge {
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 0 0.3rem;
+}
+
+.patient-detail-content__tab--active .patient-detail-content__badge {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 .patient-detail-content__list {
   display: flex;
   flex-direction: column;
