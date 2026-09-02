@@ -253,6 +253,13 @@ export interface RegisterResponse {
   user: User;
 }
 
+/** POST /auth/password (Bearer) → 200 { message } — cambio de contraseña del usuario autenticado. */
+export interface ChangePasswordData {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}
+
 // Business onboarding / profile / roles
 /** Plan de negocio. El contrato confirma valores tipo 'starter' | 'professional' | 'enterprise'. */
 export type BusinessPlan = string;

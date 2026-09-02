@@ -106,6 +106,7 @@ body.dark-theme {
   --bw-chip-text-warning:   #fcd34d;   // amber-300
   --bw-chip-text-danger:    #fca5a5;   // red-300
   --bw-chip-text-secondary: #cbd5e1;   // slate-300
+  --bw-chip-text-primary:   #93c5fd;   // blue-300 (light-ish on dark tint)
 
   background: var(--surface-ground);
   color: var(--text-color);

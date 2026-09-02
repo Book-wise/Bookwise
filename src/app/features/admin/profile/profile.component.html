@@ -3,7 +3,7 @@
     <h1>{{ lang.t('profile.title') }}</h1>
     <p>
       {{ me()?.name ?? lang.t('profile.not_available') }}
-      <span class="role-chip">{{ lang.t('profile.role_admin_general') }}</span>
+      <span class="bw-chip bw-chip--primary"><i class="pi pi-shield"></i>{{ lang.t('profile.role_admin_general') }}</span>
     </p>
   </div>
 
@@ -35,11 +35,51 @@
       <div class="password-placeholder">
         <h3>{{ lang.t('profile.section.change_password') }}</h3>
         <div class="password-fields">
-          <input pInputText type="password" [value]="''" [placeholder]="lang.t('profile.change_password.current')" disabled class="w-full" />
-          <input pInputText type="password" [value]="''" [placeholder]="lang.t('profile.change_password.new')" disabled class="w-full" />
-          <input pInputText type="password" [value]="''" [placeholder]="lang.t('profile.change_password.confirm')" disabled class="w-full" />
+          <div class="password-field">
+            <label for="pw-current">{{ lang.t('profile.change_password.current') }}</label>
+            <input id="pw-current" pInputText type="password" [(ngModel)]="pwCurrent"
+              [class.field-error]="!!pwFieldErrors().current" class="w-full" />
+            @if (pwFieldErrors().current; as err) {
+              <span class="field-error-text">{{ err }}</span>
+            }
+          </div>
+          <div class="password-field">
+            <label for="pw-new">{{ lang.t('profile.change_password.new') }}</label>
+            <input id="pw-new" pInputText type="password" [(ngModel)]="pwNew"
+              [class.field-error]="!!pwFieldErrors().password" class="w-full" />
+            <ul class="strength-checks">
+              @for (check of pwStrengthChecks(); track check.key) {
+                <li class="strength-check" [class.strength-check--met]="check.met">
+                  <i class="pi" [class.pi-check]="check.met" [class.pi-times]="!check.met"></i>
+                  {{ lang.t('profile.change_password.strength.' + check.key) }}
+                </li>
+              }
+            </ul>
+            @if (pwFieldErrors().password; as err) {
+              <span class="field-error-text">{{ err }}</span>
+            }
+          </div>
+          <div class="password-field">
+            <label for="pw-confirm">{{ lang.t('profile.change_password.confirm') }}</label>
+            <input id="pw-confirm" pInputText type="password" [(ngModel)]="pwConfirm"
+              [class.field-error]="pwMismatch()" class="w-full" />
+            @if (pwConfirm() && pwNew()) {
+              <span class="match-hint" [class.match-hint--ok]="pwMatch()" [class.match-hint--ko]="pwMismatch()">
+                <i class="pi" [class.pi-check]="pwMatch()" [class.pi-times]="pwMismatch()"></i>
+                @if (pwMatch()) {
+                  {{ lang.t('profile.change_password.match_ok') }}
+                } @else {
+                  {{ lang.t('profile.change_password.match_ko') }}
+                }
+              </span>
+            }
+            @if (pwError(); as err) {
+              <span class="field-error-text password-global-error">{{ err }}</span>
+            }
+          </div>
         </div>
-        <p-button [label]="lang.t('profile.change_password.submit')" icon="pi pi-lock" [disabled]="true" class="pw-btn" />
+        <p-button [label]="lang.t('profile.change_password.submit')" icon="pi pi-lock"
+          [loading]="pwSaving()" class="pw-btn" (onClick)="changePassword()" />
       </div>
     </p-card>
 

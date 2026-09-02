@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { AuthMeData, AuthMeResponse, AuthResponse, LoginCredentials, RegisterData, RegisterResponse, User } from '@models';
+import { AuthMeData, AuthMeResponse, AuthResponse, ChangePasswordData, LoginCredentials, RegisterData, RegisterResponse, User } from '@models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
@@ -28,5 +28,10 @@ export class AuthApiService {
   /** GET /auth/me (Bearer) → unwrap { user: AuthMeData } */
   getMe(): Observable<AuthMeData> {
     return this.http.get<AuthMeResponse>(`${this.baseUrl}/auth/me`).pipe(map((r) => r.user));
+  }
+
+  /** POST /auth/password (Bearer) → { message } — cambio de contraseña del usuario autenticado. */
+  changePassword(data: ChangePasswordData): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/password`, data);
   }
 }
