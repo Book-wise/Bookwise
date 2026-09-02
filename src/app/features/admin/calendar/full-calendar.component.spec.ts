@@ -195,12 +195,25 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(mockMessageService.add).toHaveBeenCalledTimes(1);
       const toast = mockMessageService.add.mock.calls[0][0] as {
         key: string;
+        summary: string;
         detail: string;
         severity: string;
       };
       expect(toast.key).toBe('global');
       expect(toast.severity).toBe('success');
-      expect(toast.detail).toBe('Mostrando agenda de Ana Torres en Sucursal Norte');
+      expect(toast.summary).toBe('Ana Torres');
+      // Detail is i18n'd and always reports the filter context ("Filtro: ..."),
+      // not only the provider + location names.
+      expect(toast.detail).toBe(
+        component.lang.t('cal.welcome_agenda_detail', {
+          provider: 'Ana Torres',
+          location: 'Sucursal Norte',
+          filter_label: component.lang.t('cal.toast.filter_label'),
+          statuses: component.lang.t('cal.placeholder.all_statuses'),
+        }),
+      );
+      expect(toast.detail).toContain('Sucursal Norte');
+      expect(toast.detail).toContain('Filtro: Todos los estados');
     });
 
     it('pre-selects the provider even when it is missing from the loaded list, without toast', () => {
@@ -251,8 +264,19 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(toast.severity).toBe('info');
       expect(toast.life).toBe(6000);
       expect(toast.summary).toBe(component.lang.t('cal.pending_title'));
-      // No view context carried → the default (current week) fallback message
-      expect(toast.detail).toBe(component.lang.t('cal.pending_context_toast'));
+      // No view context carried → the default (current week) fallback message,
+      // which still reports status filter + shown location + provider.
+      expect(toast.detail).toBe(
+        component.lang.t('cal.pending_context_toast', {
+          statuses: component.lang.t('status.5'),
+          location: 'Sucursal Centro',
+          provider: component.lang.t('cal.placeholder.all_providers'),
+          location_label: component.lang.t('cal.toast.location_label'),
+          provider_label: component.lang.t('cal.toast.provider_label'),
+        }),
+      );
+      expect(toast.detail).toContain('Sucursal Centro');
+      expect(toast.detail).toContain('Todos los profesionales');
     });
 
     it('applies a month view context via changeView and explains the month in the toast', () => {
@@ -277,7 +301,19 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       const toast = mockMessageService.add.mock.calls[0][0] as { summary: string; detail: string };
       expect(toast.summary).toBe(component.lang.t('cal.pending_title'));
       const monthLabel = DateTime.fromISO('2026-09-01').setLocale('es').toFormat("LLLL 'de' yyyy");
-      expect(toast.detail).toBe(component.lang.t('cal.pending_context_mes', { month: monthLabel }));
+      expect(toast.detail).toBe(
+        component.lang.t('cal.pending_context_mes', {
+          month: monthLabel,
+          statuses: component.lang.t('status.5'),
+          location: 'Sucursal Centro',
+          provider: component.lang.t('cal.placeholder.all_providers'),
+          location_label: component.lang.t('cal.toast.location_label'),
+          provider_label: component.lang.t('cal.toast.provider_label'),
+        }),
+      );
+      // The composed detail also reports the shown location and provider.
+      expect(toast.detail).toContain('Sucursal Centro');
+      expect(toast.detail).toContain('Todos los profesionales');
     });
 
     it('applies a week view context and explains the week range in the toast', () => {
@@ -300,8 +336,16 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
         component.lang.t('cal.pending_context_semana', {
           start: '31/08/2026',
           end: '06/09/2026',
+          statuses: component.lang.t('status.5'),
+          location: 'Sucursal Centro',
+          provider: component.lang.t('cal.placeholder.all_providers'),
+          location_label: component.lang.t('cal.toast.location_label'),
+          provider_label: component.lang.t('cal.toast.provider_label'),
         }),
       );
+      // The composed detail also reports the shown location and provider.
+      expect(toast.detail).toContain('Sucursal Centro');
+      expect(toast.detail).toContain('Todos los profesionales');
     });
 
     it('falls back to a week view for a custom (libre) range and explains the period', () => {
@@ -326,8 +370,16 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
         component.lang.t('cal.pending_context_libre', {
           start: '15/08/2026',
           end: '30/09/2026',
+          statuses: component.lang.t('status.5'),
+          location: 'Sucursal Centro',
+          provider: component.lang.t('cal.placeholder.all_providers'),
+          location_label: component.lang.t('cal.toast.location_label'),
+          provider_label: component.lang.t('cal.toast.provider_label'),
         }),
       );
+      // The composed detail also reports the shown location and provider.
+      expect(toast.detail).toContain('Sucursal Centro');
+      expect(toast.detail).toContain('Todos los profesionales');
     });
   });
 
@@ -379,6 +431,48 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(store.filters().selectedLocationId).toBe(1);
       expect(store.filters().selectedProviderId).toBeNull();
       expect(mockMessageService.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('slot duration density selector', () => {
+    const setOptionStub = () => ({ setOption: vi.fn(), destroy: vi.fn() });
+
+    it('updates the signal and the live calendar slotDuration when a duration is selected', () => {
+      const calendarMock = setOptionStub();
+      (component as unknown as { calendar: unknown }).calendar = calendarMock as never;
+
+      component.applySlotDuration(40);
+
+      expect(component.slotDurationMinutes()).toBe(40);
+      expect(component.calendarOptions.slotDuration).toBe('00:40:00');
+      expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '00:40:00');
+      // Selection snap must stay fixed at 1h
+      expect(component.calendarOptions.snapDuration).toBe('01:00:00');
+    });
+
+    it('formats edge durations and never touches snapDuration', () => {
+      const calendarMock = setOptionStub();
+      (component as unknown as { calendar: unknown }).calendar = calendarMock as never;
+
+      component.applySlotDuration(60);
+      expect(component.slotDurationMinutes()).toBe(60);
+      expect(component.calendarOptions.slotDuration).toBe('01:00:00');
+      expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '01:00:00');
+
+      component.applySlotDuration(5);
+      expect(component.slotDurationMinutes()).toBe(5);
+      expect(component.calendarOptions.slotDuration).toBe('00:05:00');
+      expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '00:05:00');
+      expect(component.calendarOptions.snapDuration).toBe('01:00:00');
+    });
+
+    it('exposes the 8 duration options with localized labels', () => {
+      expect(component.slotDurationOptions).toEqual([5, 10, 15, 20, 30, 40, 45, 60]);
+      // Default selection matches the initial grid (30min)
+      expect(component.slotDurationMinutes()).toBe(30);
+      for (const m of component.slotDurationOptions) {
+        expect(component.slotDurationLabel(m)).toBe(`${m} minutos`);
+      }
     });
   });
 });

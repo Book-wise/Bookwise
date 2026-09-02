@@ -86,6 +86,20 @@
     }
   }
 
+  // ── Herramientas (slots + guía) — fila propia, visible en todos los tamaños ──
+  .calendar-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    padding: 0 1rem 0.75rem;
+
+    @media (max-width: 768px) {
+      justify-content: center;
+      padding: 0 0.75rem 0.5rem;
+    }
+  }
+
   .calendar-area {
     position: relative;
     overflow: hidden;
@@ -225,6 +239,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.85rem;
+  align-self: center;
+}
+
+// ── Month view (dayGrid): status color dot + soft tinted pill ────────────────
+// FullCalendar sets the pastel status fill on the event, but on the month grid
+// the single-line pills are too small to perceive it. A leading dot colored
+// with the status + a soft tint make the state readable at a glance.
+.fc .ev-inner--month {
+  gap: 4px;
+  background: color-mix(in srgb, var(--ev-status-color) 14%, transparent);
+  border-left: 3px solid var(--ev-status-color);
+  border-radius: 4px;
+  padding-left: 4px;
+}
+
+.fc .ev-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  background: var(--ev-status-color);
+  flex-shrink: 0;
   align-self: center;
 }
 
@@ -465,9 +501,9 @@
   background: repeating-linear-gradient(
     -45deg,
     #9ca3af 0px,
-    #9ca3af 3px,
-    #ffffff 3px,
-    #ffffff 11px
+    #9ca3af 2px,
+    #ffffff 2px,
+    #ffffff 8px
   ) !important;
   border-color: #9ca3af !important;
   border-left: 3px solid #6b7280 !important;
@@ -646,5 +682,139 @@ body.dark-theme .fc {
   .fc-button-active:hover {
     background: var(--bw-300) !important;
     border-color: var(--bw-300) !important;
+  }
+}
+
+// ── Status legend (calendar help popover) ─────────────────────────────────────
+
+.status-legend-panel {
+  .p-popover-content {
+    padding: 1rem;
+    min-width: 280px;
+    max-width: 340px;
+  }
+}
+
+.status-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__group-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-secondary);
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--surface-border, #e5e7eb);
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__dot {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__badge {
+    min-width: 20px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 3px;
+    flex-shrink: 0;
+
+    &--none {
+      background: color-mix(in srgb, var(--chip-color) 18%, transparent);
+      color: var(--chip-color);
+    }
+  }
+
+  &__blocked {
+    width: 28px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      #9ca3af 0px,
+      #9ca3af 2px,
+      #ffffff 2px,
+      #ffffff 8px
+    );
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    color: var(--text-color);
+  }
+
+  &__note {
+    font-size: 0.72rem;
+    color: var(--text-color-secondary);
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--surface-border, #e5e7eb);
+  }
+}
+
+// ── Slot duration density selector popover ─────────────────────────────────────
+
+.slot-duration-panel {
+  .p-popover-content {
+    padding: 0.5rem;
+    min-width: 200px;
+  }
+}
+
+.slot-duration-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    padding: 0.25rem 0.5rem 0.5rem;
+    border-bottom: 1px solid var(--surface-border, #e5e7eb);
+    margin-bottom: 0.25rem;
+  }
+}
+
+.slot-duration-option {
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 0.35rem 0.5rem !important;
+  font-size: 0.8125rem !important;
+  gap: 0.5rem;
+
+  &--active {
+    color: #1d4ed8;
+    font-weight: 600;
   }
 }

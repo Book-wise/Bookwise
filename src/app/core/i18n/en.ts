@@ -220,12 +220,35 @@ export const EN: Record<string, string> = {
   'cal.placeholder.all_providers': 'All providers',
   'cal.placeholder.all_statuses': 'All statuses',
   'cal.pending_title': 'Pending Appointments',
-  // Fallback (status-only navigation without a view context): default current week.
-  'cal.pending_context_toast': 'You are viewing the current week with the Pending filter active. You can review other dates with the calendar controls or switch views.',
+  // Time-grid density selector (visual slot duration).
+  'cal.slot_duration.help': 'Adjust the time grid',
+  'cal.slot_duration.title': 'Slot duration',
+  'cal.slot_duration.minutes': '{{n}} minutes',
+  // Calendar status legend (what the colors and indicators mean).
+  'cal.legend.help': 'View status guide',
+  'cal.legend.title': 'Status guide',
+  'cal.legend.group_reservation': 'Booking statuses',
+  'cal.legend.group_payment': 'Payment statuses',
+  'cal.legend.group_other': 'Other indicators',
+  'cal.legend.payment.unpaid': 'Unpaid',
+  'cal.legend.payment.unpaid_short': 'Unpaid',
+  'cal.legend.payment.partial': 'Partial payment',
+  'cal.legend.payment.paid': 'Fully paid',
+  'cal.legend.blocked': 'Time-blocked slot',
+  'cal.legend.note': 'Colors apply in the calendar and the appointment detail.',
+  // Labels for the calendar-context toast (active filters reported to the client).
+  'cal.toast.location_label': 'Location',
+  'cal.toast.provider_label': 'Provider',
+  'cal.toast.filter_label': 'Filter',
+  // Single toast informing the active calendar context: status(es), location
+  // and provider. Fallback (no view context): default current week.
+  'cal.pending_context_toast': 'You are viewing the current week with the {{statuses}} filter active. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}.',
   // View/range context sent from the dashboard (client's active range).
-  'cal.pending_context_mes': 'You are viewing the month of {{month}} with the Pending filter active. You can review other dates with the calendar controls or switch to the week or day view.',
-  'cal.pending_context_semana': 'You are viewing the week from {{start}} to {{end}} with the Pending filter active. You can review other dates with the calendar controls or switch to the month or day view.',
-  'cal.pending_context_libre': 'You are viewing the pending appointments for the period {{start}} – {{end}} with the Pending filter active. You can review other dates with the calendar controls.',
+  'cal.pending_context_mes': 'You are viewing the month of {{month}} with the {{statuses}} filter active. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}. You can review other dates with the calendar controls.',
+  'cal.pending_context_semana': 'You are viewing the week from {{start}} to {{end}} with the {{statuses}} filter active. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}. You can review other dates with the calendar controls.',
+  'cal.pending_context_libre': 'You are viewing the appointments for the period {{start}} – {{end}} with the {{statuses}} filter active. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}. You can review other dates with the calendar controls.',
+  // Providers-list flow (pre-selected location + provider).
+  'cal.welcome_agenda_detail': 'Showing the schedule of {{provider}} at {{location}}. {{filter_label}}: {{statuses}}.',
 
   // Slot action menu
   'slot.new_booking': 'New Booking',

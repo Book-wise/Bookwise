@@ -21,6 +21,7 @@ import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DialogModule } from 'primeng/dialog';
 import { PopoverModule, Popover } from 'primeng/popover';
+import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { LocationsApiService } from '@services/api/locations-api.service';
@@ -72,6 +73,7 @@ import luxonPlugin from '@fullcalendar/luxon';
     SkeletonModule,
     BookingFormDialogComponent,
     PopoverModule,
+    TooltipModule,
     BlockTimeDialogComponent,
     BookingDetailDialogComponent,
     BwCurrencyPipe,
@@ -116,6 +118,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('calendarContainer') calendarContainer!: ElementRef;
   @ViewChild('eventTooltip') eventTooltip!: Popover;
+  @ViewChild('slotDurationPopover') slotDurationPopover!: Popover;
   @ViewChild(BookingFormDialogComponent) newBookingDialog!: BookingFormDialogComponent;
   @ViewChild(BlockTimeDialogComponent) blockTimeDialog!: BlockTimeDialogComponent;
   @ViewChild(BookingDetailDialogComponent) bookingDetailDialog!: BookingDetailDialogComponent;
@@ -138,6 +141,24 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       color: s.color,
     })),
   );
+
+  /** Leyenda de estados de reserva — dot color del token (fuente visual real). */
+  readonly reservationStatusLegend = computed(() =>
+    BOOKING_STATUSES.map((s) => ({
+      label: this.lang.t(s.labelKey),
+      cssVar: s.cssVar,
+    })),
+  );
+
+  /** Leyenda de estados de pago — badge/token por estado. */
+  /** Leyenda de estados de pago — colores alineados con los badges del evento en
+   *  la agenda (ev-pay-badge--paid/partial en _calendar.scss), no con los tokens
+   *  de chips, para que la guía coincida con lo que se ve en el calendario. */
+  readonly paymentLegend = computed(() => [
+    { label: this.lang.t('cal.legend.payment.unpaid'),   cssVar: 'var(--bw-payment-unpaid)', badge: '' },
+    { label: this.lang.t('cal.legend.payment.partial'),  cssVar: '#65a30d',                   badge: 'A' },
+    { label: this.lang.t('cal.legend.payment.paid'),     cssVar: '#16a34a',                   badge: '$' },
+  ]);
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
   selectedEndDate: Date | null = null;
@@ -147,6 +168,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   slotMenuAbove = signal(false);
   slotMenuPosition = { x: 0, y: 0 };
   selectedTimeStr = signal('');
+
+  // Slot duration density selector (visual time-grid density only — the
+  // click/drag selection snap duration stays fixed at 1h regardless of this).
+  readonly slotDurationOptions = [5, 10, 15, 20, 30, 40, 45, 60];
+  slotDurationMinutes = signal(30);
+
   private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
   private lastHoverKey = '';
   private lastHoverTime = 0;
@@ -469,16 +496,25 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.loadProviders(data[0].id);
         this.onFilterChange();
         // Status-only pending navigation (dashboard "Pending appointments" card):
-        // one-shot toast explaining the active Pending filter and the view/range
-        // mirroring the dashboard's active range. pendingLocationId is null in
-        // this branch; only a provider pre-selection (which shows showWelcomeToast
-        // instead) must suppress it.
+        // one-shot toast explaining the active status filter, the location shown
+        // and the view/range mirroring the dashboard's active range. locationId
+        // stays null so the toast resolves the default first location itself; a
+        // provider pre-selection (which toasts via loadProviders instead) must
+        // suppress this.
         if (pendingStatusIds.length > 0 && pendingProviderId == null) {
           // Apply the requested view first (one-shot; no-op if already applied or
           // if the calendar instance does not exist yet — the request survives in
           // pendingViewRequest until initCalendar() completes).
           this.applyPendingView();
-          this.showPendingContextToast(pendingStatusIds, pendingViewContext);
+          this.showCalendarContextToast({
+            statusIds: pendingStatusIds,
+            locationId: null,
+            providerId: null,
+            viewContext: pendingViewContext,
+            summaryKey: 'cal.pending_title',
+            severity: 'info',
+            life: 6000,
+          });
         }
       },
       error: () => {
@@ -499,7 +535,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         if (providerId != null) {
           this.selectedProviderId = providerId;
           this.onFilterChange();
-          this.showWelcomeToast(providerId, data);
+          const provider = data.find((p) => p.id === providerId);
+          this.showCalendarContextToast({
+            statusIds: [],
+            locationId: this.selectedLocationId,
+            providerId,
+            viewContext: null,
+            summary: provider ? `${provider.first_name} ${provider.last_name}`.trim() : undefined,
+            severity: 'success',
+            life: 5000,
+          });
         }
       },
       error: (err) => {
@@ -512,21 +557,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.httpError.handle(err, 'cargar profesionales');
         }
       },
-    });
-  }
-
-  /** One-shot toast confirming the calendar opened with pre-selected filters. */
-  private showWelcomeToast(providerId: number, providers: Provider[]): void {
-    const provider = providers.find((p) => p.id === providerId);
-    const location = this.locations().find((l) => l.id === this.selectedLocationId);
-    if (!provider || !location) return;
-    const providerName = `${provider.first_name} ${provider.last_name}`.trim();
-    this.messageService.add({
-      severity: 'success',
-      summary: providerName,
-      detail: `Mostrando agenda de ${providerName} en ${location.name}`,
-      key: 'global',
-      life: 5000,
     });
   }
 
@@ -549,49 +579,118 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  /** One-shot info toast explaining the active view when the calendar was opened
-   *  by a status-only pending navigation (dashboard "Pending appointments" card):
-   *  the detail describes the view/range mirroring the dashboard's active range
-   *  (month, week or custom/libre). When no view context was carried, a generic
-   *  message describes the default current-week view. */
-  private showPendingContextToast(
-    statusIds: number[],
-    context: CalendarViewContext | null,
-  ): void {
-    if (!statusIds.length) return;
+  /**
+   * One-shot toast reporting the calendar context after a navigation with
+   * pre-selected filters — the dashboard "Pending appointments" card (status
+   * filter + optional view context) or the providers-list "Agenda" button
+   * (location + provider). The detail always informs the client of the THREE
+   * active filters — status(es), location and provider — plus, for
+   * view-carrying navigations, the visible range (month/week/custom period).
+   * A pre-selected provider that cannot be resolved in the loaded list is never
+   * confirmed as active: the toast stays silent instead.
+   */
+  private showCalendarContextToast(opts: {
+    statusIds: number[];
+    /** null → resolve the default first location from locations() when present. */
+    locationId: number | null;
+    /** null → "all providers" placeholder. */
+    providerId: number | null;
+    viewContext: CalendarViewContext | null;
+    /** Raw summary string (e.g. provider full name). Takes precedence over summaryKey. */
+    summary?: string;
+    /** i18n summary key (e.g. 'cal.pending_title'). Ignored when summary is set. */
+    summaryKey?: string;
+    severity?: 'success' | 'info';
+    life?: number;
+  }): void {
+    const ctx = opts.viewContext;
+    const provider = opts.providerId != null
+      ? this.providers().find((p) => p.id === opts.providerId)
+      : null;
+    if (opts.providerId != null && !provider) return;
+
+    // Helper labels: active statuses, resolved location and provider.
+    const statuses = opts.statusIds.length
+      ? opts.statusIds
+          .map((id) => BOOKING_STATUSES.find((s) => s.value === id)?.labelKey)
+          .filter((key): key is string => !!key)
+          .map((key) => this.lang.t(key))
+          .join(', ')
+      : this.lang.t('cal.placeholder.all_statuses');
+    const location =
+      (opts.locationId != null
+        ? this.locations().find((l) => l.id === opts.locationId)?.name
+        : this.locations().length
+          ? this.locations()[0].name
+          : undefined) ?? this.lang.t('cal.placeholder.all_locations');
+    const providerLabel = provider
+      ? `${provider.first_name} ${provider.last_name}`.trim()
+      : this.lang.t('cal.placeholder.all_providers');
+
+    const locationLabel = this.lang.t('cal.toast.location_label');
+    const providerLabelWord = this.lang.t('cal.toast.provider_label');
 
     let detail: string;
-    if (context && context.view === 'dayGridMonth' && context.gotoDate) {
+    if (ctx && ctx.view === 'dayGridMonth' && ctx.gotoDate) {
       detail = this.lang.t('cal.pending_context_mes', {
-        month: this.monthLabel(context.gotoDate),
+        month: this.monthLabel(ctx.gotoDate),
+        statuses,
+        location,
+        provider: providerLabel,
+        location_label: locationLabel,
+        provider_label: providerLabelWord,
       });
-    } else if (context && context.view === 'timeGridWeek' && context.gotoDate) {
-      const visibleWeekEnd = this.addDays(context.gotoDate, 6);
-      if (context.rangeEnd && context.rangeEnd > visibleWeekEnd) {
+    } else if (ctx && ctx.view === 'timeGridWeek' && ctx.gotoDate) {
+      const visibleWeekEnd = this.addDays(ctx.gotoDate, 6);
+      if (ctx.rangeEnd && ctx.rangeEnd > visibleWeekEnd) {
         // Custom/libre range wider than the visible week (e.g. spanning two
         // months): the calendar opens the week of the range start as a useful
         // fallback, and the toast describes the selected period itself.
         detail = this.lang.t('cal.pending_context_libre', {
-          start: this.rangeDayLabel(context.gotoDate),
-          end: this.rangeDayLabel(context.rangeEnd),
+          start: this.rangeDayLabel(ctx.gotoDate),
+          end: this.rangeDayLabel(ctx.rangeEnd),
+          statuses,
+          location,
+          provider: providerLabel,
+          location_label: locationLabel,
+          provider_label: providerLabelWord,
         });
       } else {
         detail = this.lang.t('cal.pending_context_semana', {
-          start: this.rangeDayLabel(context.gotoDate),
-          end: this.rangeDayLabel(context.rangeEnd ?? visibleWeekEnd),
+          start: this.rangeDayLabel(ctx.gotoDate),
+          end: this.rangeDayLabel(ctx.rangeEnd ?? visibleWeekEnd),
+          statuses,
+          location,
+          provider: providerLabel,
+          location_label: locationLabel,
+          provider_label: providerLabelWord,
         });
       }
+    } else if (opts.providerId != null) {
+      // Providers-list flow (location + provider pre-selected, no view context).
+      detail = this.lang.t('cal.welcome_agenda_detail', {
+        provider: providerLabel,
+        location,
+        filter_label: this.lang.t('cal.toast.filter_label'),
+        statuses,
+      });
     } else {
-      // No view context (legacy/other status-only callers): default week view.
-      detail = this.lang.t('cal.pending_context_toast');
+      // No view context (status-only navigation): default current-week view.
+      detail = this.lang.t('cal.pending_context_toast', {
+        statuses,
+        location,
+        provider: providerLabel,
+        location_label: locationLabel,
+        provider_label: providerLabelWord,
+      });
     }
 
     this.messageService.add({
-      severity: 'info',
-      summary: this.lang.t('cal.pending_title'),
+      severity: opts.severity ?? 'info',
+      summary: opts.summary ?? (opts.summaryKey ? this.lang.t(opts.summaryKey) : ''),
       detail,
       key: 'global',
-      life: 6000,
+      life: opts.life ?? 6000,
     });
   }
 
@@ -667,11 +766,38 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.tzService.formatTime(iso);
   }
 
+  /**
+   * Fixed preview duration for the slot hover/date-click preview. Derived from
+   * snapDuration (1h) rather than slotDuration so the preview stays ~1h no
+   * matter how dense the visual time grid is set. Returns milliseconds.
+   */
   private getPreviewDuration(): number {
-    const raw = (this.calendarOptions.slotDuration as string) ?? '00:30:00';
+    const raw = (this.calendarOptions.snapDuration as string) ?? '01:00:00';
     const [h, m] = raw.split(':').map(Number);
-    const slotMs = (h * 60 + m) * 60 * 1000;
-    return slotMs * 2; // 2 slots ≈ 1 hora visual
+    return (h * 60 + m) * 60 * 1000;
+  }
+
+  /** Format minutes as a FullCalendar duration string 'HH:mm:00' (e.g. 40 → '00:40:00'). */
+  private formatSlotDuration(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${this.pad(h)}:${this.pad(m)}:00`;
+  }
+
+  /** Localized label for a slot-duration option, e.g. '40 minutos' / '40 minutes'. */
+  slotDurationLabel(minutes: number): string {
+    return this.lang.t('cal.slot_duration.minutes', { n: String(minutes) });
+  }
+
+  /** Apply a slot density: update the signal, source of truth and live grid. */
+  applySlotDuration(minutes: number): void {
+    this.slotDurationMinutes.set(minutes);
+    const durationStr = this.formatSlotDuration(minutes);
+    this.calendarOptions.slotDuration = durationStr;
+    if (this.calendar) {
+      this.ngZone.runOutsideAngular(() => this.calendar!.setOption('slotDuration', durationStr));
+    }
+    this.slotDurationPopover?.hide();
   }
 
   private removeSlotPreview(): void {
@@ -819,12 +945,27 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
     );
 
+    // Status color — used in the month view where the pastel fill is hard to
+    // perceive: a leading status dot plus a soft tinted pill makes the state
+    // readable at a glance.
+    const statusColor =
+      booking?.status?.color ??
+      BOOKING_STATUSES.find((s) => s.value === booking?.status_id)?.color ??
+      '';
+
     const badge =
       payment === 'paid'
         ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>'
         : payment === 'partial'
           ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>'
           : '';
+
+    const isMonthView = info.view.type.startsWith('dayGrid');
+    if (isMonthView && statusColor) {
+      return {
+        html: `<div class="ev-inner ev-inner--month" style="--ev-status-color:${statusColor}">${badge}<span class="ev-dot"></span><span class="ev-title">${title}</span></div>`,
+      };
+    }
 
     return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
   }

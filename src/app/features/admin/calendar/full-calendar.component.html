@@ -78,6 +78,29 @@
             </p-button>
           </div>
         </div>
+
+        <div class="calendar-tools">
+          <p-button
+            icon="pi pi-clock"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            [pTooltip]="lang.t('cal.slot_duration.help')"
+            tooltipPosition="top"
+            (onClick)="slotDurationPopover.toggle($event)"
+          >
+          </p-button>
+          <p-button
+            icon="pi pi-question-circle"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            [pTooltip]="lang.t('cal.legend.help')"
+            tooltipPosition="top"
+            (onClick)="statusLegendPopover.toggle($event)"
+          >
+          </p-button>
+        </div>
       }
     </ng-template>
 
@@ -191,6 +214,67 @@
       }
     </div>
   }
+</p-popover>
+
+<!-- Leyenda de estados (reserva + pago + bloqueo) -->
+<p-popover #statusLegendPopover class="status-legend-panel" [dismissable]="true" [showCloseIcon]="false">
+  <div class="status-legend">
+    <div class="status-legend__title">{{ lang.t('cal.legend.title') }}</div>
+
+    <div class="status-legend__group">
+      <div class="status-legend__group-title">{{ lang.t('cal.legend.group_reservation') }}</div>
+      @for (s of reservationStatusLegend(); track s.label) {
+        <div class="status-legend__item">
+          <span class="status-legend__dot" [style.background]="s.cssVar"></span>
+          <span class="status-legend__label">{{ s.label }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="status-legend__group">
+      <div class="status-legend__group-title">{{ lang.t('cal.legend.group_payment') }}</div>
+      @for (p of paymentLegend(); track p.label) {
+        <div class="status-legend__item">
+          @if (p.badge) {
+            <span class="status-legend__badge" [style.background]="p.cssVar">{{ p.badge }}</span>
+          } @else {
+            <span class="status-legend__badge status-legend__badge--none" [style.--chip-color]="p.cssVar">{{ lang.t('cal.legend.payment.unpaid_short') }}</span>
+          }
+          <span class="status-legend__label">{{ p.label }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="status-legend__group">
+      <div class="status-legend__group-title">{{ lang.t('cal.legend.group_other') }}</div>
+      <div class="status-legend__item">
+        <span class="status-legend__blocked"></span>
+        <span class="status-legend__label">{{ lang.t('cal.legend.blocked') }}</span>
+      </div>
+    </div>
+
+    <div class="status-legend__note">{{ lang.t('cal.legend.note') }}</div>
+  </div>
+</p-popover>
+
+<!-- Selector de densidad de slots (grilla visual) -->
+<p-popover #slotDurationPopover class="slot-duration-panel" [dismissable]="true" [showCloseIcon]="false">
+  <div class="slot-duration-list">
+    <div class="slot-duration-list__title">{{ lang.t('cal.slot_duration.title') }}</div>
+    @for (m of slotDurationOptions; track m) {
+      <button
+        pButton
+        class="slot-duration-option"
+        [class.slot-duration-option--active]="m === slotDurationMinutes()"
+        (click)="applySlotDuration(m)"
+      >
+        <span>{{ slotDurationLabel(m) }}</span>
+        @if (m === slotDurationMinutes()) {
+          <i class="pi pi-check"></i>
+        }
+      </button>
+    }
+  </div>
 </p-popover>
 
 <!-- Dialog — Detalles de la Cita -->

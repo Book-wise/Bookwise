@@ -222,12 +222,35 @@ export const ES: Record<string, string> = {
   'cal.placeholder.all_providers': 'Todos los profesionales',
   'cal.placeholder.all_statuses': 'Todos los estados',
   'cal.pending_title': 'Citas Pendientes',
-  // Fallback (status-only navigation sin contexto de vista): semana actual por defecto.
-  'cal.pending_context_toast': 'Estás viendo la semana actual con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario o cambiar de vista.',
+  // Selector de densidad de la grilla de horarios (duración visual de los slots).
+  'cal.slot_duration.help': 'Ajustar la grilla de horarios',
+  'cal.slot_duration.title': 'Duración de los slots',
+  'cal.slot_duration.minutes': '{{n}} minutos',
+  // Leyenda de estados del calendario (qué significan los colores e indicadores).
+  'cal.legend.help': 'Ver guía de estados',
+  'cal.legend.title': 'Guía de estados',
+  'cal.legend.group_reservation': 'Estados de la reserva',
+  'cal.legend.group_payment': 'Estados de pago',
+  'cal.legend.group_other': 'Otros indicadores',
+  'cal.legend.payment.unpaid': 'Pago pendiente',
+  'cal.legend.payment.unpaid_short': 'Sin pago',
+  'cal.legend.payment.partial': 'Abono',
+  'cal.legend.payment.paid': 'Pago completo',
+  'cal.legend.blocked': 'Bloqueo de horario',
+  'cal.legend.note': 'Los colores se aplican en el calendario y en el detalle de la cita.',
+  // Etiquetas del toast de contexto del calendario (filtros activos informados al cliente).
+  'cal.toast.location_label': 'Sucursal',
+  'cal.toast.provider_label': 'Profesional',
+  'cal.toast.filter_label': 'Filtro',
+  // Toast único que informa el contexto activo del calendario: estado(s),
+  // sucursal y profesional. Fallback (sin contexto de vista): semana actual.
+  'cal.pending_context_toast': 'Estás viendo la semana actual con el filtro {{statuses}} activo. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}.',
   // Contexto de vista/rango enviado desde el dashboard (rango activo del cliente).
-  'cal.pending_context_mes': 'Estás viendo el mes de {{month}} con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario o cambiar a vista de semana o día.',
-  'cal.pending_context_semana': 'Estás viendo la semana del {{start}} al {{end}} con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario o cambiar a vista de mes o día.',
-  'cal.pending_context_libre': 'Estás viendo las citas pendientes del período {{start}} – {{end}} con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario.',
+  'cal.pending_context_mes': 'Estás viendo el mes de {{month}} con el filtro {{statuses}} activo. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}. Puedes revisar otras fechas con los controles del calendario.',
+  'cal.pending_context_semana': 'Estás viendo la semana del {{start}} al {{end}} con el filtro {{statuses}} activo. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}. Puedes revisar otras fechas con los controles del calendario.',
+  'cal.pending_context_libre': 'Estás viendo las citas del período {{start}} – {{end}} con el filtro {{statuses}} activo. {{location_label}}: {{location}}. {{provider_label}}: {{provider}}. Puedes revisar otras fechas con los controles del calendario.',
+  // Flujo de la lista de profesionales (ubicación + profesional preseleccionados).
+  'cal.welcome_agenda_detail': 'Mostrando la agenda de {{provider}} en {{location}}. {{filter_label}}: {{statuses}}.',
 
   // Slot action menu
   'slot.new_booking': 'Nueva Reserva',
