@@ -27,3 +27,16 @@ const FALLBACK: RoleMeta = { color: '#6b7280', icon: 'pi-user' };
 export function roleMeta(name: string): RoleMeta {
   return ROLE_META[name] ?? FALLBACK;
 }
+
+/**
+ * Roles with direct attention duties ("rol de atención"). Only providers
+ * holding one of these roles are selectable as providers in the admin
+ * calendar. Shared so calendar and analogous consumers never duplicate the
+ * definition.
+ */
+export const ATTENTION_ROLES: readonly string[] = ['staff', 'staff_readonly'];
+
+/** True when at least one of `roles` is an attention role (staff / staff_readonly). */
+export function hasAttentionRole(roles?: { name: string }[] | null): boolean {
+  return !!roles && roles.some((role) => ATTENTION_ROLES.includes(role.name));
+}
