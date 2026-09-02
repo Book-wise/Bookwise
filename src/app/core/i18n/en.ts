@@ -209,6 +209,8 @@ export const EN: Record<string, string> = {
   'cal.placeholder.all_locations': 'All locations',
   'cal.placeholder.all_providers': 'All providers',
   'cal.placeholder.all_statuses': 'All statuses',
+  'cal.pending_title': 'Pending Appointments',
+  'cal.pending_context_toast': 'You are viewing the current week with the Pending filter active. You can review other dates with the calendar navigation.',
 
   // Slot action menu
   'slot.new_booking': 'New Booking',

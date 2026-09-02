@@ -211,6 +211,8 @@ export const ES: Record<string, string> = {
   'cal.placeholder.all_locations': 'Todas las ubicaciones',
   'cal.placeholder.all_providers': 'Todos los profesionales',
   'cal.placeholder.all_statuses': 'Todos los estados',
+  'cal.pending_title': 'Citas Pendientes',
+  'cal.pending_context_toast': 'Estás viendo la semana actual con el filtro Pendientes activo. Podés revisar otras fechas con la navegación del calendario.',
 
   // Slot action menu
   'slot.new_booking': 'Nueva Reserva',

@@ -215,6 +215,31 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(calNav.hasPendingNavigation()).toBe(false);
       expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [] });
     });
+
+    it('shows the pending-context info toast on a status-only pending navigation', () => {
+      // Dashboard "Pending appointments" card path: statusIds only, no location/provider.
+      calNav.navigateToCalendar(null, null, [5], mockRouter as unknown as Router);
+
+      component.loadLocations();
+
+      // Default location loaded with the Pending filter applied
+      expect(component.selectedLocationId).toBe(1);
+      expect(component.selectedStatusIds).toEqual([5]);
+      // Exactly one toast: the pending-context toast (no provider welcome toast)
+      expect(mockMessageService.add).toHaveBeenCalledTimes(1);
+      const toast = mockMessageService.add.mock.calls[0][0] as {
+        key: string;
+        severity: string;
+        summary: string;
+        detail: string;
+        life: number;
+      };
+      expect(toast.key).toBe('global');
+      expect(toast.severity).toBe('info');
+      expect(toast.life).toBe(6000);
+      expect(toast.summary).toBe(component.lang.t('cal.pending_title'));
+      expect(toast.detail).toBe(component.lang.t('cal.pending_context_toast'));
+    });
   });
 
   describe('pending navigation edge cases', () => {

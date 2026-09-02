@@ -441,6 +441,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.previousLocationId = data[0].id;
         this.loadProviders(data[0].id);
         this.onFilterChange();
+        // Status-only pending navigation (dashboard "Pending appointments" card):
+        // one-shot toast explaining the active Pending filter on the current week.
+        // pendingLocationId is null in this branch; only a provider pre-selection
+        // (which shows showWelcomeToast instead) must suppress it.
+        if (pendingStatusIds.length > 0 && pendingProviderId == null) {
+          this.showPendingContextToast(pendingStatusIds);
+        }
       },
       error: () => {
         this.locations.set([]);
@@ -488,6 +495,21 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       detail: `Mostrando agenda de ${providerName} en ${location.name}`,
       key: 'global',
       life: 5000,
+    });
+  }
+
+  /** One-shot info toast explaining the active view when the calendar was opened
+   *  by a status-only pending navigation (dashboard "Pending appointments" card):
+   *  the current week is shown with the Pending filter applied, and other dates
+   *  are reachable through the calendar's own navigation controls. */
+  private showPendingContextToast(statusIds: number[]): void {
+    if (!statusIds.length) return;
+    this.messageService.add({
+      severity: 'info',
+      summary: this.lang.t('cal.pending_title'),
+      detail: this.lang.t('cal.pending_context_toast'),
+      key: 'global',
+      life: 6000,
     });
   }
 
