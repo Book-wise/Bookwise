@@ -57,6 +57,13 @@ interface DashboardData {
   weekBookings: Booking[];
 }
 
+/** Params reactivos del rxResource — cambian con el rango de fechas seleccionado. */
+interface DashboardRangeParams {
+  start: string;
+  end: string;
+  anchor: string;
+}
+
 interface LocationOption {
   label: string;
   value: number | null;
@@ -220,13 +227,16 @@ export class AdminDashboardComponent {
     return `${start.toFormat('dd/MM/yyyy')} – ${end.toFormat('dd/MM/yyyy')}`;
   });
 
-  /** ── rxResource: carga reactiva del dashboard ── */
-  readonly dashboardStats = rxResource<DashboardData, void>({
-    stream: () => {
-      const tz  = this.tzService.activeTimezone();
-      const now = DateTime.now().setZone(tz);
-      const today     = now.toISODate()!;
-      const { start, end, anchor } = this.rangeParams();
+  /** ── rxResource: carga reactiva del dashboard ──
+   * Params-driven: el `params` deriva del rango seleccionado, así que cada
+   * cambio de mes/semana/rango libre re-ejecuta el stream y recarga los datos.
+   * (Un rxResource sin `params` solo corre su stream una vez — los cambios
+   * posteriores de señal NO disparan recarga.)
+   */
+  readonly dashboardStats = rxResource<DashboardData, DashboardRangeParams>({
+    params: () => this.rangeParams(),
+    stream: ({ params }) => {
+      const { start, end, anchor } = params;
 
       return forkJoin({
         today:   this.bookingsApi.getBookings({ date_from: anchor, date_to: anchor, per_page: 200 }),
