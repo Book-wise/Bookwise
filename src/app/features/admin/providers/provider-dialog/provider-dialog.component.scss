@@ -73,3 +73,37 @@
   align-items: center;
   width: 100%;
 }
+
+// ── Roles multiselect ────────────────────────────────────────────────
+
+.dialog-role-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__lock {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.field-error {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--red-500, #ef4444);
+}
