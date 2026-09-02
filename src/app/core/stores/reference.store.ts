@@ -8,7 +8,8 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject, computed } from '@angular/core';
-import { pipe, switchMap, tap, catchError, of, map } from 'rxjs';
+import { pipe, switchMap, tap, catchError, of, map, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
@@ -289,6 +290,32 @@ export const ReferenceStore = signalStore(
         }),
       );
 
+    /**
+     * Flip optimista síncrono sobre `providers` + PATCH {active}.
+     * 200 → merge canónico con res.data; error → rollback al snapshot previo y
+     * RE-THROW del HttpErrorResponse (incluye el 409 requires_confirmation, que
+     * NO se traga: el subscriber decide A2 vs A4). La reactivación nunca gatea.
+     */
+    const toggleProviderActive = (id: number, active: boolean) => {
+      const snapshot = store.providers();
+      patchState(store, {
+        providers: snapshot.map((p) => (p.id === id ? { ...p, active } : p)),
+      });
+      return providersApi.updateProvider(id, { active }).pipe(
+        tap((res) =>
+          patchState(store, {
+            providers: store.providers().map((p) =>
+              p.id === id ? { ...p, ...res.data } : p,
+            ),
+          }),
+        ),
+        catchError((err: HttpErrorResponse) => {
+          patchState(store, { providers: snapshot });
+          return throwError(() => err);
+        }),
+      );
+    };
+
     const assignProviderRoles = (providerId: number, roles: string[]) =>
       rolesApi.assignProviderRoles(providerId, roles).pipe(
         tap((res) =>
@@ -343,6 +370,7 @@ export const ReferenceStore = signalStore(
       // Mutations (catalog write methods — patchan con respuesta del server)
       createProvider,
       saveProviderBasics,
+      toggleProviderActive,
       assignProviderRoles,
     };
   }),

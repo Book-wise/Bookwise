@@ -6,6 +6,54 @@
   text-align: center;
 }
 
+// ── Status cell (chip + toggle) ───────────────────────────────────────
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// ── Conflict dialog (A2, blocking) ────────────────────────────────────
+
+.providers-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.providers-dialog-title {
+  font-size: var(--bw-font-title);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-heading);
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+}
+
+.conflict-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.conflict-lead {
+  font-size: var(--bw-font-body);
+  color: var(--text-color);
+  margin: 0;
+}
+
+.conflict-warning {
+  font-size: var(--bw-font-body);
+  color: var(--text-color);
+  font-weight: var(--bw-weight-medium);
+}
+
 .list-skeleton {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ReferenceStore } from './reference.store';
 import { LocationsApiService } from '@services/api/locations-api.service';
@@ -390,6 +390,95 @@ describe('ReferenceStore', () => {
 
       expect(received).toBeInstanceOf(HttpErrorResponse);
       expect(store.providers()[0].roles).toEqual(initialRoles);
+    });
+  });
+
+  // ── toggleProviderActive (optimista + rollback + 409 re-throw) ───────
+
+  describe('toggleProviderActive', () => {
+    beforeEach(() => {
+      clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
+      locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
+      providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider({ active: true })])) } as any;
+      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
+      rolesApi = {
+        getRoles: vi.fn().mockReturnValue(of([])),
+        assignProviderRoles: vi.fn(),
+      } as any;
+      createStore();
+    });
+
+    it('flips optimistically before the PATCH resolves, then merges the canonical response', () => {
+      const pending = new Subject<{ message: string; data: Provider }>();
+      providersApi.updateProvider = vi.fn().mockReturnValue(pending.asObservable());
+
+      const responses: { message: string; data: Provider }[] = [];
+      store.toggleProviderActive(1, false).subscribe((res) => responses.push(res));
+
+      // Optimistic flip: state changed synchronously before the server answers
+      expect(store.providers()[0].active).toBe(false);
+      expect(providersApi.updateProvider).toHaveBeenCalledWith(1, { active: false });
+
+      const canonical = makeProvider({ id: 1, active: false, phone: '+56911111111' });
+      pending.next({ message: 'ok', data: canonical });
+      pending.complete();
+
+      expect(responses).toHaveLength(1);
+      expect(responses[0].message).toBe('ok');
+      expect(store.providers()[0].active).toBe(false);
+      // Canonical fields come from the server response
+      expect(store.providers()[0].phone).toBe('+56911111111');
+    });
+
+    it('rolls back to the previous state and re-throws on a generic error (500)', () => {
+      providersApi.updateProvider = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+
+      let received: unknown = null;
+      store.toggleProviderActive(1, false).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect((received as HttpErrorResponse).status).toBe(500);
+      // Rollback: provider is active again
+      expect(store.providers()[0].active).toBe(true);
+    });
+
+    it('re-throws a 409 requires_confirmation without swallowing it, after rollback', () => {
+      const conflictBody = {
+        message: 'conflicto',
+        requires_confirmation: true,
+        affects: { bookings: [{ id: 1, date: '2026-09-10', time: '10:00', client_name: 'Ana', status: 1 }] },
+      };
+      providersApi.updateProvider = vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 409, error: conflictBody })),
+      );
+
+      let received: unknown = null;
+      store.toggleProviderActive(1, false).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      const err = received as HttpErrorResponse;
+      expect(err.status).toBe(409);
+      expect(err.error).toEqual(conflictBody);
+      // Rollback happened before re-throw
+      expect(store.providers()[0].active).toBe(true);
+    });
+
+    it('reactivates without any gating (PATCH {active:true}, 200 merge)', () => {
+      // Provider starts inactive: re-mock the loader and refetch
+      providersApi.getProviders!.mockReturnValue(of([makeProvider({ id: 1, active: false })]));
+      store.invalidateProviders();
+      expect(store.providers()[0].active).toBe(false);
+
+      providersApi.updateProvider = vi.fn().mockReturnValue(
+        of({ message: 'ok', data: makeProvider({ id: 1, active: true }) }),
+      );
+
+      let received: unknown = null;
+      store.toggleProviderActive(1, true).subscribe({ next: (res) => (received = res) });
+
+      expect(providersApi.updateProvider).toHaveBeenCalledWith(1, { active: true });
+      expect(store.providers()[0].active).toBe(true);
+      expect(received).not.toBeNull();
     });
   });
 });
