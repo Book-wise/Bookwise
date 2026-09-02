@@ -152,6 +152,7 @@ export const ES: Record<string, string> = {
   'dashboard.range.mode.semana': 'Semana',
   'dashboard.range.mode.libre': 'Rango libre',
   'dashboard.range.standard': 'Mes actual → hoy',
+  'dashboard.range.clear': 'Limpiar',
   'dashboard.range.from': 'Desde',
   'dashboard.range.to': 'Hasta',
   'dashboard.range.prev_week': 'Semana anterior',

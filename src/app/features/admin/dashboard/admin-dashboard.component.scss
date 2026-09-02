@@ -86,6 +86,32 @@ h1 {
   }
 }
 
+// El pending card va envuelto en un div clickeable; que el p-card interno
+// llene la celda igual que los otros stat-card hermanos.
+.stat-card--clickable {
+  display: flex;
+}
+
+:host ::ng-deep .stat-card--clickable .p-card {
+  width: 100%;
+  height: 100%;
+}
+
+// Aprieta el contenido del pending card para igualar el ritmo de los demás.
+:host ::ng-deep .stat-card--clickable .p-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+}
+
+:host ::ng-deep .stat-card--clickable .p-card-header {
+  padding: 0.5rem 1.25rem 0;
+  text-align: center;
+}
+
 .pending-card-title {
   font-weight: var(--bw-weight-semibold, 600);
   color: var(--text-heading, #333);
@@ -93,7 +119,7 @@ h1 {
 
 .pending-badge {
   display: inline-block;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   padding: 0.15rem 0.6rem;
   font-size: 0.75rem;
   color: var(--bw-300, #046af4);

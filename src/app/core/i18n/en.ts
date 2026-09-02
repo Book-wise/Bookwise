@@ -152,6 +152,7 @@ export const EN: Record<string, string> = {
   'dashboard.range.mode.semana': 'Week',
   'dashboard.range.mode.libre': 'Custom range',
   'dashboard.range.standard': 'Current month → today',
+  'dashboard.range.clear': 'Clear',
   'dashboard.range.from': 'From',
   'dashboard.range.to': 'To',
   'dashboard.range.prev_week': 'Previous week',
