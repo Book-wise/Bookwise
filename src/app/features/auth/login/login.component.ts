@@ -52,6 +52,15 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
+
+        // 403 { error: 'email_not_verified', detail } → no son credenciales inválidas:
+        // el email aún no se verificó, avisamos sin caer en el error genérico de login.
+        if (err?.status === 403 && err?.error?.error === 'email_not_verified') {
+          const detail = err?.error?.detail as string | undefined;
+          this.error.set(detail?.trim() || this.lang.t('auth.login_verify_email'));
+          return;
+        }
+
         const apiErrors = err.error?.errors as Record<string, string[]> | undefined;
         const rawMsg = apiErrors?.['email']?.[0];
         this.error.set(

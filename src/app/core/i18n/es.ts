@@ -114,6 +114,7 @@ export const ES: Record<string, string> = {
   'auth.login_error': 'Credenciales incorrectas. Intentá de nuevo.',
   'auth.register_error': 'Error al crear la cuenta. Intentá de nuevo.',
   'auth.register_check_email': 'Cuenta creada. Revisá tu correo para verificar tu email.',
+  'auth.login_verify_email': 'Debes verificar tu email antes de iniciar sesión.',
 
   // UI
   'ui.logout': 'Salir',
@@ -382,6 +383,10 @@ export const ES: Record<string, string> = {
   'verify_email.error.title': 'No se pudo verificar',
   'verify_email.error.text': 'El link no es válido o ya expiró.',
   'verify_email.login_link': 'Iniciar sesión',
+  'auth.verify_email_invalid_token': 'El enlace de verificación no es válido. Solicita uno nuevo.',
+  'auth.verify_email_token_expired': 'El enlace de verificación expiró. Solicita uno nuevo.',
+  'auth.verify_email_token_already_used': 'Este enlace ya fue utilizado. Tu email ya está verificado.',
+  'auth.verify_email_error': 'No se pudo verificar tu email. Intentá de nuevo.',
 
   // Onboarding (negocio)
   'onboard.title': 'Configurá tu negocio',

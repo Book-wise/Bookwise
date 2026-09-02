@@ -28,13 +28,13 @@
       class="w-full submit-btn" />
   }
 
-  @if (state() === 'error') {
+  @if (state() === 'error' || state() === 'invalid_token' || state() === 'token_expired' || state() === 'token_already_used') {
     <p-message severity="error" class="w-full state-message">
       <div class="state-content">
         <i class="pi pi-times-circle state-icon"></i>
         <div>
           <p class="state-title">{{ lang.t('verify_email.error.title') }}</p>
-          <p class="state-text">{{ lang.t('verify_email.error.text') }}</p>
+          <p class="state-text">{{ lang.t(errorMessageKey()) }}</p>
         </div>
       </div>
     </p-message>

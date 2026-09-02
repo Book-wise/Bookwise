@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -23,9 +24,11 @@ describe('VerifyEmailComponent', () => {
     return TestBed.createComponent(VerifyEmailComponent);
   }
 
-  it('calls verifyEmail with the token and shows the success state', async () => {
+  it('calls verifyEmail with the token and shows the success state (raw { message, user } body)', async () => {
     authApi = {
-      verifyEmail: vi.fn(() => of({ data: { email_verified_at: '2026-09-01T16:00:00Z' } })),
+      verifyEmail: vi.fn(() =>
+        of({ message: 'ok', user: { email_verified_at: '2026-09-01T16:00:00Z' } }),
+      ),
     };
     const fixture = await createComponent('tok-123');
     fixture.detectChanges();
@@ -35,12 +38,49 @@ describe('VerifyEmailComponent', () => {
     expect(fixture.componentInstance.emailVerifiedAt()).toBe('2026-09-01T16:00:00Z');
   });
 
-  it('shows the error state for an invalid token and never proceeds to onboarding', async () => {
+  const errorCodeCases = [
+    ['invalid_token', 'auth.verify_email_invalid_token'],
+    ['token_expired', 'auth.verify_email_token_expired'],
+    ['token_already_used', 'auth.verify_email_token_already_used'],
+  ] as const;
+
+  it.each(errorCodeCases)(
+    'maps the backend code %s to its own error state and message key',
+    async (code, messageKey) => {
+      authApi = {
+        verifyEmail: vi.fn(() =>
+          throwError(() => new HttpErrorResponse({ status: 400, error: { error: code } })),
+        ),
+      };
+      const fixture = await createComponent('tok-123');
+      fixture.detectChanges();
+
+      expect(authApi.verifyEmail).toHaveBeenCalledWith('tok-123');
+      expect(fixture.componentInstance.state()).toBe(code);
+      expect(fixture.componentInstance.errorMessageKey()).toBe(messageKey);
+    },
+  );
+
+  it('falls back to the generic error state for an unrecognized code', async () => {
+    authApi = {
+      verifyEmail: vi.fn(() =>
+        throwError(() => new HttpErrorResponse({ status: 400, error: { error: 'weird_code' } })),
+      ),
+    };
+    const fixture = await createComponent('tok-123');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.state()).toBe('error');
+    expect(fixture.componentInstance.errorMessageKey()).toBe('auth.verify_email_error');
+  });
+
+  it('shows the generic error state for an unexpected transport error', async () => {
     authApi = { verifyEmail: vi.fn(() => throwError(() => new Error('bad'))) };
     const fixture = await createComponent('invalid');
     fixture.detectChanges();
 
     expect(fixture.componentInstance.state()).toBe('error');
+    expect(fixture.componentInstance.errorMessageKey()).toBe('auth.verify_email_error');
     expect(authApi.verifyEmail).toHaveBeenCalledWith('invalid');
   });
 

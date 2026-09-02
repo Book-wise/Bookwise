@@ -114,6 +114,7 @@ export const EN: Record<string, string> = {
   'auth.login_error': 'Incorrect credentials. Please try again.',
   'auth.register_error': 'Error creating the account. Please try again.',
   'auth.register_check_email': 'Account created. Check your email to verify it.',
+  'auth.login_verify_email': 'You must verify your email before logging in.',
 
   // UI
   'ui.logout': 'Log out',
@@ -380,6 +381,10 @@ export const EN: Record<string, string> = {
   'verify_email.error.title': 'Verification failed',
   'verify_email.error.text': 'The link is invalid or has expired.',
   'verify_email.login_link': 'Log in',
+  'auth.verify_email_invalid_token': 'The verification link is invalid. Request a new one.',
+  'auth.verify_email_token_expired': 'The verification link has expired. Request a new one.',
+  'auth.verify_email_token_already_used': 'This link has already been used. Your email is already verified.',
+  'auth.verify_email_error': 'We could not verify your email. Please try again.',
 
   // Business onboarding
   'onboard.title': 'Set up your business',

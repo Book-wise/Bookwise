@@ -45,8 +45,11 @@ describe('AuthApiService', () => {
     expect(req.request.body).toEqual(data);
   });
 
-  it('verifyEmail calls PATCH /auth/verify-email with { token } and returns {data:{email_verified_at}}', () => {
-    const response = { data: { email_verified_at: '2026-09-01T16:00:00Z' } };
+  it('verifyEmail calls PATCH /auth/verify-email with { token } and returns the raw { message, user } body', () => {
+    const response = {
+      message: 'Email verificado',
+      user: { id: 7, name: 'Test', email: 'test@test.com', role: 'admin' as const, email_verified_at: '2026-09-01T16:00:00Z' },
+    };
 
     service.verifyEmail('tok-123').subscribe((res) => {
       expect(res).toEqual(response);
@@ -58,7 +61,7 @@ describe('AuthApiService', () => {
     req.flush(response);
   });
 
-  it('getMe calls GET /auth/me and unwraps { data }', () => {
+  it('getMe calls GET /auth/me and unwraps { user }', () => {
     const me: AuthMeData = {
       id: 7,
       name: 'Admin',
@@ -77,6 +80,6 @@ describe('AuthApiService', () => {
 
     const req = httpMock.expectOne(`${environment.apiUrl}/auth/me`);
     expect(req.request.method).toBe('GET');
-    req.flush({ data: me });
+    req.flush({ user: me });
   });
 });

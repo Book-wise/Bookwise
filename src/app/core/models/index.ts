@@ -221,6 +221,10 @@ export interface User {
   phone?: string;
   role: UserRole;
   provider_id?: number | null;
+  tenant_id?: number | null;
+  email_verified_at?: string | null;
+  onboarding_complete?: boolean;
+  business?: Business | null;
   location_ids?: number[];
 }
 
@@ -243,10 +247,10 @@ export interface RegisterData {
   role?: UserRole;
 }
 
-/** POST /auth/register → 201, sin token (el login queda bloqueado hasta verificar email) */
+/** POST /auth/register → 201 { message, user } (sin token: el login queda bloqueado hasta verificar email) */
 export interface RegisterResponse {
-  data: { user: User };
-  message?: string;
+  message: string;
+  user: User;
 }
 
 // Business onboarding / profile / roles
@@ -261,11 +265,12 @@ export interface Business {
   address: string;
   phone?: string | null;
   plan: BusinessPlan;
+  logo_url?: string | null;
   created_at?: string;
   updated_at?: string;
 }
 
-/** GET /auth/me (Bearer) → datos de sesión + onboarding. El email del negocio no es editable. */
+/** GET /auth/me (Bearer) → { user: AuthMeData }. El email del negocio no es editable. */
 export interface AuthMeData {
   id: number;
   name: string;
@@ -279,7 +284,7 @@ export interface AuthMeData {
 }
 
 export interface AuthMeResponse {
-  data: AuthMeData;
+  user: AuthMeData;
 }
 
 /** Rol de negocio (capa separada de `UserRole`). name ∈ admin_general|admin_local|recepcionista|recepcionista_readonly|staff|staff_readonly */
