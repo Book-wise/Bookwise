@@ -296,6 +296,38 @@
   color: #6b7280;
 }
 
+// ── Chip "viendo como" — identidad del usuario autenticado (baja prominencia) ──
+
+.full-calendar-container .calendar-header .viewing-as {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 9999px;
+  background: var(--surface-50, #fafafa);
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-table);
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  .viewing-as__label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.75;
+  }
+
+  .viewing-as__name {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+  }
+
+  .viewing-as__role {
+    opacity: 0.85;
+  }
+}
+
 // ── Custom toolbar buttons — ocultos en desktop, visibles solo en ≤425px ────
 
 .fc-bwNewBooking-button,

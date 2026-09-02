@@ -9,11 +9,12 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '@services/auth.service';
 import { ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
+import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
 
 @Component({
   selector: 'bw-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule],
+  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, UserAvatarComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
@@ -33,6 +34,10 @@ export class AdminLayoutComponent {
   
   themeOptions = this.themeService.themeOptions;
   currentTheme = signal<ThemeName>(this.themeService.currentTheme);
+
+  // ── Usuario autenticado (identidad visible en el footer del sidebar) ────────
+  readonly userName = computed(() => this.authService.user()?.name ?? '');
+  readonly userRoleLabel = computed(() => this.roleLabel(this.authService.userRole()));
 
   menuItems: MenuItem[] = [
     { label: 'nav.dashboard', icon: 'pi pi-home',     routerLink: '/admin',           command: () => this.closeMenus() },
@@ -104,6 +109,13 @@ export class AdminLayoutComponent {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  /** Etiqueta i18n del rol de sesión (`admin`/`provider`), distinta del rol de negocio. */
+  private roleLabel(role: string | null): string {
+    if (role === 'admin') return this.langService.t('ui.role.admin');
+    if (role === 'provider') return this.langService.t('ui.role.provider');
+    return '';
   }
 
   isActive(link: string): boolean {

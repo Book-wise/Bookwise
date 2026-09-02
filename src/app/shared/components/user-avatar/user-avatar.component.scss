@@ -1,0 +1,32 @@
+// Avatar de usuario — mismo recipe visual que `.bw-pc__avatar` (patient-card):
+// círculo con fondo azul claro (`--bw-200`), texto blanco, centrado.
+
+.bw-user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bw-200, #60a7f0);
+  color: #fff;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  flex-shrink: 0;
+  user-select: none;
+  line-height: 1;
+
+  &--sm {
+    width: 28px;
+    height: 28px;
+  }
+
+  &--md {
+    width: 36px;
+    height: 36px;
+  }
+
+  &--lg {
+    width: 52px;
+    height: 52px;
+    font-size: 1.125rem;
+  }
+}

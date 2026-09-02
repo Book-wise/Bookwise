@@ -153,6 +153,8 @@ export const EN: Record<string, string> = {
   'ui.language': 'Language',
   'ui.collapse_sidebar': 'Collapse menu',
   'ui.expand_sidebar': 'Expand menu',
+  'ui.role.admin': 'Administrator',
+  'ui.role.provider': 'Professional',
 
   // Nav — admin
   'nav.dashboard': 'Dashboard',
@@ -250,6 +252,7 @@ export const EN: Record<string, string> = {
   'cal.placeholder.all_providers': 'All providers',
   'cal.placeholder.all_statuses': 'All statuses',
   'cal.pending_title': 'Pending Appointments',
+  'cal.viewing_as': 'Viewing as',
   // Time-grid density selector (visual slot duration).
   'cal.slot_duration.help': 'Adjust the time grid',
   'cal.slot_duration.title': 'Slot duration',

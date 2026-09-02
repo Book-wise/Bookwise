@@ -35,10 +35,13 @@ import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/
 import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/booking-statuses';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
+import { AuthService } from '@services/auth.service';
+import { CalendarPrefsService } from '@services/calendar-prefs.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
 import { hasAttentionRole } from '../roles/role-meta';
+import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -78,6 +81,7 @@ import luxonPlugin from '@fullcalendar/luxon';
     BlockTimeDialogComponent,
     BookingDetailDialogComponent,
     BwCurrencyPipe,
+    UserAvatarComponent,
   ],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
@@ -95,6 +99,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private calNav = inject(CalendarNavigationService);
   private tzService = inject(TimezoneService);
   private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  private readonly auth = inject(AuthService);
+  private readonly calendarPrefs = inject(CalendarPrefsService);
+
+  // ── Identidad "viendo como" (chip en el header del calendario) ─────────────
+  readonly userName = computed(() => this.auth.user()?.name ?? '');
+  readonly userRoleLabel = computed(() => {
+    const role = this.auth.userRole();
+    if (role === 'admin') return this.lang.t('ui.role.admin');
+    if (role === 'provider') return this.lang.t('ui.role.provider');
+    return '';
+  });
+
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -501,9 +517,17 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
-        // Default: primera sucursal ACTIVA (C1) — las inactivas no son un
-        // default válido porque quedan excluidas del selector locationOptions.
-        const defaultLocation = data.find((l) => l.active) ?? data[0];
+        // Default sin intención de navegación: se honra la última sucursal
+        // recordada por el usuario (solo si sigue existiendo y ACTIVA — C1),
+        // con caída a la primera sucursal ACTIVA / primer item de la lista.
+        const rememberedLocationId = this.calendarPrefs.getLastLocationId(
+          this.auth.user()?.id ?? null,
+        );
+        const rememberedLocation =
+          rememberedLocationId != null
+            ? data.find((l) => l.id === rememberedLocationId && l.active)
+            : undefined;
+        const defaultLocation = rememberedLocation ?? data.find((l) => l.active) ?? data[0];
         this.selectedLocationId = defaultLocation.id;
         this.previousLocationId = defaultLocation.id;
         this.loadProviders(defaultLocation.id);
@@ -762,6 +786,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.previousLocationId = this.selectedLocationId;
       this.selectedProviderId = null;
       this.loadProviders(this.selectedLocationId);
+
+      // Cambio intencional del usuario (dropdown de sucursales) → persiste la
+      // última sucursal por usuario para abrir ahí la próxima visita a la agenda.
+      this.calendarPrefs.setLastLocationId(this.auth.user()?.id ?? null, this.selectedLocationId);
 
       // Propagate location timezone to the centralized service
       const loc = this.locations().find((l) => l.id === this.selectedLocationId);

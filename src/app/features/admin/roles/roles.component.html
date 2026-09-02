@@ -12,19 +12,57 @@
         <div class="field">
           <label>{{ lang.t('roles.provider') }}</label>
           <p-select
-            [options]="providers()"
-            optionLabel="email"
+            [options]="providerOptions()"
+            optionLabel="label"
             optionValue="id"
             [ngModel]="selectedProviderId()"
             (ngModelChange)="onProviderChange($event)"
+            [filter]="true"
+            [filterPlaceholder]="lang.t('common.search')"
             [placeholder]="lang.t('roles.provider_placeholder')"
-            class="w-full" />
+            class="w-full"
+          >
+            <ng-template pTemplate="item" let-opt>
+              <div class="provider-option">
+                <span class="provider-option__name">{{ opt.name }}</span>
+                @if (opt.roles.length > 0) {
+                  <span class="provider-option__roles">
+                    @for (role of opt.roles; track role.name) {
+                      <span
+                        class="bw-chip role-chip"
+                        [style.--chip-color]="roleMeta(role.name).color"
+                      >
+                        <span
+                          class="bw-chip__dot"
+                          [style.background]="roleMeta(role.name).color"
+                        ></span>
+                        {{ roleLabel(role.name) }}
+                      </span>
+                    }
+                  </span>
+                }
+              </div>
+            </ng-template>
+          </p-select>
         </div>
 
         @if (selectedProvider(); as provider) {
           <div class="provider-summary">
             <span class="provider-name">{{ provider.first_name }} {{ provider.last_name }}</span>
             <span class="provider-email">{{ provider.email }}</span>
+            @if ((provider.roles ?? []).length > 0) {
+              <div class="provider-summary__roles">
+                @for (role of provider.roles ?? []; track role.name) {
+                  <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
+                    <span
+                      class="bw-chip__dot"
+                      [style.background]="roleMeta(role.name).color"
+                    ></span>
+                    {{ roleLabel(role.name) }}
+                  </span>
+                }
+              </div>
+            }
           </div>
         }
 
@@ -36,10 +74,14 @@
                   [ngModel]="isRoleChecked(role.name)"
                   (ngModelChange)="onRoleChange($event, role.name)"
                   [binary]="true"
-                  [disabled]="isRoleLocked(role.name)" />
+                  [disabled]="isRoleLocked(role.name)"
+                />
                 <span class="role-label">{{ roleLabel(role.name) }}</span>
                 @if (isRoleLocked(role.name)) {
-                  <i class="pi pi-lock role-lock" [title]="lang.t('roles.admin_general_locked')"></i>
+                  <i
+                    class="pi pi-lock role-lock"
+                    [title]="lang.t('roles.admin_general_locked')"
+                  ></i>
                 }
               </div>
             }
@@ -56,7 +98,8 @@
           class="save-btn"
           [loading]="saving()"
           [disabled]="!selectedProvider()"
-          (onClick)="save()" />
+          (onClick)="save()"
+        />
       </div>
     </p-card>
 
@@ -69,7 +112,6 @@
       <div class="role-cards-grid">
         @for (role of roles(); track role.name) {
           <div class="role-card" [style.--role-color]="roleMeta(role.name).color">
-            <div class="role-card__topbar"></div>
             <div class="role-card__body">
               <span class="role-card__icon" [style.background]="roleMeta(role.name).color">
                 <i [class]="roleMeta(role.name).icon"></i>

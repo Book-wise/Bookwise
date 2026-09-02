@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
 import { AuthMeData, User, UserRole } from '@models';
 import { AuthApiService } from './api/auth-api.service';
+import { CalendarPrefsService } from './calendar-prefs.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class AuthService {
   private readonly USER_KEY  = 'auth_user';
 
   private readonly authApi = inject(AuthApiService);
+  private readonly calendarPrefs = inject(CalendarPrefsService);
 
   private _token = signal<string | null>(this.getStoredToken());
   private _user  = signal<User | null>(this.getStoredUser());
@@ -98,6 +100,7 @@ export class AuthService {
   }
 
   logout(): void {
+    const userId = this._user()?.id ?? null;
     this._token.set(null);
     this._user.set(null);
     this._me.set(null);
@@ -106,6 +109,9 @@ export class AuthService {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
     }
+    // Limpia preferencias por usuario (p. ej. última sucursal de la agenda)
+    // para que no queden restos del usuario anterior en el mismo navegador.
+    this.calendarPrefs.setLastLocationId(userId, null);
     this.router.navigate(['/login']);
   }
 }

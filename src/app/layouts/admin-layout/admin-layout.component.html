@@ -37,6 +37,16 @@
     </nav>
 
     <div class="sidebar-footer">
+      <div class="sidebar-user" [class.sidebar-user--collapsed]="effectivelyCollapsed()">
+        <bw-user-avatar [name]="userName() || null" size="md" />
+        @if (!effectivelyCollapsed()) {
+          <div class="sidebar-user__info">
+            <span class="sidebar-user__name">{{ userName() }}</span>
+            <span class="sidebar-user__role">{{ userRoleLabel() }}</span>
+          </div>
+        }
+      </div>
+
       @if (!effectivelyCollapsed()) {
         <div class="theme-selector">
           <p-select

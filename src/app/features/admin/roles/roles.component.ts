@@ -14,6 +14,19 @@ import { Role } from '@models';
 import { roleMeta } from './role-meta';
 import { applyAdminGeneralInvariant, isAdminGeneralLocked } from './role-guards';
 
+/**
+ * Opción del selector buscable: además del id, lleva un `label` concatenado
+ * (nombre + roles) para que el filtro de p-select matchee por nombre Y rol, y
+ * el `name`/`roles` para renderizar el template personalizado.
+ */
+interface ProviderOption {
+  id: number;
+  label: string;
+  name: string;
+  email: string;
+  roles: Role[];
+}
+
 @Component({
   selector: 'bw-roles',
   standalone: true,
@@ -45,6 +58,25 @@ export class RolesComponent implements OnInit {
    * esta pantalla no mantiene lista local ni recarga post-guardado.
    */
   readonly providers = computed(() => this.refStore.providers());
+
+  /**
+   * Opciones del <p-select> buscable. El `label` concatena nombre + roles para
+   * que el filtro por texto matchee ambos; el id numérico se mantiene como
+   * `optionValue` para que onProviderChange siga recibiendo un número.
+   */
+  readonly providerOptions = computed<ProviderOption[]>(() =>
+    this.providers().map((p) => {
+      const name = `${p.first_name} ${p.last_name}`;
+      const roleStr = this.roleListLabel(p.roles ?? []);
+      return {
+        id: p.id,
+        label: roleStr ? `${name} · ${roleStr}` : name,
+        name,
+        email: p.email,
+        roles: p.roles ?? [],
+      };
+    }),
+  );
   loading = signal(true);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -118,6 +150,11 @@ export class RolesComponent implements OnInit {
   roleDesc(name: string): string {
     const key = `roles.card.desc.${name}`;
     return this.lang.has(key) ? this.lang.t(key) : '';
+  }
+
+  /** Etiquetas de roles concatenadas con coma (para el label del selector). */
+  roleListLabel(roles: Role[]): string {
+    return roles.map((r) => this.roleLabel(r.name)).join(', ');
   }
 
   private sameRoleSet(a: string[], b: string[]): boolean {

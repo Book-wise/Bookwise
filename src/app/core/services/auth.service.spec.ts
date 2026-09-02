@@ -88,4 +88,32 @@ describe('AuthService', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/admin']);
     });
   });
+
+  describe('logout', () => {
+    it('clears auth state and the per-user last-location preference key', () => {
+      service.login('tok', { id: 7, email: 'admin@test.com', name: 'Admin', role: 'admin' });
+      localStorage.setItem('bw:lastLocationId:7', '2');
+      expect(service.user()?.id).toBe(7);
+
+      service.logout();
+
+      expect(service.token()).toBeNull();
+      expect(service.user()).toBeNull();
+      expect(localStorage.getItem('auth_token')).toBeNull();
+      expect(localStorage.getItem('auth_user')).toBeNull();
+      expect(localStorage.getItem('bw:lastLocationId:7')).toBeNull();
+      expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('leaves other users\u2019 preference keys untouched when logging out an anonymous session', () => {
+      // Ensure an anonymous state (no user on the service) before asserting that
+      // logout does not touch other users' preference keys.
+      service.logout();
+      localStorage.setItem('bw:lastLocationId:9', '2');
+
+      service.logout();
+
+      expect(localStorage.getItem('bw:lastLocationId:9')).toBe('2');
+    });
+  });
 });

@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FullCalendarComponent } from './full-calendar.component';
+import { AuthService } from '@services/auth.service';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
@@ -14,7 +15,7 @@ import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { Location, Provider } from '@models';
+import { Location, Provider, User } from '@models';
 import { DateTime } from 'luxon';
 
 /**
@@ -71,6 +72,12 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
   let mockClientsApi: { getClients: ReturnType<typeof vi.fn> };
   let mockMessageService: { add: ReturnType<typeof vi.fn> };
   let mockHttpError: { handle: ReturnType<typeof vi.fn>; toToastConfig: ReturnType<typeof vi.fn> };
+  let mockAuthUser: ReturnType<typeof signal<User | null>>;
+
+  /** Test admin user with a stable id — the preference key is per-user. */
+  function testUser(id: number): User {
+    return { id, email: 'admin@test.com', name: 'Admin', role: 'admin' };
+  }
 
   /**
    * The FullCalendar instance is created in ngAfterViewInit/initCalendar, which
@@ -172,11 +179,19 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     mockMessageService = { add: vi.fn() };
     mockHttpError = { handle: vi.fn(), toToastConfig: vi.fn() };
 
+    // Per-user preferences (last location) live in localStorage — cleared between
+    // tests so no test inherits another one's key.
+    localStorage.clear();
+    mockAuthUser = signal<User | null>(testUser(5));
+
     await TestBed.configureTestingModule({
       imports: [FullCalendarComponent],
       providers: [
         provideZonelessChangeDetection(),
         { provide: Router, useValue: mockRouter },
+        // Minimally mocked AuthService — the component and BookingStore only
+        // read `user()` in these flows.
+        { provide: AuthService, useValue: { user: computed(() => mockAuthUser()), userRole: computed(() => mockAuthUser()?.role ?? null) } },
         { provide: LocationsApiService, useValue: mockLocationsApi },
         { provide: ProvidersApiService, useValue: mockProvidersApi },
         { provide: BlockedSlotsApiService, useValue: mockBlockedSlotsApi },
@@ -604,6 +619,81 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       for (const m of component.slotDurationOptions) {
         expect(component.slotDurationLabel(m)).toBe(`${m} minutos`);
       }
+    });
+  });
+
+  describe('remember last location (per user, localStorage)', () => {
+    const keyFor = (userId: number) => `bw:lastLocationId:${userId}`;
+
+    it('opens the stored location when it still exists and is active', () => {
+      localStorage.setItem(keyFor(5), '2');
+
+      component.loadLocations();
+
+      expect(component.selectedLocationId).toBe(2);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 2 });
+      expect(store.filters().selectedLocationId).toBe(2);
+    });
+
+    it('falls back to the first ACTIVE location when the stored one is inactive', () => {
+      // Sucursal Sur (id 3) is inactive in the payload — not a valid default
+      mockLocationsApi.getLocations.mockReturnValue(of([locCentro, locNorte, locSur]));
+      localStorage.setItem(keyFor(5), '3');
+
+      component.loadLocations();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 1 });
+    });
+
+    it('does not leak the stored location across users', () => {
+      localStorage.setItem(keyFor(5), '2');
+      mockAuthUser.set(testUser(9));
+
+      component.loadLocations();
+
+      // User 9 has no stored preference → default (first active location)
+      expect(component.selectedLocationId).toBe(1);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 1 });
+    });
+
+    it('persists the new location on an intentional dropdown change only', () => {
+      // Simulates the user changing the sucursal dropdown: the beforeEach initial
+      // load left previousLocationId = 1 (default); now the user picks location 2.
+      component.selectedLocationId = 2;
+
+      component.onLocationChange();
+
+      expect(localStorage.getItem(keyFor(5))).toBe('2');
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 2 });
+    });
+
+    it('writes nothing when the default is applied without a user change', () => {
+      // ngOnInit/loadLocations already applied the default in beforeEach — without
+      // onLocationChange the preference must not exist.
+      expect(localStorage.getItem(keyFor(5))).toBeNull();
+    });
+  });
+
+  describe('viewing-as identity', () => {
+    it('exposes the authenticated user name and a localized admin role label', () => {
+      mockAuthUser.set(testUser(5));
+
+      expect(component.userName()).toBe('Admin');
+      expect(component.userRoleLabel()).toBe('Administrador');
+    });
+
+    it('maps a provider session role to the Professional label', () => {
+      mockAuthUser.set({ ...testUser(5), role: 'provider' });
+
+      expect(component.userRoleLabel()).toBe('Profesional');
+    });
+
+    it('falls back to empty name/label when no user is authenticated', () => {
+      mockAuthUser.set(null);
+
+      expect(component.userName()).toBe('');
+      expect(component.userRoleLabel()).toBe('');
     });
   });
 });

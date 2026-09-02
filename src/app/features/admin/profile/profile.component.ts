@@ -15,13 +15,14 @@ import { translateValidationMessage } from '@i18n/validation-translator';
 import { ChangePasswordData } from '@models';
 import { checkPasswordStrength, isPasswordStrong } from '@shared/validators/password-strength.validator';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
+import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
 
 @Component({
   selector: 'bw-profile',
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterLink, CardModule, InputTextModule, PasswordModule, ButtonModule,
-    MessageModule, PhoneInputComponent,
+    MessageModule, PhoneInputComponent, UserAvatarComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
@@ -35,6 +36,15 @@ export class ProfileComponent implements OnInit {
   loading = signal(false);
 
   readonly me = computed(() => this.auth.me());
+
+  // ── Identidad del usuario autenticado (avatar + nombre + rol de sesión) ─────
+  readonly userName = computed(() => this.auth.user()?.name ?? this.me()?.name ?? '');
+  readonly userRoleLabel = computed(() => {
+    const role = this.auth.userRole();
+    if (role === 'admin') return this.lang.t('ui.role.admin');
+    if (role === 'provider') return this.lang.t('ui.role.provider');
+    return '';
+  });
 
   // ── Teléfono editable (mismo widget del registro: bandera + código de país) ──
   readonly phone = signal('');

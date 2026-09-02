@@ -76,6 +76,14 @@
               (onClick)="openBlockTime()"
             >
             </p-button>
+            @if (userName()) {
+              <span class="viewing-as" [attr.aria-label]="lang.t('cal.viewing_as')">
+                <span class="viewing-as__label">{{ lang.t('cal.viewing_as') }}</span>
+                <bw-user-avatar [name]="userName()" size="sm" />
+                <span class="viewing-as__name">{{ userName() }}</span>
+                <span class="viewing-as__role">{{ userRoleLabel() }}</span>
+              </span>
+            }
           </div>
         </div>
 

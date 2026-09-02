@@ -6,7 +6,7 @@ import { ProfileComponent } from './profile.component';
 import { AuthService } from '@services/auth.service';
 import { AuthApiService } from '@services/api/auth-api.service';
 import { MessageService } from 'primeng/api';
-import type { AuthMeData, Business } from '@models';
+import type { AuthMeData, Business, User, UserRole } from '@models';
 
 const business: Business = {
   id: 1,
@@ -32,10 +32,22 @@ function makeMe(biz: Business | null): AuthMeData {
   };
 }
 
+function makeUser(overrides: Partial<User> = {}): User {
+  return {
+    id: 7,
+    email: 'admin@test.com',
+    name: 'Admin',
+    role: 'admin',
+    ...overrides,
+  };
+}
+
 describe('ProfileComponent', () => {
   let auth: {
     me: ReturnType<typeof signal<AuthMeData | null>>;
     meLoaded: ReturnType<typeof signal<boolean>>;
+    user: ReturnType<typeof signal<User | null>>;
+    userRole: () => UserRole | null;
     loadMe: ReturnType<typeof vi.fn>;
   };
   let api: { changePassword: ReturnType<typeof vi.fn>; updateProfile: ReturnType<typeof vi.fn> };
@@ -47,6 +59,8 @@ describe('ProfileComponent', () => {
     auth = {
       me: signal(makeMe(business) as AuthMeData | null),
       meLoaded: signal(true),
+      user: signal(makeUser() as User | null),
+      userRole: () => auth.user()?.role ?? null,
       loadMe: vi.fn(),
     };
     api = { changePassword: vi.fn(), updateProfile: vi.fn() };
@@ -214,5 +228,34 @@ describe('ProfileComponent', () => {
 
     expect(component.phoneError()).toBeTruthy();
     expect(component.phoneSaving()).toBe(false);
+  });
+
+  // ── Identidad del usuario autenticado (avatar + rol de sesión) ─────────────
+
+  it('maps the session role to its localized label instead of the hardcoded chip', () => {
+    fixture.detectChanges();
+
+    expect(component.userRoleLabel()).toBe('Administrador');
+    const nativeEl = fixture.nativeElement as HTMLElement;
+    const chip = nativeEl.querySelector('.profile-header__role');
+    expect(chip).toBeTruthy();
+    expect(chip!.textContent).toContain('Administrador');
+  });
+
+  it('renders the large avatar with the user initials', () => {
+    fixture.detectChanges();
+
+    const nativeEl = fixture.nativeElement as HTMLElement;
+    const avatar = nativeEl.querySelector('.bw-user-avatar');
+    expect(avatar).toBeTruthy();
+    expect(avatar!.classList).toContain('bw-user-avatar--lg');
+    expect(avatar!.textContent!.trim()).toBe('A');
+  });
+
+  it('maps a provider session role to the Professional label', () => {
+    auth.user.set(makeUser({ role: 'provider' }) as User | null);
+    fixture.detectChanges();
+
+    expect(component.userRoleLabel()).toBe('Profesional');
   });
 });

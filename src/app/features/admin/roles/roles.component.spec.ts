@@ -162,4 +162,38 @@ describe('RolesComponent', () => {
     expect(store.providers()[0].roles).toEqual([allRoles[0], allRoles[1]]);
     expect(component.saving()).toBe(false);
   });
+
+  it('builds providerOptions with a searchable name + role label and numeric ids', () => {
+    const provider = makeProvider({ id: 7, roles: [allRoles[0], allRoles[1]] });
+    seedProviders([provider]);
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    const opts = component.providerOptions();
+    expect(opts).toHaveLength(1);
+    expect(opts[0].id).toBe(7);
+    expect(opts[0].name).toBe('Ana García');
+    expect(opts[0].email).toBe('ana@test.com');
+    // El label concatena nombre + roles para que el filtro matchee ambos.
+    expect(opts[0].label).toBe(
+      `Ana García · ${component.roleLabel('admin_general')}, ${component.roleLabel('admin_local')}`,
+    );
+  });
+
+  it('renders a role chip row under the selected provider with its current roles', () => {
+    const provider = makeProvider({ roles: [allRoles[0], allRoles[1]] });
+    seedProviders([provider]);
+    fixture.detectChanges();
+
+    component.onProviderChange(1);
+    fixture.detectChanges();
+
+    const chips = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.provider-summary .role-chip'),
+    );
+    expect(chips).toHaveLength(2);
+    const texts = chips.map((el) => el.textContent?.trim());
+    expect(texts).toContain(component.roleLabel('admin_general'));
+    expect(texts).toContain(component.roleLabel('admin_local'));
+  });
 });

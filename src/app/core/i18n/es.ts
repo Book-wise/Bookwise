@@ -153,6 +153,8 @@ export const ES: Record<string, string> = {
   'ui.language': 'Idioma',
   'ui.collapse_sidebar': 'Colapsar menú',
   'ui.expand_sidebar': 'Expandir menú',
+  'ui.role.admin': 'Administrador',
+  'ui.role.provider': 'Profesional',
 
   // Nav — admin
   'nav.dashboard': 'Dashboard',
@@ -252,6 +254,7 @@ export const ES: Record<string, string> = {
   'cal.placeholder.all_providers': 'Todos los profesionales',
   'cal.placeholder.all_statuses': 'Todos los estados',
   'cal.pending_title': 'Citas Pendientes',
+  'cal.viewing_as': 'Viendo como',
   // Selector de densidad de la grilla de horarios (duración visual de los slots).
   'cal.slot_duration.help': 'Ajustar la grilla de horarios',
   'cal.slot_duration.title': 'Duración de los slots',

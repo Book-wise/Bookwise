@@ -1,9 +1,12 @@
 <div class="profile-wrap">
   <div class="profile-header">
     <h1>{{ lang.t('profile.title') }}</h1>
-    <p>
-      {{ me()?.name ?? lang.t('profile.not_available') }}
-      <span class="bw-chip bw-chip--primary"><i class="pi pi-shield"></i>{{ lang.t('profile.role_admin_general') }}</span>
+    <p class="profile-header__identity">
+      <bw-user-avatar [name]="userName() || null" size="lg" />
+      <span class="profile-header__text">
+        <span class="profile-header__name">{{ me()?.name ?? lang.t('profile.not_available') }}</span>
+        <span class="bw-chip bw-chip--primary profile-header__role"><i class="pi pi-shield"></i>{{ userRoleLabel() || lang.t('profile.not_available') }}</span>
+      </span>
     </p>
   </div>
 
