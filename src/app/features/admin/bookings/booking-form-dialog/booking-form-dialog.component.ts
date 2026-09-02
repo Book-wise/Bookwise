@@ -215,10 +215,21 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     })),
   );
 
-  providerOptions = computed<Array<{ label: string; value: number | null }>>(() => [
-    { label: this.lang.t('misc.unassigned'), value: null },
-    ...this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
-  ]);
+  /**
+   * Opciones de profesional (D1): en selección NUEVA solo se ofrecen providers activos.
+   * Al editar una reserva, el provider asignado se conserva aunque esté inactivo
+   * (p.id === formData.provider_id) para que la selección siga resolviéndose.
+   * El filtro vive en este consumidor; ReferenceStore no filtra lecturas.
+   */
+  providerOptions = computed<Array<{ label: string; value: number | null }>>(() => {
+    const selectedProviderId = this.formData.provider_id;
+    return [
+      { label: this.lang.t('misc.unassigned'), value: null },
+      ...this.providers()
+        .filter((p) => p.active || p.id === selectedProviderId)
+        .map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
+    ];
+  });
 
   serviceOptions = computed(() =>
     this.services().map((s: TaggedService) => ({

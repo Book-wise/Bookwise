@@ -16,7 +16,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { MessageService } from 'primeng/api';
 import { rutValidator } from '@shared/validators/rut.validator';
 import type { NgForm } from '@angular/forms';
-import type { Client } from '@models';
+import type { Client, Provider } from '@models';
 
 describe('BookingFormDialogComponent', () => {
   let component: BookingFormDialogComponent;
@@ -750,6 +750,56 @@ describe('BookingFormDialogComponent', () => {
 
       const card = fixture.debugElement.query(By.css('bw-patient-card'));
       expect(card).toBeNull();
+    });
+  });
+
+  // ── D1: inactive providers excluded from new-booking selection ─────────────
+
+  describe('providerOptions (D1 — inactive providers excluded from new-booking selection)', () => {
+    const activeProvider = { id: 1, first_name: 'Ana', last_name: 'Activa', active: true } as Provider;
+    const inactiveProvider = { id: 2, first_name: 'Bruno', last_name: 'Inactivo', active: false } as Provider;
+    const inactiveAssigned = { id: 3, first_name: 'Carla', last_name: 'Inactiva', active: false } as Provider;
+    const anotherActive = { id: 4, first_name: 'Diego', last_name: 'Activo', active: true } as Provider;
+
+    function setProviders(list: Provider[]) {
+      component.providers.set(list);
+    }
+
+    function optionValues(): Array<number | null> {
+      return component.providerOptions().map((o) => o.value);
+    }
+
+    it('excludes inactive providers when creating a new booking (nothing selected)', () => {
+      component.formData.provider_id = null;
+      setProviders([activeProvider, inactiveProvider, inactiveAssigned]);
+
+      expect(optionValues()).toEqual([null, 1]);
+    });
+
+    it('keeps active providers selectable in a new booking', () => {
+      component.formData.provider_id = null;
+      setProviders([activeProvider, inactiveProvider, anotherActive]);
+
+      const options = component.providerOptions();
+      expect(options.some((o) => o.value === 1 && o.label === 'Ana Activa')).toBe(true);
+      expect(options.some((o) => o.value === 4 && o.label === 'Diego Activo')).toBe(true);
+      expect(options.some((o) => o.value === 2)).toBe(false);
+    });
+
+    it('resolves an inactive assigned provider when editing a booking', () => {
+      // Edición: la reserva apunta al provider inactivo id 3 — debe seguir figurando
+      component.formData.provider_id = 3;
+      setProviders([activeProvider, inactiveProvider, inactiveAssigned]);
+
+      expect(optionValues()).toEqual([null, 1, 3]);
+    });
+
+    it('excludes inactive unassigned providers when editing a booking', () => {
+      // Edición: el asignado (activo, id 1) resuelve; los inactivos no asignados quedan fuera
+      component.formData.provider_id = 1;
+      setProviders([activeProvider, inactiveProvider, inactiveAssigned, anotherActive]);
+
+      expect(optionValues()).toEqual([null, 1, 4]);
     });
   });
 });
