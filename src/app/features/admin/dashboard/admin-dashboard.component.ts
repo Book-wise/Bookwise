@@ -151,21 +151,47 @@ export class AdminDashboardComponent {
     })),
   );
 
-  /** Weeks of the month that owns the currently-selected week (Semana 1..5). */
+  /** Semanas del mes elegido (Semana 1..N). Regla ISO: la semana pertenece al
+   *  mes que contiene su jueves, así cada semana aparece en un único mes. */
   readonly weekOptions = computed(() => {
     const tz = this.tzService.activeTimezone();
-    const selWeek = mondayOf(this.selectedWeekStart(), tz);
-    let monday = selWeek.startOf('month').startOf('week');
+    const now = DateTime.now().setZone(tz);
+    const monthStart = now.set({ month: this.selectedMonth(), day: 1 }).startOf('day');
+    const monthEnd = monthStart.endOf('month');
+
     const weeks: { label: string; value: string }[] = [];
-    for (let i = 1; i <= 5; i++) {
+    let monday = monthStart.startOf('week'); // lunes on/antes del día 1
+    if (monday.plus({ days: 3 }) < monthStart) {
+      monday = monday.plus({ weeks: 1 }); // el jueves aún no cae en el mes → semana siguiente
+    }
+    let i = 1;
+    while (monday.plus({ days: 3 }) <= monthEnd) {
       weeks.push({
         label: this.lang.t('dashboard.range.week', { n: String(i) }),
         value: monday.toISODate()!,
       });
       monday = monday.plus({ weeks: 1 });
+      i++;
     }
     return weeks;
   });
+
+  /** Lunes de la primera semana que pertenece al mes (la que contiene su jueves). */
+  private firstWeekMondayOfMonth(month: number): DateTime {
+    const tz = this.tzService.activeTimezone();
+    const now = DateTime.now().setZone(tz);
+    const monthStart = now.set({ month, day: 1 }).startOf('day');
+    let monday = monthStart.startOf('week');
+    if (monday.plus({ days: 3 }) < monthStart) {
+      monday = monday.plus({ weeks: 1 });
+    }
+    return monday;
+  }
+
+  /** Mes al que pertenece la semana cuyo lunes es `monday` (mes de su jueves). */
+  private monthOfWeekMonday(monday: DateTime): number {
+    return monday.plus({ days: 3 }).month;
+  }
 
   /** ── rango resuelto (start/end/anchor) según el modo activo ── */
   readonly rangeDetails = computed<{ start: DateTime; end: DateTime; anchor: DateTime }>(() => {
@@ -360,11 +386,44 @@ export class AdminDashboardComponent {
     });
   }
 
-  /** Desplaza la semana seleccionada ±1 (modo semana). */
+  /** Desplaza la semana seleccionada ±1 (modo semana). El mes visible se
+   *  sincroniza con la nueva semana (regla ISO: mes que contiene su jueves). */
   shiftWeek(delta: number): void {
     const tz = this.tzService.activeTimezone();
     const base = mondayOf(this.selectedWeekStart(), tz);
-    this.selectedWeekStart.set(base.plus({ weeks: delta }).toISODate()!);
+    const next = base.plus({ weeks: delta });
+    this.selectedWeekStart.set(next.toISODate()!);
+    this.selectedMonth.set(this.monthOfWeekMonday(next));
+  }
+
+  /** Al cambiar el modo: al entrar en 'semana', garantiza que la semana
+   *  seleccionada pertenezca al mes visible del dropdown. */
+  onRangeModeChange(mode: RangeMode): void {
+    this.rangeMode.set(mode);
+    if (mode === 'semana') {
+      const tz = this.tzService.activeTimezone();
+      const week = mondayOf(this.selectedWeekStart(), tz);
+      if (this.monthOfWeekMonday(week) !== this.selectedMonth()) {
+        const first = this.firstWeekMondayOfMonth(this.selectedMonth());
+        this.selectedWeekStart.set(first.toISODate()!);
+      }
+    }
+  }
+
+  /** Al elegir mes en modo semana (selector grueso): salta a la primera semana
+   *  del mes elegido (selector fino). */
+  onWeekMonthChange(month: number): void {
+    this.selectedMonth.set(month);
+    const first = this.firstWeekMondayOfMonth(month);
+    this.selectedWeekStart.set(first.toISODate()!);
+  }
+
+  /** Al elegir una semana directo en el dropdown fino: si esa semana pertenece
+   *  a otro mes (semana de borde), sincroniza el selector grueso. */
+  syncMonthToWeek(iso: string): void {
+    this.selectedWeekStart.set(iso);
+    const tz = this.tzService.activeTimezone();
+    this.selectedMonth.set(this.monthOfWeekMonday(mondayOf(iso, tz)));
   }
 
   /** Vuelve al rango estándar (mes actual → hoy). */

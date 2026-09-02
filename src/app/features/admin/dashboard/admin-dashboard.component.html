@@ -6,6 +6,7 @@
     <p-select
       [options]="rangeModeOptions()"
       [(ngModel)]="rangeMode"
+      (ngModelChange)="onRangeModeChange($event)"
       optionLabel="label"
       optionValue="value"
       styleClass="range-mode-select"
@@ -21,6 +22,14 @@
       />
     }
     @if (rangeMode() === 'semana') {
+      <p-select
+        [options]="monthOptions()"
+        [(ngModel)]="selectedMonth"
+        (ngModelChange)="onWeekMonthChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="range-month-select"
+      />
       <button
         type="button"
         class="range-arrow"
@@ -30,6 +39,7 @@
       <p-select
         [options]="weekOptions()"
         [(ngModel)]="selectedWeekStart"
+        (ngModelChange)="syncMonthToWeek($event)"
         optionLabel="label"
         optionValue="value"
         styleClass="range-week-select"
