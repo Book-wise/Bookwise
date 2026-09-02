@@ -13,6 +13,7 @@ import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
+import { RolesApiService } from '@services/api/roles-api.service';
 import { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
 
 // ---------------------------------------------------------------------------
@@ -94,8 +95,8 @@ export const ReferenceStore = signalStore(
     allLoaded: computed(() => Object.values(store.loaded()).every(Boolean)),
   })),
 
-  // ── Methods (load + invalidation en un solo bloque, usando closures) ──
-  withMethods((store, locationsApi = inject(LocationsApiService), providersApi = inject(ProvidersApiService), servicesApi = inject(ServicesApiService), clientsApi = inject(ClientsApiService)) => {
+  // ── Methods (load + invalidation + mutations en un solo bloque, usando closures) ──
+  withMethods((store, locationsApi = inject(LocationsApiService), providersApi = inject(ProvidersApiService), servicesApi = inject(ServicesApiService), clientsApi = inject(ClientsApiService), rolesApi = inject(RolesApiService)) => {
     // Los rxMethods se definen como variables locales para que los métodos de
     // invalidación puedan referenciarlos por closure (evita type issues entre
     // withMethods encadenados)
@@ -264,6 +265,41 @@ export const ReferenceStore = signalStore(
       ),
     );
 
+    // ── Catalog mutations (patrón BookingStore, pero con re-throw) ─────
+    // Dueñas del write: llaman al endpoint y patchan el estado con la
+    // RESPUESTA del server (single source of truth). Devuelven el Observable
+    // y NO tragan errores (Design Decisión 9): el subscriber decide el toast
+    // o el diálogo. Sin meta-estado de mutación (loading/error) en el store.
+    const createProvider = (data: Partial<Provider>) =>
+      providersApi.createProvider(data).pipe(
+        tap((res) => patchState(store, { providers: [...store.providers(), res.data] })),
+      );
+
+    const saveProviderBasics = (id: number, data: Partial<Provider>) =>
+      providersApi.updateProvider(id, data).pipe(
+        tap((res) => {
+          const providers = store.providers();
+          const index = providers.findIndex((p) => p.id === id);
+          patchState(store, {
+            providers:
+              index >= 0
+                ? providers.map((p) => (p.id === id ? { ...p, ...res.data } : p))
+                : [...providers, res.data],
+          });
+        }),
+      );
+
+    const assignProviderRoles = (providerId: number, roles: string[]) =>
+      rolesApi.assignProviderRoles(providerId, roles).pipe(
+        tap((res) =>
+          patchState(store, {
+            providers: store.providers().map((p) =>
+              p.id === providerId ? { ...p, roles: res.data } : p,
+            ),
+          }),
+        ),
+      );
+
     return {
       // Load individual
       loadLocations,
@@ -303,6 +339,11 @@ export const ReferenceStore = signalStore(
         patchState(store, { loaded: { ...initialLoaded } });
         loadAll();
       },
+
+      // Mutations (catalog write methods — patchan con respuesta del server)
+      createProvider,
+      saveProviderBasics,
+      assignProviderRoles,
     };
   }),
 

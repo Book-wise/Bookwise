@@ -551,4 +551,7 @@ export const EN: Record<string, string> = {
 
   // Providers
   'providers.filter_roles': 'Roles',
+  'providers.dialog.roles': 'Roles',
+  'providers.dialog.roles_hint': 'Roles determine the provider\'s permissions. At least one role is required.',
+  'providers.save_roles_failed': 'The roles could not be saved. Please try again.',
 };

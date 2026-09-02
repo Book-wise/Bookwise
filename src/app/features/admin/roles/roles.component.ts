@@ -12,6 +12,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { Provider, Role } from '@models';
 import { roleMeta } from './role-meta';
+import { applyAdminGeneralInvariant, isAdminGeneralLocked } from './role-guards';
 
 @Component({
   selector: 'bw-roles',
@@ -33,9 +34,6 @@ export class RolesComponent implements OnInit {
   private providersApi = inject(ProvidersApiService);
   private httpError = inject(HttpErrorService);
   readonly lang = inject(LanguageService);
-
-  /** admin_general es único y no eliminable vía la UI. */
-  readonly adminGeneralRoleName = 'admin_general';
 
   /** Resuelve color/icono de un rol (fallback gris + pi-user). */
   protected readonly roleMeta = roleMeta;
@@ -92,9 +90,12 @@ export class RolesComponent implements OnInit {
     return this.selectedRoleNames().includes(name);
   }
 
-  /** admin_general siempre bloqueado: no se puede quitar ni reasignar vía UI. */
+  /**
+   * admin_general siempre bloqueado vía el guard compartido: el holder no puede
+   * quitarlo y un no-holder no puede recibirlo (misma regla que el provider dialog).
+   */
   isRoleLocked(name: string): boolean {
-    return name === this.adminGeneralRoleName;
+    return isAdminGeneralLocked([...this.currentProviderRoles()], name);
   }
 
   onRoleChange(checked: boolean, name: string): void {
@@ -118,6 +119,10 @@ export class RolesComponent implements OnInit {
     return this.lang.has(key) ? this.lang.t(key) : '';
   }
 
+  private sameRoleSet(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((name) => b.includes(name));
+  }
+
   save(): void {
     const provider = this.selectedProvider();
     if (!provider) {
@@ -137,15 +142,11 @@ export class RolesComponent implements OnInit {
       return;
     }
 
-    const current = this.currentProviderRoles();
-    const hasGeneral = current.has(this.adminGeneralRoleName);
-    const keepsGeneral = selected.includes(this.adminGeneralRoleName);
-    // admin_general no se puede remover ni reasignar por la UI.
-    if (hasGeneral && !keepsGeneral) {
-      this.error.set(this.lang.t('roles.admin_general_locked'));
-      return;
-    }
-    if (!hasGeneral && keepsGeneral) {
+    const current = [...this.currentProviderRoles()];
+    // Guard compartido: si la invariante de admin_general cambia el set propuesto
+    // (removerlo del holder o asignarlo a un no-holder), se aborta con error.
+    const enforced = applyAdminGeneralInvariant(current, selected);
+    if (!this.sameRoleSet(enforced, selected)) {
       this.error.set(this.lang.t('roles.admin_general_locked'));
       return;
     }

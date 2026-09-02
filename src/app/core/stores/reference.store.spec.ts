@@ -1,12 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ReferenceStore } from './reference.store';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
-import type { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
+import { RolesApiService } from '@services/api/roles-api.service';
+import type { Client, Location, Provider, Service, ServicePack, Region, LocationComuna, Role } from '@models';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,6 +42,10 @@ function makeComuna(overrides: Partial<LocationComuna> = {}): LocationComuna {
   return { id: 86, name: 'Santiago', region_id: 7, ...overrides } as LocationComuna;
 }
 
+function makeRole(overrides: Partial<Role> = {}): Role {
+  return { id: 5, name: 'staff', label: 'Staff', ...overrides };
+}
+
 // ---------------------------------------------------------------------------
 // Suite
 // ---------------------------------------------------------------------------
@@ -50,6 +56,16 @@ describe('ReferenceStore', () => {
   let locationsApi: Partial<Record<keyof LocationsApiService, ReturnType<typeof vi.fn>>>;
   let providersApi: Partial<Record<keyof ProvidersApiService, ReturnType<typeof vi.fn>>>;
   let servicesApi: Partial<Record<keyof ServicesApiService, ReturnType<typeof vi.fn>>>;
+  let rolesApi: Partial<Record<keyof RolesApiService, ReturnType<typeof vi.fn>>>;
+
+  // The store never calls RolesApiService during init/loaders; this default
+  // keeps the DI graph complete for every describe that does not mutate.
+  beforeEach(() => {
+    rolesApi = {
+      getRoles: vi.fn().mockReturnValue(of([])),
+      assignProviderRoles: vi.fn().mockReturnValue(of({ data: [] })),
+    } as any;
+  });
 
   function createStore() {
     TestBed.configureTestingModule({
@@ -59,6 +75,7 @@ describe('ReferenceStore', () => {
         { provide: LocationsApiService, useValue: locationsApi },
         { provide: ProvidersApiService, useValue: providersApi },
         { provide: ServicesApiService, useValue: servicesApi },
+        { provide: RolesApiService, useValue: rolesApi },
       ],
     });
     store = TestBed.inject(ReferenceStore);
@@ -291,6 +308,88 @@ describe('ReferenceStore', () => {
       clientsApi.getClients!.mockReturnValue(of([makeClient({ id: 77 })]));
       store.loadClients();
       expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ── Provider mutations (store write methods, patrón BookingStore) ─────
+
+  describe('provider mutations', () => {
+    const initialRoles = [makeRole({ id: 1, name: 'admin_local' })];
+
+    beforeEach(() => {
+      clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
+      locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
+      providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider({ roles: initialRoles })])) } as any;
+      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
+      rolesApi = {
+        getRoles: vi.fn().mockReturnValue(of([])),
+        assignProviderRoles: vi.fn(),
+      } as any;
+      createStore();
+    });
+
+    it('createProvider POSTs and appends the server response to providers', () => {
+      const created = makeProvider({ id: 2, first_name: 'Nuevo', last_name: 'Dr' });
+      providersApi.createProvider = vi.fn().mockReturnValue(of({ message: 'ok', data: created }));
+
+      store.createProvider({ first_name: 'Nuevo', last_name: 'Dr' }).subscribe();
+
+      expect(providersApi.createProvider).toHaveBeenCalledWith({ first_name: 'Nuevo', last_name: 'Dr' });
+      expect(store.providers()).toHaveLength(2);
+      expect(store.providers()[1]).toEqual(created);
+    });
+
+    it('createProvider re-throws the error and does not append on failure', () => {
+      providersApi.createProvider = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 422 })));
+
+      let received: unknown = null;
+      store.createProvider({ first_name: 'X', last_name: 'Y' }).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect(store.providers()).toHaveLength(1);
+    });
+
+    it('saveProviderBasics PATCHes and merges the canonical server response', () => {
+      const server = makeProvider({ id: 1, first_name: 'Dr.', last_name: 'Actualizado', phone: '+56900000000' });
+      providersApi.updateProvider = vi.fn().mockReturnValue(of({ message: 'ok', data: server }));
+
+      store.saveProviderBasics(1, { last_name: 'Actualizado' }).subscribe();
+
+      expect(providersApi.updateProvider).toHaveBeenCalledWith(1, { last_name: 'Actualizado' });
+      expect(store.providers()[0].last_name).toBe('Actualizado');
+      // Canonical fields come from the server response
+      expect(store.providers()[0].phone).toBe('+56900000000');
+      expect(store.providers()).toHaveLength(1);
+    });
+
+    it('saveProviderBasics re-throws the error and leaves the provider untouched', () => {
+      providersApi.updateProvider = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+
+      let received: unknown = null;
+      store.saveProviderBasics(1, { last_name: 'Cambio' }).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect(store.providers()[0].last_name).toBe('Uno');
+    });
+
+    it('assignProviderRoles PATCHes roles and sets the canonical set from res.data', () => {
+      const canonical = [makeRole({ id: 5, name: 'staff' }), makeRole({ id: 6, name: 'staff_readonly' })];
+      rolesApi.assignProviderRoles = vi.fn().mockReturnValue(of({ data: canonical }));
+
+      store.assignProviderRoles(1, ['staff', 'staff_readonly']).subscribe();
+
+      expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['staff', 'staff_readonly']);
+      expect(store.providers()[0].roles).toEqual(canonical);
+    });
+
+    it('assignProviderRoles re-throws the error and keeps the previous roles', () => {
+      rolesApi.assignProviderRoles = vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 422 })));
+
+      let received: unknown = null;
+      store.assignProviderRoles(1, ['staff']).subscribe({ error: (e) => (received = e) });
+
+      expect(received).toBeInstanceOf(HttpErrorResponse);
+      expect(store.providers()[0].roles).toEqual(initialRoles);
     });
   });
 });

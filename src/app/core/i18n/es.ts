@@ -553,4 +553,7 @@ export const ES: Record<string, string> = {
 
   // Profesionales
   'providers.filter_roles': 'Roles',
+  'providers.dialog.roles': 'Roles',
+  'providers.dialog.roles_hint': 'Los roles determinan los permisos del profesional. Se requiere al menos un rol.',
+  'providers.save_roles_failed': 'No se pudieron guardar los roles. Inténtelo nuevamente.',
 };

@@ -59,6 +59,40 @@
       </div>
     </div>
 
+    @if (!isCreate()) {
+      <div class="field">
+        <label>{{ lang.t('providers.dialog.roles') }}</label>
+        <p-multiselect
+          formControlName="roleNames"
+          [options]="roleOptions()"
+          optionLabel="label"
+          optionValue="value"
+          optionDisabled="disabled"
+          [disabled]="isView()"
+          [placeholder]="lang.t('providers.dialog.roles_hint')"
+          display="chip"
+          [showClear]="false"
+          [appendTo]="'body'"
+          (onChange)="onRolesChange()"
+          class="w-full"
+        >
+          <ng-template pTemplate="item" let-item>
+            <div class="dialog-role-option">
+              <span class="dialog-role-option__dot" [style.background]="roleMeta(item.value).color"></span>
+              <span class="dialog-role-option__label">{{ item.label }}</span>
+              @if (isRoleOptionLocked(item)) {
+                <i class="pi pi-lock dialog-role-option__lock" pTooltip="{{ lang.t('roles.admin_general_locked') }}" tooltipPosition="left"></i>
+              }
+            </div>
+          </ng-template>
+        </p-multiselect>
+        @if (showRolesEmptyError()) {
+          <small class="field-error">{{ lang.t('roles.empty_error') }}</small>
+        }
+        <small class="field-hint">{{ lang.t('providers.dialog.roles_hint') }}</small>
+      </div>
+    }
+
     @if (isView() && provider(); as prov) {
       <div class="metadata-row">
         <span class="metadata-label">Creado: {{ prov.created_at | date:'short' }}</span>

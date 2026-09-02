@@ -224,9 +224,12 @@ export class ProvidersListComponent implements OnInit {
     this.dialogVisible.set(false);
   }
 
+  /**
+   * Save is store-routed: ReferenceStore already patched providers with the
+   * server response, so the dialog only closes — no list reload needed.
+   */
   onDialogSaved(): void {
     this.dialogVisible.set(false);
-    this.loadProviders();
   }
 
   onEditRequested(): void {
