@@ -502,4 +502,15 @@ export const ES: Record<string, string> = {
   'roles.role.recepcionista_readonly': 'Recepcionista (solo lectura)',
   'roles.role.staff': 'Staff',
   'roles.role.staff_readonly': 'Staff (solo lectura)',
+  'roles.cards_title': 'Roles de usuarios',
+  'roles.cards_subtitle': 'Conocé qué puede hacer cada rol en tu negocio.',
+  'roles.card.desc.admin_general': 'Acceso total: administra el negocio, los profesionales y las configuraciones. Es único y no se puede quitar ni reasignar.',
+  'roles.card.desc.admin_local': 'Administra una sucursal: turnos, profesionales y clientes de esa ubicación.',
+  'roles.card.desc.recepcionista': 'Gestiona turnos y clientes en mostrador: los crea, confirma y cancela.',
+  'roles.card.desc.recepcionista_readonly': 'Consulta turnos y clientes en modo solo lectura, sin poder modificarlos.',
+  'roles.card.desc.staff': 'Asiste al equipo: consulta información y realiza acciones básicas.',
+  'roles.card.desc.staff_readonly': 'Colabora con acceso de solo lectura para consultar la información.',
+
+  // Profesionales
+  'providers.filter_roles': 'Roles',
 };

@@ -59,5 +59,27 @@
           (onClick)="save()" />
       </div>
     </p-card>
+
+    <section class="role-cards">
+      <header class="role-cards__header">
+        <h2>{{ lang.t('roles.cards_title') }}</h2>
+        <p>{{ lang.t('roles.cards_subtitle') }}</p>
+      </header>
+
+      <div class="role-cards-grid">
+        @for (role of roles(); track role.name) {
+          <div class="role-card" [style.--role-color]="roleMeta(role.name).color">
+            <div class="role-card__topbar"></div>
+            <div class="role-card__body">
+              <span class="role-card__icon" [style.background]="roleMeta(role.name).color">
+                <i [class]="roleMeta(role.name).icon"></i>
+              </span>
+              <span class="role-card__name">{{ roleLabel(role.name) }}</span>
+              <span class="role-card__desc">{{ roleDesc(role.name) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
   }
 </div>

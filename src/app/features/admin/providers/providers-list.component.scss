@@ -99,6 +99,42 @@
   }
 }
 
+// ── Role filter (multiselect) ────────────────────────────────────────
+
+.filter-roles {
+  flex: 0 1 auto;
+}
+
+.role-multiselect {
+  min-width: clamp(160px, 18rem, 22rem);
+}
+
+.role-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+// ── Role chips (table + mobile cards) ──────────────────────────────────
+
+.table-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.role-chip {
+  max-width: 100%;
+}
+
 // ── Location badge ────────────────────────────────────────────────────
 // Uses the shared .bw-chip recipe (see styles/_badges.scss) with a
 // per-location --chip-color. No local recipe needed.
@@ -129,6 +165,10 @@
   .filter-chips {
     flex-direction: column;
     gap: 0.35rem;
+  }
+
+  .role-multiselect {
+    width: 100%;
   }
 }
 

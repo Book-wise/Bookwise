@@ -7,10 +7,11 @@ import { CalendarNavigationService } from '@services/calendar-navigation.service
 import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
+import { RolesApiService } from '@services/api/roles-api.service';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
-import { Provider } from '@models';
+import { Provider, Role } from '@models';
 
 describe('ProvidersListComponent', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<ProvidersListComponent>>;
@@ -22,6 +23,7 @@ describe('ProvidersListComponent', () => {
     consumePending: ReturnType<typeof vi.fn>;
   };
   let mockProvidersApi: { getProviders: ReturnType<typeof vi.fn> };
+  let mockRolesApi: { getRoles: ReturnType<typeof vi.fn> };
   let mockLocationsApi: { getLocations: ReturnType<typeof vi.fn>; getRegions: ReturnType<typeof vi.fn>; getAllComunas: ReturnType<typeof vi.fn> };
   let mockServicesApi: { getServices: ReturnType<typeof vi.fn>; getPacks: ReturnType<typeof vi.fn> };
   let mockClientsApi: { getClients: ReturnType<typeof vi.fn> };
@@ -39,6 +41,12 @@ describe('ProvidersListComponent', () => {
   });
 
   beforeEach(async () => {
+    const allRoles: Role[] = [
+      { id: 1, name: 'admin_local', label: 'Admin Local' },
+      { id: 2, name: 'recepcionista', label: 'Recepcionista' },
+      { id: 3, name: 'staff', label: 'Staff' },
+    ];
+
     mockRouter = { navigate: vi.fn() };
     mockCalNav = {
       navigateToCalendar: vi.fn(),
@@ -46,6 +54,7 @@ describe('ProvidersListComponent', () => {
       consumePending: vi.fn(() => ({ locationId: null, providerId: null })),
     };
     mockProvidersApi = { getProviders: vi.fn(() => of([])) };
+    mockRolesApi = { getRoles: vi.fn(() => of(allRoles)) };
     mockLocationsApi = { getLocations: vi.fn(() => of([])), getRegions: vi.fn(() => of({ data: [] })), getAllComunas: vi.fn(() => of({ data: [] })) };
     mockServicesApi = { getServices: vi.fn(() => of([])), getPacks: vi.fn(() => of({ data: [] })) };
     mockClientsApi = { getClients: vi.fn(() => of([])) };
@@ -58,6 +67,7 @@ describe('ProvidersListComponent', () => {
         { provide: Router, useValue: mockRouter },
         { provide: CalendarNavigationService, useValue: mockCalNav },
         { provide: ProvidersApiService, useValue: mockProvidersApi },
+        { provide: RolesApiService, useValue: mockRolesApi },
         { provide: LocationsApiService, useValue: mockLocationsApi },
         { provide: ServicesApiService, useValue: mockServicesApi },
         { provide: ClientsApiService, useValue: mockClientsApi },
@@ -111,6 +121,51 @@ describe('ProvidersListComponent', () => {
       // Should show the p-card content (loading state is false)
       const pCard = nativeEl.querySelector('p-card') ?? nativeEl.querySelector('[ng-version]');
       expect(pCard).toBeTruthy();
+    });
+  });
+
+  // ── Role filter ─────────────────────────────────────────────────
+
+  describe('role filter', () => {
+    const r1 = { id: 1, name: 'admin_local', label: 'Admin Local' };
+    const r2 = { id: 2, name: 'recepcionista', label: 'Recepcionista' };
+
+    it('keeps only providers that have at least one selected role', () => {
+      component.providers.set([
+        baseProvider({ id: 1, roles: [r1] }),
+        baseProvider({ id: 2, roles: [r2] }),
+        baseProvider({ id: 3, roles: [] }),
+        baseProvider({ id: 4, roles: undefined }),
+      ]);
+
+      component.selectedRoleNames.set(['admin_local']);
+
+      const names = component['filteredProviders']().map((p) => p.id);
+      expect(names).toEqual([1]);
+    });
+
+    it('excludes a provider that does not match any selected role', () => {
+      component.providers.set([
+        baseProvider({ id: 1, roles: [r1] }),
+        baseProvider({ id: 2, roles: [r2] }),
+      ]);
+
+      component.selectedRoleNames.set(['admin_local']);
+
+      const names = component['filteredProviders']().map((p) => p.id);
+      expect(names).not.toContain(2);
+      expect(names).toEqual([1]);
+    });
+
+    it('returns all providers when no role is selected', () => {
+      component.providers.set([
+        baseProvider({ id: 1, roles: [r1] }),
+        baseProvider({ id: 2, roles: [] }),
+      ]);
+
+      component.selectedRoleNames.set([]);
+
+      expect(component['filteredProviders']().length).toBe(2);
     });
   });
 

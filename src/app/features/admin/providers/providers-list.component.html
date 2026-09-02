@@ -97,6 +97,34 @@
           }
         </div>
       }
+
+      <div class="filter-roles">
+        <p-multiselect
+          [options]="roleOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="selectedRoleNames()"
+          (ngModelChange)="selectedRoleNames.set($event)"
+          [placeholder]="lang.t('providers.filter_roles')"
+          display="chip"
+          [showClear]="true"
+          class="role-multiselect">
+          <ng-template pTemplate="item" let-item>
+            <div class="role-option">
+              <span class="role-option__dot" [style.background]="roleMeta(item.value).color"></span>
+              <span class="role-option__label">{{ item.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="selectedItems" let-items>
+            @for (item of items; track item.value) {
+              <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(item.value).color">
+                <span class="bw-chip__dot" [style.background]="roleMeta(item.value).color"></span>
+                {{ item.label }}
+              </span>
+            }
+          </ng-template>
+        </p-multiselect>
+      </div>
     </div>
 
     <!-- ── Desktop table ── -->
@@ -108,6 +136,7 @@
             <th>Email</th>
             <th>Teléfono</th>
             <th>Sucursal</th>
+            <th>Roles</th>
             <th>Estado</th>
             <th>Acciones</th>
           </tr>
@@ -129,6 +158,20 @@
               }
             </td>
             <td>
+              @if (providerRoles(provider).length > 0) {
+                <div class="table-roles">
+                  @for (role of providerRoles(provider); track role.name) {
+                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
+                      <span class="bw-chip__dot" [style.background]="roleMeta(role.name).color"></span>
+                      {{ roleLabel(role.name) }}
+                    </span>
+                  }
+                </div>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </td>
+            <td>
               <span class="bw-chip" [class]="provider.active ? 'bw-chip--success' : 'bw-chip--danger'">
                 {{ provider.active ? 'Activo' : 'Inactivo' }}
               </span>
@@ -142,7 +185,7 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center">No se encontraron profesionales</td>
+            <td colspan="7" class="text-center">No se encontraron profesionales</td>
           </tr>
         </ng-template>
       </p-table>
@@ -178,6 +221,22 @@
                 </span>
               } @else {
                 <span class="prov-card__value">Sin asignar</span>
+              }
+            </div>
+
+            <div class="prov-card__row">
+              <span class="prov-card__label">Roles</span>
+              @if (providerRoles(provider).length > 0) {
+                <div class="table-roles">
+                  @for (role of providerRoles(provider); track role.name) {
+                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
+                      <span class="bw-chip__dot" [style.background]="roleMeta(role.name).color"></span>
+                      {{ roleLabel(role.name) }}
+                    </span>
+                  }
+                </div>
+              } @else {
+                <span class="prov-card__value">—</span>
               }
             </div>
 

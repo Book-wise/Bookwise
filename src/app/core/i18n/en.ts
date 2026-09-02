@@ -500,4 +500,15 @@ export const EN: Record<string, string> = {
   'roles.role.recepcionista_readonly': 'Receptionist (read-only)',
   'roles.role.staff': 'Staff',
   'roles.role.staff_readonly': 'Staff (read-only)',
+  'roles.cards_title': 'User roles',
+  'roles.cards_subtitle': 'See what each role can do in your business.',
+  'roles.card.desc.admin_general': 'Full access: manages the business, providers and settings. It is unique and cannot be removed or reassigned.',
+  'roles.card.desc.admin_local': 'Manages one branch: appointments, providers and clients for that location.',
+  'roles.card.desc.recepcionista': 'Handles appointments and clients at the counter: creates, confirms and cancels them.',
+  'roles.card.desc.recepcionista_readonly': 'Views appointments and clients in read-only mode, without editing them.',
+  'roles.card.desc.staff': 'Assists the team: views information and performs basic actions.',
+  'roles.card.desc.staff_readonly': 'Collaborates with read-only access to check information.',
+
+  // Providers
+  'providers.filter_roles': 'Roles',
 };

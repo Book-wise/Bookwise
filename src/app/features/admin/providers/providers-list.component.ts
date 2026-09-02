@@ -9,11 +9,15 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ProvidersApiService } from '@services/api/providers-api.service';
+import { RolesApiService } from '@services/api/roles-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
+import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
-import { Location, Provider } from '@models';
+import { Location, Provider, Role } from '@models';
+import { roleMeta } from '../roles/role-meta';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
 
 // ── Color palette for location grouping ────────────────────────────────
@@ -38,25 +42,38 @@ const LOCATION_PALETTE = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
-    SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, ProviderDialogComponent,
+    SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, MultiSelectModule,
+    ProviderDialogComponent,
   ],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss'],
 })
 export class ProvidersListComponent implements OnInit {
   private providersApi = inject(ProvidersApiService);
+  private rolesApi = inject(RolesApiService);
   private httpError = inject(HttpErrorService);
   private router = inject(Router);
   private calNav = inject(CalendarNavigationService);
   protected refStore = inject(ReferenceStore);
+  protected readonly lang = inject(LanguageService);
+
+  /** Resuelve color/icono de un rol (fallback gris + pi-user). */
+  protected readonly roleMeta = roleMeta;
 
   // ── Data ────────────────────────────────────────────────────────────────
   providers = signal<Provider[]>([]);
+  roles = signal<Role[]>([]);
   loading = signal(true);
 
   // ── Filters ─────────────────────────────────────────────────────────────
   searchQuery = signal('');
   selectedLocationIds = signal<Set<number>>(new Set());
+  selectedRoleNames = signal<string[]>([]);
+
+  /** Roles del catálogo mapeados a opciones `{ label, value }` para el p-multiselect. */
+  readonly roleOptions = computed(() =>
+    this.roles().map((r) => ({ label: this.roleLabel(r.name), value: r.name })),
+  );
 
   /** Unique active locations from ReferenceStore + any from loaded providers */
   readonly filterLocations = computed<Location[]>(() => {
@@ -99,11 +116,12 @@ export class ProvidersListComponent implements OnInit {
 
   // ── Filtered + sorted ───────────────────────────────────────────────────
 
-  /** Applies search and location filters */
+  /** Applies search, location and role filters */
   readonly filteredProviders = computed(() => {
     let result = this.providers();
     const query = this.searchQuery().toLowerCase().trim();
     const locIds = this.selectedLocationIds();
+    const roleNames = this.selectedRoleNames();
 
     // Location filter
     if (locIds.size > 0) {
@@ -122,6 +140,11 @@ export class ProvidersListComponent implements OnInit {
           p.email.toLowerCase().includes(query) ||
           (p.phone ?? '').includes(query),
       );
+    }
+
+    // Role filter: keep providers that have at least one selected role.
+    if (roleNames.length > 0) {
+      result = result.filter((p) => p.roles?.some((r) => roleNames.includes(r.name)));
     }
 
     return result;
@@ -145,6 +168,7 @@ export class ProvidersListComponent implements OnInit {
   // ── Lifecycle ────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadProviders();
+    this.loadRoles();
   }
 
   loadProviders(): void {
@@ -160,6 +184,23 @@ export class ProvidersListComponent implements OnInit {
         this.httpError.handle(err, 'cargar profesionales');
       },
     });
+  }
+
+  loadRoles(): void {
+    this.rolesApi.getRoles().subscribe({
+      next: (roles) => this.roles.set(roles),
+      error: (err) => this.httpError.handle(err, this.lang.t('roles.title')),
+    });
+  }
+
+  roleLabel(name: string): string {
+    const key = `roles.role.${name}`;
+    return this.lang.has(key) ? this.lang.t(key) : name;
+  }
+
+  /** Tipado seguro: `provider.roles` puede ser undefined. */
+  providerRoles(provider: Provider): Role[] {
+    return provider.roles ?? [];
   }
 
   // ── Dialog ────────────────────────────────────────────────────────────────

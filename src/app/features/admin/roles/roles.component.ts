@@ -11,6 +11,7 @@ import { ProvidersApiService } from '@services/api/providers-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { Provider, Role } from '@models';
+import { roleMeta } from './role-meta';
 
 @Component({
   selector: 'bw-roles',
@@ -35,6 +36,9 @@ export class RolesComponent implements OnInit {
 
   /** admin_general es único y no eliminable vía la UI. */
   readonly adminGeneralRoleName = 'admin_general';
+
+  /** Resuelve color/icono de un rol (fallback gris + pi-user). */
+  protected readonly roleMeta = roleMeta;
 
   roles = signal<Role[]>([]);
   providers = signal<Provider[]>([]);
@@ -107,6 +111,11 @@ export class RolesComponent implements OnInit {
   roleLabel(name: string): string {
     const key = `roles.role.${name}`;
     return this.lang.has(key) ? this.lang.t(key) : name;
+  }
+
+  roleDesc(name: string): string {
+    const key = `roles.card.desc.${name}`;
+    return this.lang.has(key) ? this.lang.t(key) : '';
   }
 
   save(): void {

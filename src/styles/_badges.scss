@@ -69,6 +69,11 @@
     --chip-text-color: var(--bw-chip-text-danger);
   }
 
+  &--primary {
+    --chip-color: var(--bw-500, #0b3d95);
+    --chip-text-color: var(--bw-chip-text-primary);
+  }
+
   &--secondary {
     --chip-color: var(--text-color-secondary);
     --chip-text-color: var(--bw-chip-text-secondary);

@@ -67,6 +67,22 @@ describe('RolesComponent', () => {
     expect(labels).toHaveLength(6);
   });
 
+  it('renders the role cards reference section with resolved descriptions', () => {
+    fixture.detectChanges();
+
+    const nativeEl = fixture.nativeElement as HTMLElement;
+    const cards = Array.from(nativeEl.querySelectorAll('.role-card'));
+    expect(cards).toHaveLength(6);
+
+    const descs = Array.from(nativeEl.querySelectorAll('.role-card__desc')).map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(descs).toHaveLength(6);
+    // Las descripciones provienen de i18n (`roles.card.desc.<name>`), nunca del label.
+    expect(descs[0]).toBeTruthy();
+    expect(descs[0]).not.toBe(component.roleLabel(allRoles[0].name));
+  });
+
   it('blocks saving an empty selection (no PATCH)', () => {
     providersApi.getProviders.mockReturnValue(of([makeProvider()]));
     fixture.detectChanges();
