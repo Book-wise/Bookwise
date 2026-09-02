@@ -9,6 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -22,7 +23,6 @@ import { TimezoneService } from '@services/timezone.service';
 import { LanguageService } from '@services/language.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { ReferenceStore } from '@core/stores/reference.store';
-import { MessageService } from 'primeng/api';
 import { Booking } from '@models';
 import { BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-statuses';
 
@@ -95,7 +95,7 @@ function mondayOf(iso: string, tz: string): DateTime {
   selector: 'bw-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ChartModule, SelectModule, SkeletonModule, DatePickerModule, ButtonModule],
+  imports: [CommonModule, FormsModule, CardModule, ChartModule, SelectModule, SkeletonModule, DatePickerModule, ButtonModule, TooltipModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
@@ -106,7 +106,6 @@ export class AdminDashboardComponent {
   private tzService = inject(TimezoneService);
   readonly lang = inject(LanguageService);
   private router = inject(Router);
-  private messageService = inject(MessageService);
   private calNav = inject(CalendarNavigationService);
 
   /** ReferenceStore: datos maestros reactivos */
@@ -374,15 +373,41 @@ export class AdminDashboardComponent {
 
   // ── selectores de rango ─────────────────────────────────────
 
-  /** Card "Citas Pendientes": link al calendario filtrado + toast. */
+  /** Card "Citas Pendientes": abre el calendario con el filtro Pendientes activo y
+   *  un contexto de vista/fecha que refleja el rango activo del dashboard:
+   *  - 'mes'    → vista de mes (dayGridMonth) posicionada en el mes seleccionado.
+   *  - 'semana' → vista de semana (timeGridWeek) en la semana seleccionada.
+   *  - 'libre'  → rango custom que puede cruzar dos meses: el calendario no puede
+   *               renderizar dos meses a la vez, así que abre en semana anclada al
+   *               inicio del rango (fallback útil) y describe el período elegido.
+   *  El toast con el contexto (vista + rango) lo muestra el calendario tras la
+   *  navegación; no se dispara un toast propio aquí para no duplicar mensajes. */
   onPendingCardClick(): void {
-    this.calNav.navigateToCalendar(null, null, [PENDING_STATUS_ID], this.router);
-    this.messageService.add({
-      severity: 'info',
-      summary: this.lang.t('dashboard.pending.title'),
-      detail: this.lang.t('dashboard.pending.toast'),
-      key: 'global',
-      life: 5000,
+    const { start, end } = this.rangeDetails();
+    const mode = this.rangeMode();
+
+    let view: 'dayGridMonth' | 'timeGridWeek';
+    let gotoDate: string;
+    let rangeEnd: string | undefined;
+
+    if (mode === 'mes') {
+      view = 'dayGridMonth';
+      gotoDate = start.toISODate()!;
+    } else if (mode === 'semana') {
+      view = 'timeGridWeek';
+      gotoDate = start.toISODate()!;
+      rangeEnd = end.toISODate()!;
+    } else {
+      // 'libre': fallback a semana anclada al inicio del rango custom
+      view = 'timeGridWeek';
+      gotoDate = start.toISODate()!;
+      rangeEnd = end.toISODate()!;
+    }
+
+    this.calNav.navigateToCalendar(null, null, [PENDING_STATUS_ID], this.router, {
+      view,
+      gotoDate,
+      rangeEnd,
     });
   }
 

@@ -148,6 +148,13 @@ export const EN: Record<string, string> = {
   'status.7': 'Cancelled',
 
   // Dashboard — date range
+  'dashboard.range.filter_type_label': 'Filter type',
+  'dashboard.range.period_label': 'Period',
+  'dashboard.range.tip.filter_type': 'Choose which appointment period you want to see on the dashboard.',
+  'dashboard.range.tip.month': 'Select the month to display.',
+  'dashboard.range.tip.week': 'Choose a week within the selected month, or use the arrows to navigate.',
+  'dashboard.range.tip.date_from': 'Start date of the range.',
+  'dashboard.range.tip.date_to': 'End date of the range.',
   'dashboard.range.mode.mes': 'Month',
   'dashboard.range.mode.semana': 'Week',
   'dashboard.range.mode.libre': 'Custom range',
@@ -175,6 +182,8 @@ export const EN: Record<string, string> = {
   'dashboard.pending.title': 'Pending Appointments',
   'dashboard.pending.label': 'To assign',
   'dashboard.pending.toast': 'Showing pending appointments — confirm, assign, or cancel',
+  'dashboard.pending.tip': 'Opens the calendar with the Pending filter active for the shown period.',
+  'dashboard.period.tip': 'Appointment period shown in the cards and charts above.',
 
   // Repeat options
   'repeat.daily': 'Daily',
@@ -211,7 +220,12 @@ export const EN: Record<string, string> = {
   'cal.placeholder.all_providers': 'All providers',
   'cal.placeholder.all_statuses': 'All statuses',
   'cal.pending_title': 'Pending Appointments',
-  'cal.pending_context_toast': 'You are viewing the current week with the Pending filter active. You can review other dates with the calendar navigation.',
+  // Fallback (status-only navigation without a view context): default current week.
+  'cal.pending_context_toast': 'You are viewing the current week with the Pending filter active. You can review other dates with the calendar controls or switch views.',
+  // View/range context sent from the dashboard (client's active range).
+  'cal.pending_context_mes': 'You are viewing the month of {{month}} with the Pending filter active. You can review other dates with the calendar controls or switch to the week or day view.',
+  'cal.pending_context_semana': 'You are viewing the week from {{start}} to {{end}} with the Pending filter active. You can review other dates with the calendar controls or switch to the month or day view.',
+  'cal.pending_context_libre': 'You are viewing the pending appointments for the period {{start}} – {{end}} with the Pending filter active. You can review other dates with the calendar controls.',
 
   // Slot action menu
   'slot.new_booking': 'New Booking',

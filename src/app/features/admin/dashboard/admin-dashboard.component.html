@@ -3,71 +3,129 @@
   <p class="welcome">Bienvenido, {{ userName() }}</p>
 
   <div class="range-selector">
-    <p-select
-      [options]="rangeModeOptions()"
-      [(ngModel)]="rangeMode"
-      (ngModelChange)="onRangeModeChange($event)"
-      optionLabel="label"
-      optionValue="value"
-      styleClass="range-mode-select"
-      placeholder="Periodo"
-    />
+    <div class="range-field">
+      <label class="range-field__label" for="range-mode">
+        {{ lang.t('dashboard.range.filter_type_label') }}
+        <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.range.tip.filter_type')" tooltipPosition="top">
+          <i class="pi pi-question-circle"></i>
+        </button>
+      </label>
+      <p-select
+        inputId="range-mode"
+        [options]="rangeModeOptions()"
+        [(ngModel)]="rangeMode"
+        (ngModelChange)="onRangeModeChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="range-mode-select"
+      />
+    </div>
+
     @if (rangeMode() === 'mes') {
-      <p-select
-        [options]="monthOptions()"
-        [(ngModel)]="selectedMonth"
-        optionLabel="label"
-        optionValue="value"
-        styleClass="range-month-select"
-      />
+      <div class="range-field">
+        <label class="range-field__label" for="range-month">
+          <span>{{ lang.t('dashboard.range.mode.mes') }}</span>
+          <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.range.tip.month')" tooltipPosition="top">
+            <i class="pi pi-question-circle"></i>
+          </button>
+        </label>
+        <p-select
+          inputId="range-month"
+          [options]="monthOptions()"
+          [(ngModel)]="selectedMonth"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="range-month-select"
+        />
+      </div>
     }
+
     @if (rangeMode() === 'semana') {
-      <p-select
-        [options]="monthOptions()"
-        [(ngModel)]="selectedMonth"
-        (ngModelChange)="onWeekMonthChange($event)"
-        optionLabel="label"
-        optionValue="value"
-        styleClass="range-month-select"
-      />
-      <button
-        type="button"
-        class="range-arrow"
-        (click)="shiftWeek(-1)"
-        [attr.aria-label]="lang.t('dashboard.range.prev_week')"
-      >◀</button>
-      <p-select
-        [options]="weekOptions()"
-        [(ngModel)]="selectedWeekStart"
-        (ngModelChange)="syncMonthToWeek($event)"
-        optionLabel="label"
-        optionValue="value"
-        styleClass="range-week-select"
-      />
-      <button
-        type="button"
-        class="range-arrow"
-        (click)="shiftWeek(1)"
-        [attr.aria-label]="lang.t('dashboard.range.next_week')"
-      >▶</button>
+      <div class="range-field">
+        <label class="range-field__label" for="range-week-month">
+          <span>{{ lang.t('dashboard.range.mode.mes') }}</span>
+          <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.range.tip.month')" tooltipPosition="top">
+            <i class="pi pi-question-circle"></i>
+          </button>
+        </label>
+        <p-select
+          inputId="range-week-month"
+          [options]="monthOptions()"
+          [(ngModel)]="selectedMonth"
+          (ngModelChange)="onWeekMonthChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="range-month-select"
+        />
+      </div>
+
+      <div class="range-field">
+        <label class="range-field__label" for="range-week">
+          <span>{{ lang.t('dashboard.range.mode.semana') }}</span>
+          <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.range.tip.week')" tooltipPosition="top">
+            <i class="pi pi-question-circle"></i>
+          </button>
+        </label>
+        <div class="range-week-control">
+          <button
+            type="button"
+            class="range-arrow"
+            (click)="shiftWeek(-1)"
+            [attr.aria-label]="lang.t('dashboard.range.prev_week')"
+          >◀</button>
+          <p-select
+            inputId="range-week"
+            [options]="weekOptions()"
+            [(ngModel)]="selectedWeekStart"
+            (ngModelChange)="syncMonthToWeek($event)"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="range-week-select"
+          />
+          <button
+            type="button"
+            class="range-arrow"
+            (click)="shiftWeek(1)"
+            [attr.aria-label]="lang.t('dashboard.range.next_week')"
+          >▶</button>
+        </div>
+      </div>
     }
+
     @if (rangeMode() === 'libre') {
-      <p-datepicker
-        [(ngModel)]="customStart"
-        dateFormat="dd/mm/yy"
-        [appendTo]="'body'"
-        [placeholder]="lang.t('dashboard.range.from')"
-        styleClass="range-date"
-      />
+      <div class="range-field">
+        <label class="range-field__label" for="range-from">
+          <span>{{ lang.t('dashboard.range.from') }}</span>
+          <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.range.tip.date_from')" tooltipPosition="top">
+            <i class="pi pi-question-circle"></i>
+          </button>
+        </label>
+        <p-datepicker
+          inputId="range-from"
+          [(ngModel)]="customStart"
+          dateFormat="dd/mm/yy"
+          [appendTo]="'body'"
+          styleClass="range-date"
+        />
+      </div>
       <span class="range-dash">–</span>
-      <p-datepicker
-        [(ngModel)]="customEnd"
-        dateFormat="dd/mm/yy"
-        [appendTo]="'body'"
-        [placeholder]="lang.t('dashboard.range.to')"
-        styleClass="range-date"
-      />
+      <div class="range-field">
+        <label class="range-field__label" for="range-to">
+          <span>{{ lang.t('dashboard.range.to') }}</span>
+          <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.range.tip.date_to')" tooltipPosition="top">
+            <i class="pi pi-question-circle"></i>
+          </button>
+        </label>
+        <p-datepicker
+          inputId="range-to"
+          [(ngModel)]="customEnd"
+          dateFormat="dd/mm/yy"
+          [appendTo]="'body'"
+          styleClass="range-date"
+        />
+      </div>
     }
+
     <p-button
       [label]="lang.t('dashboard.range.clear')"
       severity="secondary"
@@ -77,7 +135,13 @@
     />
   </div>
 
-  <p class="date-range">{{ rangeBadgeText() }}</p>
+  <p class="date-range">
+    <span class="date-range__label">{{ lang.t('dashboard.range.period_label') }}:</span>
+    <span class="date-range__value">{{ rangeBadgeText() }}</span>
+    <button type="button" class="info-btn" [pTooltip]="lang.t('dashboard.period.tip')" tooltipPosition="top">
+      <i class="pi pi-question-circle"></i>
+    </button>
+  </p>
 
   @if (loading()) {
     <div class="stats-grid">
@@ -124,10 +188,10 @@
       (keydown.enter)="onPendingCardClick()"
       (keydown.space)="onPendingCardClick()"
     >
-      <p-card styleClass="stat-card-inner pending-card">
-        <ng-template pTemplate="header">
-          <span class="pending-card-title">{{ lang.t('dashboard.pending.title') }}</span>
-        </ng-template>
+      <p-card
+        styleClass="stat-card-inner pending-card"
+        [header]="lang.t('dashboard.pending.title')"
+      >
         <div class="stat-value">{{ pendingBookings() }}</div>
         <div class="stat-label">{{ lang.t('dashboard.pending.label') }}</div>
         <div class="pending-badge">{{ rangeBadgeText() }}</div>

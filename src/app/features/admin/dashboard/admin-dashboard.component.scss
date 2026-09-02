@@ -15,9 +15,20 @@ h1 {
 }
 
 .date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text-color-secondary);
   font-size: 0.85rem;
   margin: 0.25rem 0 2rem;
+}
+
+.date-range__label {
+  font-weight: 600;
+}
+
+.date-range__value {
+  color: var(--text-heading, #333);
 }
 
 // ── Selector de rango de fechas ──────────────────────────────────────────────
@@ -25,13 +36,52 @@ h1 {
 .range-selector {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
   margin: 0.5rem 0 0.75rem;
 }
 
+.range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.range-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+}
+
+.range-week-control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+// Icono de ayuda con tooltip (patrón del patient-card de notificaciones)
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0.1rem;
+  cursor: pointer;
+  color: var(--text-color-secondary);
+  line-height: 1;
+  border-radius: var(--bw-radius-sm, 4px);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--bw-300, #046af4);
+  }
+}
+
 :host ::ng-deep .range-mode-select {
-  min-width: 130px;
+  min-width: 140px;
 }
 
 :host ::ng-deep .range-month-select {
@@ -39,15 +89,16 @@ h1 {
 }
 
 :host ::ng-deep .range-week-select {
-  min-width: 140px;
+  min-width: 150px;
 }
 
 :host ::ng-deep .range-date {
-  max-width: 150px;
+  width: 150px;
 }
 
 .range-dash {
   color: var(--text-color-secondary);
+  padding-bottom: 0.55rem;
 }
 
 .range-arrow {
@@ -97,24 +148,16 @@ h1 {
   height: 100%;
 }
 
-// Aprieta el contenido del pending card para igualar el ritmo de los demás.
+// Mismo ritmo interno que los otros stat-card: el p-card usa el header default
+// (título con el mismo padding que los hermanos) y el body centrado con el
+// badge del periodo como único extra, sin apretar el título.
 :host ::ng-deep .stat-card--clickable .p-card-body {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 1rem 1.25rem;
-}
-
-:host ::ng-deep .stat-card--clickable .p-card-header {
-  padding: 0.5rem 1.25rem 0;
-  text-align: center;
-}
-
-.pending-card-title {
-  font-weight: var(--bw-weight-semibold, 600);
-  color: var(--text-heading, #333);
+  gap: 0.35rem;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .pending-badge {

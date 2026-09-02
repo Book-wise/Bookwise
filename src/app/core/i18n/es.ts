@@ -148,6 +148,13 @@ export const ES: Record<string, string> = {
   'status.7': 'Cancelado',
 
   // Dashboard — rango de fechas
+  'dashboard.range.filter_type_label': 'Tipo de filtro',
+  'dashboard.range.period_label': 'Periodo',
+  'dashboard.range.tip.filter_type': 'Elige qué periodo de citas quieres ver en el dashboard.',
+  'dashboard.range.tip.month': 'Selecciona el mes a visualizar.',
+  'dashboard.range.tip.week': 'Elige la semana dentro del mes seleccionado, o navega con las flechas.',
+  'dashboard.range.tip.date_from': 'Fecha inicial del rango.',
+  'dashboard.range.tip.date_to': 'Fecha final del rango.',
   'dashboard.range.mode.mes': 'Mes',
   'dashboard.range.mode.semana': 'Semana',
   'dashboard.range.mode.libre': 'Rango libre',
@@ -175,6 +182,8 @@ export const ES: Record<string, string> = {
   'dashboard.pending.title': 'Citas Pendientes',
   'dashboard.pending.label': 'Por asignar',
   'dashboard.pending.toast': 'Mostrando citas pendientes — confirma, asigna o cancela',
+  'dashboard.pending.tip': 'Abre el calendario con el filtro Pendientes activo en el periodo indicado.',
+  'dashboard.period.tip': 'Periodo de citas que se muestra en las tarjetas y gráficos de arriba.',
 
 
 
@@ -213,7 +222,12 @@ export const ES: Record<string, string> = {
   'cal.placeholder.all_providers': 'Todos los profesionales',
   'cal.placeholder.all_statuses': 'Todos los estados',
   'cal.pending_title': 'Citas Pendientes',
-  'cal.pending_context_toast': 'Estás viendo la semana actual con el filtro Pendientes activo. Podés revisar otras fechas con la navegación del calendario.',
+  // Fallback (status-only navigation sin contexto de vista): semana actual por defecto.
+  'cal.pending_context_toast': 'Estás viendo la semana actual con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario o cambiar de vista.',
+  // Contexto de vista/rango enviado desde el dashboard (rango activo del cliente).
+  'cal.pending_context_mes': 'Estás viendo el mes de {{month}} con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario o cambiar a vista de semana o día.',
+  'cal.pending_context_semana': 'Estás viendo la semana del {{start}} al {{end}} con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario o cambiar a vista de mes o día.',
+  'cal.pending_context_libre': 'Estás viendo las citas pendientes del período {{start}} – {{end}} con el filtro Pendientes activo. Puedes revisar otras fechas con los controles del calendario.',
 
   // Slot action menu
   'slot.new_booking': 'Nueva Reserva',
