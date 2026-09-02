@@ -100,6 +100,14 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     timezone: 'America/Santiago',
     active: true,
   };
+  const locSur: Location = {
+    id: 3,
+    name: 'Sucursal Sur',
+    address: '',
+    city: '',
+    timezone: 'America/Santiago',
+    active: false,
+  };
   const providerAna: Provider = {
     id: 7,
     first_name: 'Ana',
@@ -107,6 +115,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'ana@test.com',
     active: true,
     location: locNorte,
+    roles: [{ id: 1, name: 'staff' }],
   };
   const providerJuan: Provider = {
     id: 8,
@@ -115,6 +124,37 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'juan@test.com',
     active: true,
     location: locCentro,
+    roles: [{ id: 1, name: 'staff' }],
+  };
+  // Sólo recepcionista: activo pero SIN rol de atención → oculto (C2)
+  const providerRosa: Provider = {
+    id: 9,
+    first_name: 'Rosa',
+    last_name: 'Mesa',
+    email: 'rosa@test.com',
+    active: true,
+    location: locCentro,
+    roles: [{ id: 3, name: 'recepcionista' }],
+  };
+  // staff_readonly: activo y visible (C2)
+  const providerLuis: Provider = {
+    id: 10,
+    first_name: 'Luis',
+    last_name: 'Rojas',
+    email: 'luis@test.com',
+    active: true,
+    location: locCentro,
+    roles: [{ id: 4, name: 'staff_readonly' }],
+  };
+  // Inactivo con staff: excluido por active (C2)
+  const providerSofia: Provider = {
+    id: 11,
+    first_name: 'Sofía',
+    last_name: 'Lagos',
+    email: 'sofia@test.com',
+    active: false,
+    location: locCentro,
+    roles: [{ id: 5, name: 'staff' }],
   };
 
   beforeEach(async () => {
@@ -216,12 +256,15 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(toast.detail).toContain('Filtro: Todos los estados');
     });
 
-    it('pre-selects the provider even when it is missing from the loaded list, without toast', () => {
+    it('clears a pre-selection missing from the loaded list, without toast', () => {
       calNav.navigateToCalendar(2, 999, [], mockRouter as unknown as Router);
 
       component.loadLocations();
 
-      expect(component.selectedProviderId).toBe(999);
+      // C3: the pinned provider never existed in the list → the selection is
+      // reconciled to null ("todos los profesionales") and nothing is confirmed.
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
       expect(mockMessageService.add).not.toHaveBeenCalled();
     });
 
@@ -395,7 +438,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(calNav.consumePending()).toEqual({ locationId: null, providerId: null, statusIds: [], view: null, gotoDate: null, rangeEnd: null });
     });
 
-    it('applies the pending provider filter and surfaces a toast when loading providers fails', () => {
+    it('does not apply the provider intent when loading providers fails, and surfaces the error', () => {
       mockProvidersApi.getProviders.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
       );
@@ -403,9 +446,10 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
 
       component.loadLocations();
 
-      // Filter intent is applied to the store even though the providers list failed
-      expect(component.selectedProviderId).toBe(7);
-      expect(store.filters().selectedProviderId).toBe(7);
+      // Drop del apply-intent-anyway en error: la pre-selección no se aplica ni
+      // se sincroniza al store; solo se informa el fallo genérico.
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
       expect(mockHttpError.handle).toHaveBeenCalledTimes(1);
     });
 
@@ -431,6 +475,93 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(store.filters().selectedLocationId).toBe(1);
       expect(store.filters().selectedProviderId).toBeNull();
       expect(mockMessageService.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('C1 — location visibility (active locations only)', () => {
+    it('excludes inactive locations from locationOptions', () => {
+      component.locations.set([locCentro, locNorte, locSur]);
+
+      const values = component.locationOptions().map((o) => o.value);
+      expect(values).toEqual([1, 2]);
+      expect(values).not.toContain(3);
+    });
+
+    it('defaults the loaded location to the first ACTIVE location', () => {
+      // Inactive branch first in the payload → never picked as default
+      mockLocationsApi.getLocations.mockReturnValue(of([locSur, locCentro, locNorte]));
+
+      component.loadLocations();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 1 });
+    });
+
+    it('keeps an explicit navigation intent to an inactive location', () => {
+      mockLocationsApi.getLocations.mockReturnValue(of([locCentro, locSur]));
+      calNav.navigateToCalendar(3, null, [], mockRouter as unknown as Router);
+
+      component.loadLocations();
+
+      // Deliberate navigation wins over the active-only rule
+      expect(component.selectedLocationId).toBe(3);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 3 });
+    });
+  });
+
+  describe('C2 — provider visibility (active + attention role)', () => {
+    it('shows active providers with role staff', () => {
+      component.providers.set([providerAna, providerSofia]);
+
+      const values = component.providerOptions().map((o) => o.value);
+      expect(values).toContain(7); // activo + staff
+      expect(values).not.toContain(11); // inactivo + staff → oculto
+    });
+
+    it('shows active providers with role staff_readonly', () => {
+      component.providers.set([providerLuis]);
+
+      expect(component.providerOptions().map((o) => o.value)).toEqual([10]);
+    });
+
+    it('hides active providers whose only role is recepcionista', () => {
+      component.providers.set([providerRosa, providerJuan]);
+
+      const values = component.providerOptions().map((o) => o.value);
+      expect(values).toContain(8); // staff visible
+      expect(values).not.toContain(9); // recepcionista-only → oculto
+    });
+  });
+
+  describe('C3 — stale provider selection reconcile', () => {
+    it('clears a stale selection when a reload hides the selected provider', () => {
+      // User had Juan (active staff) selected and synced to the store
+      component.selectedProviderId = 8;
+      component.onFilterChange();
+      expect(store.filters().selectedProviderId).toBe(8);
+
+      // Reload returns Juan now inactive → excluded by the C2 filter
+      const juanInactive: Provider = { ...providerJuan, active: false };
+      mockProvidersApi.getProviders.mockReturnValue(of([providerAna, juanInactive]));
+
+      component.loadProviders(1);
+
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 1 });
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
+      expect(mockMessageService.add).not.toHaveBeenCalled();
+    });
+
+    it('keeps the selection when the provider is still visible after a reload', () => {
+      component.selectedProviderId = 8;
+      component.onFilterChange();
+      expect(store.filters().selectedProviderId).toBe(8);
+
+      // Default mock list still has Juan as active staff → selection survives
+      component.loadProviders(1);
+
+      expect(component.selectedProviderId).toBe(8);
+      expect(store.filters().selectedProviderId).toBe(8);
     });
   });
 

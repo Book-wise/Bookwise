@@ -38,6 +38,7 @@ import { LanguageService } from '@services/language.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
+import { hasAttentionRole } from '../roles/role-meta';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -234,10 +235,20 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     contentHeight: this.getContentHeight(),
   };
 
-  locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
+  /** Sucursales seleccionables: solo activas (C1). La intención de navegación
+   *  explícita hacia una sucursal inactiva se conserva igualmente (loadLocations). */
+  locationOptions = computed(() =>
+    this.locations()
+      .filter((l) => l.active)
+      .map((l) => ({ label: l.name, value: l.id })),
+  );
 
+  /** Profesionales seleccionables: solo activos con rol de atención (C2), usando
+   *  la constante compartida ATTENTION_ROLES/hasAttentionRole (role-meta). */
   providerOptions = computed(() =>
-    this.providers().map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
+    this.providers()
+      .filter((p) => p.active && hasAttentionRole(p.roles))
+      .map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
 
   showEventDialog = signal(false);
@@ -490,10 +501,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
-        // Default: first location
-        this.selectedLocationId = data[0].id;
-        this.previousLocationId = data[0].id;
-        this.loadProviders(data[0].id);
+        // Default: primera sucursal ACTIVA (C1) — las inactivas no son un
+        // default válido porque quedan excluidas del selector locationOptions.
+        const defaultLocation = data.find((l) => l.active) ?? data[0];
+        this.selectedLocationId = defaultLocation.id;
+        this.previousLocationId = defaultLocation.id;
+        this.loadProviders(defaultLocation.id);
         this.onFilterChange();
         // Status-only pending navigation (dashboard "Pending appointments" card):
         // one-shot toast explaining the active status filter, the location shown
@@ -531,10 +544,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.providers.set(data);
         this.providersLoading.set(false);
 
-        // Pre-selection from calendar navigation: sync filters and confirm with toast
+        // Pre-selection from calendar navigation: apply the intent first, then
+        // reconcile — a provider oculto por el filtro C2 se limpia abajo y NO
+        // se confirma como activo.
         if (providerId != null) {
           this.selectedProviderId = providerId;
           this.onFilterChange();
+        }
+        this.reconcileProviderSelection();
+
+        // Nav-intent toast solo si la selección SOBREVIVE el reconcile (el
+        // provider sigue visible/selectable en providerOptions).
+        if (providerId != null && this.selectedProviderId === providerId) {
           const provider = data.find((p) => p.id === providerId);
           this.showCalendarContextToast({
             statusIds: [],
@@ -550,14 +571,33 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (err) => {
         this.providersLoading.set(false);
         if (providerId != null) {
-          // Navigation pre-selection: apply the filter intent anyway so the UI
-          // and the store stay consistent, and surface the failure with a toast.
-          this.selectedProviderId = providerId;
-          this.onFilterChange();
+          // Fallo de la pre-selección de navegación: NO se aplica el intent de
+          // todas formas (drop del apply-intent-anyway) — solo se informa el error.
           this.httpError.handle(err, 'cargar profesionales');
         }
+        this.reconcileProviderSelection();
       },
     });
+  }
+
+  /**
+   * C3 — Reconciliación de la selección de profesional tras (re)cargar la
+   * lista: si `selectedProviderId` apunta a un provider excluido por el filtro
+   * de visibilidad de providerOptions (C2: inactivo o sin rol de atención), la
+   * selección se limpia a null ("todos los profesionales") y se re-sincronizan
+   * los filtros para que el calendario no conserve un provider stale. Se invoca
+   * al final de loadProviders (next y error). No-op sin selección o con
+   * selección aún seleccionable.
+   */
+  private reconcileProviderSelection(): void {
+    if (this.selectedProviderId == null) return;
+    const stillSelectable = this.providerOptions().some(
+      (o) => o.value === this.selectedProviderId,
+    );
+    if (!stillSelectable) {
+      this.selectedProviderId = null;
+      this.onFilterChange();
+    }
   }
 
   /**
