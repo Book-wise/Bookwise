@@ -11,6 +11,7 @@ import { AuthApiService } from '@services/api/auth-api.service';
 import { LanguageService } from '@services/language.service';
 import { translateValidationMessage } from '@i18n/validation-translator';
 import { RegisterData } from '@models';
+import { checkPasswordStrength, isPasswordStrong, PasswordStrengthCheck } from '@shared/validators/password-strength.validator';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { AuthLayoutComponent } from '@shared/components/auth-layout/auth-layout.component';
 
@@ -49,6 +50,36 @@ export class RegisterComponent {
     password_confirmation: '',
   };
 
+  /** Mismas reglas visibles que en "Cambiar contraseña" (Mi perfil) → consistencia visual. */
+  private readonly strengthLabels: Record<PasswordStrengthCheck['key'], string> = {
+    length: 'Mínimo 8 caracteres',
+    uppercase: 'Una letra mayúscula',
+    lowercase: 'Una letra minúscula',
+    number: 'Un número',
+  };
+
+  passwordChecks(): Array<PasswordStrengthCheck & { label: string }> {
+    return checkPasswordStrength(this.formData.password).map((check) => ({
+      ...check,
+      label: this.strengthLabels[check.key],
+    }));
+  }
+
+  /** Coincidencia en vivo entre contraseña y su confirmación (como en el perfil). */
+  pwMatch(): boolean {
+    return (
+      this.formData.password.length > 0 &&
+      this.formData.password === this.formData.password_confirmation
+    );
+  }
+
+  pwMismatch(): boolean {
+    return (
+      this.formData.password_confirmation.length > 0 &&
+      this.formData.password !== this.formData.password_confirmation
+    );
+  }
+
   isFormValid(): boolean {
     return !!(
       this.formData.name &&
@@ -56,8 +87,14 @@ export class RegisterComponent {
       this.formData.phone &&
       this.formData.password &&
       this.formData.password_confirmation &&
-      this.formData.password === this.formData.password_confirmation
+      this.formData.password === this.formData.password_confirmation &&
+      isPasswordStrong(this.formData.password)
     );
+  }
+
+  /** True cuando la contraseña cumple todos los checkpoints de fortaleza. */
+  passwordStrong(): boolean {
+    return isPasswordStrong(this.formData.password);
   }
 
   onRegister(form?: NgForm): void {

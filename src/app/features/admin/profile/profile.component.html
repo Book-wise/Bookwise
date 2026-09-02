@@ -28,7 +28,30 @@
         </div>
         <div class="info-field">
           <label>{{ lang.t('profile.personal.phone') }}</label>
-          <input pInputText [value]="me()?.phone ?? ''" readonly class="w-full" />
+          <bw-phone-input
+            name="phone"
+            [(ngModel)]="phone"
+            required
+            #phoneField="ngModel" />
+          @if (phoneField.invalid && phoneField.touched) {
+            @if (phoneField.errors?.['required']) {
+              <span class="field-error-text">{{ lang.t('profile.personal.phone_required') }}</span>
+            } @else if (phoneField.errors?.['invalidPhone']) {
+              <span class="field-error-text">{{ lang.t('profile.personal.phone_invalid') }}</span>
+            }
+          }
+          @if (phoneError(); as err) {
+            <span class="field-error-text">{{ err }}</span>
+          }
+          <div class="phone-actions">
+            <p-button
+              [label]="lang.t('profile.personal.phone_save')"
+              icon="pi pi-save"
+              size="small"
+              [loading]="phoneSaving()"
+              [disabled]="phoneField.invalid || !phone() || phoneSaving()"
+              (onClick)="savePhone()" />
+          </div>
         </div>
       </div>
 
@@ -43,10 +66,16 @@
               <span class="field-error-text">{{ err }}</span>
             }
           </div>
-          <div class="password-field">
+          <div class="password-field" [class.has-error]="!!pwFieldErrors().password">
             <label for="pw-new">{{ lang.t('profile.change_password.new') }}</label>
-            <input id="pw-new" pInputText type="password" [(ngModel)]="pwNew"
-              [class.field-error]="!!pwFieldErrors().password" class="w-full" />
+            <p-password
+              inputId="pw-new"
+              [(ngModel)]="pwNew"
+              [feedback]="true"
+              [promptLabel]="lang.t('profile.change_password.meter_prompt')"
+              [weakLabel]="lang.t('profile.change_password.meter_weak')"
+              [mediumLabel]="lang.t('profile.change_password.meter_medium')"
+              [strongLabel]="lang.t('profile.change_password.meter_strong')" />
             <ul class="strength-checks">
               @for (check of pwStrengthChecks(); track check.key) {
                 <li class="strength-check" [class.strength-check--met]="check.met">

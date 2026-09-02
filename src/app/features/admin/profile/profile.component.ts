@@ -1,9 +1,10 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
@@ -13,11 +14,15 @@ import { AuthApiService } from '@services/api/auth-api.service';
 import { translateValidationMessage } from '@i18n/validation-translator';
 import { ChangePasswordData } from '@models';
 import { checkPasswordStrength, isPasswordStrong } from '@shared/validators/password-strength.validator';
+import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'bw-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CardModule, InputTextModule, ButtonModule, MessageModule],
+  imports: [
+    CommonModule, FormsModule, RouterLink, CardModule, InputTextModule, PasswordModule, ButtonModule,
+    MessageModule, PhoneInputComponent,
+  ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
 })
@@ -30,6 +35,12 @@ export class ProfileComponent implements OnInit {
   loading = signal(false);
 
   readonly me = computed(() => this.auth.me());
+
+  // ── Teléfono editable (mismo widget del registro: bandera + código de país) ──
+  readonly phone = signal('');
+  readonly phoneSaving = signal(false);
+  readonly phoneError = signal<string | null>(null);
+  private readonly phoneSeeded = signal(false);
 
   // ── Cambio de contraseña ───────────────────────────────────────────────────
   readonly pwSaving = signal(false);
@@ -51,6 +62,18 @@ export class ProfileComponent implements OnInit {
     this.pwConfirm().length > 0 && this.pwNew() !== this.pwConfirm(),
   );
 
+  constructor() {
+    // Siembra el teléfono editable apenas /auth/me está disponible (una sola vez,
+    // sin pisar lo que el usuario esté editando tras un refresh del caché).
+    effect(() => {
+      const me = this.auth.me();
+      if (me && !this.phoneSeeded()) {
+        this.phoneSeeded.set(true);
+        this.phone.set(me.phone ?? '');
+      }
+    });
+  }
+
   ngOnInit(): void {
     // Si el guard ya cacheó /auth/me no re-peticiona; si no, lo cargamos.
     if (!this.auth.meLoaded()) {
@@ -60,6 +83,47 @@ export class ProfileComponent implements OnInit {
         error: () => this.loading.set(false),
       });
     }
+  }
+
+  /** PATCH /auth/me — persiste el teléfono editado (contrato backend "profile phone update"). */
+  savePhone(): void {
+    const phone = this.phone().trim();
+    if (!phone) {
+      this.phoneError.set(this.lang.t('profile.personal.phone_required'));
+      return;
+    }
+
+    this.phoneError.set(null);
+    this.phoneSaving.set(true);
+    this.authApi.updateProfile({ phone }).subscribe({
+      next: () => {
+        this.phoneSaving.set(false);
+        // Refresca el caché de /auth/me para que el resto de la app vea el nuevo teléfono.
+        this.auth.loadMe(true).subscribe();
+        this.messageService.add({
+          severity: 'success',
+          summary: this.lang.t('profile.personal.phone_saved_title'),
+          detail: this.lang.t('profile.personal.phone_saved'),
+          key: 'global',
+          life: 4000,
+        });
+      },
+      error: (err) => {
+        this.phoneSaving.set(false);
+        const apiErrors = err.error?.errors as Record<string, string[]> | undefined;
+        const lang = this.lang.lang();
+        if (apiErrors?.['phone']?.length) {
+          this.phoneError.set(translateValidationMessage(apiErrors['phone'][0], lang));
+        } else {
+          this.phoneError.set(
+            translateValidationMessage(
+              err.error?.message ?? 'profile.personal.phone_error',
+              lang,
+            ),
+          );
+        }
+      },
+    });
   }
 
   /** POST /auth/password — habilita el cambio de contraseña del usuario autenticado. */

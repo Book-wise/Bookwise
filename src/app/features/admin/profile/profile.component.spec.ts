@@ -38,7 +38,7 @@ describe('ProfileComponent', () => {
     meLoaded: ReturnType<typeof signal<boolean>>;
     loadMe: ReturnType<typeof vi.fn>;
   };
-  let api: { changePassword: ReturnType<typeof vi.fn> };
+  let api: { changePassword: ReturnType<typeof vi.fn>; updateProfile: ReturnType<typeof vi.fn> };
   let toast: { add: ReturnType<typeof vi.fn> };
   let component: ProfileComponent;
   let fixture: ReturnType<typeof TestBed.createComponent<ProfileComponent>>;
@@ -49,7 +49,7 @@ describe('ProfileComponent', () => {
       meLoaded: signal(true),
       loadMe: vi.fn(),
     };
-    api = { changePassword: vi.fn() };
+    api = { changePassword: vi.fn(), updateProfile: vi.fn() };
     toast = { add: vi.fn() };
 
     await TestBed.configureTestingModule({
@@ -169,5 +169,50 @@ describe('ProfileComponent', () => {
     component.pwNew.set('clave');
     expect(component.pwStrong()).toBe(false);
     expect(component.pwStrengthChecks().some((c) => !c.met)).toBe(true);
+  });
+
+  it('seeds the editable phone from /auth/me', () => {
+    fixture.detectChanges();
+    expect(component.phone()).toBe('+56912345678');
+  });
+
+  it('saves the edited phone via PATCH /auth/me and refreshes the me cache', () => {
+    api.updateProfile.mockReturnValue(of({ user: makeMe(business) }));
+    auth.loadMe.mockReturnValue(of(makeMe(business)));
+    fixture.detectChanges();
+
+    component.phone.set('+59899123456');
+    component.savePhone();
+
+    expect(api.updateProfile).toHaveBeenCalledWith({ phone: '+59899123456' });
+    expect(auth.loadMe).toHaveBeenCalledWith(true);
+    expect(toast.add).toHaveBeenCalled();
+    expect(component.phoneError()).toBeNull();
+  });
+
+  it('blocks saving when the phone is empty', () => {
+    fixture.detectChanges();
+
+    component.phone.set('');
+    component.savePhone();
+
+    expect(api.updateProfile).not.toHaveBeenCalled();
+    expect(component.phoneError()).toBeTruthy();
+  });
+
+  it('maps a 422 phone error to the field message', () => {
+    api.updateProfile.mockReturnValue(
+      throwError(() => ({
+        status: 422,
+        error: { errors: { phone: ['El número no es válido para este país.'] } },
+      })),
+    );
+    fixture.detectChanges();
+
+    component.phone.set('123');
+    component.savePhone();
+
+    expect(component.phoneError()).toBeTruthy();
+    expect(component.phoneSaving()).toBe(false);
   });
 });

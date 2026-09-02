@@ -34,4 +34,9 @@ export class AuthApiService {
   changePassword(data: ChangePasswordData): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/auth/password`, data);
   }
+
+  /** PATCH /auth/me (Bearer) → { user } — actualiza el perfil del usuario autenticado (hoy solo phone). */
+  updateProfile(data: { phone: string }): Observable<AuthMeResponse> {
+    return this.http.patch<AuthMeResponse>(`${this.baseUrl}/auth/me`, data);
+  }
 }

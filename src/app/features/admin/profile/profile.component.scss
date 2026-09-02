@@ -69,6 +69,19 @@
     font-size: 0.75rem;
     color: var(--text-color-secondary);
   }
+
+  .field-error-text {
+    font-size: 0.75rem;
+    color: #ef4444;
+  }
+
+  .phone-actions {
+    margin-top: 0.125rem;
+
+    .p-button {
+      align-self: flex-start;
+    }
+  }
 }
 
 .w-full {
@@ -102,6 +115,20 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+
+    .p-password {
+      width: 100%;
+
+      input {
+        width: 100%;
+      }
+    }
+
+    &.has-error {
+      .p-password input {
+        border-color: #ef4444 !important;
+      }
+    }
   }
 
   .field-error-text {

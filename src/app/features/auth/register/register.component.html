@@ -66,11 +66,26 @@
         placeholder="Mínimo 8 caracteres"
         [(ngModel)]="formData.password"
         [toggleMask]="true"
+        [feedback]="true"
+        promptLabel="Ingresá una contraseña"
+        weakLabel="Débil"
+        mediumLabel="Media"
+        strongLabel="Fuerte"
         required
         #password="ngModel"
         class="w-full" />
       @if (password.invalid && password.touched) {
-        <span class="field-error">La contraseña es obligatoria</span>
+        <span class="field-error-text">La contraseña es obligatoria</span>
+      }
+      @if (formData.password.length > 0) {
+        <ul class="strength-checks">
+          @for (check of passwordChecks(); track check.key) {
+            <li class="strength-check" [class.strength-check--met]="check.met">
+              <i class="pi" [class.pi-check]="check.met" [class.pi-times]="!check.met"></i>
+              {{ check.label }}
+            </li>
+          }
+        </ul>
       }
     </div>
 
@@ -85,8 +100,18 @@
         required
         #passwordConfirm="ngModel"
         class="w-full" />
-      @if (passwordConfirm.touched && formData.password_confirmation && formData.password !== formData.password_confirmation) {
-        <span class="field-error">Las contraseñas no coinciden</span>
+      @if (passwordConfirm.invalid && passwordConfirm.touched) {
+        <span class="field-error-text">La contraseña es obligatoria</span>
+      }
+      @if (formData.password_confirmation && formData.password) {
+        <span class="match-hint" [class.match-hint--ok]="pwMatch()" [class.match-hint--ko]="pwMismatch()">
+          <i class="pi" [class.pi-check]="pwMatch()" [class.pi-times]="pwMismatch()"></i>
+          @if (pwMatch()) {
+            Las contraseñas coinciden
+          } @else {
+            Las contraseñas no coinciden
+          }
+        </span>
       }
     </div>
 
@@ -104,7 +129,7 @@
       icon="pi pi-user-plus"
       class="w-full submit-btn"
       [loading]="loading()"
-      [disabled]="registerForm.invalid || formData.password !== formData.password_confirmation" />
+      [disabled]="registerForm.invalid || !passwordStrong() || formData.password !== formData.password_confirmation" />
   </form>
 
   <div class="auth-footer">

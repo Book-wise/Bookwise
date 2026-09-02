@@ -34,9 +34,56 @@
   }
 }
 
-.field-error {
+.field-error,
+.field-error-text {
   font-size: 0.75rem;
-  color: #dc2626;
+  color: #ef4444;
+}
+
+// ── Validación de contraseña: mismo patrón visual que "Cambiar contraseña" ──
+.strength-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strength-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 0.7rem;
+  }
+
+  &--met {
+    color: #16a34a;
+
+    i {
+      color: #16a34a;
+    }
+  }
+}
+
+.match-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  &--ok {
+    color: #16a34a;
+  }
+
+  &--ko {
+    color: #ef4444;
+  }
 }
 
 .w-full {
