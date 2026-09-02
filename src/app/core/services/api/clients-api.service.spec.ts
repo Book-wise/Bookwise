@@ -111,7 +111,7 @@ describe('ClientsApiService', () => {
       expect(data).toEqual(dummy);
     });
 
-    const req = httpMock.expectOne(`${baseUrl}/client-packs`);
+    const req = httpMock.expectOne((r) => r.url === `${baseUrl}/client-packs`);
     expect(req.request.method).toBe('GET');
     expect(req.request.params.get('client_id')).toBe('1');
     req.flush(dummy);
