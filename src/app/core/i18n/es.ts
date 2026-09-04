@@ -212,6 +212,18 @@ export const ES: Record<string, string> = {
   'biz.profesionales': 'Profesionales',
   'biz.rol': 'Rol',
   'biz.activo': 'Activo',
+  'biz.public_view': 'Vista pública',
+  'biz.timezone': 'Zona horaria',
+  'biz.notifications': 'Canales de notificación',
+  'biz.notifications.wa_hint': 'Recibe recordatorios y avisos por WhatsApp',
+  'biz.notifications.email': 'Correo electrónico',
+  'biz.notifications.email_hint': 'Confirmaciones y resumen por correo',
+  'biz.notifications.push': 'Notificaciones push',
+  'biz.notifications.push_hint': 'Avisos en tiempo real en el navegador',
+  'biz.view_config': 'Ver configuración completa',
+  'biz.members': 'Miembros con acceso administrativo',
+  'biz.member.owner': 'Propietario',
+  'biz.member.admin': 'Administrador',
 
   // Landing
   'landing.nav.login': 'Ingresar',

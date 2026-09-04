@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
@@ -23,7 +24,7 @@ import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.
   standalone: true,
   imports: [
     CommonModule, FormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule,
-    MessageModule, PhoneInputComponent, UserAvatarComponent,
+    MessageModule, ToggleSwitchModule, PhoneInputComponent, UserAvatarComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
@@ -49,6 +50,7 @@ export class ProfileComponent implements OnInit {
 
   // ── Identidad del usuario autenticado (avatar + nombre + rol de sesión) ─────
   readonly userName = computed(() => this.auth.user()?.name ?? this.me()?.name ?? '');
+  readonly userEmail = computed(() => this.auth.user()?.email ?? this.me()?.email ?? '');
   /** URL del avatar del usuario autenticado (fallback → iniciales en el componente). */
   readonly userAvatar = computed(() => this.auth.user()?.avatar_url ?? this.me()?.avatar_url ?? null);
   readonly avatarSaving = signal(false);
@@ -70,6 +72,26 @@ export class ProfileComponent implements OnInit {
   monogram(name?: string): string {
     return (name || 'B').trim().charAt(0).toUpperCase();
   }
+
+  // ── Datos del hero / notificaciones ─────────────────────────────────────
+  /** Zona horaria del negocio activo (derivada de la primera sucursal activa). */
+  readonly timezoneLabel = computed<string>(() => {
+    const tz = this.refStore.locations().find((l) => l.active)?.timezone;
+    return tz ?? '—';
+  });
+  readonly langLabel = computed(() =>
+    this.lang.lang() === 'es' ? 'Español' : 'English',
+  );
+  readonly memberSince = computed(() => this.me()?.business?.created_at ?? null);
+  // Notificaciones (UI local por ahora; persistencia a futuro con notification_prefs)
+  readonly notifWhatsApp = signal(true);
+  readonly notifEmail = signal(true);
+  readonly notifPush = signal(false);
+
+  /** Miembro como etiqueta de rol (para la lista de miembros). */
+  readonly memberRoleLabel = computed(() =>
+    this.auth.isAdmin() ? this.lang.t('biz.member.owner') : this.lang.t('biz.member.admin'),
+  );
 
   /** URL del logo del negocio, o null → el componente cae al monograma. */
   businessLogo(biz: Business): string | null {
@@ -126,6 +148,17 @@ export class ProfileComponent implements OnInit {
 
   editBusiness(biz: Business): void {
     this.router.navigate(['/admin/negocios', biz.id]);
+  }
+
+  /** Crea una nueva empresa (flujo de onboarding). */
+  newBusiness(): void {
+    this.router.navigate(['/onboarding']);
+  }
+
+  /** Ve la configuración completa del negocio activo. */
+  viewBusinessConfig(): void {
+    const id = this.activeBusinessId();
+    if (id) this.router.navigate(['/admin/negocios', id]);
   }
 
   // ── Teléfono editable (mismo widget del registro: bandera + código de país) ──

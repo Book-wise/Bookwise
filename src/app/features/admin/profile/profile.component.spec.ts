@@ -48,6 +48,7 @@ describe('ProfileComponent', () => {
     meLoaded: ReturnType<typeof signal<boolean>>;
     user: ReturnType<typeof signal<User | null>>;
     userRole: () => UserRole | null;
+    isAdmin: () => boolean;
     loadMe: ReturnType<typeof vi.fn>;
   };
   let api: { changePassword: ReturnType<typeof vi.fn>; updateProfile: ReturnType<typeof vi.fn> };
@@ -61,6 +62,7 @@ describe('ProfileComponent', () => {
       meLoaded: signal(true),
       user: signal(makeUser() as User | null),
       userRole: () => auth.user()?.role ?? null,
+      isAdmin: () => auth.user()?.role === 'admin',
       loadMe: vi.fn(),
     };
     api = { changePassword: vi.fn(), updateProfile: vi.fn() };
@@ -82,25 +84,28 @@ describe('ProfileComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('shows the CTA when business is null', () => {
+  it('shows the new-business action and no active detail when business is null', () => {
     auth.me.set(makeMe(null) as AuthMeData | null);
     fixture.detectChanges();
 
     const nativeEl = fixture.nativeElement as HTMLElement;
-    expect(nativeEl.querySelector('.business-cta')).toBeTruthy();
+    // Sin negocio activo → no hay detalle del negocio.
+    expect(nativeEl.querySelector('.biz-detail')).toBeNull();
+    // La card de negocios ofrece crear una nueva empresa.
+    expect(nativeEl.querySelector('.profile-card__actions')).toBeTruthy();
   });
 
-  it('renders business RUT/email read-only and never issues an update request', () => {
+  it('renders user email read-only and never issues an update request', () => {
     fixture.detectChanges();
 
     const nativeEl = fixture.nativeElement as HTMLElement;
     const inputs = Array.from(nativeEl.querySelectorAll<HTMLInputElement>('input'));
 
-    const rutInput = inputs.find((i) => i.value === '11111111-1');
-    const emailInput = inputs.find((i) => i.value === 'negocio@test.com');
+    const nameInput = inputs.find((i) => i.value === 'Admin');
+    const emailInput = inputs.find((i) => i.value === 'admin@test.com');
 
-    expect(rutInput).toBeTruthy();
-    expect(rutInput!.readOnly).toBe(true);
+    expect(nameInput).toBeTruthy();
+    expect(nameInput!.readOnly).toBe(true);
     expect(emailInput).toBeTruthy();
     expect(emailInput!.readOnly).toBe(true);
 
@@ -237,7 +242,7 @@ describe('ProfileComponent', () => {
 
     expect(component.userRoleLabel()).toBe('Administrador');
     const nativeEl = fixture.nativeElement as HTMLElement;
-    const chip = nativeEl.querySelector('.profile-header__role');
+    const chip = nativeEl.querySelector('.profile-hero__role');
     expect(chip).toBeTruthy();
     expect(chip!.textContent).toContain('Administrador');
   });

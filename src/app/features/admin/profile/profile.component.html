@@ -1,10 +1,9 @@
 <div class="profile-wrap">
-  <div class="profile-header">
-    <h1>{{ lang.t('profile.title') }}</h1>
-    <p class="profile-header__identity">
-      <span class="profile-header__avatar-wrap">
+  <div class="profile-hero">
+    <div class="profile-hero__avatar">
+      <span class="profile-hero__avatar-wrap">
         <bw-user-avatar [name]="userName() || null" [image]="userAvatar()" size="lg" />
-        <label class="profile-header__avatar-edit" [class.is-loading]="avatarSaving()">
+        <label class="profile-hero__avatar-edit" [class.is-loading]="avatarSaving()">
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -14,11 +13,22 @@
           <i class="pi pi-camera"></i>
         </label>
       </span>
-      <span class="profile-header__text">
-        <span class="profile-header__name">{{ me()?.name ?? lang.t('profile.not_available') }}</span>
-        <span class="bw-chip bw-chip--primary profile-header__role"><i class="pi pi-shield"></i>{{ userRoleLabel() || lang.t('profile.not_available') }}</span>
-      </span>
-    </p>
+    </div>
+    <div class="profile-hero__content">
+      <div class="profile-hero__identity">
+        <span class="profile-hero__name">{{ me()?.name ?? lang.t('profile.not_available') }}</span>
+        <span class="profile-hero__role">{{ userRoleLabel() }}</span>
+      </div>
+      <div class="profile-hero__meta">
+        <span><i class="pi pi-envelope"></i> {{ me()?.email }}</span>
+        <span><i class="pi pi-phone"></i> {{ me()?.phone ?? '—' }}</span>
+        <span><i class="pi pi-globe"></i> {{ timezoneLabel() }}</span>
+      </div>
+    </div>
+    <div class="profile-hero__actions">
+      <p-button label="{{ lang.t('settings.profile.edit') }}" icon="pi pi-pencil" size="small" />
+      <p-button label="{{ lang.t('biz.public_view') }}" icon="pi pi-eye" severity="secondary" [outlined]="true" size="small" />
+    </div>
   </div>
 
   @if (loading()) {
@@ -66,6 +76,14 @@
               [disabled]="phoneField.invalid || !phone() || phoneSaving()"
               (onClick)="savePhone()" />
           </div>
+        </div>
+        <div class="info-field">
+          <label>{{ lang.t('settings.appearance.lang') }}</label>
+          <input pInputText [value]="langLabel()" readonly class="w-full" />
+        </div>
+        <div class="info-field">
+          <label>{{ lang.t('biz.timezone') }}</label>
+          <input pInputText [value]="timezoneLabel()" readonly class="w-full" />
         </div>
       </div>
 
@@ -126,12 +144,47 @@
       </div>
     </p-card>
 
+    <p-card [header]="lang.t('biz.notifications')" class="profile-card">
+      <div class="notif-row">
+        <div class="notif-row__label">
+          <i class="pi pi-whatsapp notif-row__icon"></i>
+          <div>
+            <span class="notif-row__title">WhatsApp Business</span>
+            <span class="notif-row__hint">{{ lang.t('biz.notifications.wa_hint') }}</span>
+          </div>
+        </div>
+        <p-toggleswitch [(ngModel)]="notifWhatsApp" />
+      </div>
+      <div class="notif-row">
+        <div class="notif-row__label">
+          <i class="pi pi-envelope notif-row__icon"></i>
+          <div>
+            <span class="notif-row__title">{{ lang.t('biz.notifications.email') }}</span>
+            <span class="notif-row__hint">{{ lang.t('biz.notifications.email_hint') }}</span>
+          </div>
+        </div>
+        <p-toggleswitch [(ngModel)]="notifEmail" />
+      </div>
+      <div class="notif-row">
+        <div class="notif-row__label">
+          <i class="pi pi-bell notif-row__icon"></i>
+          <div>
+            <span class="notif-row__title">{{ lang.t('biz.notifications.push') }}</span>
+            <span class="notif-row__hint">{{ lang.t('biz.notifications.push_hint') }}</span>
+          </div>
+        </div>
+        <p-toggleswitch [(ngModel)]="notifPush" />
+      </div>
+    </p-card>
+
     @if (showBusiness()) {
     <p-card class="profile-card">
       <ng-template pTemplate="header">
         <div class="profile-card__header">
           <span class="profile-card__title">{{ lang.t('biz.negocios') }}</span>
-          <span class="profile-card__hint">{{ lang.t('biz.rol') }}: {{ userRoleLabel() }}</span>
+          <div class="profile-card__actions">
+            <p-button label="{{ lang.t('biz.nueva_empresa') }}" icon="pi pi-plus" size="small" severity="secondary" [text]="true" (onClick)="newBusiness()" />
+          </div>
         </div>
       </ng-template>
 
@@ -152,7 +205,10 @@
                   <span class="biz-card__badge biz-card__badge--active">{{ lang.t('biz.activo') }}</span>
                 }
               </div>
-              <span class="biz-card__meta">Plan: {{ biz.plan }}</span>
+              <span class="biz-card__meta">
+                <span class="biz-card__plan" [class.biz-card__plan--enterprise]="biz.plan === 'enterprise'">{{ biz.plan }}</span>
+                <span>{{ lang.t('biz.rol') }}: {{ userRoleLabel() }}</span>
+              </span>
             </div>
             <div class="biz-card__actions">
               @if (biz.id !== activeBusinessId() && canSwitch()) {
@@ -166,7 +222,12 @@
 
       @if (me()?.business; as biz) {
         <div class="biz-detail">
-          <div class="biz-detail__title">{{ lang.t('biz.detalle') }} — {{ biz.name }}</div>
+          <div class="biz-detail__head">
+            <span class="biz-detail__title">{{ lang.t('biz.detalle') }} — {{ biz.name }}</span>
+            <button type="button" class="biz-detail__link" (click)="viewBusinessConfig()">
+              {{ lang.t('biz.view_config') }} <i class="pi pi-arrow-right"></i>
+            </button>
+          </div>
           <div class="biz-detail__stats">
             <div class="biz-stat">
               <div class="biz-stat__value">{{ locationsCount() }}</div>
@@ -179,6 +240,18 @@
             <div class="biz-stat">
               <div class="biz-stat__value">{{ biz.plan }}</div>
               <div class="biz-stat__label">{{ lang.t('settings.business.plan') }}</div>
+            </div>
+          </div>
+
+          <div class="biz-members">
+            <div class="biz-members__title">{{ lang.t('biz.members') }}</div>
+            <div class="biz-member">
+              <bw-user-avatar [name]="userName() || null" [image]="userAvatar()" size="md" />
+              <div class="biz-member__info">
+                <span class="biz-member__name">{{ userName() }}</span>
+                <span class="biz-member__email">{{ userEmail() }}</span>
+              </div>
+              <span class="biz-member__role">{{ memberRoleLabel() }}</span>
             </div>
           </div>
         </div>
