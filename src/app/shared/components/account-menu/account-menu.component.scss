@@ -136,6 +136,93 @@
     color: var(--text-color-secondary);
   }
 
+  // Selector de negocios (multi-tenant) dentro del menú
+  &__business-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.375rem 0.5rem;
+    border-top: 1px solid var(--surface-border);
+    margin-top: 0.25rem;
+  }
+
+  &__biz-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-secondary);
+    padding: 0.125rem 0.25rem 0.25rem;
+  }
+
+  &__biz-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.4375rem 0.5rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-family);
+
+    &:hover {
+      background: var(--surface-hover);
+    }
+
+    &--active {
+      background: color-mix(in srgb, var(--bw-300) 12%, transparent);
+
+      .account-menu__biz-name {
+        color: var(--color-primary);
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__monogram {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--bw-300);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  &__biz-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.0625rem;
+    flex: 1;
+  }
+
+  &__biz-name {
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.84375rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__biz-rut {
+    font-size: 0.6875rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__biz-check {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+  }
+
   &__sep {
     height: 1px;
     background: var(--surface-border);

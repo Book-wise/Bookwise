@@ -29,15 +29,40 @@
     </div>
 
     @if (business(); as biz) {
-      <div class="account-menu__business">
-        <span class="account-menu__business-avatar">{{ businessMonogram() }}</span>
-        <div class="account-menu__business-info">
-          <span class="account-menu__business-name">{{ biz.name }}</span>
-          @if (biz.rut) {
-            <span class="account-menu__business-rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
+      @if (canSwitch() && isAdmin()) {
+        <!-- Selector de negocios (multi-tenant) en el menú -->
+        <div class="account-menu__business-selector">
+          <div class="account-menu__biz-title">{{ lang.t('biz.negocios') }}</div>
+          @for (b of businesses(); track b.id) {
+            <button
+              type="button"
+              class="account-menu__biz-item"
+              [class.account-menu__biz-item--active]="b.id === currentBusinessId()"
+              (click)="switchTo(b, accountPop)"
+            >
+              <span class="account-menu__monogram">{{ (b.name || 'B').charAt(0).toUpperCase() }}</span>
+              <div class="account-menu__biz-info">
+                <span class="account-menu__biz-name">{{ b.name }}</span>
+                <span class="account-menu__biz-rut">{{ lang.t('ui.rut') }}: {{ b.rut }}</span>
+              </div>
+              @if (b.id === currentBusinessId()) {
+                <i class="pi pi-check account-menu__biz-check"></i>
+              }
+            </button>
           }
         </div>
-      </div>
+      } @else {
+        <!-- Negocio activo (solo lectura si 1 negocio / plan no enterprise) -->
+        <div class="account-menu__business">
+          <span class="account-menu__business-avatar">{{ businessMonogram() }}</span>
+          <div class="account-menu__business-info">
+            <span class="account-menu__business-name">{{ biz.name }}</span>
+            @if (biz.rut) {
+              <span class="account-menu__business-rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
+            }
+          </div>
+        </div>
+      }
     }
 
     <span class="account-menu__sep"></span>

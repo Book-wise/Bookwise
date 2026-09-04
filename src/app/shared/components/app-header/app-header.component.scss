@@ -18,6 +18,13 @@
   @media (max-width: 768px) {
     margin: 0 0 var(--bw-space-md);
   }
+
+  // En mobile el picker de negocio se fusiona dentro del menú del avatar.
+  @media (max-width: 768px) {
+    .app-header__business {
+      display: none;
+    }
+  }
 }
 
 .app-header__left {

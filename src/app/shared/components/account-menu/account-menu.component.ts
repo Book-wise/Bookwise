@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
+import { ReferenceStore } from '@core/stores/reference.store';
+import { Business } from '@models';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 
 /** Item del menú de cuenta. `logout` marca el cierre de sesión; si no, se navega a `route`. */
@@ -36,6 +39,8 @@ interface AccountMenuItem {
 export class AccountMenuComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly refStore = inject(ReferenceStore);
+  private readonly messageService = inject(MessageService);
   protected readonly lang = inject(LanguageService);
 
   /** True cuando la sidebar está colapsada → se muestra el chip solo con avatar. */
@@ -49,11 +54,16 @@ export class AccountMenuComponent {
     return '';
   });
 
-  /** Negocio del usuario (para admin): nombre + RUT, visible en el popover. */
+  /** Negocio del usuario (activo), lista de negocios y selector (multi-tenant). */
   readonly business = computed(() => this.auth.me()?.business ?? null);
+  readonly businesses = computed(() => this.auth.me()?.businesses ?? []);
   readonly businessMonogram = computed(() =>
     (this.business()?.name ?? 'B').trim().charAt(0).toUpperCase(),
   );
+  readonly currentBusinessId = computed(() => this.business()?.id ?? null);
+  /** Solo mostrar el selector si hay más de un negocio (gate por plan/tenant). */
+  readonly canSwitch = computed(() => this.businesses().length > 1);
+  readonly isAdmin = computed(() => this.auth.isAdmin());
 
   /** Ítems según el rol de sesión (capas separadas de los roles de negocio). */
   readonly items = computed<AccountMenuItem[]>(() => {
@@ -82,5 +92,22 @@ export class AccountMenuComponent {
     } else if (item.route) {
       this.router.navigate([item.route]);
     }
+  }
+
+  /**
+   * Cambia de negocio (multi-tenant, gate por plan: solo si canSwitch) y recarga
+   * los datos del nuevo tenant. Se usa desde el selector del menú (mobile).
+   */
+  switchTo(biz: Business, popover: Popover): void {
+    if (biz.id === this.currentBusinessId()) return;
+    this.auth.switchTenant(biz.id).subscribe({
+      next: () => {
+        this.refStore.loadLocations();
+        this.refStore.loadProviders();
+        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: this.lang.t('ui.error'), detail: this.lang.t('auth.switch_tenant_error'), key: 'global', life: 4000 }),
+    });
+    popover.hide();
   }
 }
