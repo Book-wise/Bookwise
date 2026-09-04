@@ -4,47 +4,143 @@
     <a class="landing-nav__brand" routerLink="/">
       <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="landing-nav__logo" />
     </a>
-    <div class="landing-nav__right">
-      <a class="landing-nav__link" routerLink="/login">{{ lang.t('landing.nav.login') }}</a>
-      <a class="landing-nav__cta" routerLink="/register">{{ lang.t('landing.nav.register') }}</a>
+
+    <nav class="landing-nav__links">
+      <a class="landing-nav__link" href="#features">{{ lang.t('landing.nav.features') }}</a>
+      <a class="landing-nav__link" href="#features">{{ lang.t('landing.nav.how') }}</a>
+      <a class="landing-nav__link" href="#pricing">{{ lang.t('landing.nav.pricing') }}</a>
+    </nav>
+
+    <div class="landing-nav__actions">
+      <a class="landing-nav__login" routerLink="/login">{{ lang.t('landing.nav.login') }}</a>
+      <a class="landing-nav__cta" routerLink="/register">{{ lang.t('landing.nav.cta') }}</a>
     </div>
   </header>
 
   <!-- Hero -->
   <section class="landing-hero">
     <div class="landing-hero__inner">
-      <h1 class="landing-hero__title">{{ lang.t('landing.hero.title') }}</h1>
-      <p class="landing-hero__sub">{{ lang.t('landing.hero.subtitle') }}</p>
-      <div class="landing-hero__ctas">
-        <a class="btn btn--primary" routerLink="/register">
-          <i class="pi pi-check"></i> {{ lang.t('landing.hero.cta') }}
-        </a>
-        <a class="btn btn--ghost" routerLink="/login">{{ lang.t('landing.nav.login') }}</a>
+      <div class="landing-hero__content">
+        <span class="landing-hero__badge">
+          <span class="landing-hero__badge-dot"></span>
+          {{ lang.t('landing.hero.badge') }}
+        </span>
+
+        <h1 class="landing-hero__title">
+          {{ lang.t('landing.hero.title') }}<span class="landing-hero__accent">{{ lang.t('landing.hero.title_accent') }}</span>
+        </h1>
+
+        <p class="landing-hero__subtitle">{{ lang.t('landing.hero.subtitle') }}</p>
+
+        <div class="landing-hero__ctas">
+          <a class="btn btn--primary" routerLink="/register">
+            {{ lang.t('landing.hero.cta') }} <i class="pi pi-arrow-right"></i>
+          </a>
+          <a class="btn btn--ghost" href="#demo">
+            <i class="pi pi-play"></i> {{ lang.t('landing.hero.demo') }}
+          </a>
+        </div>
+
+        <div class="landing-hero__trust">
+          <div class="landing-hero__avatars">
+            <span class="landing-hero__avatar" style="background:#046af4">JM</span>
+            <span class="landing-hero__avatar" style="background:#0b3d95">CR</span>
+            <span class="landing-hero__avatar" style="background:#60a7f0">LP</span>
+          </div>
+          <p class="landing-hero__trust-text">{{ lang.t('landing.hero.trust') }}</p>
+        </div>
+      </div>
+
+      <div class="landing-hero__visual">
+        <div class="browser" id="demo">
+          <div class="browser__bar">
+            <span class="browser__dot browser__dot--red"></span>
+            <span class="browser__dot browser__dot--yellow"></span>
+            <span class="browser__dot browser__dot--green"></span>
+            <span class="browser__url"><i class="pi pi-lock"></i> {{ lang.t('landing.mockup.url') }}</span>
+          </div>
+
+          <div class="browser__body">
+            <div class="mock-calendar">
+              <div class="mock-calendar__times">
+                <span>9:00</span>
+                <span>10:00</span>
+                <span>11:00</span>
+                <span>12:00</span>
+                <span>13:00</span>
+              </div>
+              <div class="mock-calendar__grid">
+                <span class="mock-calendar__row"></span>
+                <span class="mock-calendar__row"></span>
+                <span class="mock-calendar__row"></span>
+                <span class="mock-calendar__row"></span>
+                <span class="mock-calendar__row"></span>
+                <div class="mock-booking mock-booking--green">
+                  <strong>María Requelme</strong>
+                  <span>10:00 - 11:30</span>
+                </div>
+                <div class="mock-booking mock-booking--indigo">
+                  <strong>Carla Coler</strong>
+                  <span>11:00 - 12:00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ai-bubble">
+              <div class="ai-bubble__icon"><i class="pi pi-comments"></i></div>
+              <div class="ai-bubble__text">
+                <strong>{{ lang.t('landing.mockup.ai') }}</strong>
+                <span>{{ lang.t('landing.mockup.ai_msg') }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Features -->
-  <section class="landing-section">
-    <h2 class="landing-section__title reveal">{{ lang.t('landing.features.title') }}</h2>
+  <section class="landing-section" id="features">
+    <h2 class="landing-section__title">{{ lang.t('landing.features.title') }}</h2>
+    <p class="landing-section__sub">{{ lang.t('landing.features.subtitle') }}</p>
+
     <div class="landing-features">
-      @for (f of [1,2,3,4]; track f) {
-        <div class="landing-feature bw-card reveal">
-          <i class="pi {{ ['pi-calendar','pi-users','pi-chart-line','pi-bell'][f-1] }} landing-feature__icon"></i>
-          <h3 class="landing-feature__title">{{ lang.t('landing.features.' + f + '.title') }}</h3>
-          <p class="landing-feature__desc">{{ lang.t('landing.features.' + f + '.desc') }}</p>
-        </div>
+      @for (feature of features; track feature.title) {
+        <article class="landing-feature">
+          <div class="landing-feature__icon" [style.--feature-color]="feature.color">
+            <i class="pi {{ feature.icon }}"></i>
+          </div>
+          <h3 class="landing-feature__title">{{ lang.t(feature.title) }}</h3>
+          <p class="landing-feature__desc">{{ lang.t(feature.desc) }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- Business types -->
+  <section class="landing-business">
+    <h2 class="landing-business__title">{{ lang.t('landing.business.title') }}</h2>
+    <p class="landing-business__sub">{{ lang.t('landing.business.subtitle') }}</p>
+
+    <div class="landing-business__grid">
+      @for (biz of businessTypes; track biz) {
+        <a class="landing-business__card" routerLink="/register">
+          <span class="landing-business__card-bg" aria-hidden="true"></span>
+          <span class="landing-business__card-label">{{ lang.t('landing.business.' + biz + '.title') }}</span>
+          <i class="pi pi-arrow-right landing-business__card-arrow"></i>
+        </a>
       }
     </div>
   </section>
 
   <!-- Pricing -->
-  <section class="landing-section landing-section--pricing">
-    <h2 class="landing-section__title reveal">{{ lang.t('landing.pricing.title') }}</h2>
-    <p class="landing-section__sub reveal">{{ lang.t('landing.pricing.subtitle') }}</p>
+  <section class="landing-section landing-section--pricing" id="pricing">
+    <h2 class="landing-section__title">{{ lang.t('landing.pricing.title') }}</h2>
+    <p class="landing-section__sub">{{ lang.t('landing.pricing.subtitle') }}</p>
+
     <div class="landing-pricing">
       @for (plan of plans; track plan.key) {
-        <div class="landing-plan bw-card reveal" [class.landing-plan--popular]="plan.popular">
+        <div class="landing-plan bw-card" [class.landing-plan--popular]="plan.popular">
           @if (plan.popular) {
             <span class="landing-plan__tag">{{ lang.t('landing.pricing.popular') }}</span>
           }
@@ -66,7 +162,14 @@
 
   <!-- Footer -->
   <footer class="landing-footer">
-    <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="landing-footer__logo" />
-    <p class="landing-footer__copy">© 2026 Bookwise</p>
+    <a class="landing-footer__brand" routerLink="/">
+      <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="landing-footer__logo" />
+    </a>
+    <p class="landing-footer__copy">{{ lang.t('landing.footer.copy') }}</p>
+    <div class="landing-footer__social">
+      <a class="landing-footer__social-link" href="#" aria-label="Twitter"><i class="pi pi-twitter"></i></a>
+      <a class="landing-footer__social-link" href="#" aria-label="Instagram"><i class="pi pi-instagram"></i></a>
+      <a class="landing-footer__social-link" href="#" aria-label="LinkedIn"><i class="pi pi-linkedin"></i></a>
+    </div>
   </footer>
 </div>

@@ -1,19 +1,40 @@
-import { AfterViewInit, Component, ElementRef, inject, ViewChildren, QueryList } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { LanguageService } from '@services/language.service';
 
 @Component({
   selector: 'bw-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, ButtonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss'],
 })
-export class LandingComponent implements AfterViewInit {
+export class LandingComponent {
   readonly lang = inject(LanguageService);
-  @ViewChildren('.reveal') revealEls!: QueryList<ElementRef>;
+
+  readonly features = [
+    {
+      title: 'landing.features.1.title',
+      desc: 'landing.features.1.desc',
+      icon: 'pi-calendar',
+      color: 'var(--bw-300)',
+    },
+    {
+      title: 'landing.features.2.title',
+      desc: 'landing.features.2.desc',
+      icon: 'pi-whatsapp',
+      color: 'var(--bw-success)',
+    },
+    {
+      title: 'landing.features.3.title',
+      desc: 'landing.features.3.desc',
+      icon: 'pi-comments',
+      color: '#7c3aed',
+    },
+  ];
+
+  readonly businessTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
   readonly plans = [
     {
@@ -50,28 +71,8 @@ export class LandingComponent implements AfterViewInit {
         '2+ empresas (multi-tenant)',
         'Multi-sucursal',
         'API + panel consolidado',
-        'Roles admin_general / admin_local',
+        'Soporte prioritario',
       ],
     },
   ];
-
-  ngAfterViewInit(): void {
-    const els = this.revealEls.toArray().map((e) => e.nativeElement as HTMLElement);
-    if (!('IntersectionObserver' in window)) {
-      els.forEach((el) => el.classList.add('is-visible'));
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            en.target.classList.add('is-visible');
-            io.unobserve(en.target);
-          }
-        });
-      },
-      { threshold: 0.12 },
-    );
-    els.forEach((el) => io.observe(el));
-  }
 }
