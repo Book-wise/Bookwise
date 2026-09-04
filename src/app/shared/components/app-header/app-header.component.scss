@@ -9,8 +9,8 @@
   position: sticky;
   top: 0;
   z-index: var(--z-topbar);
-  // Full-width (ignora el padding del main) y sticky al scrollear.
-  margin: -1.25rem -1.25rem var(--bw-space-lg);
+  // Full-width y SIN margen arriba: el .main-content ya no tiene padding-top.
+  margin: 0 -1.25rem var(--bw-space-lg);
 
   @media (max-width: 991px) {
     margin: 0 -1rem var(--bw-space-md);

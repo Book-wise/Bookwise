@@ -352,7 +352,8 @@
   min-width: 0;
   overflow-y: auto;
   height: 100%;
-  padding: 1.25rem;
+  // Sin padding-top en desktop: el AppHeader (sticky) va flush al tope.
+  padding: 0 1.25rem 1.25rem;
   background: var(--surface-ground);
   transition: background var(--bw-transition-base);
 
