@@ -213,6 +213,26 @@ export const ES: Record<string, string> = {
   'biz.rol': 'Rol',
   'biz.activo': 'Activo',
 
+  // Landing
+  'landing.nav.login': 'Ingresar',
+  'landing.nav.register': 'Crear cuenta',
+  'landing.hero.title': 'Gestioná tu clínica o centro de kinesiología',
+  'landing.hero.subtitle': 'Agenda, profesionales, sucursales y pagos en un solo lugar. Escalá a múltiples negocios.',
+  'landing.hero.cta': 'Crear mi negocio',
+  'landing.features.title': 'Todo lo que tu centro necesita',
+  'landing.features.1.title': 'Agenda inteligente',
+  'landing.features.1.desc': 'Citas, disponibilidad y recordatorios automáticos.',
+  'landing.features.2.title': 'Profesionales y roles',
+  'landing.features.2.desc': 'Gestioná equipos con roles claros.',
+  'landing.features.3.title': 'Reportes por sucursal',
+  'landing.features.3.desc': 'Dashboard consolidado multi-sucursal.',
+  'landing.features.4.title': 'Multi-empresa',
+  'landing.features.4.desc': 'Operá varios negocios desde una cuenta (plan Enterprise).',
+  'landing.pricing.title': 'Planes y precios',
+  'landing.pricing.subtitle': 'Elegí el plan que crece con tu centro. Precios mensuales en CLP.',
+  'landing.pricing.popular': 'Más popular',
+  'landing.pricing.choose': 'Elegir',
+
   // Dashboard — citas por día
   'dashboard.chart.daily': 'Citas por Día',
   'dashboard.chart.sum': 'Suma',

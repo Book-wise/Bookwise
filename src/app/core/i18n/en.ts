@@ -213,6 +213,26 @@ export const EN: Record<string, string> = {
   'biz.rol': 'Role',
   'biz.activo': 'Active',
 
+  // Landing
+  'landing.nav.login': 'Log in',
+  'landing.nav.register': 'Sign up',
+  'landing.hero.title': 'Manage your kinesiology clinic or center',
+  'landing.hero.subtitle': 'Scheduling, professionals, locations and payments in one place. Scale to multiple businesses.',
+  'landing.hero.cta': 'Create my business',
+  'landing.features.title': 'Everything your center needs',
+  'landing.features.1.title': 'Smart scheduling',
+  'landing.features.1.desc': 'Appointments, availability and automatic reminders.',
+  'landing.features.2.title': 'Professionals and roles',
+  'landing.features.2.desc': 'Manage teams with clear roles.',
+  'landing.features.3.title': 'Reports per location',
+  'landing.features.3.desc': 'Consolidated multi-location dashboard.',
+  'landing.features.4.title': 'Multi-business',
+  'landing.features.4.desc': 'Run multiple businesses from one account (Enterprise plan).',
+  'landing.pricing.title': 'Plans and pricing',
+  'landing.pricing.subtitle': 'Choose the plan that grows with your center. Monthly prices in CLP.',
+  'landing.pricing.popular': 'Most popular',
+  'landing.pricing.choose': 'Choose',
+
   // Dashboard — bookings per day
   'dashboard.chart.daily': 'Bookings per Day',
   'dashboard.chart.sum': 'Total',

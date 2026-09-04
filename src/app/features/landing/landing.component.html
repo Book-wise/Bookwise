@@ -1,0 +1,72 @@
+<div class="landing">
+  <!-- Nav -->
+  <header class="landing-nav">
+    <a class="landing-nav__brand" routerLink="/">
+      <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="landing-nav__logo" />
+    </a>
+    <div class="landing-nav__right">
+      <a class="landing-nav__link" routerLink="/login">{{ lang.t('landing.nav.login') }}</a>
+      <a class="landing-nav__cta" routerLink="/register">{{ lang.t('landing.nav.register') }}</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="landing-hero">
+    <div class="landing-hero__inner">
+      <h1 class="landing-hero__title">{{ lang.t('landing.hero.title') }}</h1>
+      <p class="landing-hero__sub">{{ lang.t('landing.hero.subtitle') }}</p>
+      <div class="landing-hero__ctas">
+        <a class="btn btn--primary" routerLink="/register">
+          <i class="pi pi-check"></i> {{ lang.t('landing.hero.cta') }}
+        </a>
+        <a class="btn btn--ghost" routerLink="/login">{{ lang.t('landing.nav.login') }}</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="landing-section">
+    <h2 class="landing-section__title reveal">{{ lang.t('landing.features.title') }}</h2>
+    <div class="landing-features">
+      @for (f of [1,2,3,4]; track f) {
+        <div class="landing-feature bw-card reveal">
+          <i class="pi {{ ['pi-calendar','pi-users','pi-chart-line','pi-bell'][f-1] }} landing-feature__icon"></i>
+          <h3 class="landing-feature__title">{{ lang.t('landing.features.' + f + '.title') }}</h3>
+          <p class="landing-feature__desc">{{ lang.t('landing.features.' + f + '.desc') }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="landing-section landing-section--pricing">
+    <h2 class="landing-section__title reveal">{{ lang.t('landing.pricing.title') }}</h2>
+    <p class="landing-section__sub reveal">{{ lang.t('landing.pricing.subtitle') }}</p>
+    <div class="landing-pricing">
+      @for (plan of plans; track plan.key) {
+        <div class="landing-plan bw-card reveal" [class.landing-plan--popular]="plan.popular">
+          @if (plan.popular) {
+            <span class="landing-plan__tag">{{ lang.t('landing.pricing.popular') }}</span>
+          }
+          <div class="landing-plan__name">{{ plan.name }}</div>
+          <div class="landing-plan__price">
+            <span class="landing-plan__value">{{ plan.price }}</span>
+            <span class="landing-plan__note">{{ plan.priceNote }}</span>
+          </div>
+          <ul class="landing-plan__features">
+            @for (feat of plan.features; track feat) {
+              <li><i class="pi pi-check"></i> {{ feat }}</li>
+            }
+          </ul>
+          <a class="btn btn--outline" routerLink="/register">{{ lang.t('landing.pricing.choose') }}</a>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="landing-footer__logo" />
+    <p class="landing-footer__copy">© 2026 Bookwise</p>
+  </footer>
+</div>
