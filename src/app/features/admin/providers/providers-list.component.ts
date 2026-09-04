@@ -20,24 +20,14 @@ import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location, Provider, Role } from '@models';
 import { roleMeta } from '../roles/role-meta';
+import { locationColor } from '@shared/utils/location-palette.util';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
 
 // ── Color palette for location grouping ────────────────────────────────
-const LOCATION_PALETTE = [
-  '#3b82f6', // blue
-  '#f97316', // orange
-  '#22c55e', // green
-  '#a855f7', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#eab308', // yellow
-  '#84cc16', // lime
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#14b8a6', // teal
-  '#f43f5e', // rose
-];
+// Los colores de sucursal se resuelven en shared/utils/location-palette.util
+// (deterministas por id), para que la lista de profesionales y el dashboard
+// usen SIEMPRE el mismo color para la misma sucursal.
 
 /** Shape de un booking afectado por la desactivación (contrato 409 obs #217). */
 interface ConflictBooking {
@@ -126,12 +116,12 @@ export class ProvidersListComponent implements OnInit {
     this.providers().some((p) => !p.location),
   );
 
-  /** Location ID → color, sorted by name for stable assignment */
+  /** Location ID → color. Determinista por id (compartido con el dashboard). */
   readonly locationColorMap = computed(() => {
     const map = new Map<number | undefined, string>();
     const locs = this.filterLocations();
-    locs.forEach((loc, i) => {
-      map.set(loc.id, LOCATION_PALETTE[i % LOCATION_PALETTE.length]);
+    locs.forEach((loc) => {
+      map.set(loc.id, locationColor(loc.id));
     });
     return map;
   });
@@ -143,7 +133,7 @@ export class ProvidersListComponent implements OnInit {
     let result = this.providers();
     const query = this.searchQuery().toLowerCase().trim();
     const locIds = this.selectedLocationIds();
-    const roleNames = this.selectedRoleNames();
+    const roleNames = this.selectedRoleNames() ?? [];
 
     // Location filter
     if (locIds.size > 0) {
@@ -168,7 +158,6 @@ export class ProvidersListComponent implements OnInit {
     if (roleNames.length > 0) {
       result = result.filter((p) => p.roles?.some((r) => roleNames.includes(r.name)));
     }
-
     return result;
   });
 
@@ -311,5 +300,14 @@ export class ProvidersListComponent implements OnInit {
       else next.add(id);
       return next;
     });
+  }
+
+  /**
+   * Handler del multiselect de roles. PrimeNG emite `null` al usar su botón de
+   * limpiar (clear), lo que rompería el computed `filteredProviders` que lee
+   * `roleNames.length` — coercer a array para que el filtro quede vacío.
+   */
+  onRoleFilterChange(value: string[] | null): void {
+    this.selectedRoleNames.set(Array.isArray(value) ? value : []);
   }
 }

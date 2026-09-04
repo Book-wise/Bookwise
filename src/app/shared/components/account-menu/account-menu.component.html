@@ -1,0 +1,59 @@
+<div
+  class="account-chip"
+  [class.account-chip--collapsed]="collapsed()"
+  (click)="accountPop.toggle($event)"
+  [attr.aria-label]="lang.t('ui.account_menu')"
+  [attr.role]="'button'"
+  [attr.tabindex]="'0'"
+  (keydown.enter)="accountPop.toggle($event)"
+  (keydown.space)="accountPop.toggle($event)"
+>
+  <bw-user-avatar [name]="userName() || null" size="md" />
+  @if (!collapsed()) {
+    <div class="account-chip__info">
+      <span class="account-chip__name">{{ userName() }}</span>
+      <span class="account-chip__role">{{ userRoleLabel() }}</span>
+    </div>
+    <i class="pi pi-chevron-down account-chip__chevron"></i>
+  }
+</div>
+
+<p-popover #accountPop class="account-menu-popover" [dismissable]="true">
+  <div class="account-menu">
+    <div class="account-menu__header">
+      <bw-user-avatar [name]="userName() || null" size="md" />
+      <div class="account-menu__identity">
+        <span class="account-menu__name">{{ userName() }}</span>
+        <span class="account-menu__role">{{ userRoleLabel() }}</span>
+      </div>
+    </div>
+
+    @if (business(); as biz) {
+      <div class="account-menu__business">
+        <span class="account-menu__business-avatar">{{ businessMonogram() }}</span>
+        <div class="account-menu__business-info">
+          <span class="account-menu__business-name">{{ biz.name }}</span>
+          @if (biz.rut) {
+            <span class="account-menu__business-rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <span class="account-menu__sep"></span>
+
+    <div class="account-menu__items">
+      @for (item of items(); track item.label) {
+        <button
+          pButton
+          class="account-menu__item"
+          [class.account-menu__item--logout]="item.logout"
+          (click)="onItemClick(item, accountPop)"
+        >
+          <i class="pi" [ngClass]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+</p-popover>

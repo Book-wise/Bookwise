@@ -43,6 +43,9 @@ export class CalendarNavigationService {
    * matching the dashboard's active range instead of the default week. Callers
    * that only pre-select a location/provider (e.g. providers list) pass no
    * context and keep the default week behaviour.
+   *
+   * `route` permite al widget de navegación apuntar a la agenda del admin
+   * (`/admin/calendar`, por defecto) o a la del profesional (`/provider`).
    */
   navigateToCalendar(
     locationId: number | null,
@@ -50,6 +53,7 @@ export class CalendarNavigationService {
     statusIds: number[],
     router: Router,
     context?: CalendarViewContext,
+    route: string[] = ['/admin', 'calendar'],
   ): Promise<void> {
     this.pendingLocationId.set(locationId);
     this.pendingProviderId.set(providerId);
@@ -57,7 +61,10 @@ export class CalendarNavigationService {
     this.pendingView.set(context?.view ?? null);
     this.pendingGotoDate.set(context?.gotoDate ?? null);
     this.pendingRangeEnd.set(context?.rangeEnd ?? null);
-    return router.navigate(['/admin', 'calendar']).then(
+    // `?date=` en la URL hace el salto determinista (el calendario lo lee directo,
+    // y además fuerza re-navegación si ya estás en la misma ruta).
+    const queryParams = context?.gotoDate ? { date: context.gotoDate } : undefined;
+    return router.navigate(route, { queryParams }).then(
       () => undefined,
       () => {
         // Navigation failed (lazy chunk / guard rejection): never leave stale

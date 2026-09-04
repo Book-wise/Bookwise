@@ -115,38 +115,58 @@
       </div>
     </p-card>
 
-    <p-card [header]="lang.t('profile.section.business')" class="profile-card">
-      @if (me()?.business) {
-        <div class="info-grid">
-          <div class="info-field">
-            <label>{{ lang.t('profile.business.name') }}</label>
-            <input pInputText [value]="me()?.business?.name" readonly class="w-full" />
-          </div>
-          <div class="info-field">
-            <label>{{ lang.t('profile.business.rut') }}</label>
-            <input pInputText [value]="me()?.business?.rut" readonly class="w-full" />
-          </div>
-          <div class="info-field">
-            <label>{{ lang.t('profile.business.email') }}</label>
-            <input pInputText [value]="me()?.business?.email" readonly class="w-full" />
-          </div>
-          <div class="info-field">
-            <label>{{ lang.t('profile.business.address') }}</label>
-            <input pInputText [value]="me()?.business?.address" readonly class="w-full" />
-          </div>
-          <div class="info-field">
-            <label>{{ lang.t('profile.business.phone') }}</label>
-            <input pInputText [value]="me()?.business?.phone ?? ''" readonly class="w-full" />
-          </div>
+    @if (showBusiness()) {
+    <p-card class="profile-card">
+      <ng-template pTemplate="header">
+        <div class="profile-card__header">
+          <span class="profile-card__title">{{ lang.t('biz.negocios') }}</span>
+          <span class="profile-card__hint">{{ lang.t('biz.rol') }}: {{ userRoleLabel() }}</span>
         </div>
-        <p-message severity="warn" class="w-full warn" [text]="lang.t('profile.business.warning')" />
-      } @else {
-        <div class="business-cta">
-          <i class="pi pi-building"></i>
-          <p>{{ lang.t('profile.business.cta_hint') }}</p>
-          <p-button [label]="lang.t('profile.business.cta')" icon="pi pi-arrow-right" [routerLink]="'/onboarding'" />
+      </ng-template>
+
+      <div class="biz-list">
+        @for (biz of businesses(); track biz.id) {
+          <div class="biz-card" [class.biz-card--active]="biz.id === activeBusinessId()">
+            <span class="biz-card__avatar" [style.background]="biz.id === activeBusinessId() ? 'var(--bw-300)' : 'var(--surface-300, #cbd5e1)'">{{ monogram(biz.name) }}</span>
+            <div class="biz-card__info">
+              <div class="biz-card__head">
+                <span class="biz-card__name">{{ biz.name }}</span>
+                @if (biz.id === activeBusinessId()) {
+                  <span class="biz-card__badge biz-card__badge--active">{{ lang.t('biz.activo') }}</span>
+                }
+              </div>
+              <span class="biz-card__meta">Plan: {{ biz.plan }}</span>
+            </div>
+            <div class="biz-card__actions">
+              @if (biz.id !== activeBusinessId() && canSwitch()) {
+                <p-button label="{{ lang.t('biz.cambiar_a') }}" size="small" severity="secondary" [outlined]="true" (onClick)="switchTo(biz)" />
+              }
+              <p-button label="{{ lang.t('biz.administrar') }}" icon="pi pi-building" size="small" severity="secondary" [text]="true" (onClick)="editBusiness(biz)" />
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (me()?.business; as biz) {
+        <div class="biz-detail">
+          <div class="biz-detail__title">{{ lang.t('biz.detalle') }} — {{ biz.name }}</div>
+          <div class="biz-detail__stats">
+            <div class="biz-stat">
+              <div class="biz-stat__value">{{ locationsCount() }}</div>
+              <div class="biz-stat__label">{{ lang.t('biz.sucursales') }}</div>
+            </div>
+            <div class="biz-stat">
+              <div class="biz-stat__value">{{ providersCount() }}</div>
+              <div class="biz-stat__label">{{ lang.t('biz.profesionales') }}</div>
+            </div>
+            <div class="biz-stat">
+              <div class="biz-stat__value">{{ biz.plan }}</div>
+              <div class="biz-stat__label">{{ lang.t('settings.business.plan') }}</div>
+            </div>
+          </div>
         </div>
       }
     </p-card>
+    }
   </div>
 </div>

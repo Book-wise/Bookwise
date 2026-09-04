@@ -1,63 +1,540 @@
+// ── Contenedor ───────────────────────────────────────────────────────────────
+
 .availability-container {
-  padding: 1rem;
-  max-width: 900px;
+  padding: 1.25rem;
+  max-width: 1080px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bw-space-lg);
 }
 
-h2 { margin-bottom: 0.5rem; }
-.subtitle { color: #666; margin-bottom: 1.5rem; }
+.availability-head {
+  h2 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: var(--bw-weight-semibold);
+  }
+}
 
-.add-slot { margin-top: 1rem; }
+.availability-subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--text-color-secondary);
+  font-size: 0.9375rem;
+}
 
-.mt-3 { margin-top: 1rem; }
+// Icono de ayuda con tooltip (mismo patrón de la "guía" del admin / dashboard).
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0.1rem;
+  cursor: pointer;
+  color: var(--text-color-secondary);
+  line-height: 1;
+  border-radius: var(--bw-radius-sm, 4px);
+  font-size: 0.875rem;
 
-.preview-grid {
+  &:hover,
+  &:focus-visible {
+    color: var(--bw-300, #046af4);
+  }
+}
+
+// ── Tarjeta editor ───────────────────────────────────────────────────────────
+
+// Estilo empresarial de Bookwise: borde, radio y sombra consistentes con .bw-card.
+.avail-card,
+.preview-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.avail-card__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.avail-card__title {
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+}
+
+.avail-card__hint {
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+.avail-table-scroll {
+  overflow-x: auto;
+}
+
+.add-slot {
+  margin-top: 1rem;
+}
+
+// ── Vista previa header + toggle ─────────────────────────────────────────────
+
+.preview-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.preview-card__title {
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+}
+
+.view-toggle {
+  display: inline-flex;
+  background: var(--surface-100, var(--bw-surface-muted));
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-toggle__btn {
+  border: none;
+  background: transparent;
+  color: var(--text-color-secondary);
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 0.875rem;
+  white-space: nowrap;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+
+  &--active {
+    background: var(--surface-card, #ffffff);
+    color: var(--color-primary);
+    box-shadow: var(--bw-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  }
+}
+
+// ── Semana estándar: grilla de 7 días ────────────────────────────────────────
+
+.preview-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.5rem;
 }
 
 .preview-day {
-  text-align: center;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.day-name {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #333;
-}
-
-.day-slots {
+  background: var(--surface-50, #fafafa);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  padding: 0.625rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  min-width: 0;
+  position: relative;
+
+  &--today {
+    border-color: var(--bw-300);
+    box-shadow: inset 0 0 0 1px var(--bw-300);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0.25rem;
+      right: 0.375rem;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--bw-300);
+    }
+  }
 }
+
+.preview-day__name {
+  font-weight: var(--bw-weight-semibold);
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.preview-day__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+// ── Chips de horario ─────────────────────────────────────────────────────────
 
 .slot-preview {
-  background: #22c55e;
-  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  background: var(--bw-success);
+  color: #ffffff;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
 
-.slot-preview.inactive {
-  background: #ccc;
+  &--inactive {
+    background: var(--surface-300, #d1d5db);
+    color: var(--text-color-secondary);
+  }
+
+  &__time {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__tag {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+
+  &--month {
+    font-size: 0.75rem;
+    padding: 0.1875rem 0.375rem;
+  }
+
+  // Bloqueo de horario: mismo rayado diagonal del calendario (.fc-blocked-slot).
+  &--blocked {
+    background: repeating-linear-gradient(-45deg, #9ca3af 0px, #9ca3af 2px, #ffffff 2px, #ffffff 8px);
+    color: #374151;
+    border: 1px solid #6b7280;
+  }
+
+  // Reserva ocupada (mismo azul de la marca).
+  &--booked {
+    background: var(--bw-300, #046af4);
+    color: #fff;
+  }
+
+  &__icon {
+    font-size: 0.7rem;
+    color: inherit;
+  }
 }
 
 .no-slots {
-  color: #999;
-  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  font-size: 0.8125rem;
   font-style: italic;
-}
-
-.actions {
-  margin-top: 1.5rem;
   text-align: center;
 }
+
+// ── Mes actual ───────────────────────────────────────────────────────────────
+
+.preview-month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bw-space-sm);
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bw-space-sm);
+  margin-bottom: var(--bw-space-sm);
+}
+
+.month-nav__btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: background var(--bw-transition-base);
+
+  &:hover {
+    background: var(--surface-100);
+  }
+}
+
+.month-nav__label {
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+  font-size: 0.9375rem;
+  text-transform: capitalize;
+  flex: 0 0 auto;
+  margin-right: var(--bw-space-xs);
+}
+
+.month-nav__today {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--color-primary);
+  font-family: var(--font-family);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color var(--bw-transition-base), background var(--bw-transition-base);
+
+  &:hover {
+    background: var(--surface-100);
+  }
+
+  // Circulito que acompaña a "Hoy": hueco por defecto, azul cuando está activo.
+  .month-nav__today-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--bw-300);
+    background: transparent;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  // Activo (en la semana/mes actual): borde azul + circulito lleno azul.
+  &--active {
+    border-color: var(--bw-300);
+
+    .month-nav__today-dot {
+      background: var(--bw-300);
+    }
+
+    &:hover {
+      background: var(--surface-100);
+    }
+  }
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.375rem;
+}
+
+.month-grid__header {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.25rem 0;
+}
+
+.month-cell {
+  background: var(--surface-50, #fafafa);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+  min-height: 3.5rem;
+  position: relative;
+
+  &--today {
+    border-color: var(--bw-300);
+    box-shadow: inset 0 0 0 1px var(--bw-300);
+  }
+
+  &--empty {
+    background: transparent;
+    border: 1px solid transparent;
+  }
+
+  &__dot {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.375rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bw-300);
+  }
+
+  &__top {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+  }
+
+  &__day {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+    font-size: 0.875rem;
+  }
+
+  &__dow {
+    font-size: 0.6875rem;
+    color: var(--text-color-secondary);
+    text-transform: uppercase;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__loading {
+    color: var(--text-color-secondary);
+    font-size: 0.8125rem;
+  }
+  &__blocked {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-button-danger-background, #dc2626);
+
+    i {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+.preview-month__legend,
+.preview-legend {
+  margin: var(--bw-space-md) 0 0;
+  padding-top: var(--bw-space-sm);
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bw-space-md);
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.3125rem;
+  vertical-align: middle;
+
+  &--available {
+    background: var(--bw-success);
+  }
+  &--booked {
+    background: var(--bw-300);
+  }
+  &--blocked {
+    width: 28px;
+    height: 12px;
+    min-width: 28px;
+    border-radius: 3px;
+    background: repeating-linear-gradient(-45deg, #9ca3af 0px, #9ca3af 2px, #ffffff 2px, #ffffff 8px);
+  }
+  &--today {
+    background: var(--bw-300);
+  }
+}
+
+// Toolbar del editor (hint + info) y de la vista previa (toggle + info).
+.editor-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.editor-tools__hint {
+  color: var(--text-color-secondary);
+  font-size: 0.8125rem;
+}
+
+// Controles superiores: toggle Semanas/Meses + barra de rango en la misma línea.
+.preview-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bw-space-sm);
+  margin-bottom: var(--bw-space-md);
+}
+
+.preview-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: var(--bw-space-md);
+}
+
+// Sección de rango: espacio propio con controles + resultados.
+.range-section {
+  margin-top: var(--bw-space-lg);
+  padding-top: var(--bw-space-md);
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bw-space-sm);
+}
+
+.range-section__title {
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+  font-size: 0.9375rem;
+}
+
+.range-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-family: var(--font-family);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-100);
+    color: var(--p-button-danger-background, #dc2626);
+    border-color: var(--p-button-danger-background, #dc2626);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Acciones ─────────────────────────────────────────────────────────────────
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+// ── Dialog agregar ───────────────────────────────────────────────────────────
 
 .add-dialog {
   display: flex;
@@ -69,17 +546,17 @@ h2 { margin-bottom: 0.5rem; }
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
 
-.field label {
-  font-weight: bold;
-  color: #333;
-}
+  label {
+    font-weight: 600;
+    color: var(--text-color);
+  }
 
-.field:has(p-inputSwitch) {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
+  &--toggle {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
 }
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
@@ -97,3 +574,373 @@ h2 { margin-bottom: 0.5rem; }
   align-items: center;
   gap: 1.5rem;
 }
+
+// ── Editor de la semana (grilla de 7 días) ───────────────────────────────────
+
+// Semana estándar como LISTA (un renglón por día) — más legible que la grilla.
+.week-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.week-editor__day {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface-50, #fafafa);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.625rem 0.75rem;
+
+  &--empty {
+    opacity: 0.85;
+  }
+}
+
+.week-editor__day-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 132px;
+  flex-shrink: 0;
+}
+
+.week-editor__day-name {
+  font-weight: var(--bw-weight-semibold);
+  font-size: 0.875rem;
+  color: var(--text-color);
+}
+
+.week-editor__add {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px dashed var(--surface-border);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+
+  &:hover {
+    background: var(--surface-100);
+    border-color: var(--color-primary);
+  }
+}
+
+.week-editor__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+
+  &--inactive {
+    opacity: 0.6;
+  }
+
+  &__time {
+    width: 82px;
+    min-width: 82px;
+    flex: 0 0 auto;
+    border: none;
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: 0.875rem;
+    color: var(--text-color);
+    padding: 0;
+    text-align: center;
+  }
+
+  &__sep {
+    color: var(--text-color-secondary);
+  }
+
+  &__remove {
+    border: none;
+    background: transparent;
+    color: var(--text-color-secondary);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    padding: 0;
+    margin-left: auto;
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--p-button-danger-background, #dc2626);
+    }
+  }
+}
+
+.week-editor__copy {
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+  padding: 0.3125rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3125rem;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-100);
+    color: var(--color-primary);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Navegación por semanas del mes ───────────────────────────────────────────
+
+.preview-month__top {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bw-space-sm);
+  margin-bottom: var(--bw-space-md);
+}
+
+.week-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bw-space-sm);
+  justify-content: flex-start;
+  margin-bottom: var(--bw-space-md);
+}
+
+.week-strip__chip {
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(.week-strip__chip--active) {
+    background: var(--surface-100);
+  }
+  &--active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+}
+
+// ── Rango de fechas ──────────────────────────────────────────────────────────
+
+.range-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.range-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// Cada label + input es una unidad atómica que envuelve junta.
+.range-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.range-bar__label {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.range-bar__date {
+  min-width: 120px;
+}
+
+.range-view__hint {
+  color: var(--text-color-secondary);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.range-view__empty {
+  padding: 1rem 0;
+}
+
+.range-days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.range-day {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--surface-50, #fafafa);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.625rem;
+
+  &--today {
+    border-color: var(--bw-300);
+    box-shadow: inset 0 0 0 1px var(--bw-300);
+  }
+  &__head {
+    width: 96px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  &__date {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+    font-size: 0.875rem;
+  }
+  &__today {
+    font-size: 0.6875rem;
+    color: var(--color-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  &__slots {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    align-items: center;
+  }
+  &__blocked {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-button-danger-background, #dc2626);
+  }
+}
+
+// En desktop la grilla del mes ya tiene el encabezado de día → se oculta la
+// etiqueta por celda (se conserva en la lista de mobile).
+@media (min-width: 769px) {
+  .month-cell__dow {
+    display: none;
+  }
+}
+
+// ── Mobile: los días se apilan en lista (basado en lo que había) ─────────────
+
+@media (max-width: 768px) {
+  .availability-container {
+    padding: 1rem;
+  }
+
+  .preview-week {
+    grid-template-columns: 1fr;
+  }
+
+  // Cada día ocupa un renglón a lo ancho, con su nombre arriba y los slots.
+  .preview-day {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    .preview-day__name {
+      width: 96px;
+      flex-shrink: 0;
+      text-align: left;
+      padding-top: 0.1875rem;
+    }
+
+    .preview-day__slots {
+      flex: 1;
+    }
+  }
+
+  .month-grid__header {
+    display: none;
+  }
+
+  .month-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .month-cell {
+    min-height: 0;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    &__top {
+      width: 72px;
+      flex-shrink: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.125rem;
+    }
+
+    &__content {
+      flex: 1;
+    }
+  }
+
+  .week-editor__day {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .week-editor__day-head {
+    width: auto;
+  }
+  .week-editor__copy {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+
+  .week-strip {
+    justify-content: center;
+  }
+
+  .range-day {
+    flex-direction: column;
+  }
+  .range-day__head {
+    width: auto;
+  }
+}
+

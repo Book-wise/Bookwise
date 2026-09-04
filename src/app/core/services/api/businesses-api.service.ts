@@ -20,4 +20,20 @@ export class BusinessesApiService {
   createBusiness(data: CreateBusinessData): Observable<CreateBusinessResponse> {
     return this.http.post<CreateBusinessResponse>(`${this.baseUrl}/businesses`, data);
   }
+
+  /** PATCH /businesses/{id} (Bearer) → { data: Business } — edita info del negocio. */
+  updateBusiness(id: number, data: UpdateBusinessData): Observable<Business> {
+    return this.http
+      .patch<{ data: Business }>(`${this.baseUrl}/businesses/${id}`, data)
+      .pipe(map((r) => r.data));
+  }
+}
+
+/** Body de edición de negocio (RUT inmutable). */
+export interface UpdateBusinessData {
+  name: string;
+  email?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  plan: string;
 }

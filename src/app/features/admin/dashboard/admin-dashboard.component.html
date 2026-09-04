@@ -1,6 +1,6 @@
 <div class="dashboard">
-  <h1>Dashboard Administrador</h1>
-  <p class="welcome">Bienvenido, {{ userName() }}</p>
+  <h1>{{ lang.t('dashboard.title') }}</h1>
+  <p class="welcome">{{ lang.t('dashboard.welcome', { name: userName() }) }}</p>
 
   <div class="range-selector">
     <div class="range-field">
@@ -165,19 +165,19 @@
     </div>
   } @else {
   <div class="stats-grid">
-    <p-card header="Locations" class="stat-card">
+    <p-card [header]="lang.t('dashboard.stats.locations')" class="stat-card">
       <div class="stat-value">{{ locations().length }}</div>
-      <div class="stat-label">Centros activos</div>
+      <div class="stat-label">{{ lang.t('dashboard.stats.locations_label') }}</div>
     </p-card>
 
-    <p-card header="Profesionales" class="stat-card">
+    <p-card [header]="lang.t('dashboard.stats.providers')" class="stat-card">
       <div class="stat-value">{{ providers().length }}</div>
-      <div class="stat-label">Profesionales registrados</div>
+      <div class="stat-label">{{ lang.t('dashboard.stats.providers_label') }}</div>
     </p-card>
 
-    <p-card header="Citas Hoy" class="stat-card">
+    <p-card [header]="lang.t('dashboard.stats.today')" class="stat-card">
       <div class="stat-value">{{ todayBookings() }}</div>
-      <div class="stat-label">Citas agendadas</div>
+      <div class="stat-label">{{ lang.t('dashboard.stats.today_label') }}</div>
     </p-card>
 
     <div
@@ -200,7 +200,7 @@
   </div>
 
   <div class="charts-row">
-    <p-card header="Citas por Location" styleClass="chart-card">
+    <p-card [header]="lang.t('dashboard.chart.by_location_title')" styleClass="chart-card">
       <div class="chart-container chart-container--circular">
         <p-chart type="doughnut" [data]="locationChartData()" [options]="doughnutOptions()" [plugins]="chartPlugins" class="bw-chart-circular"></p-chart>
       </div>
@@ -210,7 +210,7 @@
       <ng-template pTemplate="header">
         <div class="chart-card-header">
           <div class="chart-card-header__left">
-            <span class="chart-card-header__title">Citas por Día</span>
+            <span class="chart-card-header__title">{{ lang.t('dashboard.chart.daily') }}</span>
             <span class="chart-card-header__period">{{ rangeBadgeText() }}</span>
           </div>
           <p-select
@@ -218,9 +218,25 @@
             [(ngModel)]="selectedLocationId"
             optionLabel="label"
             optionValue="value"
-            placeholder="Todas las sucursales"
+            [placeholder]="lang.t('dashboard.chart.all_locations')"
             styleClass="location-filter-dropdown"
           />
+          @if (!selectedLocationId()) {
+            <div class="chart-mode-toggle">
+              <button
+                type="button"
+                class="chart-mode-toggle__btn"
+                [class.chart-mode-toggle__btn--active]="weeklyMode() === 'sumatoria'"
+                (click)="weeklyMode.set('sumatoria')"
+              >{{ lang.t('dashboard.chart.sum') }}</button>
+              <button
+                type="button"
+                class="chart-mode-toggle__btn"
+                [class.chart-mode-toggle__btn--active]="weeklyMode() === 'comparativa'"
+                (click)="weeklyMode.set('comparativa')"
+              >{{ lang.t('dashboard.chart.by_location') }}</button>
+            </div>
+          }
         </div>
       </ng-template>
       <div class="chart-container chart-container--linear">

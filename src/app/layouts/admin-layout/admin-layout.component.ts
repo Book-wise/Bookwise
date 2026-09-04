@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, HostListener, effect } from '@angular/core';
+import { Component, signal, computed, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -9,12 +9,13 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '@services/auth.service';
 import { ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
-import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
+import { AppHeaderComponent } from '@shared/components/app-header/app-header.component';
+import { AgendaNavigatorComponent } from '@shared/components/agenda-navigator/agenda-navigator.component';
 
 @Component({
   selector: 'bw-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, UserAvatarComponent],
+  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, AppHeaderComponent, AgendaNavigatorComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
@@ -30,8 +31,8 @@ export class AdminLayoutComponent {
 
   // On mobile the sidebar is always in expanded format — collapsed is desktop-only
   readonly effectivelyCollapsed = computed(() => this.sidebarCollapsed() && !this.isMobile());
-  darkMode = signal<boolean>(this.getInitialDarkMode());
-  
+  readonly darkMode = computed(() => this.themeService.darkMode);
+
   themeOptions = this.themeService.themeOptions;
   currentTheme = signal<ThemeName>(this.themeService.currentTheme);
 
@@ -46,31 +47,10 @@ export class AdminLayoutComponent {
     { label: 'nav.calendar',  icon: 'pi pi-calendar',  routerLink: '/admin/calendar',  command: () => this.closeMenus() },
     { label: 'nav.clients',   icon: 'pi pi-user',      routerLink: '/admin/clients',   command: () => this.closeMenus() },
     { label: 'nav.packs',     icon: 'pi pi-box',       routerLink: '/admin/packs',     command: () => this.closeMenus() },
-    { label: 'nav.profile',   icon: 'pi pi-id-card',   routerLink: '/admin/profile',   command: () => this.closeMenus() },
-    { label: 'nav.roles',     icon: 'pi pi-shield',    routerLink: '/admin/roles',     command: () => this.closeMenus() },
   ];
 
   constructor() {
     this.checkScreenSize();
-    this.applyDarkMode();
-    
-    effect(() => {
-      this.applyDarkMode();
-      localStorage.setItem('darkMode', this.darkMode() ? 'true' : 'false');
-    });
-  }
-
-  private getInitialDarkMode(): boolean {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return localStorage.getItem('darkMode') === 'true';
-    }
-    return false;
-  }
-
-  private applyDarkMode(): void {
-    if (typeof document !== 'undefined') {
-      document.body.classList.toggle('dark-theme', this.darkMode());
-    }
   }
 
   @HostListener('window:resize')
@@ -91,7 +71,7 @@ export class AdminLayoutComponent {
   }
 
   toggleDarkMode(): void {
-    this.darkMode.update(v => !v);
+    this.themeService.toggleDarkMode();
   }
 
   onThemeChange(themeName: ThemeName): void {

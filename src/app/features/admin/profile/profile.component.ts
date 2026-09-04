@@ -1,7 +1,7 @@
-import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
@@ -11,8 +11,9 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { AuthApiService } from '@services/api/auth-api.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { translateValidationMessage } from '@i18n/validation-translator';
-import { ChangePasswordData } from '@models';
+import { Business, ChangePasswordData } from '@models';
 import { checkPasswordStrength, isPasswordStrong } from '@shared/validators/password-strength.validator';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
@@ -21,7 +22,7 @@ import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.
   selector: 'bw-profile',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink, CardModule, InputTextModule, PasswordModule, ButtonModule,
+    CommonModule, FormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule,
     MessageModule, PhoneInputComponent, UserAvatarComponent,
   ],
   templateUrl: './profile.component.html',
@@ -31,7 +32,16 @@ export class ProfileComponent implements OnInit {
   private auth = inject(AuthService);
   private authApi = inject(AuthApiService);
   private messageService = inject(MessageService);
+  private router = inject(Router);
+  private refStore = inject(ReferenceStore);
   readonly lang = inject(LanguageService);
+
+  /**
+   * Mostrar la sección "Información del negocio". `true` para admin (que ve el
+   * negocio principal / CTA de onboarding); `false` para el profesional y roles
+   * operativos, que no gestionan el negocio.
+   */
+  showBusiness = input(true);
 
   loading = signal(false);
 
@@ -45,6 +55,34 @@ export class ProfileComponent implements OnInit {
     if (role === 'provider') return this.lang.t('ui.role.provider');
     return '';
   });
+
+  // ── Negocios (multi-tenant) ───────────────────────────────────────────────
+  readonly businesses = computed(() => this.auth.me()?.businesses ?? []);
+  readonly activeBusinessId = computed(() => this.auth.me()?.business?.id ?? null);
+  readonly canSwitch = computed(() => this.businesses().length > 1);
+  /** Conteos del tenant activo (desde ReferenceStore). */
+  readonly locationsCount = computed(() => this.refStore.locations().length);
+  readonly providersCount = computed(() => this.refStore.providers().length);
+
+  monogram(name?: string): string {
+    return (name || 'B').trim().charAt(0).toUpperCase();
+  }
+
+  switchTo(biz: Business): void {
+    if (biz.id === this.activeBusinessId()) return;
+    this.auth.switchTenant(biz.id).subscribe({
+      next: () => {
+        this.refStore.loadLocations();
+        this.refStore.loadProviders();
+        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: this.lang.t('ui.error'), detail: this.lang.t('auth.switch_tenant_error'), key: 'global', life: 4000 }),
+    });
+  }
+
+  editBusiness(biz: Business): void {
+    this.router.navigate(['/admin/negocios', biz.id]);
+  }
 
   // ── Teléfono editable (mismo widget del registro: bandera + código de país) ──
   readonly phone = signal('');

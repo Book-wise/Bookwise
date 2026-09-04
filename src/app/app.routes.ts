@@ -67,6 +67,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/profile/profile.component').then(m => m.ProfileComponent)
       },
       {
+        path: 'configuraciones',
+        loadComponent: () => import('@shared/components/configuraciones/configuraciones.component').then(m => m.ConfiguracionesComponent)
+      },
+      {
+        path: 'negocios/:id',
+        loadComponent: () => import('./features/admin/business/business-edit.component').then(m => m.BusinessEditComponent)
+      },
+      {
         path: 'roles',
         loadComponent: () => import('./features/admin/roles/roles.component').then(m => m.RolesComponent)
       }
@@ -84,6 +92,14 @@ export const routes: Routes = [
       {
         path: 'availability',
         loadComponent: () => import('./features/provider/availability/provider-availability.component').then(m => m.ProviderAvailabilityComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/provider/profile/provider-profile.component').then(m => m.ProviderProfileComponent)
+      },
+      {
+        path: 'configuraciones',
+        loadComponent: () => import('@shared/components/configuraciones/configuraciones.component').then(m => m.ConfiguracionesComponent)
       }
     ]
   },

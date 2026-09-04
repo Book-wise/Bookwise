@@ -1,0 +1,186 @@
+.settings {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bw-space-lg);
+}
+
+.settings-head {
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+  }
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--text-color-secondary);
+    font-size: 0.9375rem;
+  }
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--bw-space-lg);
+}
+
+.settings-card {
+  .p-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bw-space-md);
+  }
+}
+
+// ── Perfil ──────────────────────────────────────────────────────────────
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  &__name {
+    font-weight: var(--bw-weight-semibold);
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+  &__email {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+  }
+  &__role {
+    font-size: 0.8125rem;
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+}
+
+// ── Apariencia ─────────────────────────────────────────────────────────
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bw-space-md);
+  padding: var(--bw-space-sm) 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+
+    span {
+      font-weight: 500;
+      color: var(--text-color);
+      font-size: 0.9375rem;
+    }
+    small {
+      color: var(--text-color-secondary);
+      font-size: 0.8125rem;
+    }
+  }
+}
+
+.settings-select {
+  width: 170px;
+}
+
+// ── Negocio ────────────────────────────────────────────────────────────
+
+.biz-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--bw-300);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bw-weight-semibold);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  &__name {
+    font-weight: var(--bw-weight-semibold);
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+  &__rut {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.biz-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.biz-detail {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-color);
+
+  &__label {
+    width: 92px;
+    flex-shrink: 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.biz-actions {
+  margin-top: var(--bw-space-sm);
+}
+
+.settings-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+// ── Mobile ─────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .settings {
+    padding: 1rem;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--bw-space-sm);
+  }
+  .settings-select {
+    width: 100%;
+  }
+}

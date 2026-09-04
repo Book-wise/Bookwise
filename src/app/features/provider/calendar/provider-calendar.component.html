@@ -49,6 +49,18 @@
             ></p-button>
           </div>
         </div>
+
+        <div class="calendar-tools">
+          <p-button
+            icon="pi pi-question-circle"
+            size="small"
+            severity="secondary"
+            [text]="true"
+            (mouseenter)="statusLegendPopover.show($event)"
+            (mouseleave)="statusLegendPopover.hide()"
+          >
+          </p-button>
+        </div>
       }
     </ng-template>
 
@@ -125,6 +137,47 @@
       }
     </div>
   }
+</p-popover>
+
+<!-- Leyenda de estados (reserva + pago + bloqueo) -->
+<p-popover #statusLegendPopover class="status-legend-panel" [dismissable]="true" [showCloseIcon]="false">
+  <div class="status-legend">
+    <div class="status-legend__title">{{ lang.t('cal.legend.title') }}</div>
+
+    <div class="status-legend__group">
+      <div class="status-legend__group-title">{{ lang.t('cal.legend.group_reservation') }}</div>
+      @for (s of reservationStatusLegend(); track s.label) {
+        <div class="status-legend__item">
+          <span class="status-legend__dot" [style.background]="s.cssVar"></span>
+          <span class="status-legend__label">{{ s.label }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="status-legend__group">
+      <div class="status-legend__group-title">{{ lang.t('cal.legend.group_payment') }}</div>
+      @for (p of paymentLegend(); track p.label) {
+        <div class="status-legend__item">
+          @if (p.badge) {
+            <span class="status-legend__badge" [style.background]="p.cssVar">{{ p.badge }}</span>
+          } @else {
+            <span class="status-legend__badge status-legend__badge--none" [style.--chip-color]="p.cssVar">{{ lang.t('cal.legend.payment.unpaid_short') }}</span>
+          }
+          <span class="status-legend__label">{{ p.label }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="status-legend__group">
+      <div class="status-legend__group-title">{{ lang.t('cal.legend.group_other') }}</div>
+      <div class="status-legend__item">
+        <span class="status-legend__blocked"></span>
+        <span class="status-legend__label">{{ lang.t('cal.legend.blocked') }}</span>
+      </div>
+    </div>
+
+    <div class="status-legend__note">{{ lang.t('cal.legend.note') }}</div>
+  </div>
 </p-popover>
 
 <!-- Dialog detalle de reserva -->

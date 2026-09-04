@@ -1,0 +1,34 @@
+<div class="navigator">
+  <div class="navigator__nav">
+    <button type="button" class="navigator__arrow" (click)="shiftMonth(-1)" [attr.aria-label]="lang.t('ui.prev_month')">
+      <i class="pi pi-chevron-left"></i>
+    </button>
+    <span class="navigator__label">
+      <span class="navigator__year">{{ yearLabel() }}</span>
+      <span class="navigator__month">{{ monthName() }}</span>
+    </span>
+    <button type="button" class="navigator__arrow" (click)="shiftMonth(1)" [attr.aria-label]="lang.t('ui.next_month')">
+      <i class="pi pi-chevron-right"></i>
+    </button>
+    <button type="button" class="navigator__today" (click)="goToday()">{{ lang.t('ui.today') }}</button>
+  </div>
+
+  <div class="navigator__grid">
+    @for (d of headerDays; track $index) {
+      <div class="navigator__header">{{ dayHeader(d) }}</div>
+    }
+    @for (cell of monthGrid(); track $index) {
+      @if (cell.day; as day) {
+        <button
+          type="button"
+          class="navigator__day"
+          [class.navigator__day--today]="isToday(cell.date!)"
+          [class.navigator__day--selected]="isSelected(cell.date!)"
+          (click)="goto(cell.date!)"
+        >{{ day }}</button>
+      } @else {
+        <div class="navigator__day navigator__day--empty"></div>
+      }
+    }
+  </div>
+</div>

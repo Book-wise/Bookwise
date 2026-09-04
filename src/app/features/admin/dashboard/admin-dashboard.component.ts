@@ -25,6 +25,7 @@ import { CalendarNavigationService } from '@services/calendar-navigation.service
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Booking } from '@models';
 import { BOOKING_STATUSES } from '@features/admin/bookings/constants/booking-statuses';
+import { locationColor } from '@shared/utils/location-palette.util';
 
 interface ChartDataset { data: number[]; backgroundColor?: string | string[]; borderColor?: string; fill?: boolean; tension?: number; label?: string }
 interface DashboardChartData { labels: string[]; datasets: ChartDataset[] }
@@ -76,10 +77,18 @@ interface RangeOption {
   value: RangeMode;
 }
 
-const CHART_COLORS = ['#046af4', '#0b3d95', '#94a3b8', '#fcd34d', '#86efac', '#fb923c', '#a78bfa', '#ec4899'];
-const PRIMARY_COLOR = CHART_COLORS[0];
+const PRIMARY_COLOR = '#046af4';
 const DAY_LABELS    = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const PENDING_STATUS_ID = BOOKING_STATUSES.find((s) => s.label === 'Pendiente')!.value;
+
+/** Convierte un color hex (#rrggbb) a rgba con la opacidad dada. */
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 /** Normalize API response: may be a plain array or { data: [...] } */
 function normalizeBookings(res: unknown): Booking[] {
@@ -119,6 +128,8 @@ export class AdminDashboardComponent {
 
   /** ── Filtro de location ── */
   readonly selectedLocationId = signal<number | null>(null);
+  /** Modo del gráfico "Citas por Día" cuando se ven todas las sucursales. */
+  readonly weeklyMode = signal<'sumatoria' | 'comparativa'>('sumatoria');
 
   /** ── Selector de rango de fechas ── */
   readonly rangeMode = signal<RangeMode>('mes');
@@ -309,17 +320,63 @@ export class AdminDashboardComponent {
 
   readonly weeklyChartData = computed<DashboardChartData>(() => {
     const stats = this.filteredWeeklyStats();
-    return {
-      labels: DAY_LABELS,
-      datasets: [{
-        label: 'Citas',
-        data: stats.map(s => s.count),
-        fill: true,
-        borderColor: PRIMARY_COLOR,
-        backgroundColor: 'rgba(4, 106, 244, 0.1)',
+    const locId = this.selectedLocationId();
+    const data = this.dashboardStats.value()?.weekBookings ?? [];
+
+    // Sucursal puntual → una sola línea con su color.
+    if (locId) {
+      const color = locationColor(locId);
+      return {
+        labels: DAY_LABELS,
+        datasets: [{
+          label: this.lang.t('dashboard.chart.citas'),
+          data: stats.map(s => s.count),
+          fill: true,
+          borderColor: color,
+          backgroundColor: hexToRgba(color, 0.1),
+          tension: 0.4,
+        }],
+      };
+    }
+
+    // "Todas las sucursales": modo sumatoria (total) o comparativa (por sucursal).
+    if (this.weeklyMode() === 'sumatoria') {
+      return {
+        labels: DAY_LABELS,
+        datasets: [{
+          label: this.lang.t('dashboard.chart.total'),
+          data: stats.map(s => s.count),
+          fill: true,
+          borderColor: PRIMARY_COLOR,
+          backgroundColor: hexToRgba(PRIMARY_COLOR, 0.1),
+          tension: 0.4,
+        }],
+      };
+    }
+
+    // Comparativa: una línea por sucursal, cada una con su color de la paleta.
+    const byLoc = new Map<number, { name: string; bookings: Booking[] }>();
+    for (const b of data) {
+      const id = b.location?.id ?? -1;
+      const name = b.location?.name ?? 'Sin ubicación';
+      const entry = byLoc.get(id) ?? { name, bookings: [] };
+      entry.bookings.push(b);
+      byLoc.set(id, entry);
+    }
+
+    const datasets = Array.from(byLoc.entries()).map(([id, loc]) => {
+      const color = locationColor(id);
+      return {
+        label: loc.name,
+        data: this.computeWeeklyStats(loc.bookings).map(s => s.count),
+        fill: false,
+        borderColor: color,
+        backgroundColor: hexToRgba(color, 0.1),
         tension: 0.4,
-      }],
-    };
+      };
+    });
+
+    return { labels: DAY_LABELS, datasets };
   });
 
   /** ── opciones de charts ── */
@@ -465,19 +522,25 @@ export class AdminDashboardComponent {
   // ── helpers ─────────────────────────────────────────
 
   private computeLocationStats(bookings: Booking[]): LocationStat[] {
-    const locationMap = new Map<string, number>();
+    // Se agrupa por `location.id` y el color se resuelve con el palette
+    // compartido (determinista por id), para que sea idéntico al color que
+    // identifica a la sucursal en la lista de profesionales.
+    const countByLoc = new Map<number | null, { name: string; count: number }>();
 
     for (const b of bookings) {
+      const id = b.location?.id ?? null;
       const name = b.location?.name ?? 'Sin ubicación';
-      locationMap.set(name, (locationMap.get(name) ?? 0) + 1);
+      const entry = countByLoc.get(id) ?? { name, count: 0 };
+      entry.count++;
+      countByLoc.set(id, entry);
     }
 
-    return Array.from(locationMap.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count], i) => ({
+    return Array.from(countByLoc.entries())
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([id, { name, count }]) => ({
         name,
         count,
-        color: CHART_COLORS[i % CHART_COLORS.length],
+        color: locationColor(id),
       }));
   }
 

@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -41,7 +42,6 @@ import { CalendarNavigationService } from '@services/calendar-navigation.service
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
 import { hasAttentionRole } from '../roles/role-meta';
-import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -81,7 +81,6 @@ import luxonPlugin from '@fullcalendar/luxon';
     BlockTimeDialogComponent,
     BookingDetailDialogComponent,
     BwCurrencyPipe,
-    UserAvatarComponent,
   ],
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.scss'],
@@ -97,12 +96,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly store = inject(BookingStore);
   private httpError = inject(HttpErrorService);
   private calNav = inject(CalendarNavigationService);
+  private route = inject(ActivatedRoute);
   private tzService = inject(TimezoneService);
   private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   private readonly auth = inject(AuthService);
   private readonly calendarPrefs = inject(CalendarPrefsService);
 
-  // ── Identidad "viendo como" (chip en el header del calendario) ─────────────
+  // ── Identidad "viendo como" (chip en la fila de herramientas junto a slots y guía) ──
   readonly userName = computed(() => this.auth.user()?.name ?? '');
   readonly userRoleLabel = computed(() => {
     const role = this.auth.userRole();
@@ -335,6 +335,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initCalendar();
+    this.watchDateQueryParam();
   }
 
   @HostListener('window:resize')
@@ -350,6 +351,21 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     // viewport minus fixed overhead: main-content padding + card header (filters) +
     // FullCalendar toolbar + column headers row + surrounding paddings
     return window.innerHeight - 250;
+  }
+
+  /**
+   * Reacciona al `?date=YYYY-MM-DD` del widget de navegación, incluso cuando el
+   * componente ya está montado (re-navegación sobre la misma ruta).
+   */
+  private watchDateQueryParam(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      const date = params.get('date');
+      if (date && this.calendar) {
+        this.ngZone.runOutsideAngular(() => {
+          this.calendar!.changeView('timeGridWeek', date);
+        });
+      }
+    });
   }
 
   private checkViewport(): void {
@@ -492,6 +508,16 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       : null;
     if (pendingViewContext) {
       this.pendingViewRequest = pendingViewContext;
+    }
+
+    // Salto por URL (`?date=YYYY-MM-DD`) del widget de navegación: determinista.
+    // Si viene la fecha por query, la usamos como gotoDate garantizado.
+    const queryDate = this.route.snapshot.queryParamMap.get('date');
+    if (queryDate) {
+      this.pendingViewRequest = {
+        view: pending.view ?? 'timeGridWeek',
+        gotoDate: queryDate,
+      };
     }
 
     // Status-only navigation (e.g. the dashboard "Pending appointments" card)

@@ -279,6 +279,37 @@ h1 {
   min-width: 200px;
 }
 
+// Toggle Suma / Por sucursal (visible cuando se ven todas las sucursales).
+.chart-mode-toggle {
+  display: inline-flex;
+  background: var(--surface-100, #f3f4f6);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+
+  &__btn {
+    border: none;
+    background: transparent;
+    color: var(--text-color-secondary);
+    font-family: var(--font-family);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &--active {
+      background: var(--surface-card, #ffffff);
+      color: var(--text-color);
+      font-weight: 600;
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        inset 0 -2px 0 var(--color-primary);
+    }
+  }
+}
+
 // ── Skeleton ─────────────────────────────────────────────────────────────────
 
 .dash-sk-stat {

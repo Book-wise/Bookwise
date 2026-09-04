@@ -15,7 +15,7 @@
         </button>
       }
       <div class="logo-wrapper" [class.logo-hidden]="effectivelyCollapsed()">
-        <img src="assets/images/LOGO.png" alt="Bookwise" class="sidebar-logo" />
+        <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="sidebar-logo" />
       </div>
       <div class="logo-icon-wrapper" [class.logo-hidden]="!effectivelyCollapsed()">
         <img src="assets/images/icono.svg" alt="BW" class="sidebar-icon-img" />
@@ -36,61 +36,11 @@
       }
     </nav>
 
-    <div class="sidebar-footer">
-      <div class="sidebar-user" [class.sidebar-user--collapsed]="effectivelyCollapsed()">
-        <bw-user-avatar [name]="userName() || null" size="md" />
-        @if (!effectivelyCollapsed()) {
-          <div class="sidebar-user__info">
-            <span class="sidebar-user__name">{{ userName() }}</span>
-            <span class="sidebar-user__role">{{ userRoleLabel() }}</span>
-          </div>
-        }
+    @if (!effectivelyCollapsed()) {
+      <div class="sidebar-widget">
+        <bw-agenda-navigator />
       </div>
-
-      @if (!effectivelyCollapsed()) {
-        <div class="theme-selector">
-          <p-select
-            [options]="themeOptions"
-            [(ngModel)]="currentTheme"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Tema"
-            (onChange)="onThemeChange($event.value)"
-            [appendTo]="'body'"
-            class="theme-select"
-          />
-        </div>
-        <div class="theme-selector">
-          <p-select
-            [options]="langService.langOptions"
-            [ngModel]="langService.lang()"
-            optionLabel="label"
-            optionValue="value"
-            (onChange)="onLangChange($event.value)"
-            [appendTo]="'body'"
-            class="theme-select"
-          />
-        </div>
-      } @else {
-        <button class="nav-item" (click)="onLangChange(langService.lang() === 'es' ? 'en' : 'es')" [title]="langService.lang() === 'es' ? 'English' : 'Español'">
-          <i class="pi pi-globe"></i>
-        </button>
-      }
-
-      <button class="nav-item dark-mode-btn" (click)="toggleDarkMode()" [title]="effectivelyCollapsed() ? langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') : ''">
-        <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
-        @if (!effectivelyCollapsed()) {
-          <span class="nav-label">{{ langService.t(darkMode() ? 'ui.light_mode' : 'ui.dark_mode') }}</span>
-        }
-      </button>
-
-      <button class="nav-item logout-btn" (click)="logout()">
-        <i class="pi pi-sign-out"></i>
-        @if (!effectivelyCollapsed()) {
-          <span class="nav-label">{{ langService.t('ui.logout') }}</span>
-        }
-      </button>
-    </div>
+    }
   </aside>
 
   @if (!isMobile()) {
@@ -105,6 +55,7 @@
 
   <!-- Main Content -->
   <main class="main-content">
+    <bw-app-header />
     <router-outlet></router-outlet>
   </main>
 </div>

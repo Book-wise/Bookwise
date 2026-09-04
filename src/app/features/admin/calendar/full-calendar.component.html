@@ -76,14 +76,6 @@
               (onClick)="openBlockTime()"
             >
             </p-button>
-            @if (userName()) {
-              <span class="viewing-as" [attr.aria-label]="lang.t('cal.viewing_as')">
-                <span class="viewing-as__label">{{ lang.t('cal.viewing_as') }}</span>
-                <bw-user-avatar [name]="userName()" size="sm" />
-                <span class="viewing-as__name">{{ userName() }}</span>
-                <span class="viewing-as__role">{{ userRoleLabel() }}</span>
-              </span>
-            }
           </div>
         </div>
 
@@ -92,7 +84,6 @@
             icon="pi pi-clock"
             size="small"
             severity="secondary"
-            [text]="true"
             [pTooltip]="lang.t('cal.slot_duration.help')"
             tooltipPosition="top"
             (onClick)="slotDurationPopover.toggle($event)"
@@ -103,9 +94,8 @@
             size="small"
             severity="secondary"
             [text]="true"
-            [pTooltip]="lang.t('cal.legend.help')"
-            tooltipPosition="top"
-            (onClick)="statusLegendPopover.toggle($event)"
+            (mouseenter)="statusLegendPopover.show($event)"
+            (mouseleave)="statusLegendPopover.hide()"
           >
           </p-button>
         </div>

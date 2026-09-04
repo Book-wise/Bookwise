@@ -296,6 +296,8 @@ export interface AuthMeData {
   email_verified_at: string | null;
   onboarding_complete: boolean;
   business: Business | null;
+  /** Negocios a los que puede alternar (multi-tenant; admin_general ve todos). */
+  businesses?: Business[];
 }
 
 export interface AuthMeResponse {

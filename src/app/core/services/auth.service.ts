@@ -89,6 +89,16 @@ export class AuthService {
     this._meLoaded.set(true);
   }
 
+  /** Cambia el negocio activo (admin_general) y refresca el caché de /auth/me. */
+  switchTenant(tenantId: number): Observable<AuthMeData> {
+    return this.authApi.switchTenant(tenantId).pipe(
+      tap((me) => {
+        this._me.set(me);
+        this._meLoaded.set(true);
+      }),
+    );
+  }
+
   private navigateByRole(role: UserRole): void {
     if (role === 'admin') {
       this.router.navigate(['/admin']);

@@ -14,6 +14,7 @@ import {
   NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -74,6 +75,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly store         = inject(BookingStore);
   private httpError      = inject(HttpErrorService);
   private tzService      = inject(TimezoneService);
+  private route          = inject(ActivatedRoute);
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -102,6 +104,21 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   statusFilterOptions = computed(() =>
     BOOKING_STATUSES.map(s => ({ label: this.lang.t(s.labelKey), value: s.value, color: s.color }))
   );
+
+  /** Leyenda de estados de reserva — dot del token. */
+  readonly reservationStatusLegend = computed(() =>
+    BOOKING_STATUSES.map((s) => ({
+      label: this.lang.t(s.labelKey),
+      cssVar: s.cssVar,
+    })),
+  );
+
+  /** Leyenda de estados de pago — colores alineados con los badges del evento. */
+  readonly paymentLegend = computed(() => [
+    { label: this.lang.t('cal.legend.payment.unpaid'),   cssVar: 'var(--bw-payment-unpaid)', badge: '' },
+    { label: this.lang.t('cal.legend.payment.partial'),  cssVar: '#65a30d',                   badge: 'A' },
+    { label: this.lang.t('cal.legend.payment.paid'),     cssVar: '#16a34a',                   badge: '$' },
+  ]);
 
   selectedDate: Date | null = null;
   selectedEndDate: Date | null = null;
@@ -228,6 +245,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngAfterViewInit(): void {
     this.initCalendar();
+    this.watchDateQueryParam();
   }
 
   @HostListener('window:resize')
@@ -241,6 +259,18 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   private getContentHeight(): number {
     return window.innerHeight - 250;
+  }
+
+  /** Reacciona al `?date=` del widget de navegación (incluso si ya está montado). */
+  private watchDateQueryParam(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      const date = params.get('date');
+      if (date && this.calendar) {
+        this.ngZone.runOutsideAngular(() => {
+          this.calendar!.gotoDate(date);
+        });
+      }
+    });
   }
 
   private checkViewport(): void {
@@ -330,6 +360,12 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       });
       this.calendar.render();
       this.startNowLabel();
+
+      // Salto por URL (`?date=YYYY-MM-DD`) desde el widget de navegación del sidebar.
+      const qDate = this.route.snapshot.queryParamMap.get('date');
+      if (qDate && this.calendar) {
+        this.calendar.gotoDate(qDate);
+      }
     });
   }
 
@@ -440,10 +476,21 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     const title = info.event.title.replace(/[&<>"']/g, (c: string) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c
     );
+    // Status color — used in the month view where the pastel fill is hard to
+    // perceive: a leading status dot plus a soft tinted pill makes the state
+    // readable at a glance (igual que el full calendar de admin).
+    const statusColor =
+      booking?.status?.color ??
+      BOOKING_STATUSES.find((s) => s.value === booking?.status_id)?.color ??
+      '';
     const badge =
       payment === 'paid'    ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>' :
       payment === 'partial' ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>' :
       '';
+    const isMonthView = info.view.type.startsWith('dayGrid');
+    if (isMonthView && statusColor) {
+      return { html: `<div class="ev-inner ev-inner--month" style="--ev-status-color:${statusColor}">${badge}<span class="ev-dot"></span><span class="ev-title">${title}</span></div>` };
+    }
     return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
   }
 

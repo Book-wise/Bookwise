@@ -30,6 +30,13 @@ export class AuthApiService {
     return this.http.get<AuthMeResponse>(`${this.baseUrl}/auth/me`).pipe(map((r) => r.user));
   }
 
+  /** POST /auth/switch-tenant (Bearer) → { user } — cambia el negocio activo (admin_general). */
+  switchTenant(tenantId: number): Observable<AuthMeData> {
+    return this.http
+      .post<AuthMeResponse>(`${this.baseUrl}/auth/switch-tenant`, { tenant_id: tenantId })
+      .pipe(map((r) => r.user));
+  }
+
   /** POST /auth/password (Bearer) → { message } — cambio de contraseña del usuario autenticado. */
   changePassword(data: ChangePasswordData): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/auth/password`, data);

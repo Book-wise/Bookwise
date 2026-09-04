@@ -71,6 +71,148 @@
   padding: 1.25rem;
 }
 
+// ── Tarjetas de negocios (multi-tenant) ──────────────────────────────────────
+
+.profile-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.profile-card__title {
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+}
+.profile-card__hint {
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+.biz-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.biz-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: var(--surface-50);
+  transition: border-color var(--bw-transition-base), box-shadow var(--bw-transition-base);
+
+  &--active {
+    border-color: var(--bw-300);
+    box-shadow: inset 0 0 0 1px var(--bw-300);
+  }
+
+  &__avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bw-weight-semibold);
+    font-size: 0.9375rem;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.125rem;
+    flex: 1;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__name {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-radius: 9999px;
+    padding: 0.125rem 0.5rem;
+
+    &--active {
+      background: color-mix(in srgb, var(--bw-success) 16%, transparent);
+      color: #15803d;
+    }
+  }
+
+  &__meta {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+  }
+}
+
+.biz-detail {
+  margin-top: var(--bw-space-md);
+  padding-top: var(--bw-space-md);
+  border-top: 1px solid var(--surface-border);
+
+  &__title {
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-color);
+    font-size: 0.9375rem;
+    margin-bottom: var(--bw-space-md);
+  }
+
+  &__stats {
+    display: flex;
+    gap: var(--bw-space-md);
+    flex-wrap: wrap;
+  }
+}
+
+.biz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  &__value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+    text-transform: capitalize;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}
+
 .info-grid {
   display: flex;
   flex-direction: column;

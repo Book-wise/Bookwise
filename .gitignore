@@ -55,3 +55,5 @@ src/env.ts
 
 # Claude Code instructions
 CLAUDE.md
+# Local AI runtime state
+.atl/

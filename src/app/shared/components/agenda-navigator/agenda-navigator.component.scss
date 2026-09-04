@@ -1,0 +1,136 @@
+// Widget de navegación por fecha — tarjeta clara que funciona sobre el sidebar.
+.navigator {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #1a2744;
+}
+
+.navigator__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  height: 38px;
+}
+
+.navigator__arrow {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(4, 106, 244, 0.08);
+    color: #046af4;
+  }
+}
+
+.navigator__label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.1;
+  text-transform: capitalize;
+  color: #1a2744;
+  overflow: hidden;
+}
+
+.navigator__year {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.navigator__month {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.navigator__today {
+  border: none;
+  background: transparent;
+  color: #046af4;
+  font-family: var(--font-family);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.1875rem 0.3125rem;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(4, 106, 244, 0.08);
+  }
+}
+
+.navigator__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.navigator__header {
+  text-align: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  padding: 2px 0;
+}
+
+.navigator__day {
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #1a2744;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(4, 106, 244, 0.1);
+    color: #046af4;
+  }
+
+  &--today {
+    background: #046af4;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &--selected {
+    background: rgba(4, 106, 244, 0.28);
+    color: #046af4;
+    font-weight: 700;
+    box-shadow: inset 0 0 0 2px #046af4;
+  }
+
+  &--empty {
+    background: transparent;
+    cursor: default;
+  }
+}

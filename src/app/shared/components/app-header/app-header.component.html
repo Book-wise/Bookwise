@@ -1,0 +1,58 @@
+<header class="app-header">
+  <div class="app-header__left">
+    @if (business(); as biz) {
+      <button
+        type="button"
+        class="app-header__business"
+        [class.app-header__business--button]="canSwitch()"
+        (click)="canSwitch() ? bizPopover.toggle($event) : null"
+      >
+        <span class="app-header__monogram">{{ businessMonogram() }}</span>
+        <div class="app-header__business-info">
+          <span class="app-header__business-name">{{ biz.name }}</span>
+          @if (biz.rut) {
+            <span class="app-header__business-rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
+          }
+        </div>
+        @if (canSwitch()) {
+          <i class="pi pi-chevron-down app-header__chevron"></i>
+        }
+      </button>
+
+      <p-popover #bizPopover class="biz-selector-popover" [dismissable]="true">
+        <div class="biz-selector">
+          <div class="biz-selector__title">{{ lang.t('settings.business') }}</div>
+          @for (b of businesses(); track b.id) {
+            <button
+              type="button"
+              class="biz-selector__item"
+              [class.biz-selector__item--active]="b.id === currentBusinessId()"
+              (click)="switchTo(b); bizPopover.hide()"
+            >
+              <span class="biz-selector__monogram">{{ (b.name || 'B').charAt(0).toUpperCase() }}</span>
+              <div class="biz-selector__info">
+                <span class="biz-selector__name">{{ b.name }}</span>
+                <span class="biz-selector__rut">{{ lang.t('ui.rut') }}: {{ b.rut }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      </p-popover>
+    }
+  </div>
+
+  <div class="app-header__right">
+    <div class="app-header__actions">
+      <button
+        type="button"
+        class="app-header__icon-btn"
+        (click)="toggleDarkMode()"
+        [attr.title]="darkMode() ? (lang.t('ui.light_mode')) : (lang.t('ui.dark_mode'))"
+      >
+        <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
+      </button>
+      <!-- A futuro: notificaciones / mensajes -->
+    </div>
+    <bw-account-menu />
+  </div>
+</header>

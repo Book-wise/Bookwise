@@ -201,6 +201,13 @@
   z-index: 1;
 }
 
+// Widget de navegación por fecha (bw-agenda-navigator) dentro del sidebar.
+.sidebar-widget {
+  padding: 0.625rem 0.5rem 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 .sidebar-footer {

@@ -104,7 +104,7 @@
           optionLabel="label"
           optionValue="value"
           [ngModel]="selectedRoleNames()"
-          (ngModelChange)="selectedRoleNames.set($event)"
+          (ngModelChange)="onRoleFilterChange($event)"
           [placeholder]="lang.t('providers.filter_roles')"
           display="chip"
           [showClear]="true"

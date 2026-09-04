@@ -1,0 +1,58 @@
+<div class="biz-edit">
+  <div class="biz-edit__head">
+    <div>
+      <h1>{{ lang.t('settings.business') }}</h1>
+      <p>{{ lang.t('biz.edit.subtitle') }}</p>
+    </div>
+    <p-button label="{{ lang.t('settings.profile') }}" icon="pi pi-arrow-left" severity="secondary" [text]="true" [routerLink]="'/admin/profile'" />
+  </div>
+
+  @if (business(); as biz) {
+    <p-card class="biz-edit-card">
+      <div class="biz-summary">
+        <span class="biz-summary__avatar">{{ (biz.name || 'B').charAt(0).toUpperCase() }}</span>
+        <div class="biz-summary__info">
+          <span class="biz-summary__name">{{ biz.name }}</span>
+          <span class="biz-summary__rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
+        </div>
+      </div>
+
+      <div class="biz-form">
+        <div class="field">
+          <label>{{ lang.t('settings.business') }} *</label>
+          <input pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" class="w-full" />
+        </div>
+        <div class="field">
+          <label>{{ lang.t('settings.business.email') }}</label>
+          <input pInputText [ngModel]="email()" (ngModelChange)="email.set($event)" class="w-full" />
+        </div>
+        <div class="field">
+          <label>{{ lang.t('settings.business.address') }}</label>
+          <input pInputText [ngModel]="address()" (ngModelChange)="address.set($event)" class="w-full" />
+        </div>
+        <div class="field">
+          <label>{{ lang.t('settings.business.phone') }}</label>
+          <input pInputText [ngModel]="phone()" (ngModelChange)="phone.set($event)" class="w-full" />
+        </div>
+        <div class="field">
+          <label>{{ lang.t('settings.business.plan') }}</label>
+          <p-select
+            [options]="PLAN_OPTIONS"
+            [ngModel]="plan()"
+            (ngModelChange)="plan.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="biz-actions">
+        <p-button label="Cancelar" severity="secondary" [text]="true" [routerLink]="'/admin/profile'" />
+        <p-button label="Guardar" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
+      </div>
+    </p-card>
+  } @else {
+    <p class="biz-edit__empty">{{ lang.t('biz.edit.not_found') }}</p>
+  }
+</div>

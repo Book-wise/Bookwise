@@ -1,0 +1,108 @@
+<div class="settings">
+  <div class="settings-head">
+    <h1>{{ lang.t('settings.title') }}</h1>
+    <p>{{ lang.t('settings.subtitle') }}</p>
+  </div>
+
+  <div class="settings-grid">
+    <!-- ── Perfil ─────────────────────────────────────────────── -->
+    <p-card [header]="lang.t('settings.profile')" class="settings-card">
+      <div class="profile-summary">
+        <bw-user-avatar [name]="userName() || null" size="lg" />
+        <div class="profile-summary__info">
+          <span class="profile-summary__name">{{ userName() }}</span>
+          <span class="profile-summary__email">{{ userEmail() }}</span>
+          <span class="profile-summary__role">{{ userRoleLabel() }}</span>
+        </div>
+      </div>
+      <p-button
+        [label]="lang.t('settings.profile.edit')"
+        icon="pi pi-user"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        [routerLink]="profileRoute()"
+      />
+    </p-card>
+
+    <!-- ── Apariencia ────────────────────────────────────────── -->
+    <p-card [header]="lang.t('settings.appearance')" class="settings-card">
+      <div class="setting-row">
+        <div class="setting-row__label">
+          <span>{{ lang.t('settings.appearance.dark') }}</span>
+          <small>{{ lang.t('settings.appearance.dark.hint') }}</small>
+        </div>
+        <p-toggleswitch [ngModel]="darkMode()" (ngModelChange)="onDarkChange($event)" />
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row__label">
+          <span>{{ lang.t('settings.appearance.theme') }}</span>
+          <small>{{ lang.t('settings.appearance.theme.hint') }}</small>
+        </div>
+        <p-select
+          [options]="themeOptions"
+          [ngModel]="currentTheme()"
+          (ngModelChange)="onThemeChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          class="settings-select"
+        />
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-row__label">
+          <span>{{ lang.t('settings.appearance.lang') }}</span>
+          <small>{{ lang.t('settings.appearance.lang.hint') }}</small>
+        </div>
+        <p-select
+          [options]="lang.langOptions"
+          [ngModel]="lang.lang()"
+          (ngModelChange)="onLangChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          class="settings-select"
+        />
+      </div>
+    </p-card>
+
+    <!-- ── Negocio (admin) ───────────────────────────────────── -->
+    @if (isAdmin() && business(); as biz) {
+      <p-card [header]="lang.t('settings.business')" class="settings-card">
+        <div class="biz-summary">
+          <span class="biz-summary__avatar">{{ businessMonogram() }}</span>
+          <div class="biz-summary__info">
+            <span class="biz-summary__name">{{ biz.name }}</span>
+            <span class="biz-summary__rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
+          </div>
+        </div>
+
+        <div class="biz-details">
+          @if (biz.email) {
+            <div class="biz-detail"><span class="biz-detail__label">{{ lang.t('settings.business.email') }}</span><span>{{ biz.email }}</span></div>
+          }
+          @if (biz.address) {
+            <div class="biz-detail"><span class="biz-detail__label">{{ lang.t('settings.business.address') }}</span><span>{{ biz.address }}</span></div>
+          }
+          @if (biz.phone) {
+            <div class="biz-detail"><span class="biz-detail__label">{{ lang.t('settings.business.phone') }}</span><span>{{ biz.phone }}</span></div>
+          }
+          <div class="biz-detail"><span class="biz-detail__label">{{ lang.t('settings.business.plan') }}</span><span>{{ biz.plan }}</span></div>
+        </div>
+
+        <div class="biz-actions">
+          <p-button
+            [label]="lang.t('settings.business.detail')"
+            icon="pi pi-building"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            [routerLink]="'/admin/profile'"
+          />
+        </div>
+
+        <p class="settings-hint">{{ lang.t('settings.business.hint') }}</p>
+      </p-card>
+    }
+  </div>
+</div>

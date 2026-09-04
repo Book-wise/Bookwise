@@ -1,27 +1,61 @@
 <p-toast key="global" position="top-right" [life]="4500" />
 
-<div class="layout">
-  <p-menubar [model]="menuItems()">
-    <ng-template pTemplate="start">
-      <span class="app-title">Kinesilk - Profesional</span>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="menubar-end">
-        <p-select
-          [options]="langService.langOptions"
-          [ngModel]="langService.lang()"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onLangChange($event.value)"
-          [appendTo]="'body'"
-          class="lang-select"
-        />
-        <p-button icon="pi pi-sign-out" [label]="langService.t('ui.logout')" class="p-button-text" (onClick)="logout()" />
-      </div>
-    </ng-template>
-  </p-menubar>
+<div class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <!-- Mobile Toggle Button (visible only on mobile) -->
+  <button class="sidebar-toggle" (click)="toggleSidebar()">
+    <i class="pi" [class.pi-bars]="!mobileMenuOpen()" [class.pi-times]="mobileMenuOpen()"></i>
+  </button>
 
-  <div class="content">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="effectivelyCollapsed()">
+    <div class="sidebar-header">
+      @if (isMobile()) {
+        <button class="mobile-close-btn" (click)="closeMenus()">
+          <i class="pi pi-times"></i>
+        </button>
+      }
+      <div class="logo-wrapper" [class.logo-hidden]="effectivelyCollapsed()">
+        <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="sidebar-logo" />
+      </div>
+      <div class="logo-icon-wrapper" [class.logo-hidden]="!effectivelyCollapsed()">
+        <img src="assets/images/icono.svg" alt="BW" class="sidebar-icon-img" />
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of menuItems; track item.routerLink) {
+        <a [routerLink]="item.routerLink"
+           class="nav-item"
+           [class.active]="isActive(item.routerLink!)"
+           [title]="effectivelyCollapsed() ? langService.t(item.label!) : ''">
+          <i class="pi" [ngClass]="item.icon"></i>
+          @if (!effectivelyCollapsed()) {
+            <span class="nav-label">{{ langService.t(item.label!) }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    @if (!effectivelyCollapsed()) {
+      <div class="sidebar-widget">
+        <bw-agenda-navigator [route]="['/provider']" />
+      </div>
+    }
+  </aside>
+
+  @if (!isMobile()) {
+    <button class="sidebar-collapse-tab" (click)="toggleSidebar()" [title]="sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar')">
+      <i class="pi" [class.pi-chevron-left]="!sidebarCollapsed()" [class.pi-chevron-right]="sidebarCollapsed()"></i>
+    </button>
+  }
+
+  @if (mobileMenuOpen()) {
+    <div class="mobile-overlay" (click)="closeMenus()"></div>
+  }
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <bw-app-header />
     <router-outlet></router-outlet>
-  </div>
+  </main>
 </div>
