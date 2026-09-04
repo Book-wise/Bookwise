@@ -47,6 +47,7 @@ export class AccountMenuComponent {
   collapsed = input(false);
 
   readonly userName = computed(() => this.auth.user()?.name ?? '');
+  readonly userAvatar = computed(() => this.auth.user()?.avatar_url ?? this.auth.me()?.avatar_url ?? null);
   readonly userRoleLabel = computed(() => {
     const role = this.auth.userRole();
     if (role === 'admin') return this.lang.t('ui.role.admin');
@@ -57,9 +58,6 @@ export class AccountMenuComponent {
   /** Negocio del usuario (activo), lista de negocios y selector (multi-tenant). */
   readonly business = computed(() => this.auth.me()?.business ?? null);
   readonly businesses = computed(() => this.auth.me()?.businesses ?? []);
-  readonly businessMonogram = computed(() =>
-    (this.business()?.name ?? 'B').trim().charAt(0).toUpperCase(),
-  );
   readonly currentBusinessId = computed(() => this.business()?.id ?? null);
   /** Solo mostrar el selector si hay más de un negocio (gate por plan/tenant). */
   readonly canSwitch = computed(() => this.businesses().length > 1);

@@ -8,7 +8,7 @@
   (keydown.enter)="accountPop.toggle($event)"
   (keydown.space)="accountPop.toggle($event)"
 >
-  <bw-user-avatar [name]="userName() || null" size="md" />
+  <bw-user-avatar [name]="userName() || null" [image]="userAvatar()" size="md" />
   @if (!collapsed()) {
     <div class="account-chip__info">
       <span class="account-chip__name">{{ userName() }}</span>
@@ -21,7 +21,7 @@
 <p-popover #accountPop class="account-menu-popover" [dismissable]="true">
   <div class="account-menu">
     <div class="account-menu__header">
-      <bw-user-avatar [name]="userName() || null" size="md" />
+      <bw-user-avatar [name]="userName() || null" [image]="userAvatar()" size="md" />
       <div class="account-menu__identity">
         <span class="account-menu__name">{{ userName() }}</span>
         <span class="account-menu__role">{{ userRoleLabel() }}</span>
@@ -40,7 +40,13 @@
               [class.account-menu__biz-item--active]="b.id === currentBusinessId()"
               (click)="switchTo(b, accountPop)"
             >
-              <span class="account-menu__monogram">{{ (b.name || 'B').charAt(0).toUpperCase() }}</span>
+              <span class="account-menu__monogram">
+                <bw-user-avatar
+                  [name]="b.name"
+                  [image]="b.logo_url"
+                  size="sm"
+                  shape="square" />
+              </span>
               <div class="account-menu__biz-info">
                 <span class="account-menu__biz-name">{{ b.name }}</span>
                 <span class="account-menu__biz-rut">{{ lang.t('ui.rut') }}: {{ b.rut }}</span>
@@ -54,7 +60,13 @@
       } @else {
         <!-- Negocio activo (solo lectura si 1 negocio / plan no enterprise) -->
         <div class="account-menu__business">
-          <span class="account-menu__business-avatar">{{ businessMonogram() }}</span>
+          <span class="account-menu__business-avatar">
+            <bw-user-avatar
+              [name]="biz.name"
+              [image]="biz.logo_url"
+              size="md"
+              shape="square" />
+          </span>
           <div class="account-menu__business-info">
             <span class="account-menu__business-name">{{ biz.name }}</span>
             @if (biz.rut) {

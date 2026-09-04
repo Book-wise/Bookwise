@@ -1,8 +1,29 @@
-<span
-  class="bw-user-avatar"
-  [class.bw-user-avatar--sm]="size() === 'sm'"
-  [class.bw-user-avatar--md]="size() === 'md'"
-  [class.bw-user-avatar--lg]="size() === 'lg'"
-  aria-hidden="true"
-  >{{ initials() }}</span
->
+@let avatarImage = image();
+
+@if (hasImage() && avatarImage) {
+  <span
+    class="bw-user-avatar"
+    [class.bw-user-avatar--sm]="size() === 'sm'"
+    [class.bw-user-avatar--md]="size() === 'md'"
+    [class.bw-user-avatar--lg]="size() === 'lg'"
+    [class.bw-user-avatar--square]="shape() === 'square'"
+    aria-hidden="true"
+  >
+    <img
+      class="bw-user-avatar__img"
+      [src]="avatarImage"
+      [alt]="name() ?? 'avatar'"
+      loading="lazy"
+    />
+  </span>
+} @else {
+  <span
+    class="bw-user-avatar"
+    [class.bw-user-avatar--sm]="size() === 'sm'"
+    [class.bw-user-avatar--md]="size() === 'md'"
+    [class.bw-user-avatar--lg]="size() === 'lg'"
+    [class.bw-user-avatar--square]="shape() === 'square'"
+    aria-hidden="true"
+    >{{ shape() === 'square' ? monogram() : initials() }}</span
+  >
+}

@@ -11,6 +11,21 @@ export class UserAvatarComponent {
   readonly size = input<'sm' | 'md' | 'lg'>('md');
 
   /**
+   * Imagen opcional (avatar de usuario o logo de negocio). Si viene una URL se
+   * muestra la `<img>`; si no, cae a las iniciales/monograma. Permite que un
+   * único componente sirva a personas y negocios con su fallback por nombre.
+   */
+  readonly image = input<string | null | undefined>(undefined);
+
+  /**
+   * Forma del marco. `circle` (defecto) para avatares de persona; `square`
+   * (redondeado) para logos de negocio, que se ven mejor encuadrados.
+   */
+  readonly shape = input<'circle' | 'square'>('circle');
+
+  readonly hasImage = computed(() => !!this.image()?.trim());
+
+  /**
    * Iniciales a partir del nombre completo: primera letra del primer y del
    * último token no vacío. Un solo token → su primera letra. Sin nombre → '?'.
    * Ej.: 'Beatriz González' → 'BG', 'Sebastian' → 'S'.
@@ -25,4 +40,9 @@ export class UserAvatarComponent {
 
     return `${tokens[0][0]}${tokens[tokens.length - 1][0]}`.toUpperCase();
   });
+
+  /**
+   * Monograma de una letra para logos de negocio sin imagen (nombre corto).
+   */
+  readonly monogram = computed(() => (this.name()?.trim().charAt(0) ?? 'B').toUpperCase());
 }

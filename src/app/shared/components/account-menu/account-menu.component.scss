@@ -102,16 +102,9 @@
   }
 
   &__business-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: var(--bw-300);
-    color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: var(--bw-weight-semibold);
-    font-size: 1rem;
     flex-shrink: 0;
   }
 
@@ -183,16 +176,9 @@
   }
 
   &__monogram {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: var(--bw-300);
-    color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 0.875rem;
     flex-shrink: 0;
   }
 

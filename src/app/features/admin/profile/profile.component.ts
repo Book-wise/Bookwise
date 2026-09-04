@@ -49,6 +49,9 @@ export class ProfileComponent implements OnInit {
 
   // ── Identidad del usuario autenticado (avatar + nombre + rol de sesión) ─────
   readonly userName = computed(() => this.auth.user()?.name ?? this.me()?.name ?? '');
+  /** URL del avatar del usuario autenticado (fallback → iniciales en el componente). */
+  readonly userAvatar = computed(() => this.auth.user()?.avatar_url ?? this.me()?.avatar_url ?? null);
+  readonly avatarSaving = signal(false);
   readonly userRoleLabel = computed(() => {
     const role = this.auth.userRole();
     if (role === 'admin') return this.lang.t('ui.role.admin');
@@ -66,6 +69,47 @@ export class ProfileComponent implements OnInit {
 
   monogram(name?: string): string {
     return (name || 'B').trim().charAt(0).toUpperCase();
+  }
+
+  /** URL del logo del negocio, o null → el componente cae al monograma. */
+  businessLogo(biz: Business): string | null {
+    return biz.logo_url ?? null;
+  }
+
+  /** Handler del input file del avatar: valida imagen y sube vía /auth/me/avatar. */
+  onAvatarInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (file) this.changeAvatar(file);
+  }
+
+  /** POST /auth/me/avatar — sube el avatar, refresca /auth/me y notifica. */
+  changeAvatar(file: File): void {
+    this.avatarSaving.set(true);
+    this.authApi.uploadAvatar(file).subscribe({
+      next: () => {
+        this.avatarSaving.set(false);
+        this.auth.loadMe(true).subscribe();
+        this.messageService.add({
+          severity: 'success',
+          summary: this.lang.t('profile.avatar.change'),
+          detail: this.lang.t('profile.avatar.success'),
+          key: 'global',
+          life: 4000,
+        });
+      },
+      error: () => {
+        this.avatarSaving.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: this.lang.t('ui.error'),
+          detail: this.lang.t('profile.avatar.error'),
+          key: 'global',
+          life: 4000,
+        });
+      },
+    });
   }
 
   switchTo(biz: Business): void {

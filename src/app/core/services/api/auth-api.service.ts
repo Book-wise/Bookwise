@@ -58,4 +58,12 @@ export class AuthApiService {
   updateProfile(data: { phone: string }): Observable<AuthMeResponse> {
     return this.http.patch<AuthMeResponse>(`${this.baseUrl}/auth/me`, data);
   }
+
+  /** POST /auth/me/avatar (Bearer, multipart) → { user } — sube el avatar del usuario autenticado.
+   *  El backend genera un thumbnail optimizado (WebP), nunca persiste el original. */
+  uploadAvatar(file: File): Observable<AuthMeResponse> {
+    const form = new FormData();
+    form.append('avatar', file);
+    return this.http.post<AuthMeResponse>(`${this.baseUrl}/auth/me/avatar`, form);
+  }
 }

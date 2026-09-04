@@ -219,6 +219,7 @@ export interface User {
   email: string;
   name: string;
   phone?: string;
+  avatar_url?: string | null;
   role: UserRole;
   provider_id?: number | null;
   tenant_id?: number | null;
@@ -291,6 +292,7 @@ export interface AuthMeData {
   name: string;
   email: string;
   phone?: string | null;
+  avatar_url?: string | null;
   role: UserRole;
   tenant_id: number | null;
   email_verified_at: string | null;

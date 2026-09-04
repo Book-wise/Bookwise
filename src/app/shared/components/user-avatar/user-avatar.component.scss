@@ -1,5 +1,6 @@
-// Avatar de usuario — mismo recipe visual que `.bw-pc__avatar` (patient-card):
-// círculo con fondo azul claro (`--bw-200`), texto blanco, centrado.
+// Avatar de usuario / logo de negocio — mismo recipe visual que `.bw-pc__avatar`
+// (patient-card): círculo con fondo azul claro (`--bw-200`), texto blanco, centrado.
+// Cuando hay `[image]` la foto llena el marco con `object-fit: cover`.
 
 .bw-user-avatar {
   display: inline-flex;
@@ -13,6 +14,12 @@
   flex-shrink: 0;
   user-select: none;
   line-height: 1;
+  overflow: hidden;
+
+  // Logos de negocio: marco cuadrado (redondeado), se ve mejor encuadrado.
+  &--square {
+    border-radius: 0.625rem;
+  }
 
   &--sm {
     width: 28px;
@@ -28,5 +35,12 @@
     width: 52px;
     height: 52px;
     font-size: 1.125rem;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 }

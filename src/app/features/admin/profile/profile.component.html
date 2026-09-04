@@ -2,7 +2,18 @@
   <div class="profile-header">
     <h1>{{ lang.t('profile.title') }}</h1>
     <p class="profile-header__identity">
-      <bw-user-avatar [name]="userName() || null" size="lg" />
+      <span class="profile-header__avatar-wrap">
+        <bw-user-avatar [name]="userName() || null" [image]="userAvatar()" size="lg" />
+        <label class="profile-header__avatar-edit" [class.is-loading]="avatarSaving()">
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onAvatarInput($event)"
+            [disabled]="avatarSaving()"
+            aria-label="{{ lang.t('profile.avatar.change') }}" />
+          <i class="pi pi-camera"></i>
+        </label>
+      </span>
       <span class="profile-header__text">
         <span class="profile-header__name">{{ me()?.name ?? lang.t('profile.not_available') }}</span>
         <span class="bw-chip bw-chip--primary profile-header__role"><i class="pi pi-shield"></i>{{ userRoleLabel() || lang.t('profile.not_available') }}</span>
@@ -127,7 +138,13 @@
       <div class="biz-list">
         @for (biz of businesses(); track biz.id) {
           <div class="biz-card" [class.biz-card--active]="biz.id === activeBusinessId()">
-            <span class="biz-card__avatar" [style.background]="biz.id === activeBusinessId() ? 'var(--bw-300)' : 'var(--surface-300, #cbd5e1)'">{{ monogram(biz.name) }}</span>
+            <span class="biz-card__avatar">
+              <bw-user-avatar
+                [name]="biz.name"
+                [image]="businessLogo(biz)"
+                size="md"
+                shape="square" />
+            </span>
             <div class="biz-card__info">
               <div class="biz-card__head">
                 <span class="biz-card__name">{{ biz.name }}</span>
