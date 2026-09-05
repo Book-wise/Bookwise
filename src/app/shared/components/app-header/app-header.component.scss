@@ -3,6 +3,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--bw-space-md);
+  // Altura FIJA (border-box → incluye el padding): el header mide lo mismo en
+  // todas las resoluciones aunque cambien sus elementos internos (chip completo
+  // en desktop ↔ avatar compacto en mobile). Eso mantiene alineado el bloque del
+  // logo (sidebar-header = 67px) y un drawer/sidebar consistente.
+  height: 4.1875rem;
+  min-height: 4.1875rem;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--surface-border);
   background: var(--surface-card);
@@ -16,13 +22,31 @@
     margin: 0 -1rem var(--bw-space-md);
   }
   @media (max-width: 768px) {
-    margin: 0 0 var(--bw-space-md);
+    // Full-width y flush al tope: contrarrestamos el `padding: 1rem` lateral
+    // del .main-content en mobile para que la barra se extienda de borde a borde
+    // (igual que en desktop) y NO quede como una "tarjeta" con margen.
+    margin: 0 -1rem var(--bw-space-md);
   }
 
-  // En mobile el picker de negocio se fusiona dentro del menú del avatar.
+  // En mobile el picker de negocio se condensa al monograma (el menú completo
+  // de empresas vive en el account-menu). Convive con la hamburguesa y el avatar.
   @media (max-width: 768px) {
     .app-header__business {
+      padding: 0.25rem;
+      border: none;
+      background: transparent;
+    }
+    .app-header__business-info,
+    .app-header__chevron {
       display: none;
+    }
+    // El monograma NO fuerza su propio tamaño: el `bw-user-avatar` (size="md",
+    // 36px) determina la altura. Así el logo del negocio (cuadrado = md) queda a
+    // la misma altura que el avatar de usuario (círculo = md) en la barra.
+    .app-header__monogram {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 }
@@ -32,6 +56,35 @@
   align-items: center;
   gap: var(--bw-space-lg);
   min-width: 0;
+}
+
+// ── Botón hamburguesa (solo mobile) ───────────────────────────────────────────
+// La sidebar se abre/cierra desde acá, unificando en una sola barra superior.
+
+.app-header__menu-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color);
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: background var(--bw-transition-base), color var(--bw-transition-base);
+  display: none;
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--color-primary);
+  }
+
+  @media (max-width: 991px) {
+    display: inline-flex;
+  }
 }
 
 .app-header__business {
@@ -59,16 +112,9 @@
 }
 
 .app-header__monogram {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: var(--bw-300);
-  color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--bw-weight-semibold);
-  font-size: 0.8125rem;
   flex-shrink: 0;
 }
 
@@ -150,16 +196,9 @@
 }
 
 .biz-selector__monogram {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--bw-300);
-  color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.9375rem;
   flex-shrink: 0;
 }
 
@@ -191,8 +230,8 @@
 }
 
 .app-header__icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--surface-border);
   background: var(--surface-card);
   color: var(--text-color);

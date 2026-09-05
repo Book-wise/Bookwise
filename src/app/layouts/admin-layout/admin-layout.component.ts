@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@services/auth.service';
@@ -15,7 +16,7 @@ import { AgendaNavigatorComponent } from '@shared/components/agenda-navigator/ag
 @Component({
   selector: 'bw-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, AppHeaderComponent, AgendaNavigatorComponent],
+  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, TooltipModule, AppHeaderComponent, AgendaNavigatorComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
@@ -59,7 +60,14 @@ export class AdminLayoutComponent {
   }
 
   private checkScreenSize(): void {
-    this.isMobile.set(window.innerWidth < 992);
+    const mobile = window.innerWidth < 992;
+    this.isMobile.set(mobile);
+    // Al volver a desktop (o al salir de mobile), el panel overlay nunca debe
+    // quedar "abierto": sin esto, redimensionar de mobile→desktop dejaba un
+    // overlay fantasma (ya que la sidebar colapsada es un estado distinto).
+    if (!mobile && this.mobileMenuOpen()) {
+      this.mobileMenuOpen.set(false);
+    }
   }
 
   toggleSidebar(): void {

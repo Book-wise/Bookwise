@@ -51,6 +51,19 @@
     color: var(--text-color-secondary);
     flex-shrink: 0;
   }
+
+  // Pantallas muy angostas (≤ 575px, ej. iPhone SE): el chip se compacta a solo
+  // el avatar para no apretar la barra superior junto a hamburguesa/logo/dark.
+  @media (max-width: 575px) {
+    padding: 0.25rem;
+    border: none;
+    background: transparent;
+
+    .account-chip__info,
+    .account-chip__chevron {
+      display: none;
+    }
+  }
 }
 
 // ── Popover de cuenta (contenido proyectado en el overlay) ──────────────────

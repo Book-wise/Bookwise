@@ -1,19 +1,9 @@
 <p-toast key="global" position="top-right" [life]="4500" />
 
 <div class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
-  <!-- Mobile Toggle Button (visible only on mobile) -->
-  <button class="sidebar-toggle" (click)="toggleSidebar()">
-    <i class="pi" [class.pi-bars]="!mobileMenuOpen()" [class.pi-times]="mobileMenuOpen()"></i>
-  </button>
-
   <!-- Sidebar -->
   <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="effectivelyCollapsed()">
     <div class="sidebar-header">
-      @if (isMobile()) {
-        <button class="mobile-close-btn" (click)="closeMenus()">
-          <i class="pi pi-times"></i>
-        </button>
-      }
       <div class="logo-wrapper" [class.logo-hidden]="effectivelyCollapsed()">
         <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="sidebar-logo" />
       </div>
@@ -21,6 +11,23 @@
         <img src="assets/images/icono.svg" alt="BW" class="sidebar-icon-img" />
       </div>
     </div>
+
+    <!-- Flecha de colapso/cierre, ARRIBA antes del menú, separada por una línea.
+         Desktop: colapsa/expande. Mobile: cierra el drawer. -->
+    <button
+      type="button"
+      class="sidebar-collapse-btn"
+      (click)="toggleSidebar()"
+      [pTooltip]="isMobile()
+        ? langService.t('ui.close_menu')
+        : (sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar'))"
+      tooltipPosition="top"
+    >
+      <span class="sidebar-collapse-btn__label">
+        {{ isMobile() ? langService.t('ui.close_menu') : (sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar')) }}
+      </span>
+      <i class="pi" [class.pi-chevron-left]="!effectivelyCollapsed()" [class.pi-chevron-right]="effectivelyCollapsed()"></i>
+    </button>
 
     <nav class="sidebar-nav">
       @for (item of menuItems; track item.routerLink) {
@@ -36,18 +43,27 @@
       }
     </nav>
 
-    @if (!effectivelyCollapsed()) {
+    @if (!isMobile() && !effectivelyCollapsed()) {
       <div class="sidebar-widget">
         <bw-agenda-navigator />
       </div>
     }
-  </aside>
 
-  @if (!isMobile()) {
-    <button class="sidebar-collapse-tab" (click)="toggleSidebar()" [title]="sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar')">
-      <i class="pi" [class.pi-chevron-left]="!sidebarCollapsed()" [class.pi-chevron-right]="sidebarCollapsed()"></i>
-    </button>
-  }
+    <div class="sidebar-footer">
+      <button
+        type="button"
+        class="sidebar-logout"
+        (click)="logout()"
+        [pTooltip]="langService.t('ui.logout')"
+        tooltipPosition="top"
+      >
+        <i class="pi pi-sign-out"></i>
+        @if (!effectivelyCollapsed()) {
+          <span>{{ langService.t('ui.logout') }}</span>
+        }
+      </button>
+    </div>
+  </aside>
 
   @if (mobileMenuOpen()) {
     <div class="mobile-overlay" (click)="closeMenus()"></div>
@@ -55,7 +71,9 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <bw-app-header />
+    <bw-app-header
+      [mobileMenuOpen]="mobileMenuOpen()"
+      [onToggleMenu]="() => toggleSidebar()" />
     <router-outlet></router-outlet>
   </main>
 </div>

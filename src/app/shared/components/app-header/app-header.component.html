@@ -1,5 +1,15 @@
 <header class="app-header">
   <div class="app-header__left">
+    <button
+      type="button"
+      class="app-header__menu-btn app-header__menu-btn--mobile"
+      (click)="onToggleMenu()()"
+      [attr.aria-label]="lang.t('ui.toggle_menu')"
+      [attr.aria-expanded]="mobileMenuOpen()"
+    >
+      <i class="pi" [class.pi-bars]="!mobileMenuOpen()" [class.pi-times]="mobileMenuOpen()"></i>
+    </button>
+
     @if (business(); as biz) {
       <button
         type="button"
@@ -7,7 +17,13 @@
         [class.app-header__business--button]="canSwitch()"
         (click)="canSwitch() ? bizPopover.toggle($event) : null"
       >
-        <span class="app-header__monogram">{{ businessMonogram() }}</span>
+        <span class="app-header__monogram">
+          <bw-user-avatar
+            [name]="biz.name"
+            [image]="businessLogo()"
+            size="md"
+            shape="square" />
+        </span>
         <div class="app-header__business-info">
           <span class="app-header__business-name">{{ biz.name }}</span>
           @if (biz.rut) {
@@ -29,7 +45,13 @@
               [class.biz-selector__item--active]="b.id === currentBusinessId()"
               (click)="switchTo(b); bizPopover.hide()"
             >
-              <span class="biz-selector__monogram">{{ (b.name || 'B').charAt(0).toUpperCase() }}</span>
+              <span class="biz-selector__monogram">
+                <bw-user-avatar
+                  [name]="b.name"
+                  [image]="b.logo_url"
+                  size="sm"
+                  shape="square" />
+              </span>
               <div class="biz-selector__info">
                 <span class="biz-selector__name">{{ b.name }}</span>
                 <span class="biz-selector__rut">{{ lang.t('ui.rut') }}: {{ b.rut }}</span>
