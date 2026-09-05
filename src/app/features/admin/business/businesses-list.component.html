@@ -1,0 +1,66 @@
+<div class="businesses-wrap">
+  <div class="businesses-toolbar">
+    <div class="businesses-toolbar__title">
+      <h2>{{ lang.t('biz.negocios') }}</h2>
+      <p class="businesses-toolbar__hint">{{ lang.t('biz.negocios_hint') }}</p>
+    </div>
+    <p-button
+      label="{{ lang.t('biz.nueva_empresa') }}"
+      icon="pi pi-plus"
+      (onClick)="newBusiness()" />
+  </div>
+
+  @if (businesses().length === 0) {
+    <div class="businesses-empty">
+      <i class="pi pi-building"></i>
+      <span>{{ lang.t('biz.no_businesses') }}</span>
+    </div>
+  } @else {
+    <div class="businesses-list">
+      @for (biz of businesses(); track biz.id) {
+        <div class="biz-row" [class.biz-row--active]="biz.id === activeBusinessId()">
+          <span class="biz-row__avatar">
+            <bw-user-avatar
+              [name]="biz.name"
+              [image]="biz.logo_url ?? null"
+              size="md"
+              shape="square" />
+          </span>
+          <div class="biz-row__info">
+            <div class="biz-row__head">
+              <span class="biz-row__name">{{ biz.name }}</span>
+              @if (biz.id === activeBusinessId()) {
+                <span class="biz-row__badge biz-row__badge--active">{{ lang.t('biz.activo') }}</span>
+              }
+              <span class="biz-row__plan" [class.biz-row__plan--enterprise]="biz.plan === 'enterprise'">
+                {{ biz.plan }}
+              </span>
+            </div>
+            <span class="biz-row__meta">
+              @if (biz.rut) {
+                <span>{{ biz.rut }}</span>
+              }
+            </span>
+          </div>
+          <div class="biz-row__actions">
+            @if (biz.id !== activeBusinessId() && canSwitch()) {
+              <p-button
+                label="{{ lang.t('biz.cambiar_a') }}"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="switchTo(biz)" />
+            }
+            <p-button
+              label="{{ lang.t('biz.administrar') }}"
+              icon="pi pi-building"
+              size="small"
+              severity="secondary"
+              [text]="true"
+              (onClick)="editBusiness(biz)" />
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

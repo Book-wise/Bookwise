@@ -4,19 +4,16 @@
       <h1>{{ lang.t('settings.business') }}</h1>
       <p>{{ lang.t('biz.edit.subtitle') }}</p>
     </div>
-    <p-button label="{{ lang.t('settings.profile') }}" icon="pi pi-arrow-left" severity="secondary" [text]="true" [routerLink]="'/admin/profile'" />
+    <p-button label="{{ lang.t('biz.negocios') }}" icon="pi pi-arrow-left" severity="secondary" [text]="true" [routerLink]="'/admin/negocios'" />
   </div>
 
   @if (business(); as biz) {
-    <p-card class="biz-edit-card">
-      <div class="biz-summary">
-        <span class="biz-summary__avatar">{{ (biz.name || 'B').charAt(0).toUpperCase() }}</span>
-        <div class="biz-summary__info">
-          <span class="biz-summary__name">{{ biz.name }}</span>
-          <span class="biz-summary__rut">{{ lang.t('ui.rut') }}: {{ biz.rut }}</span>
-        </div>
-      </div>
+    <bw-business-hero
+      [business]="biz"
+      [canManage]="canManage()"
+      (logoChanged)="onLogoChanged()" />
 
+    <p-card class="biz-edit-card">
       <div class="biz-form">
         <div class="field">
           <label>{{ lang.t('settings.business') }} *</label>
@@ -48,8 +45,8 @@
       </div>
 
       <div class="biz-actions">
-        <p-button label="Cancelar" severity="secondary" [text]="true" [routerLink]="'/admin/profile'" />
-        <p-button label="Guardar" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
+        <p-button label="{{ lang.t('ui.cancel') }}" severity="secondary" [text]="true" [routerLink]="'/admin/negocios'" />
+        <p-button label="{{ lang.t('biz.save') }}" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
       </div>
     </p-card>
   } @else {
