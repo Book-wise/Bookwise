@@ -11,6 +11,7 @@ import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { BusinessesApiService } from '@services/api/businesses-api.service';
 import { Business } from '@models';
+import { BusinessHeroComponent } from '@shared/components/business-hero/business-hero.component';
 
 const PLAN_OPTIONS = [
   { label: 'Starter', value: 'starter' },
@@ -23,7 +24,7 @@ const PLAN_OPTIONS = [
   standalone: true,
   imports: [
     CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, SelectModule,
-    RouterLink,
+    RouterLink, BusinessHeroComponent,
   ],
   templateUrl: './business-edit.component.html',
   styleUrls: ['./business-edit.component.scss'],
@@ -46,6 +47,9 @@ export class BusinessEditComponent implements OnInit {
     return all.find((b) => b.id === id) ?? this.auth.me()?.business ?? null;
   });
 
+  /** Si el usuario puede gestionar ESTE negocio (admin_general o admin_local suyo). */
+  readonly canManage = computed(() => this.auth.isAdminGeneral() || this.auth.isAdminLocal());
+
   name = signal('');
   email = signal('');
   address = signal('');
@@ -56,7 +60,7 @@ export class BusinessEditComponent implements OnInit {
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isFinite(id)) {
-      this.router.navigate(['/admin/profile']);
+      this.router.navigate(['/admin/negocios']);
       return;
     }
     this.businessId.set(id);
@@ -68,6 +72,11 @@ export class BusinessEditComponent implements OnInit {
       this.phone.set(biz.phone ?? '');
       this.plan.set(biz.plan);
     }
+  }
+
+  /** Refresca /auth/me tras un cambio de logo (hero). */
+  onLogoChanged(): void {
+    this.auth.loadMe(true).subscribe();
   }
 
   save(): void {
@@ -85,12 +94,25 @@ export class BusinessEditComponent implements OnInit {
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.messageService.add({ severity: 'success', summary: 'Negocio', detail: 'Negocio actualizado', key: 'global', life: 3500 });
-          this.router.navigate(['/admin/profile']);
+          this.auth.loadMe(true).subscribe();
+          this.messageService.add({
+            severity: 'success',
+            summary: this.lang.t('biz.negocios'),
+            detail: this.lang.t('biz.update_success'),
+            key: 'global',
+            life: 3500,
+          });
+          this.router.navigate(['/admin/negocios']);
         },
         error: () => {
           this.saving.set(false);
-          this.messageService.add({ severity: 'error', summary: this.lang.t('ui.error'), detail: 'No se pudo actualizar el negocio', key: 'global', life: 4000 });
+          this.messageService.add({
+            severity: 'error',
+            summary: this.lang.t('ui.error'),
+            detail: this.lang.t('biz.update_error'),
+            key: 'global',
+            life: 4000,
+          });
         },
       });
   }

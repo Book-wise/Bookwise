@@ -1,0 +1,79 @@
+@if (created(); as createdFlag) {
+  <div class="biz-create__created">
+    <p-card>
+      <div class="biz-create__created-body">
+        <i class="pi pi-check-circle biz-create__created-icon"></i>
+        @if (createdBusiness(); as biz) {
+          <bw-business-hero
+            [business]="biz"
+            [canManage]="true"
+            (logoChanged)="onLogoChanged()" />
+          <p class="biz-create__created-hint">{{ lang.t('biz.logo.hint') }}</p>
+        }
+        <p-button label="{{ lang.t('biz.go_list') }}" icon="pi pi-arrow-right" (onClick)="goToList()" />
+      </div>
+    </p-card>
+  </div>
+} @else {
+  <div class="biz-create-wrap">
+    <p-card class="biz-create-card">
+      <ng-template pTemplate="header">
+        <div class="biz-create__header">
+          <h2>{{ lang.t('biz.create_title') }}</h2>
+          <p class="biz-create__subtitle">{{ lang.t('biz.logo.hint') }}</p>
+        </div>
+      </ng-template>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="biz-create__form">
+        <div class="field">
+          <label for="name">{{ lang.t('onboard.business_name') }}</label>
+          <input id="name" pInputText formControlName="name" class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="rut">{{ lang.t('onboard.business_rut') }}</label>
+          <input id="rut" pInputText formControlName="rut" class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="email">{{ lang.t('onboard.business_email') }}</label>
+          <input id="email" pInputText formControlName="email" class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="address">{{ lang.t('onboard.business_address') }}</label>
+          <input id="address" pInputText formControlName="address" class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="phone">{{ lang.t('onboard.business_phone') }}</label>
+          <input id="phone" pInputText formControlName="phone" class="w-full" />
+        </div>
+
+        <div class="field">
+          <label for="plan">{{ lang.t('settings.business.plan') }}</label>
+          <p-select
+            inputId="plan"
+            formControlName="plan"
+            [options]="PLAN_OPTIONS"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full" />
+        </div>
+
+        <div class="biz-create__actions">
+          <p-button
+            label="{{ lang.t('ui.cancel') }}"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="'/admin/negocios'" />
+          <p-button
+            label="{{ lang.t('biz.create_submit') }}"
+            icon="pi pi-check"
+            type="submit"
+            [loading]="saving()" />
+        </div>
+      </form>
+    </p-card>
+  </div>
+}

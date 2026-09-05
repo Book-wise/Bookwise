@@ -70,6 +70,14 @@ export const routes: Routes = [
         loadComponent: () => import('@shared/components/configuraciones/configuraciones.component').then(m => m.ConfiguracionesComponent)
       },
       {
+        path: 'negocios',
+        loadComponent: () => import('./features/admin/business/businesses-list.component').then(m => m.BusinessesListComponent)
+      },
+      {
+        path: 'negocios/nuevo',
+        loadComponent: () => import('./features/admin/business/business-create.component').then(m => m.BusinessCreateComponent)
+      },
+      {
         path: 'negocios/:id',
         loadComponent: () => import('./features/admin/business/business-edit.component').then(m => m.BusinessEditComponent)
       },
