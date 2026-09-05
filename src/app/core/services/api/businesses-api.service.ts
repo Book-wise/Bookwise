@@ -27,6 +27,36 @@ export class BusinessesApiService {
       .patch<{ data: Business }>(`${this.baseUrl}/businesses/${id}`, data)
       .pipe(map((r) => r.data));
   }
+
+  /** POST /businesses/{id}/logo (Bearer, multipart) → { data: Business } — logo de ESE negocio. */
+  uploadLogo(id: number, file: File): Observable<Business> {
+    const form = new FormData();
+    form.append('logo', file);
+    return this.http
+      .post<{ data: Business }>(`${this.baseUrl}/businesses/${id}/logo`, form)
+      .pipe(map((r) => r.data));
+  }
+
+  /** DELETE /businesses/{id}/logo (Bearer) → { data: Business } — quita el logo de ESE negocio. */
+  removeLogo(id: number): Observable<Business> {
+    return this.http
+      .delete<{ data: Business }>(`${this.baseUrl}/businesses/${id}/logo`)
+      .pipe(map((r) => r.data));
+  }
+
+  /** POST /businesses/{id}/assign-admin-local (Bearer) → asigna admin_local a un negocio. */
+  assignAdminLocal(id: number, userId: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/businesses/${id}/assign-admin-local`, {
+      user_id: userId,
+    });
+  }
+
+  /** DELETE /businesses/{id}/assign-admin-local (Bearer) → desasigna admin_local. */
+  unassignAdminLocal(id: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/businesses/${id}/assign-admin-local`, {
+      body: { user_id: userId },
+    });
+  }
 }
 
 /** Body de edición de negocio (RUT inmutable). */

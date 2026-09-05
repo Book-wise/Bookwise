@@ -87,6 +87,16 @@ describe('UserAvatarComponent', () => {
       expect(fixture.debugElement.query(By.css('.bw-user-avatar')).nativeElement.textContent.trim()).toBe('JP');
     });
 
+    it('resolves a relative /storage path against the configured API base', () => {
+      fixture.componentRef.setInput('name', 'Juan Pérez');
+      fixture.componentRef.setInput('image', '/storage/user-avatars/x.webp');
+      fixture.detectChanges();
+
+      const img = fixture.debugElement.query(By.css('.bw-user-avatar__img'));
+      expect(img).toBeTruthy();
+      expect(img.nativeElement.getAttribute('src')).toMatch(/^http:\/\/127\.0\.0\.1:9999\/storage\/user-avatars\/x\.webp$/);
+    });
+
     it('applies the square shape for business logos', () => {
       fixture.componentRef.setInput('name', 'Nimbus Corp');
       fixture.componentRef.setInput('shape', 'square');
