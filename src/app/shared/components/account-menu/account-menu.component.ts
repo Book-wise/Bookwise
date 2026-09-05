@@ -75,7 +75,7 @@ export class AccountMenuComponent {
 
     return [
       { icon: 'pi pi-id-card', label: this.lang.t('nav.profile'), route: '/admin/profile' },
-      { icon: 'pi pi-building', label: this.lang.t('account.business_primary'), route: '/admin/profile' },
+      { icon: 'pi pi-building', label: this.lang.t('account.business_primary'), route: '/admin/negocios' },
       { icon: 'pi pi-shield', label: this.lang.t('nav.roles'), route: '/admin/roles' },
       { icon: 'pi pi-cog', label: this.lang.t('nav.settings'), route: '/admin/configuraciones' },
       { icon: 'pi pi-sign-out', label: this.lang.t('ui.logout'), logout: true },
