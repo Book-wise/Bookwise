@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { resolveApiUrl } from '@shared/utils/api-url.util';
 
 @Component({
   selector: 'bw-user-avatar',
@@ -18,12 +19,19 @@ export class UserAvatarComponent {
   readonly image = input<string | null | undefined>(undefined);
 
   /**
+   * URL ya resuelta contra la base de la API. El backend devuelve rutas
+   * relativas (/storage/…); este computado las convierte en absolutas usando
+   * `environment.apiUrl`, así el asset carga en cualquier entorno.
+   */
+  readonly resolvedImage = computed(() => resolveApiUrl(this.image()));
+
+  /**
    * Forma del marco. `circle` (defecto) para avatares de persona; `square`
    * (redondeado) para logos de negocio, que se ven mejor encuadrados.
    */
   readonly shape = input<'circle' | 'square'>('circle');
 
-  readonly hasImage = computed(() => !!this.image()?.trim());
+  readonly hasImage = computed(() => !!this.resolvedImage()?.trim());
 
   /**
    * Iniciales a partir del nombre completo: primera letra del primer y del

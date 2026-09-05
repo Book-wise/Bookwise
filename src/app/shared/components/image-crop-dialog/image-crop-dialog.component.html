@@ -1,0 +1,50 @@
+<p-dialog
+  [visible]="visible()"
+  [header]="t(titleKey())"
+  [modal]="true"
+  [closable]="true"
+  (onHide)="close()"
+  [style]="{ width: 'min(92vw, 480px)' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="crop-body">
+    <p class="crop-body__hint">{{ t('profile.avatar.crop_hint') }}</p>
+
+    @if (loadFailed()) {
+      <div class="crop-body__error">{{ t('profile.avatar.load_failed') }}</div>
+    } @else if (cropperImage(); as img) {
+      <div class="crop-body__cropper">
+        <image-cropper
+          [imageChangedEvent]="null"
+          [imageBase64]="img"
+          [maintainAspectRatio]="true"
+          [aspectRatio]="1"
+          [roundCropper]="true"
+          [resizeToWidth]="256"
+          [onlyScaleDown]="true"
+          format="png"
+          (imageCropped)="onImageCropped($event)"
+          (loadImageFailed)="onLoadFailed()"
+        ></image-cropper>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="crop-actions">
+      <p-button
+        label="{{ t('profile.avatar.crop_cancel') }}"
+        severity="secondary"
+        [text]="true"
+        [disabled]="saving()"
+        (onClick)="close()" />
+      <p-button
+        label="{{ t('profile.avatar.crop_confirm') }}"
+        icon="pi pi-check"
+        [disabled]="!canConfirm()"
+        [loading]="saving()"
+        (onClick)="confirm()" />
+    </div>
+  </ng-template>
+</p-dialog>

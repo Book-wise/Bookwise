@@ -1,0 +1,75 @@
+@if (business(); as biz) {
+  <div class="business-hero" [class.business-hero--loading]="logoSaving()">
+    <div class="business-hero__avatar">
+      <span class="business-hero__avatar-wrap">
+        <bw-user-avatar
+          [name]="biz.name"
+          [image]="biz.logo_url ?? null"
+          size="lg"
+          shape="square" />
+        @if (canManage()) {
+          <label class="business-hero__logo-edit" [class.is-loading]="logoSaving()">
+            <input
+              type="file"
+              class="business-hero__logo-input"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              (change)="onLogoInput($event)"
+              [disabled]="logoSaving()"
+              aria-label="{{ lang.t('biz.logo.change') }}" />
+            <i class="pi pi-camera"></i>
+          </label>
+        }
+      </span>
+    </div>
+
+    <div class="business-hero__content">
+      <div class="business-hero__identity">
+        <span class="business-hero__name">{{ biz.name }}</span>
+        @if (biz.plan) {
+          <span class="business-hero__plan" [class.business-hero__plan--enterprise]="biz.plan === 'enterprise'">
+            {{ biz.plan }}
+          </span>
+        }
+      </div>
+      <div class="business-hero__meta">
+        @if (biz.rut) {
+          <span><i class="pi pi-id-card"></i> {{ biz.rut }}</span>
+        }
+        @if (biz.email) {
+          <span><i class="pi pi-envelope"></i> {{ biz.email }}</span>
+        }
+        @if (biz.phone) {
+          <span><i class="pi pi-phone"></i> {{ biz.phone }}</span>
+        }
+      </div>
+    </div>
+
+    @if (canManage()) {
+      <div class="business-hero__actions">
+        <p-button
+          label="{{ lang.t('biz.logo.change') }}"
+          icon="pi pi-image"
+          size="small"
+          severity="secondary"
+          [text]="true"
+          [loading]="logoSaving()"
+          (onClick)="openLogoPicker()" />
+        @if (biz.logo_url) {
+          <p-button
+            label="{{ lang.t('biz.logo.remove') }}"
+            icon="pi pi-times"
+            size="small"
+            severity="danger"
+            [text]="true"
+            [disabled]="logoSaving()"
+            (onClick)="onRemoveLogo()" />
+        }
+      </div>
+    }
+  </div>
+
+  <bw-image-crop-dialog
+    [(file)]="logoFile"
+    titleKey="profile.avatar.crop_title"
+    (cropped)="onLogoCropped($event)" />
+}

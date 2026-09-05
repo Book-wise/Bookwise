@@ -28,6 +28,9 @@ export class AuthService {
   readonly userRole        = computed(() => this._user()?.role ?? null);
   readonly isAdmin         = computed(() => this._user()?.role === 'admin');
   readonly isProvider      = computed(() => this._user()?.role === 'provider');
+  /** Roles de NEGOCIO (multi-tenant) — expuestos por el backend en /auth/me. */
+  readonly isAdminGeneral  = computed(() => this._me()?.is_admin_general ?? false);
+  readonly isAdminLocal    = computed(() => this._me()?.is_admin_local ?? false);
 
   constructor(private router: Router) {}
 

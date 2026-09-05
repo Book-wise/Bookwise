@@ -300,6 +300,9 @@ export interface AuthMeData {
   business: Business | null;
   /** Negocios a los que puede alternar (multi-tenant; admin_general ve todos). */
   businesses?: Business[];
+  /** Roles de NEGOCIO (distintos del rol técnico `role`). */
+  is_admin_general?: boolean;
+  is_admin_local?: boolean;
 }
 
 export interface AuthMeResponse {
@@ -321,6 +324,8 @@ export interface CreateBusinessData {
   address: string;
   phone: string;
   plan: BusinessPlan;
+  /** Logo opcional del negocio (aparece en recibos/email). */
+  logo?: File | null;
 }
 
 /** POST /businesses → 201 { data: { business }, user } (user: me actualizado, onboarding_complete=true). */

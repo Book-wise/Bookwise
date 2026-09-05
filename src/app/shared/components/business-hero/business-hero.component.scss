@@ -1,0 +1,115 @@
+.business-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--border_radius, 1rem);
+  background: linear-gradient(135deg, var(--bw-500, #3b82f6) 0%, var(--bw-600, #2563eb) 55%, var(--bw-700, #1d4ed8) 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.22);
+  position: relative;
+
+  &--loading {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__avatar-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  &__logo-edit {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+
+    input {
+      display: none;
+    }
+
+    &:hover,
+    &.is-loading {
+      opacity: 1;
+    }
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+  }
+
+  &__name {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  &__plan {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+
+    &--enterprise {
+      background: rgba(245, 158, 11, 0.25);
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    opacity: 0.92;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .business-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.875rem;
+  }
+}
