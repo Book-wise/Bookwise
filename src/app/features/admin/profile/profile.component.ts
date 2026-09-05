@@ -152,7 +152,7 @@ export class ProfileComponent implements OnInit {
 
   /** Crea una nueva empresa (flujo de onboarding). */
   newBusiness(): void {
-    this.router.navigate(['/onboarding']);
+    this.router.navigate(['/admin/negocios/nuevo']);
   }
 
   /** Ve la configuración completa del negocio activo. */
