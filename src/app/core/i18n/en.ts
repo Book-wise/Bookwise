@@ -796,6 +796,7 @@ export const EN: Record<string, string> = {
   'roles.permissions.saved': 'Permissions updated',
   'roles.permissions.saved_detail': 'The role now has the selected permissions.',
   'roles.permissions.select_role': 'Select a role to edit its permissions.',
+  'roles.permissions.admin_general_locked': 'The Admin General role always has every permission and cannot be edited.',
   'roles.permissions.empty_confirm_header': 'Remove all permissions',
   'roles.permissions.empty_confirm_message': 'You are about to leave this role with no permissions. Confirm the operation?',
   'roles.permissions.empty_confirm_accept': 'Remove permissions',

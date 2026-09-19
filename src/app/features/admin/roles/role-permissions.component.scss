@@ -93,6 +93,23 @@
   min-width: 0;
 }
 
+.permissions-lock {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--surface-border, #d1d5db);
+  border-radius: 6px;
+  background: var(--bw-50, #f9fafb);
+  color: #4b5563;
+  font-size: 0.85rem;
+
+  &__icon {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+}
+
 .permission-group {
   &__title {
     font-size: 0.95rem;

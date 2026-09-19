@@ -41,6 +41,15 @@
 
       <section class="matrix-detail">
         @if (selectedRole(); as role) {
+          @if (isAdminGeneralLocked()) {
+            <div class="permissions-lock">
+              <i class="pi pi-lock permissions-lock__icon"></i>
+              <span class="permissions-lock__text">
+                {{ lang.t('roles.permissions.admin_general_locked') }}
+              </span>
+            </div>
+          }
+
           @for (group of catalog(); track group.group) {
             <div class="permission-group">
               <h3 class="permission-group__title">{{ permissionGroupLabel(group.group) }}</h3>
@@ -51,6 +60,7 @@
                       [ngModel]="isSelected(item.key)"
                       (ngModelChange)="togglePermission(item.key, $event)"
                       [binary]="true"
+                      [disabled]="isAdminGeneralLocked()"
                     />
                     <span class="permission-item__label">{{ permissionLabel(item) }}</span>
                   </label>
@@ -64,6 +74,7 @@
             [label]="lang.t('roles.permissions.save')"
             icon="pi pi-save"
             [loading]="saving()"
+            [disabled]="isAdminGeneralLocked()"
             (onClick)="save()"
           />
         } @else {

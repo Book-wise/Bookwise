@@ -150,21 +150,23 @@ describe('RolePermissionsComponent', () => {
 
   it('dedupes keys before sending the PATCH', () => {
     updateRolePermissions.mockReturnValue(
-      of({ data: { role_id: 1, slug: 'admin_general', permissions: ['bookings.view'] } }),
+      of({ data: { role_id: 5, slug: 'staff', permissions: ['bookings.view'] } }),
     );
     fixture.detectChanges();
+    component.selectRole(allRoles[2]);
 
     component.draft.set(['bookings.view', 'bookings.view', 'roles.view']);
     component.save();
 
-    expect(updateRolePermissions).toHaveBeenCalledWith(1, ['bookings.view', 'roles.view']);
+    expect(updateRolePermissions).toHaveBeenCalledWith(5, ['bookings.view', 'roles.view']);
   });
 
   it('emits the success toast on the global key so the app shell renders it', () => {
     updateRolePermissions.mockReturnValue(
-      of({ data: { role_id: 1, slug: 'admin_general', permissions: ['bookings.view'] } }),
+      of({ data: { role_id: 5, slug: 'staff', permissions: ['bookings.view'] } }),
     );
     fixture.detectChanges();
+    component.selectRole(allRoles[2]);
 
     component.draft.set(['bookings.view']);
     component.save();
@@ -179,9 +181,10 @@ describe('RolePermissionsComponent', () => {
 
   it('requires confirmation before clearing all permissions', () => {
     updateRolePermissions.mockReturnValue(
-      of({ data: { role_id: 1, slug: 'admin_general', permissions: [] } }),
+      of({ data: { role_id: 5, slug: 'staff', permissions: [] } }),
     );
     fixture.detectChanges();
+    component.selectRole(allRoles[2]);
 
     component.draft.set([]);
     component.save();
@@ -192,7 +195,7 @@ describe('RolePermissionsComponent', () => {
     const config = confirmation.confirm.mock.calls[0][0] as { accept: () => void };
     config.accept();
 
-    expect(updateRolePermissions).toHaveBeenCalledWith(1, []);
+    expect(updateRolePermissions).toHaveBeenCalledWith(5, []);
   });
 
   it('reverts the draft and refetches roles on 422', () => {
@@ -202,15 +205,71 @@ describe('RolePermissionsComponent', () => {
       ),
     );
     fixture.detectChanges();
+    component.selectRole(allRoles[2]);
 
     component.draft.set(['bookings.view', 'clients.view']);
     component.save();
 
     // The role was never patched optimistically: the draft reverts to the store values.
-    expect(component.draft()).toEqual(['roles.view']);
+    expect(component.draft()).toEqual(['bookings.view']);
     expect(loadRoles).toHaveBeenCalledTimes(1);
     expect(httpError.handle).toHaveBeenCalled();
     expect(component.saving()).toBe(false);
+  });
+
+  it('locks the admin_general matrix: toggles are a no-op', () => {
+    fixture.detectChanges();
+
+    expect(component.selectedRole()?.slug).toBe('admin_general');
+    expect(component.isAdminGeneralLocked()).toBe(true);
+
+    component.togglePermission('bookings.view', true);
+    component.togglePermission('roles.view', false);
+
+    expect(component.draft()).toEqual(['roles.view']);
+  });
+
+  it('never calls the store when saving the locked admin_general role', () => {
+    fixture.detectChanges();
+
+    component.save();
+
+    expect(updateRolePermissions).not.toHaveBeenCalled();
+    expect(confirmation.confirm).not.toHaveBeenCalled();
+  });
+
+  it('still toggles and saves a non-locked role normally', () => {
+    updateRolePermissions.mockReturnValue(
+      of({ data: { role_id: 5, slug: 'staff', permissions: ['bookings.view', 'clients.view'] } }),
+    );
+    fixture.detectChanges();
+
+    component.selectRole(allRoles[2]);
+    fixture.detectChanges();
+    expect(component.isAdminGeneralLocked()).toBe(false);
+
+    component.togglePermission('clients.view', true);
+    expect(component.draft()).toEqual(['bookings.view', 'clients.view']);
+
+    component.save();
+
+    expect(updateRolePermissions).toHaveBeenCalledWith(5, ['bookings.view', 'clients.view']);
+  });
+
+  it('renders the lock indicator only for the locked role', () => {
+    fixture.detectChanges();
+    const nativeEl = fixture.nativeElement as HTMLElement;
+
+    expect(nativeEl.querySelector('.permissions-lock')).toBeTruthy();
+    expect(nativeEl.querySelector('.permissions-lock .pi-lock')).toBeTruthy();
+    expect(nativeEl.textContent ?? '').toContain(
+      component.lang.t('roles.permissions.admin_general_locked'),
+    );
+
+    component.selectRole(allRoles[2]);
+    fixture.detectChanges();
+
+    expect(nativeEl.querySelector('.permissions-lock')).toBeNull();
   });
 
   it('shows the persistent deferred-enforcement warning and no restore control', () => {

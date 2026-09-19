@@ -10,6 +10,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { PermissionItem, Role } from '@models';
 import { roleMeta } from './role-meta';
+import { ADMIN_GENERAL_ROLE } from './role-guards';
 import { RolesStore } from './roles.store';
 
 /**
@@ -65,6 +66,15 @@ export class RolePermissionsComponent implements OnInit {
   });
 
   /**
+   * `admin_general` derives from the catalog, so it always holds the full
+   * permission set and its matrix is never editable. This is the permission
+   * counterpart of the assignment-tab lock; both key off `ADMIN_GENERAL_ROLE`.
+   */
+  readonly isAdminGeneralLocked = computed(
+    () => this.selectedRole()?.slug === ADMIN_GENERAL_ROLE,
+  );
+
+  /**
    * Draft keys for the active role. Re-derived whenever the active role (or its
    * server permissions) changes; edited locally by toggles and never sent until
    * save. Dedupe happens before the request.
@@ -87,6 +97,8 @@ export class RolePermissionsComponent implements OnInit {
   }
 
   togglePermission(key: string, checked: boolean): void {
+    // The locked role keeps its catalog-derived set: toggles are a no-op.
+    if (this.isAdminGeneralLocked()) return;
     this.draft.update((keys) => {
       const next = new Set(keys);
       if (checked) next.add(key);
@@ -121,6 +133,9 @@ export class RolePermissionsComponent implements OnInit {
   save(): void {
     const role = this.selectedRole();
     if (!role) return;
+    // The locked role is never persisted from the matrix, even if a stale
+    // draft reached this point.
+    if (this.isAdminGeneralLocked()) return;
 
     const keys = [...new Set(this.draft())];
     if (keys.length === 0) {
