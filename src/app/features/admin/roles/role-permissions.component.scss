@@ -148,3 +148,44 @@
   color: #6b7280;
   font-size: 0.9rem;
 }
+
+// ── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .matrix {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  // Master list becomes a horizontally scrollable row above the detail pane.
+  .role-list {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-right: 0;
+    border-bottom: 1px solid var(--bw-100, #e5e7eb);
+    padding-right: 0;
+    padding-bottom: 0.75rem;
+
+    &__item {
+      flex: 0 0 auto;
+    }
+  }
+
+  // Save is the pane's primary action: give it the full width.
+  .save-btn {
+    align-self: stretch;
+
+    :deep(.p-button) {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .permission-group__items {
+    grid-template-columns: 1fr;
+  }
+}

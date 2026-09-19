@@ -201,3 +201,22 @@
     color: #6b7280;
   }
 }
+
+// ── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  // Lower the track floor so two cards still fit side by side on a tablet.
+  .role-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .roles-card :deep(.p-card-body) {
+    padding: 1rem;
+  }
+
+  .role-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
