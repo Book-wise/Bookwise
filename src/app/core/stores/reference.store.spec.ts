@@ -649,4 +649,90 @@ describe('ReferenceStore', () => {
       expect(received).not.toBeNull();
     });
   });
+
+  // ── reloadAll (PR2: switch-path reload, R3/D6) ─────────────────────────
+
+  describe('reloadAll', () => {
+    beforeEach(() => {
+      clientsApi = { getClients: vi.fn().mockReturnValue(of([makeClient({ id: 42 })])) } as any;
+      locationsApi = { getLocations: vi.fn().mockReturnValue(of([makeLocation()])), getRegions: vi.fn().mockReturnValue(of({ data: [makeRegion()] })), getAllComunas: vi.fn().mockReturnValue(of({ data: [makeComuna()] })) } as any;
+      providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider()])) } as any;
+      servicesApi = { getServices: vi.fn().mockReturnValue(of([makeService()])), getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })) } as any;
+      createStore();
+    });
+
+    it('keeps onInit fan-out unchanged (six loads including regions)', () => {
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
+      expect(locationsApi.getLocations).toHaveBeenCalledTimes(1);
+      expect(servicesApi.getServices).toHaveBeenCalledTimes(1);
+      expect(providersApi.getProviders).toHaveBeenCalledTimes(1);
+      expect(servicesApi.getPacks).toHaveBeenCalledTimes(1);
+      expect(locationsApi.getRegions).toHaveBeenCalledTimes(1);
+    });
+
+    it('reloads the five tenant lists once and excludes geography', () => {
+      store.reloadAll().subscribe();
+
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
+      expect(locationsApi.getLocations).toHaveBeenCalledTimes(2);
+      expect(servicesApi.getServices).toHaveBeenCalledTimes(2);
+      expect(providersApi.getProviders).toHaveBeenCalledTimes(2);
+      expect(servicesApi.getPacks).toHaveBeenCalledTimes(2);
+      // Geography is tenant-independent: it is not part of the switch reload.
+      expect(locationsApi.getRegions).toHaveBeenCalledTimes(1);
+    });
+
+    it('coalesces concurrent callers into a single in-flight round-trip', () => {
+      const pending = new Subject<Client[]>();
+      clientsApi.getClients!.mockReturnValue(pending.asObservable());
+
+      const first$ = store.reloadAll();
+      const second$ = store.reloadAll();
+      first$.subscribe();
+      second$.subscribe();
+
+      expect(second$).toBe(first$);
+      // 1 from onInit + exactly 1 coalesced reload
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
+    });
+
+    it('clears the five tenant lists before the reload resolves', () => {
+      expect(store.locations()).toHaveLength(1);
+      expect(store.clients()).toHaveLength(1);
+
+      locationsApi.getLocations!.mockReturnValue(new Subject<Location[]>().asObservable());
+      providersApi.getProviders!.mockReturnValue(new Subject<Provider[]>().asObservable());
+      servicesApi.getServices!.mockReturnValue(new Subject<Service[]>().asObservable());
+      clientsApi.getClients!.mockReturnValue(new Subject<Client[]>().asObservable());
+      servicesApi.getPacks!.mockReturnValue(new Subject<{ data: ServicePack[] }>().asObservable());
+
+      store.reloadAll().subscribe();
+
+      expect(store.locations()).toEqual([]);
+      expect(store.providers()).toEqual([]);
+      expect(store.services()).toEqual([]);
+      expect(store.clients()).toEqual([]);
+      expect(store.packs()).toEqual([]);
+    });
+
+    it('completes without error when a loader fails (non-fatal)', () => {
+      locationsApi.getLocations!.mockReturnValue(throwError(() => new Error('boom')));
+
+      let completed = false;
+      let errored = false;
+      store.reloadAll().subscribe({ complete: () => (completed = true), error: () => (errored = true) });
+
+      expect(errored).toBe(false);
+      expect(completed).toBe(true);
+      expect(store.locations()).toEqual([]);
+      expect(store.error().locations).toBe('boom');
+    });
+
+    it('starts a fresh round-trip after the previous reload completes', () => {
+      store.reloadAll().subscribe();
+      store.reloadAll().subscribe();
+
+      expect(clientsApi.getClients).toHaveBeenCalledTimes(3); // 1 init + 2 sequential reloads
+    });
+  });
 });
