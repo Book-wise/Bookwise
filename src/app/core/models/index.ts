@@ -317,6 +317,15 @@ export interface AuthMeResponse {
   user: AuthMeData;
 }
 
+/** POST /auth/switch-tenant | /auth/switch-account (Bearer) → { token, user, abilities }.
+ *  The backend ROTATES the token on every switch and revokes the previous one,
+ *  so callers MUST adopt `token`. `abilities` is TOP-LEVEL, never inside `user`. */
+export interface AuthSwitchResponse {
+  token: string;
+  user: AuthMeData;
+  abilities: string[];
+}
+
 /** Rol de negocio (capa separada de `UserRole`). name ∈ admin_general|admin_local|recepcionista|recepcionista_readonly|staff|staff_readonly */
 export interface Role {
   id: number;

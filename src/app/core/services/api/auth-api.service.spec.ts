@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { AuthApiService } from './auth-api.service';
 import { environment } from '@env/environment';
-import { AuthMeData, LoginCredentials, RegisterData, ResetPasswordData } from '@models';
+import { AuthMeData, AuthSwitchResponse, LoginCredentials, RegisterData, ResetPasswordData } from '@models';
 
 describe('AuthApiService', () => {
   let service: AuthApiService;
@@ -106,5 +106,35 @@ describe('AuthApiService', () => {
     const req = httpMock.expectOne(`${environment.apiUrl}/auth/me`);
     expect(req.request.method).toBe('GET');
     req.flush({ user: me });
+  });
+
+  it('switchTenant calls POST /auth/switch-tenant and returns the full { token, user, abilities } payload', () => {
+    const user: AuthMeData = {
+      id: 7,
+      name: 'Tenant B Admin',
+      email: 'admin@test.com',
+      role: 'admin',
+      tenant_id: 2,
+      provider_id: 3,
+      email_verified_at: '2026-09-01T16:00:00Z',
+      onboarding_complete: true,
+      business: null,
+    };
+    const response: AuthSwitchResponse = {
+      token: 'rotated-token',
+      user,
+      abilities: ['bookings.view', 'agenda.manage'],
+    };
+
+    service.switchTenant(2).subscribe((res) => {
+      expect(res).toEqual(response);
+      expect(res.token).toBe('rotated-token');
+      expect(res.abilities).toEqual(['bookings.view', 'agenda.manage']);
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/switch-tenant`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ tenant_id: 2 });
+    req.flush(response);
   });
 });
