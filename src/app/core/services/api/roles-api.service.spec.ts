@@ -9,12 +9,12 @@ describe('RolesApiService', () => {
   let httpMock: HttpTestingController;
 
   const roles: Role[] = [
-    { id: 1, name: 'admin_general', label: 'Admin General' },
-    { id: 2, name: 'admin_local', label: 'Admin Local' },
-    { id: 3, name: 'recepcionista', label: 'Recepcionista' },
-    { id: 4, name: 'recepcionista_readonly', label: 'Recepcionista (solo lectura)' },
-    { id: 5, name: 'staff', label: 'Staff' },
-    { id: 6, name: 'staff_readonly', label: 'Staff (solo lectura)' },
+    { id: 1, slug: 'admin_general', name: 'Admin General', permissions: [] },
+    { id: 2, slug: 'admin_local', name: 'Admin Local', permissions: [] },
+    { id: 3, slug: 'recepcionista', name: 'Recepcionista', permissions: [] },
+    { id: 4, slug: 'recepcionista_readonly', name: 'Recepcionista (solo lectura)', permissions: [] },
+    { id: 5, slug: 'staff', name: 'Staff', permissions: [] },
+    { id: 6, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] },
   ];
 
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe('RolesApiService', () => {
   describe('assignProviderRoles', () => {
     it('PATCHes /providers/{id}/roles with { roles: [...] } and returns the new set', () => {
       const selected = ['admin_local', 'recepcionista'];
-      const response = { data: roles.filter((r) => selected.includes(r.name)) };
+      const response = { data: roles.filter((r) => selected.includes(r.slug)) };
 
       service.assignProviderRoles(5, selected).subscribe((res) => {
         expect(res).toEqual(response);

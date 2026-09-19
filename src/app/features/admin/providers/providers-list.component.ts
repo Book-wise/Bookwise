@@ -80,11 +80,11 @@ export class ProvidersListComponent implements OnInit {
   // ── Filters ─────────────────────────────────────────────────────────────
   searchQuery = signal('');
   selectedLocationIds = signal<Set<number>>(new Set());
-  selectedRoleNames = signal<string[]>([]);
+  selectedRoleSlugs = signal<string[]>([]);
 
   /** Roles del catálogo mapeados a opciones `{ label, value }` para el p-multiselect. */
   readonly roleOptions = computed(() =>
-    this.roles().map((r) => ({ label: this.roleLabel(r.name), value: r.name })),
+    this.roles().map((r) => ({ label: this.roleLabel(r), value: r.slug })),
   );
 
   /** Unique active locations from ReferenceStore + any from loaded providers */
@@ -133,7 +133,7 @@ export class ProvidersListComponent implements OnInit {
     let result = this.providers();
     const query = this.searchQuery().toLowerCase().trim();
     const locIds = this.selectedLocationIds();
-    const roleNames = this.selectedRoleNames() ?? [];
+    const roleSlugs = this.selectedRoleSlugs() ?? [];
 
     // Location filter
     if (locIds.size > 0) {
@@ -155,8 +155,8 @@ export class ProvidersListComponent implements OnInit {
     }
 
     // Role filter: keep providers that have at least one selected role.
-    if (roleNames.length > 0) {
-      result = result.filter((p) => p.roles?.some((r) => roleNames.includes(r.name)));
+    if (roleSlugs.length > 0) {
+      result = result.filter((p) => p.roles?.some((r) => roleSlugs.includes(r.slug)));
     }
     return result;
   });
@@ -194,9 +194,10 @@ export class ProvidersListComponent implements OnInit {
     });
   }
 
-  roleLabel(name: string): string {
-    const key = `roles.role.${name}`;
-    return this.lang.has(key) ? this.lang.t(key) : name;
+  /** Resolves the display label: i18n key by slug, falling back to the backend `name`. */
+  roleLabel(role: Pick<Role, 'slug' | 'name'>): string {
+    const key = `roles.role.${role.slug}`;
+    return this.lang.has(key) ? this.lang.t(key) : role.name;
   }
 
   /** Tipado seguro: `provider.roles` puede ser undefined. */
@@ -305,9 +306,9 @@ export class ProvidersListComponent implements OnInit {
   /**
    * Handler del multiselect de roles. PrimeNG emite `null` al usar su botón de
    * limpiar (clear), lo que rompería el computed `filteredProviders` que lee
-   * `roleNames.length` — coercer a array para que el filtro quede vacío.
+   * `roleSlugs.length` — coercer a array para que el filtro quede vacío.
    */
   onRoleFilterChange(value: string[] | null): void {
-    this.selectedRoleNames.set(Array.isArray(value) ? value : []);
+    this.selectedRoleSlugs.set(Array.isArray(value) ? value : []);
   }
 }

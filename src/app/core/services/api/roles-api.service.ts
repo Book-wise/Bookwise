@@ -14,11 +14,14 @@ export class RolesApiService {
     return this.http.get<{ data: Role[] }>(`${this.baseUrl}/roles`).pipe(map((r) => r.data));
   }
 
-  /** PATCH /providers/{id}/roles { roles: [...] } → reemplaza el set de roles del profesional. */
-  assignProviderRoles(providerId: number, roles: string[]): Observable<{ data: Role[] }> {
+  /**
+   * PATCH /providers/{id}/roles { roles: [slug] } → replaces the professional's
+   * role set. The request always carries slugs, never display names.
+   */
+  assignProviderRoles(providerId: number, slugs: string[]): Observable<{ data: Role[] }> {
     return this.http.patch<{ data: Role[] }>(
       `${this.baseUrl}/providers/${providerId}/roles`,
-      { roles },
+      { roles: slugs },
     );
   }
 }

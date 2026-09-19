@@ -122,7 +122,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'ana@test.com',
     active: true,
     location: locNorte,
-    roles: [{ id: 1, name: 'staff' }],
+    roles: [{ id: 1, slug: 'staff', name: 'Staff', permissions: [] }],
   };
   const providerJuan: Provider = {
     id: 8,
@@ -131,7 +131,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'juan@test.com',
     active: true,
     location: locCentro,
-    roles: [{ id: 1, name: 'staff' }],
+    roles: [{ id: 1, slug: 'staff', name: 'Staff', permissions: [] }],
   };
   // Sólo recepcionista: activo pero SIN rol de atención → oculto (C2)
   const providerRosa: Provider = {
@@ -141,7 +141,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'rosa@test.com',
     active: true,
     location: locCentro,
-    roles: [{ id: 3, name: 'recepcionista' }],
+    roles: [{ id: 3, slug: 'recepcionista', name: 'Recepcionista', permissions: [] }],
   };
   // staff_readonly: activo y visible (C2)
   const providerLuis: Provider = {
@@ -151,7 +151,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'luis@test.com',
     active: true,
     location: locCentro,
-    roles: [{ id: 4, name: 'staff_readonly' }],
+    roles: [{ id: 4, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] }],
   };
   // Inactivo con staff: excluido por active (C2)
   const providerSofia: Provider = {
@@ -161,7 +161,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'sofia@test.com',
     active: false,
     location: locCentro,
-    roles: [{ id: 5, name: 'staff' }],
+    roles: [{ id: 5, slug: 'staff', name: 'Staff', permissions: [] }],
   };
 
   beforeEach(async () => {

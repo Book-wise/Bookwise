@@ -12,12 +12,12 @@ import { ReferenceStore } from '@core/stores/reference.store';
 import type { Provider, Role } from '@models';
 
 const allRoles: Role[] = [
-  { id: 1, name: 'admin_general', label: 'Admin General' },
-  { id: 2, name: 'admin_local', label: 'Admin Local' },
-  { id: 3, name: 'recepcionista', label: 'Recepcionista' },
-  { id: 4, name: 'recepcionista_readonly', label: 'Recepcionista (solo lectura)' },
-  { id: 5, name: 'staff', label: 'Staff' },
-  { id: 6, name: 'staff_readonly', label: 'Staff (solo lectura)' },
+  { id: 1, slug: 'admin_general', name: 'Admin General', permissions: [] },
+  { id: 2, slug: 'admin_local', name: 'Admin Local', permissions: [] },
+  { id: 3, slug: 'recepcionista', name: 'Recepcionista', permissions: [] },
+  { id: 4, slug: 'recepcionista_readonly', name: 'Recepcionista (solo lectura)', permissions: [] },
+  { id: 5, slug: 'staff', name: 'Staff', permissions: [] },
+  { id: 6, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] },
 ];
 
 function makeProvider(overrides: Partial<Provider> = {}): Provider {
@@ -108,7 +108,18 @@ describe('RolesComponent', () => {
     expect(descs).toHaveLength(6);
     // Las descripciones provienen de i18n (`roles.card.desc.<name>`), nunca del label.
     expect(descs[0]).toBeTruthy();
-    expect(descs[0]).not.toBe(component.roleLabel(allRoles[0].name));
+    expect(descs[0]).not.toBe(component.roleLabel(allRoles[0]));
+  });
+
+  it('falls back to the backend name when the slug has no i18n key', () => {
+    const unknownRole: Role = {
+      id: 99,
+      slug: 'custom_role',
+      name: 'Custom Role',
+      permissions: [],
+    };
+
+    expect(component.roleLabel(unknownRole)).toBe('Custom Role');
   });
 
   it('reads providers from ReferenceStore (no local providersApi load)', () => {
@@ -126,7 +137,7 @@ describe('RolesComponent', () => {
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleNames.set([]);
+    component.selectedRoleSlugs.set([]);
     component.save();
 
     expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
@@ -140,7 +151,7 @@ describe('RolesComponent', () => {
 
     component.onProviderChange(1);
     // Intento de quitar admin_general del set seleccionado.
-    component.selectedRoleNames.set(['admin_local']);
+    component.selectedRoleSlugs.set(['admin_local']);
     component.save();
 
     expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
@@ -154,7 +165,7 @@ describe('RolesComponent', () => {
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleNames.set(['admin_general', 'admin_local']);
+    component.selectedRoleSlugs.set(['admin_general', 'admin_local']);
     component.save();
 
     expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['admin_general', 'admin_local']);
@@ -176,7 +187,7 @@ describe('RolesComponent', () => {
     expect(opts[0].email).toBe('ana@test.com');
     // El label concatena nombre + roles para que el filtro matchee ambos.
     expect(opts[0].label).toBe(
-      `Ana García · ${component.roleLabel('admin_general')}, ${component.roleLabel('admin_local')}`,
+      `Ana García · ${component.roleLabel(allRoles[0])}, ${component.roleLabel(allRoles[1])}`,
     );
   });
 
@@ -193,7 +204,7 @@ describe('RolesComponent', () => {
     );
     expect(chips).toHaveLength(2);
     const texts = chips.map((el) => el.textContent?.trim());
-    expect(texts).toContain(component.roleLabel('admin_general'));
-    expect(texts).toContain(component.roleLabel('admin_local'));
+    expect(texts).toContain(component.roleLabel(allRoles[0]));
+    expect(texts).toContain(component.roleLabel(allRoles[1]));
   });
 });

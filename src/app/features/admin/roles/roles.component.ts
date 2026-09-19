@@ -82,17 +82,17 @@ export class RolesComponent implements OnInit {
   error = signal<string | null>(null);
 
   selectedProviderId = signal<number | null>(null);
-  selectedRoleNames = signal<string[]>([]);
+  selectedRoleSlugs = signal<string[]>([]);
 
   readonly selectedProvider = computed(() => {
     const id = this.selectedProviderId();
     return this.providers().find((p) => p.id === id) ?? null;
   });
 
-  /** Roles que el profesional seleccionado tiene actualmente (desde GET /providers). */
-  readonly currentProviderRoles = computed<Set<string>>(() => {
+  /** Slugs que el profesional seleccionado tiene actualmente (desde GET /providers). */
+  readonly currentProviderSlugs = computed<Set<string>>(() => {
     const provider = this.selectedProvider();
-    return new Set((provider?.roles ?? []).map((r) => r.name));
+    return new Set((provider?.roles ?? []).map((r) => r.slug));
   });
 
   ngOnInit(): void {
@@ -116,49 +116,51 @@ export class RolesComponent implements OnInit {
   onProviderChange(id: number): void {
     this.selectedProviderId.set(id);
     this.error.set(null);
-    this.selectedRoleNames.set([...this.currentProviderRoles()]);
+    this.selectedRoleSlugs.set([...this.currentProviderSlugs()]);
   }
 
-  isRoleChecked(name: string): boolean {
-    return this.selectedRoleNames().includes(name);
+  isRoleChecked(slug: string): boolean {
+    return this.selectedRoleSlugs().includes(slug);
   }
 
   /**
    * admin_general siempre bloqueado vía el guard compartido: el holder no puede
    * quitarlo y un no-holder no puede recibirlo (misma regla que el provider dialog).
    */
-  isRoleLocked(name: string): boolean {
-    return isAdminGeneralLocked([...this.currentProviderRoles()], name);
+  isRoleLocked(slug: string): boolean {
+    return isAdminGeneralLocked([...this.currentProviderSlugs()], slug);
   }
 
-  onRoleChange(checked: boolean, name: string): void {
-    if (this.isRoleLocked(name)) return;
-    this.selectedRoleNames.update((list) => {
+  onRoleChange(checked: boolean, slug: string): void {
+    if (this.isRoleLocked(slug)) return;
+    this.selectedRoleSlugs.update((list) => {
       const next = new Set(list);
-      if (checked) next.add(name);
-      else next.delete(name);
+      if (checked) next.add(slug);
+      else next.delete(slug);
       return [...next];
     });
     this.error.set(null);
   }
 
-  roleLabel(name: string): string {
-    const key = `roles.role.${name}`;
-    return this.lang.has(key) ? this.lang.t(key) : name;
+  /** Resolves the display label: i18n key by slug, falling back to the backend `name`. */
+  roleLabel(role: Pick<Role, 'slug' | 'name'>): string {
+    const key = `roles.role.${role.slug}`;
+    return this.lang.has(key) ? this.lang.t(key) : role.name;
   }
 
-  roleDesc(name: string): string {
-    const key = `roles.card.desc.${name}`;
+  /** Resolves the card description by slug; empty when no i18n key exists. */
+  roleDesc(role: Pick<Role, 'slug'>): string {
+    const key = `roles.card.desc.${role.slug}`;
     return this.lang.has(key) ? this.lang.t(key) : '';
   }
 
   /** Etiquetas de roles concatenadas con coma (para el label del selector). */
   roleListLabel(roles: Role[]): string {
-    return roles.map((r) => this.roleLabel(r.name)).join(', ');
+    return roles.map((r) => this.roleLabel(r)).join(', ');
   }
 
   private sameRoleSet(a: string[], b: string[]): boolean {
-    return a.length === b.length && a.every((name) => b.includes(name));
+    return a.length === b.length && a.every((slug) => b.includes(slug));
   }
 
   save(): void {
@@ -168,19 +170,19 @@ export class RolesComponent implements OnInit {
       return;
     }
 
-    const selected = [...this.selectedRoleNames()];
+    const selected = [...this.selectedRoleSlugs()];
     if (selected.length === 0) {
       this.error.set(this.lang.t('roles.empty_error'));
       return;
     }
 
-    const valid = new Set(this.roles().map((r) => r.name));
-    if (selected.some((name) => !valid.has(name))) {
+    const valid = new Set(this.roles().map((r) => r.slug));
+    if (selected.some((slug) => !valid.has(slug))) {
       this.error.set(this.lang.t('roles.empty_error'));
       return;
     }
 
-    const current = [...this.currentProviderRoles()];
+    const current = [...this.currentProviderSlugs()];
     // Guard compartido: si la invariante de admin_general cambia el set propuesto
     // (removerlo del holder o asignarlo a un no-holder), se aborta con error.
     const enforced = applyAdminGeneralInvariant(current, selected);

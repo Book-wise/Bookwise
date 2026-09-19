@@ -1,7 +1,7 @@
 /**
  * Single source-of-truth for business role metadata (color + icon).
  *
- * Keyed by role `name` (see `Role.name`: admin_general | admin_local |
+ * Keyed by role `slug` (see `Role.slug`: admin_general | admin_local |
  * recepcionista | recepcionista_readonly | staff | staff_readonly). Used by:
  *  - the Roles screen cards (/admin/roles), and
  *  - the Professionals list badges + role filter (/admin/providers)
@@ -23,9 +23,9 @@ export const ROLE_META: Record<string, RoleMeta> = {
 
 const FALLBACK: RoleMeta = { color: '#6b7280', icon: 'pi-user' };
 
-/** Resolve metadata for a role name, falling back to gray + pi-user. */
-export function roleMeta(name: string): RoleMeta {
-  return ROLE_META[name] ?? FALLBACK;
+/** Resolve metadata for a role slug, falling back to gray + pi-user. */
+export function roleMeta(slug: string): RoleMeta {
+  return ROLE_META[slug] ?? FALLBACK;
 }
 
 /**
@@ -36,7 +36,7 @@ export function roleMeta(name: string): RoleMeta {
  */
 export const ATTENTION_ROLES: readonly string[] = ['staff', 'staff_readonly'];
 
-/** True when at least one of `roles` is an attention role (staff / staff_readonly). */
-export function hasAttentionRole(roles?: { name: string }[] | null): boolean {
-  return !!roles && roles.some((role) => ATTENTION_ROLES.includes(role.name));
+/** True when at least one of `roles` is an attention role (staff / staff_readonly), matched by slug. */
+export function hasAttentionRole(roles?: { slug: string }[] | null): boolean {
+  return !!roles && roles.some((role) => ATTENTION_ROLES.includes(role.slug));
 }

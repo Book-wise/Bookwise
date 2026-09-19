@@ -49,9 +49,9 @@ describe('ProvidersListComponent', () => {
 
   beforeEach(async () => {
     const allRoles: Role[] = [
-      { id: 1, name: 'admin_local', label: 'Admin Local' },
-      { id: 2, name: 'recepcionista', label: 'Recepcionista' },
-      { id: 3, name: 'staff', label: 'Staff' },
+      { id: 1, slug: 'admin_local', name: 'Admin Local', permissions: [] },
+      { id: 2, slug: 'recepcionista', name: 'Recepcionista', permissions: [] },
+      { id: 3, slug: 'staff', name: 'Staff', permissions: [] },
     ];
 
     mockRouter = { navigate: vi.fn() };
@@ -146,8 +146,8 @@ describe('ProvidersListComponent', () => {
   // ── Role filter (computed over store providers) ─────────────────
 
   describe('role filter', () => {
-    const r1 = { id: 1, name: 'admin_local', label: 'Admin Local' };
-    const r2 = { id: 2, name: 'recepcionista', label: 'Recepcionista' };
+    const r1: Role = { id: 1, slug: 'admin_local', name: 'Admin Local', permissions: [] };
+    const r2: Role = { id: 2, slug: 'recepcionista', name: 'Recepcionista', permissions: [] };
 
     it('keeps only providers that have at least one selected role', () => {
       seedProviders([
@@ -157,7 +157,7 @@ describe('ProvidersListComponent', () => {
         baseProvider({ id: 4, roles: undefined }),
       ]);
 
-      component.selectedRoleNames.set(['admin_local']);
+      component.selectedRoleSlugs.set(['admin_local']);
 
       const names = component['filteredProviders']().map((p) => p.id);
       expect(names).toEqual([1]);
@@ -169,7 +169,7 @@ describe('ProvidersListComponent', () => {
         baseProvider({ id: 2, roles: [r2] }),
       ]);
 
-      component.selectedRoleNames.set(['admin_local']);
+      component.selectedRoleSlugs.set(['admin_local']);
 
       const names = component['filteredProviders']().map((p) => p.id);
       expect(names).not.toContain(2);
@@ -182,7 +182,7 @@ describe('ProvidersListComponent', () => {
         baseProvider({ id: 2, roles: [] }),
       ]);
 
-      component.selectedRoleNames.set([]);
+      component.selectedRoleSlugs.set([]);
 
       expect(component['filteredProviders']().length).toBe(2);
     });
