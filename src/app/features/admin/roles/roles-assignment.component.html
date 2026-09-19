@@ -102,7 +102,7 @@
         <div class="role-card" [style.--role-color]="roleMeta(role.slug).color">
           <div class="role-card__body">
             <span class="role-card__icon" [style.background]="roleMeta(role.slug).color">
-              <i [class]="roleMeta(role.slug).icon"></i>
+              <i [class]="'pi ' + roleMeta(role.slug).icon"></i>
             </span>
             <span class="role-card__name">{{ roleLabel(role) }}</span>
             <span class="role-card__desc">{{ roleDesc(role) }}</span>

@@ -55,7 +55,7 @@
             [class.active]="selectedRole()?.slug === role.slug"
             (click)="selectRole(role)"
           >
-            <i [class]="roleMeta(role.slug).icon"></i>
+            <i [class]="'pi ' + roleMeta(role.slug).icon"></i>
             <span class="role-list__label">{{ roleLabel(role) }}</span>
           </button>
         }
