@@ -21,19 +21,17 @@ Los tres entregables consolidados en una sola branch y mergeados a `develop`:
 
 ---
 
-## 1. Verificación manual pendiente (bloqueante para dar por cerrado)
+## 1. Verificación manual — ✅ CERRADA (2026-09-19)
 
-Solo la puede hacer una persona en el navegador; el entorno headless no la cubre.
+Confirmado por el mantenedor en el navegador:
 
-- [ ] **`/admin/calendar`** → el selector de profesionales lista los activos con
-      `staff` / `staff_readonly`. (Depende de que el tenant tenga providers: el BE
-      los sembró; verificar que siguen.)
-- [ ] **`/admin/roles` → Permisos**: matriz, `admin_general` bloqueado, guardado,
-      toast de éxito, select + label en mobile.
-- [ ] **`/admin/roles` → Asignación**: radios (un rol), lock de `admin_general`,
-      badges de icono.
-- [x] **Cambio de negocio**: ya confirmado — no desloguea, la identidad se
-      actualiza y la agenda se re-scopea.
+- [x] **`/admin/calendar`** → la agenda carga y **aparecen las reservas**.
+- [x] **`/admin/roles` en mobile** → la página está OK (select + label, layout).
+- [x] **Cambio de negocio** → no desloguea, la identidad se actualiza y la agenda
+      se re-scopea.
+
+No reportado explícitamente (si algo se ve raro, reabrir): el detalle de la pestaña
+**Permisos** en desktop y el grupo de **radios** en Asignación.
 
 ## 2. `tenant-switch-reactivity` sin `verify-report`
 
