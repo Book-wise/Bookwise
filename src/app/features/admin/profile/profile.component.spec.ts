@@ -5,6 +5,8 @@ import { of, throwError } from 'rxjs';
 import { ProfileComponent } from './profile.component';
 import { AuthService } from '@services/auth.service';
 import { AuthApiService } from '@services/api/auth-api.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import { MessageService } from 'primeng/api';
 import type { AuthMeData, Business, User, UserRole } from '@models';
 
@@ -54,6 +56,13 @@ describe('ProfileComponent', () => {
   };
   let api: { changePassword: ReturnType<typeof vi.fn>; updateProfile: ReturnType<typeof vi.fn> };
   let toast: { add: ReturnType<typeof vi.fn> };
+  let tenantSwitch: { switchTenant: ReturnType<typeof vi.fn>; lastSwitch: ReturnType<typeof signal<unknown>> };
+  let refStore: {
+    locations: ReturnType<typeof signal<unknown[]>>;
+    providers: ReturnType<typeof signal<unknown[]>>;
+    loadLocations: ReturnType<typeof vi.fn>;
+    loadProviders: ReturnType<typeof vi.fn>;
+  };
   let component: ProfileComponent;
   let fixture: ReturnType<typeof TestBed.createComponent<ProfileComponent>>;
 
@@ -69,6 +78,13 @@ describe('ProfileComponent', () => {
     };
     api = { changePassword: vi.fn(), updateProfile: vi.fn() };
     toast = { add: vi.fn() };
+    tenantSwitch = { switchTenant: vi.fn(() => of(void 0)), lastSwitch: signal(null) };
+    refStore = {
+      locations: signal<unknown[]>([]),
+      providers: signal<unknown[]>([]),
+      loadLocations: vi.fn(),
+      loadProviders: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [ProfileComponent],
@@ -76,6 +92,8 @@ describe('ProfileComponent', () => {
         provideZonelessChangeDetection(),
         { provide: AuthService, useValue: auth },
         { provide: AuthApiService, useValue: api },
+        { provide: TenantSwitchService, useValue: tenantSwitch },
+        { provide: ReferenceStore, useValue: refStore },
         { provide: MessageService, useValue: toast },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: ActivatedRoute, useValue: { snapshot: {} } },
@@ -278,5 +296,56 @@ describe('ProfileComponent', () => {
     fixture.detectChanges();
 
     expect(component.memberRoleLabel()).toBe('Administrador');
+  });
+
+  // ── Business switch delegates to the coordinator (PR5) ─────────────────────
+
+  describe('switchTo', () => {
+    const otherBusiness: Business = { ...business, id: 2, name: 'Kinesilk Norte' };
+
+    it('delegates to the coordinator and never reloads the reference store', () => {
+      fixture.detectChanges();
+
+      component.switchTo(otherBusiness);
+
+      expect(tenantSwitch.switchTenant).toHaveBeenCalledWith(2);
+      expect(refStore.loadLocations).not.toHaveBeenCalled();
+      expect(refStore.loadProviders).not.toHaveBeenCalled();
+      expect(toast.add).toHaveBeenCalledTimes(1);
+      const toastConfig = toast.add.mock.calls[0][0] as {
+        key: string;
+        severity: string;
+        detail: string;
+      };
+      expect(toastConfig.key).toBe('global');
+      expect(toastConfig.severity).toBe('success');
+      expect(toastConfig.detail).toBe('Kinesilk Norte');
+    });
+
+    it('maps a switch error to the tenant error key with a global error toast', () => {
+      tenantSwitch.switchTenant.mockReturnValue(throwError(() => ({ status: 403 })));
+      fixture.detectChanges();
+
+      component.switchTo(otherBusiness);
+
+      expect(refStore.loadLocations).not.toHaveBeenCalled();
+      expect(refStore.loadProviders).not.toHaveBeenCalled();
+      const toastConfig = toast.add.mock.calls[0][0] as {
+        key: string;
+        severity: string;
+        detail: string;
+      };
+      expect(toastConfig.key).toBe('global');
+      expect(toastConfig.severity).toBe('error');
+      expect(toastConfig.detail).toBe(component.lang.t('auth.switch_tenant_forbidden'));
+    });
+
+    it('is a no-op when the business is already active', () => {
+      fixture.detectChanges();
+
+      component.switchTo(business);
+
+      expect(tenantSwitch.switchTenant).not.toHaveBeenCalled();
+    });
   });
 });

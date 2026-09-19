@@ -12,6 +12,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { AuthApiService } from '@services/api/auth-api.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { translateValidationMessage } from '@i18n/validation-translator';
 import { Business, ChangePasswordData } from '@models';
@@ -35,6 +36,9 @@ export class ProfileComponent implements OnInit {
   private authApi = inject(AuthApiService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private tenantSwitch = inject(TenantSwitchService);
+  // Read-only: counts and the active-location timezone of the current tenant.
+  // The switch-path reload is owned by TenantSwitchService, not this component.
   private refStore = inject(ReferenceStore);
   readonly lang = inject(LanguageService);
 
@@ -140,10 +144,8 @@ export class ProfileComponent implements OnInit {
 
   switchTo(biz: Business): void {
     if (biz.id === this.activeBusinessId()) return;
-    this.auth.switchTenant(biz.id).subscribe({
+    this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.refStore.loadLocations();
-        this.refStore.loadProviders();
         this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
       },
       error: (err) =>

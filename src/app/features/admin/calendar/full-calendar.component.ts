@@ -39,6 +39,8 @@ import { LanguageService } from '@services/language.service';
 import { AuthService } from '@services/auth.service';
 import { CalendarPrefsService } from '@services/calendar-prefs.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
+import type { TenantSwitchResult } from '@services/tenant-switch.service';
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
 import { hasAttentionRole } from '../roles/role-meta';
@@ -101,6 +103,15 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   private readonly auth = inject(AuthService);
   private readonly calendarPrefs = inject(CalendarPrefsService);
+  private readonly tenantSwitch = inject(TenantSwitchService);
+
+  /**
+   * Last tenant-switch result applied by the effect below. Primed with the
+   * coordinator's current value so mounting the agenda after a switch does not
+   * re-apply it: the unmounted-agenda handoff is the tenant-scoped preferences,
+   * restored by the default `loadLocations()` path (avoids a duplicate fetch).
+   */
+  private lastAppliedSwitch: TenantSwitchResult | null = this.tenantSwitch.lastSwitch();
 
   // ── Identidad "viendo como" (chip en la fila de herramientas junto a slots y guía) ──
   readonly userName = computed(() => this.auth.user()?.name ?? '');
@@ -325,6 +336,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (mutLoading) {
         this._dragMutPending = true;
       }
+    });
+
+    // A successful tenant switch publishes the selection the coordinator
+    // resolved for the new tenant. The component's own lists still hold the
+    // previous tenant's data, so the selection is re-applied through a fresh
+    // fetch (see applyTenantSwitch). The priming guard makes this a
+    // switch-while-mounted concern only.
+    effect(() => {
+      const result = this.tenantSwitch.lastSwitch();
+      if (!result || result === this.lastAppliedSwitch) return;
+      this.lastAppliedSwitch = result;
+      this.applyTenantSwitch(result);
     });
   }
 
@@ -557,6 +580,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         const defaultLocation = rememberedLocation ?? data.find((l) => l.active) ?? data[0];
         this.selectedLocationId = defaultLocation.id;
         this.previousLocationId = defaultLocation.id;
+        // Provider memory (per user + tenant): restored when it still exists in
+        // the loaded list; loadProviders reconciles a stale id to null (all).
+        this.selectedProviderId = this.calendarPrefs.getLastProviderId(
+          this.auth.user()?.id ?? null,
+          this.auth.user()?.tenant_id ?? null,
+        );
         this.loadProviders(defaultLocation.id);
         this.onFilterChange();
         // Status-only pending navigation (dashboard "Pending appointments" card):
@@ -627,6 +656,50 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.httpError.handle(err, 'cargar profesionales');
         }
         this.reconcileProviderSelection();
+      },
+    });
+  }
+
+  /**
+   * Re-applies, for the mounted agenda, the selection the coordinator resolved
+   * after a tenant switch. The component's own location/provider lists still
+   * hold the previous tenant's data, so they are re-fetched; the coordinator's
+   * provider memory is then reconciled against the new tenant's list — a
+   * provider that no longer exists (or is not selectable) falls back to `null`
+   * (= all providers). No navigation toast is emitted: this is a switch, not a
+   * navigation intent.
+   */
+  private applyTenantSwitch(result: TenantSwitchResult): void {
+    this.locationsApi.getLocations().subscribe({
+      next: (data) => {
+        this.locations.set(data);
+        const resolvedLocationId =
+          result.locationId != null && data.some((l) => l.id === result.locationId)
+            ? result.locationId
+            : (data.find((l) => l.active)?.id ?? data[0]?.id ?? null);
+
+        this.selectedLocationId = resolvedLocationId;
+        this.previousLocationId = resolvedLocationId;
+
+        if (resolvedLocationId == null) {
+          this.providers.set([]);
+          this.selectedProviderId = null;
+          this.onFilterChange();
+          return;
+        }
+
+        // The coordinator carries provider memory as-is (null = all); assigning
+        // it before loadProviders lets reconcileProviderSelection() clear a
+        // stale id against the new tenant's provider list.
+        this.selectedProviderId = result.providerId;
+        this.loadProviders(resolvedLocationId);
+        this.onFilterChange();
+      },
+      error: () => {
+        this.locations.set([]);
+        this.providers.set([]);
+        this.selectedProviderId = null;
+        this.onFilterChange();
       },
     });
   }
@@ -828,6 +901,20 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.tzService.setTimezone(loc.timezone);
       }
     }
+    this.onFilterChange();
+  }
+
+  /**
+   * Provider dropdown change: syncs the filters and remembers the choice per
+   * user + tenant. Clearing the selection persists `null` (= all providers),
+   * so "cleared" is remembered as such instead of falling back to a provider.
+   */
+  onProviderChange(): void {
+    this.calendarPrefs.setLastProviderId(
+      this.auth.user()?.id ?? null,
+      this.auth.user()?.tenant_id ?? null,
+      this.selectedProviderId ?? null,
+    );
     this.onFilterChange();
   }
 

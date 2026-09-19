@@ -6,7 +6,7 @@ import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
-import { ReferenceStore } from '@core/stores/reference.store';
+import { TenantSwitchService } from '@services/tenant-switch.service';
 import { Business } from '@models';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
 import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
@@ -28,7 +28,7 @@ import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
 export class BusinessesListComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly refStore = inject(ReferenceStore);
+  private readonly tenantSwitch = inject(TenantSwitchService);
   private readonly messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
 
@@ -49,13 +49,11 @@ export class BusinessesListComponent {
     this.router.navigate(['/admin/negocios/nuevo']);
   }
 
-  /** Cambia el negocio activo (admin_general). */
+  /** Cambia el negocio activo (admin_general) delegando en el coordinador. */
   switchTo(biz: Business): void {
     if (biz.id === this.activeBusinessId()) return;
-    this.auth.switchTenant(biz.id).subscribe({
+    this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.refStore.loadLocations();
-        this.refStore.loadProviders();
         this.messageService.add({
           severity: 'success',
           summary: this.lang.t('biz.negocios'),
