@@ -300,6 +300,8 @@ export interface AuthMeData {
   phone?: string | null;
   avatar_url?: string | null;
   role: UserRole;
+  /** Provider id when the authenticated user is provider-scoped; null otherwise. */
+  provider_id?: number | null;
   tenant_id: number | null;
   email_verified_at: string | null;
   onboarding_complete: boolean;
@@ -313,6 +315,15 @@ export interface AuthMeData {
 
 export interface AuthMeResponse {
   user: AuthMeData;
+}
+
+/** POST /auth/switch-tenant | /auth/switch-account (Bearer) → { token, user, abilities }.
+ *  The backend ROTATES the token on every switch and revokes the previous one,
+ *  so callers MUST adopt `token`. `abilities` is TOP-LEVEL, never inside `user`. */
+export interface AuthSwitchResponse {
+  token: string;
+  user: AuthMeData;
+  abilities: string[];
 }
 
 /**

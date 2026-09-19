@@ -6,7 +6,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { ThemeService } from '@services/theme.service';
-import { ReferenceStore } from '@core/stores/reference.store';
+import { TenantSwitchService } from '@services/tenant-switch.service';
 import { Business } from '@models';
 import { AccountMenuComponent } from '@shared/components/account-menu/account-menu.component';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
@@ -27,7 +27,7 @@ import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
 export class AppHeaderComponent {
   private auth = inject(AuthService);
   private themeService = inject(ThemeService);
-  private refStore = inject(ReferenceStore);
+  private tenantSwitch = inject(TenantSwitchService);
   private messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
 
@@ -62,16 +62,13 @@ export class AppHeaderComponent {
     this.themeService.toggleDarkMode();
   }
 
-  /** Cambia de negocio (admin_general) y recarga datos del nuevo tenant. */
+  /** Cambia de negocio (admin_general) delegando en el coordinador del switch. */
   switchTo(biz: Business): void {
-    this.auth.switchTenant(biz.id).subscribe({
+    this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.refStore.loadLocations();
-        this.refStore.loadProviders();
         this.messageService.add({
           severity: 'success',
-          summary: this.lang.t('settings.business'),
-          detail: `${this.lang.t('settings.business')}: ${biz.name}`,
+          summary: this.lang.t('biz.switched_to', { name: biz.name }),
           key: 'global',
           life: 3500,
         });

@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
-import { ReferenceStore } from '@core/stores/reference.store';
+import { TenantSwitchService } from '@services/tenant-switch.service';
 import { Business } from '@models';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
@@ -40,7 +40,7 @@ interface AccountMenuItem {
 export class AccountMenuComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly refStore = inject(ReferenceStore);
+  private readonly tenantSwitch = inject(TenantSwitchService);
   private readonly messageService = inject(MessageService);
   protected readonly lang = inject(LanguageService);
 
@@ -95,16 +95,15 @@ export class AccountMenuComponent {
   }
 
   /**
-   * Cambia de negocio (multi-tenant, gate por plan: solo si canSwitch) y recarga
-   * los datos del nuevo tenant. Se usa desde el selector del menú (mobile).
+   * Cambia de negocio (multi-tenant, gate por plan: solo si canSwitch) delegando
+   * en el coordinador, que refresca identidad, datos de referencia y selección.
+   * Se usa desde el selector del menú (mobile).
    */
   switchTo(biz: Business, popover: Popover): void {
     if (biz.id === this.currentBusinessId()) return;
-    this.auth.switchTenant(biz.id).subscribe({
+    this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.refStore.loadLocations();
-        this.refStore.loadProviders();
-        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
+        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.switched_to', { name: biz.name }), key: 'global', life: 3500 });
       },
       error: (err) =>
         this.messageService.add({

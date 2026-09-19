@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
-import { AuthMeData, User, UserRole } from '@models';
+import { AuthMeData, AuthSwitchResponse, User, UserRole } from '@models';
 import { AuthApiService } from './api/auth-api.service';
 import { CalendarPrefsService } from './calendar-prefs.service';
 
@@ -19,11 +19,13 @@ export class AuthService {
   private _user  = signal<User | null>(this.getStoredUser());
   private _me    = signal<AuthMeData | null>(null);
   private _meLoaded = signal(false);
+  private _abilities = signal<string[]>([]);
 
   readonly token           = computed(() => this._token());
   readonly user            = computed(() => this._user());
   readonly me              = computed(() => this._me());
   readonly meLoaded        = computed(() => this._meLoaded());
+  readonly abilities       = computed(() => this._abilities());
   readonly isAuthenticated = computed(() => !!this._token());
   readonly userRole        = computed(() => this._user()?.role ?? null);
   readonly isAdmin         = computed(() => this._user()?.role === 'admin');
@@ -45,9 +47,18 @@ export class AuthService {
     return this._token();
   }
 
-  private getStoredToken(): string | null {
+  /** Token persisted in `localStorage` — the cross-tab source of truth. The
+   *  interceptor compares it against the token a failed request actually used
+   *  to tell a rotated (stale) token apart from a genuinely expired session. */
+  getStoredToken(): string | null {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  /** Re-syncs the in-memory token from `localStorage` after another tab rotated
+   *  it. Does NOT write to `localStorage` — the persisted value wins. */
+  syncTokenFromStorage(): void {
+    this._token.set(this.getStoredToken());
   }
 
   private getStoredUser(): User | null {
@@ -99,14 +110,42 @@ export class AuthService {
     this._meLoaded.set(true);
   }
 
-  /** Cambia el negocio activo (admin_general) y refresca el caché de /auth/me. */
-  switchTenant(tenantId: number): Observable<AuthMeData> {
+  /** Cambia el negocio activo (admin_general) y adopta la sesión rotada.
+   *  El backend revoca el token viejo y devuelve uno nuevo, así que hay que
+   *  reemplazar el token persistido; actualiza `user()` vía `setUser` — nunca
+   *  `login()`, que navegaría. */
+  switchTenant(tenantId: number): Observable<AuthSwitchResponse> {
     return this.authApi.switchTenant(tenantId).pipe(
-      tap((me) => {
-        this._me.set(me);
+      tap((res) => {
+        this.setToken(res.token);
+        this._me.set(res.user);
         this._meLoaded.set(true);
+        this.setUser(this.toUser(res.user));
+        this._abilities.set(res.abilities ?? []);
       }),
     );
+  }
+
+  /** True when the backend granted the given ability on the active session. */
+  hasAbility(ability: string): boolean {
+    return this._abilities().includes(ability);
+  }
+
+  /** Mapea el payload de /auth/me a la forma persistida `User`. */
+  private toUser(me: AuthMeData): User {
+    return {
+      id: me.id,
+      email: me.email,
+      name: me.name,
+      phone: me.phone ?? undefined,
+      avatar_url: me.avatar_url ?? null,
+      role: me.role,
+      provider_id: me.provider_id ?? null,
+      tenant_id: me.tenant_id,
+      email_verified_at: me.email_verified_at,
+      onboarding_complete: me.onboarding_complete,
+      business: me.business,
+    };
   }
 
   private navigateByRole(role: UserRole): void {
@@ -125,13 +164,15 @@ export class AuthService {
     this._user.set(null);
     this._me.set(null);
     this._meLoaded.set(false);
+    this._abilities.set([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
     }
-    // Limpia preferencias por usuario (p. ej. última sucursal de la agenda)
-    // para que no queden restos del usuario anterior en el mismo navegador.
-    this.calendarPrefs.setLastLocationId(userId, null);
+    // Limpia TODAS las preferencias tenant-scoped del usuario (sucursal +
+    // profesional, incl. la clave legacy user-only) para que no queden restos
+    // del usuario anterior en el mismo navegador.
+    this.calendarPrefs.clearForUser(userId);
     this.router.navigate(['/login']);
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { AuthMeData, AuthMeResponse, AuthResponse, ChangePasswordData, LoginCredentials, RegisterData, RegisterResponse, ResetPasswordData, User } from '@models';
+import { AuthMeData, AuthMeResponse, AuthResponse, AuthSwitchResponse, ChangePasswordData, LoginCredentials, RegisterData, RegisterResponse, ResetPasswordData, User } from '@models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
@@ -30,11 +30,13 @@ export class AuthApiService {
     return this.http.get<AuthMeResponse>(`${this.baseUrl}/auth/me`).pipe(map((r) => r.user));
   }
 
-  /** POST /auth/switch-tenant (Bearer) → { user } — cambia el negocio activo (admin_general). */
-  switchTenant(tenantId: number): Observable<AuthMeData> {
-    return this.http
-      .post<AuthMeResponse>(`${this.baseUrl}/auth/switch-tenant`, { tenant_id: tenantId })
-      .pipe(map((r) => r.user));
+  /** POST /auth/switch-tenant (Bearer) → { token, user, abilities } — cambia el
+   *  negocio activo (admin_general). El backend ROTA el token (revoca el viejo) y
+   *  `abilities` viaja TOP-LEVEL, por eso se devuelve el payload completo. */
+  switchTenant(tenantId: number): Observable<AuthSwitchResponse> {
+    return this.http.post<AuthSwitchResponse>(`${this.baseUrl}/auth/switch-tenant`, {
+      tenant_id: tenantId,
+    });
   }
 
   /** POST /auth/password (Bearer) → { message } — cambio de contraseña del usuario autenticado. */

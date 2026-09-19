@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal, computed } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FullCalendarComponent } from './full-calendar.component';
 import { AuthService } from '@services/auth.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
+import type { TenantSwitchResult } from '@services/tenant-switch.service';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
@@ -73,6 +75,10 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
   let mockMessageService: { add: ReturnType<typeof vi.fn> };
   let mockHttpError: { handle: ReturnType<typeof vi.fn>; toToastConfig: ReturnType<typeof vi.fn> };
   let mockAuthUser: ReturnType<typeof signal<User | null>>;
+  let mockTenantSwitch: {
+    lastSwitch: ReturnType<typeof signal<TenantSwitchResult | null>>;
+    switchTenant: ReturnType<typeof vi.fn>;
+  };
 
   /** Test admin user with a stable id — the preference key is per-user. */
   function testUser(id: number): User {
@@ -183,15 +189,26 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     // tests so no test inherits another one's key.
     localStorage.clear();
     mockAuthUser = signal<User | null>(testUser(5));
+    mockTenantSwitch = { lastSwitch: signal<TenantSwitchResult | null>(null), switchTenant: vi.fn(() => of(void 0)) };
 
     await TestBed.configureTestingModule({
       imports: [FullCalendarComponent],
       providers: [
         provideZonelessChangeDetection(),
         { provide: Router, useValue: mockRouter },
+        // The component reads `?date=` from the route snapshot/subscription; a
+        // minimal ActivatedRoute keeps the calendar navigation tests hermetic.
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { queryParamMap: convertToParamMap({}) },
+            queryParamMap: of(convertToParamMap({})),
+          },
+        },
         // Minimally mocked AuthService — the component and BookingStore only
         // read `user()` in these flows.
         { provide: AuthService, useValue: { user: computed(() => mockAuthUser()), userRole: computed(() => mockAuthUser()?.role ?? null) } },
+        { provide: TenantSwitchService, useValue: mockTenantSwitch },
         { provide: LocationsApiService, useValue: mockLocationsApi },
         { provide: ProvidersApiService, useValue: mockProvidersApi },
         { provide: BlockedSlotsApiService, useValue: mockBlockedSlotsApi },
@@ -694,6 +711,119 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
 
       expect(component.userName()).toBe('');
       expect(component.userRoleLabel()).toBe('');
+    });
+  });
+
+  describe('tenant switch effect (lastSwitch)', () => {
+    it('re-applies the coordinator resolved location and provider after a switch', () => {
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 2,
+        providerId: 8,
+      });
+
+      fixture.detectChanges();
+
+      // New tenant's lists are re-fetched and the resolved selection applied
+      expect(mockLocationsApi.getLocations).toHaveBeenCalled();
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 2 });
+      expect(component.selectedLocationId).toBe(2);
+      expect(component.selectedProviderId).toBe(8);
+      expect(store.filters().selectedLocationId).toBe(2);
+      expect(store.filters().selectedProviderId).toBe(8);
+    });
+
+    it('reconciles a provider missing from the new tenant to null (all providers)', () => {
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 1,
+        providerId: 999,
+      });
+
+      fixture.detectChanges();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
+      // A switch is not a navigation intent — no context toast is emitted
+      expect(mockMessageService.add).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the first active location when the resolved one is not in the new tenant', () => {
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 999,
+        providerId: null,
+      });
+
+      fixture.detectChanges();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 1 });
+      expect(component.selectedProviderId).toBeNull();
+    });
+
+    it('does not re-apply a switch already present when the agenda mounts', () => {
+      // Stop the beforeEach component's effects before publishing the switch.
+      fixture.destroy();
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 2,
+        providerId: 8,
+      });
+      mockLocationsApi.getLocations.mockClear();
+
+      const fresh = TestBed.createComponent(FullCalendarComponent);
+      fresh.detectChanges();
+
+      // Only the mount-time default load ran; the primed effect did not
+      // duplicate it (it restores from the tenant-scoped preferences instead).
+      expect(mockLocationsApi.getLocations).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('provider memory (per user, localStorage)', () => {
+    const providerKeyFor = (userId: number) => `bw:lastProviderId:${userId}`;
+
+    it('restores the remembered provider on the default load path', () => {
+      localStorage.setItem(providerKeyFor(5), '8');
+
+      component.loadLocations();
+
+      expect(component.selectedProviderId).toBe(8);
+      expect(store.filters().selectedProviderId).toBe(8);
+    });
+
+    it('reconciles a remembered provider missing from the list to null', () => {
+      localStorage.setItem(providerKeyFor(5), '999');
+
+      component.loadLocations();
+
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
+    });
+
+    it('persists the provider choice per user + tenant on change', () => {
+      component.selectedProviderId = 8;
+
+      component.onProviderChange();
+
+      expect(localStorage.getItem(providerKeyFor(5))).toBe('8');
+      expect(store.filters().selectedProviderId).toBe(8);
+    });
+
+    it('remembers a cleared provider as null (all providers)', () => {
+      localStorage.setItem(providerKeyFor(5), '8');
+      component.selectedProviderId = null;
+
+      component.onProviderChange();
+
+      expect(localStorage.getItem(providerKeyFor(5))).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
     });
   });
 });
