@@ -25,6 +25,28 @@
     </div>
   } @else {
     <div class="matrix">
+      <p-select
+        class="role-select"
+        [options]="roleOptions()"
+        optionLabel="label"
+        optionValue="slug"
+        [ngModel]="selectedRole()?.slug"
+        (ngModelChange)="selectRoleBySlug($event)"
+      >
+        <ng-template pTemplate="item" let-opt>
+          <div class="role-option">
+            <i [class]="'pi ' + opt.icon"></i>
+            <span>{{ opt.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="selectedItem" let-opt>
+          <div class="role-option">
+            <i [class]="'pi ' + opt.icon"></i>
+            <span>{{ opt.label }}</span>
+          </div>
+        </ng-template>
+      </p-select>
+
       <aside class="role-list">
         @for (role of roles(); track role.slug) {
           <button

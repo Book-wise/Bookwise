@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -31,6 +32,7 @@ import { RolesStore } from './roles.store';
     FormsModule,
     CheckboxModule,
     ButtonModule,
+    SelectModule,
     MessageModule,
     ConfirmDialogModule,
   ],
@@ -49,6 +51,19 @@ export class RolePermissionsComponent implements OnInit {
   protected readonly roleMeta = roleMeta;
 
   readonly roles = computed(() => this.store.roles());
+
+  /**
+   * Options for the mobile role picker: slug (value), i18n label and role icon.
+   * The desktop button row keeps rendering `roles()` directly.
+   */
+  readonly roleOptions = computed(() =>
+    this.roles().map((role) => ({
+      slug: role.slug,
+      label: this.roleLabel(role),
+      icon: roleMeta(role.slug).icon,
+    })),
+  );
+
   readonly catalog = computed(() => this.store.catalog());
   readonly catalogLoading = computed(() => this.store.catalogLoading());
   readonly catalogError = computed(() => this.store.catalogError());
@@ -90,6 +105,11 @@ export class RolePermissionsComponent implements OnInit {
 
   selectRole(role: Role): void {
     this.selectedRoleSlug.set(role.slug);
+  }
+
+  /** Mobile picker handler: selects by slug, mirroring `selectRole`. */
+  selectRoleBySlug(slug: string): void {
+    this.selectedRoleSlug.set(slug);
   }
 
   isSelected(key: string): boolean {

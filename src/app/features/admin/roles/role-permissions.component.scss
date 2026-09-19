@@ -47,6 +47,22 @@
   align-items: start;
 }
 
+// Mobile-only role picker; the desktop button row (`.role-list`) is hidden
+// below 768px where a dropdown gives a clear selection affordance.
+.role-select {
+  display: none;
+}
+
+.role-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    color: #6b7280;
+  }
+}
+
 .role-list {
   display: flex;
   flex-direction: column;
@@ -157,21 +173,14 @@
     gap: 1rem;
   }
 
-  // Master list becomes a horizontally scrollable row above the detail pane.
+  // The button row has no scroll affordance on touch: the dropdown replaces it.
   .role-list {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-right: 0;
-    border-bottom: 1px solid var(--bw-100, #e5e7eb);
-    padding-right: 0;
-    padding-bottom: 0.75rem;
+    display: none;
+  }
 
-    &__item {
-      flex: 0 0 auto;
-    }
+  .role-select {
+    display: block;
+    width: 100%;
   }
 
   // Save is the pane's primary action: give it the full width.

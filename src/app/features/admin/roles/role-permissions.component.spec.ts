@@ -1,6 +1,8 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { NgModel } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { RolePermissionsComponent } from './role-permissions.component';
@@ -96,6 +98,12 @@ describe('RolePermissionsComponent', () => {
     component = fixture.componentInstance;
   });
 
+  /** The `NgModel` bound to the mobile role select. */
+  function selectNgModel(): NgModel {
+    const select = fixture.debugElement.query(By.css('p-select.role-select'));
+    return select.injector.get(NgModel);
+  }
+
   it('requests the catalog on init', () => {
     fixture.detectChanges();
 
@@ -130,6 +138,38 @@ describe('RolePermissionsComponent', () => {
 
     expect(component.selectedRole()?.slug).toBe('staff');
     expect(component.draft()).toEqual(['bookings.view']);
+  });
+
+  it('renders the mobile role select with the role options and reflects the active role', () => {
+    fixture.detectChanges();
+    const nativeEl = fixture.nativeElement as HTMLElement;
+
+    expect(nativeEl.querySelector('p-select.role-select')).toBeTruthy();
+    expect(component.roleOptions()).toEqual([
+      { slug: 'admin_general', label: component.roleLabel(allRoles[0]), icon: 'pi-shield' },
+      { slug: 'admin_local', label: component.roleLabel(allRoles[1]), icon: 'pi-building' },
+      { slug: 'staff', label: component.roleLabel(allRoles[2]), icon: 'pi-users' },
+    ]);
+    expect(selectNgModel().model).toBe('admin_general');
+
+    component.selectRoleBySlug('staff');
+    fixture.detectChanges();
+
+    expect(selectNgModel().model).toBe('staff');
+  });
+
+  it('switches the active role and detail when another role is chosen in the select', () => {
+    fixture.detectChanges();
+    const nativeEl = fixture.nativeElement as HTMLElement;
+
+    // Emulates the user picking "Staff" in the p-select (ngModelChange output).
+    selectNgModel().update.emit('staff');
+    fixture.detectChanges();
+
+    expect(component.selectedRole()?.slug).toBe('staff');
+    expect(component.draft()).toEqual(['bookings.view']);
+    expect(component.isAdminGeneralLocked()).toBe(false);
+    expect(nativeEl.querySelector('.permissions-lock')).toBeNull();
   });
 
   it('resolves permission labels via i18n with backend label and raw-key fallbacks', () => {
