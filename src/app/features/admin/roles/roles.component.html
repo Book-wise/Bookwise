@@ -4,124 +4,19 @@
     <p>{{ lang.t('roles.subtitle') }}</p>
   </div>
 
-  @if (loading()) {
-    <div class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
-  } @else {
-    <p-card class="roles-card">
-      <div class="roles-body">
-        <div class="field">
-          <label>{{ lang.t('roles.provider') }}</label>
-          <p-select
-            [options]="providerOptions()"
-            optionLabel="label"
-            optionValue="id"
-            [ngModel]="selectedProviderId()"
-            (ngModelChange)="onProviderChange($event)"
-            [filter]="true"
-            [filterPlaceholder]="lang.t('common.search')"
-            [placeholder]="lang.t('roles.provider_placeholder')"
-            class="w-full"
-          >
-            <ng-template pTemplate="item" let-opt>
-              <div class="provider-option">
-                <span class="provider-option__name">{{ opt.name }}</span>
-                @if (opt.roles.length > 0) {
-                  <span class="provider-option__roles">
-                    @for (role of opt.roles; track role.slug) {
-                      <span
-                        class="bw-chip role-chip"
-                        [style.--chip-color]="roleMeta(role.slug).color"
-                      >
-                        <span
-                          class="bw-chip__dot"
-                          [style.background]="roleMeta(role.slug).color"
-                        ></span>
-                        {{ roleLabel(role) }}
-                      </span>
-                    }
-                  </span>
-                }
-              </div>
-            </ng-template>
-          </p-select>
-        </div>
+  <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" class="roles-tabs">
+    <p-tablist>
+      <p-tab value="assignment">{{ lang.t('roles.tabs.assignment') }}</p-tab>
+      <p-tab value="permissions">{{ lang.t('roles.tabs.permissions') }}</p-tab>
+    </p-tablist>
 
-        @if (selectedProvider(); as provider) {
-          <div class="provider-summary">
-            <span class="provider-name">{{ provider.first_name }} {{ provider.last_name }}</span>
-            <span class="provider-email">{{ provider.email }}</span>
-            @if ((provider.roles ?? []).length > 0) {
-              <div class="provider-summary__roles">
-                @for (role of provider.roles ?? []; track role.slug) {
-                  <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.slug).color">
-                    <span
-                      class="bw-chip__dot"
-                      [style.background]="roleMeta(role.slug).color"
-                    ></span>
-                    {{ roleLabel(role) }}
-                  </span>
-                }
-              </div>
-            }
-          </div>
-        }
-
-        @if (roles().length > 0) {
-          <div class="roles-list">
-            @for (role of roles(); track role.slug) {
-              <div class="role-item" [class.locked]="isRoleLocked(role.slug)">
-                <p-checkbox
-                  [ngModel]="isRoleChecked(role.slug)"
-                  (ngModelChange)="onRoleChange($event, role.slug)"
-                  [binary]="true"
-                  [disabled]="isRoleLocked(role.slug)"
-                />
-                <span class="role-label">{{ roleLabel(role) }}</span>
-                @if (isRoleLocked(role.slug)) {
-                  <i
-                    class="pi pi-lock role-lock"
-                    [title]="lang.t('roles.admin_general_locked')"
-                  ></i>
-                }
-              </div>
-            }
-          </div>
-        }
-
-        @if (error()) {
-          <p-message severity="warn" class="w-full" [text]="error() ?? ''" />
-        }
-
-        <p-button
-          [label]="lang.t('roles.save')"
-          icon="pi pi-save"
-          class="save-btn"
-          [loading]="saving()"
-          [disabled]="!selectedProvider()"
-          (onClick)="save()"
-        />
-      </div>
-    </p-card>
-
-    <section class="role-cards">
-      <header class="role-cards__header">
-        <h2>{{ lang.t('roles.cards_title') }}</h2>
-        <p>{{ lang.t('roles.cards_subtitle') }}</p>
-      </header>
-
-      <div class="role-cards-grid">
-        @for (role of roles(); track role.slug) {
-          <div class="role-card" [style.--role-color]="roleMeta(role.slug).color">
-            <div class="role-card__body">
-              <span class="role-card__icon" [style.background]="roleMeta(role.slug).color">
-                <i [class]="roleMeta(role.slug).icon"></i>
-              </span>
-              <span class="role-card__name">{{ roleLabel(role) }}</span>
-              <span class="role-card__desc">{{ roleDesc(role) }}</span>
-            </div>
-          </div>
-        }
-      </div>
-    </section>
-  }
+    <p-tabpanels>
+      <p-tabpanel value="assignment">
+        <bw-roles-assignment />
+      </p-tabpanel>
+      <p-tabpanel value="permissions">
+        <bw-role-permissions />
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
 </div>

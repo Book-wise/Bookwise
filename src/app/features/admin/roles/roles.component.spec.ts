@@ -1,6 +1,9 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { MessageService } from 'primeng/api';
 import { RolesComponent } from './roles.component';
 import { RolesApiService } from '@services/api/roles-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
@@ -8,8 +11,22 @@ import { LocationsApiService } from '@services/api/locations-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
-import { ReferenceStore } from '@core/stores/reference.store';
-import type { Provider, Role } from '@models';
+import type { PermissionGroup, Role } from '@models';
+
+// PrimeNG TabList binds a ResizeObserver on init; jsdom does not provide one.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {
+      /* test no-op */
+    }
+    unobserve() {
+      /* test no-op */
+    }
+    disconnect() {
+      /* test no-op */
+    }
+  } as typeof ResizeObserver;
+}
 
 const allRoles: Role[] = [
   { id: 1, slug: 'admin_general', name: 'Admin General', permissions: [] },
@@ -20,33 +37,27 @@ const allRoles: Role[] = [
   { id: 6, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] },
 ];
 
-function makeProvider(overrides: Partial<Provider> = {}): Provider {
-  return {
-    id: 1,
-    first_name: 'Ana',
-    last_name: 'García',
-    email: 'ana@test.com',
-    active: true,
-    ...overrides,
-  };
-}
+const catalog: PermissionGroup[] = [
+  { group: 'bookings', items: [{ key: 'bookings.view', label: 'Ver turnos' }] },
+];
 
-describe('RolesComponent', () => {
+describe('RolesComponent (shell)', () => {
   let rolesApi: {
     getRoles: ReturnType<typeof vi.fn>;
-    assignProviderRoles: ReturnType<typeof vi.fn>;
+    getPermissionCatalog: ReturnType<typeof vi.fn>;
+    updateRolePermissions: ReturnType<typeof vi.fn>;
   };
   let providersApi: { getProviders: ReturnType<typeof vi.fn> };
-  let store: InstanceType<typeof ReferenceStore>;
-  let fixture: ReturnType<typeof TestBed.createComponent<RolesComponent>>;
-  let component: RolesComponent;
+  let router: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     rolesApi = {
       getRoles: vi.fn(() => of(allRoles)),
-      assignProviderRoles: vi.fn(),
+      getPermissionCatalog: vi.fn(() => of(catalog)),
+      updateRolePermissions: vi.fn(),
     };
     providersApi = { getProviders: vi.fn(() => of([])) };
+    router = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [RolesComponent],
@@ -68,143 +79,58 @@ describe('RolesComponent', () => {
         },
         { provide: ClientsApiService, useValue: { getClients: vi.fn(() => of([])) } },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
+        { provide: MessageService, useValue: { add: vi.fn() } },
+        { provide: Router, useValue: router },
       ],
     }).compileComponents();
-
-    store = TestBed.inject(ReferenceStore);
-    fixture = TestBed.createComponent(RolesComponent);
-    component = fixture.componentInstance;
   });
 
-  /**
-   * Seeds providers in the real ReferenceStore (U6: canonical source for this
-   * screen — the component no longer fetches providers on its own).
-   */
-  function seedProviders(providers: Provider[]): void {
-    providersApi.getProviders.mockReturnValue(of(providers));
-    store.invalidateProviders();
+  function createFixture(): ComponentFixture<RolesComponent> {
+    const fixture = TestBed.createComponent(RolesComponent);
+    fixture.detectChanges();
+    return fixture;
   }
 
-  it('renders the six business roles', () => {
-    fixture.detectChanges();
+  it('loads GET /v1/roles exactly once on init', () => {
+    createFixture();
 
-    expect(component.roles().length).toBe(6);
-    const labels = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.role-label'),
-    ).map((el) => el.textContent?.trim());
-    expect(labels).toHaveLength(6);
+    expect(rolesApi.getRoles).toHaveBeenCalledTimes(1);
   });
 
-  it('renders the role cards reference section with resolved descriptions', () => {
-    fixture.detectChanges();
+  it('renders the Asignación and Permisos tabs', () => {
+    const fixture = createFixture();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
+    expect(text).toContain('Asignación');
+    expect(text).toContain('Permisos');
+  });
+
+  it('defaults to the assignment tab and mounts both panes', () => {
+    const fixture = createFixture();
     const nativeEl = fixture.nativeElement as HTMLElement;
-    const cards = Array.from(nativeEl.querySelectorAll('.role-card'));
-    expect(cards).toHaveLength(6);
 
-    const descs = Array.from(nativeEl.querySelectorAll('.role-card__desc')).map((el) =>
-      el.textContent?.trim(),
+    expect(fixture.componentInstance.activeTab()).toBe('assignment');
+    expect(nativeEl.querySelector('bw-roles-assignment')).toBeTruthy();
+    expect(nativeEl.querySelector('bw-role-permissions')).toBeTruthy();
+  });
+
+  it('switches the active tab through onTabChange', () => {
+    const fixture = createFixture();
+
+    fixture.componentInstance.onTabChange('permissions');
+
+    expect(fixture.componentInstance.activeTab()).toBe('permissions');
+  });
+
+  it('redirects to onboarding when GET /v1/roles responds 409 onboarding_required', () => {
+    rolesApi.getRoles.mockReturnValue(
+      throwError(
+        () => new HttpErrorResponse({ status: 409, error: { error: 'onboarding_required' } }),
+      ),
     );
-    expect(descs).toHaveLength(6);
-    // Las descripciones provienen de i18n (`roles.card.desc.<name>`), nunca del label.
-    expect(descs[0]).toBeTruthy();
-    expect(descs[0]).not.toBe(component.roleLabel(allRoles[0]));
-  });
 
-  it('falls back to the backend name when the slug has no i18n key', () => {
-    const unknownRole: Role = {
-      id: 99,
-      slug: 'custom_role',
-      name: 'Custom Role',
-      permissions: [],
-    };
+    createFixture();
 
-    expect(component.roleLabel(unknownRole)).toBe('Custom Role');
-  });
-
-  it('reads providers from ReferenceStore (no local providersApi load)', () => {
-    seedProviders([makeProvider({ id: 7 })]);
-    fixture.detectChanges();
-    fixture.detectChanges();
-
-    expect(component.providers()).toEqual([makeProvider({ id: 7 })]);
-    // Only the store loader called the API — the component never fetched on its own.
-    expect(providersApi.getProviders).toHaveBeenCalled();
-  });
-
-  it('blocks saving an empty selection (no PATCH)', () => {
-    seedProviders([makeProvider()]);
-    fixture.detectChanges();
-
-    component.onProviderChange(1);
-    component.selectedRoleSlugs.set([]);
-    component.save();
-
-    expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
-    expect(component.error()).toBeTruthy();
-  });
-
-  it('blocks removing admin_general (no PATCH)', () => {
-    const owner = makeProvider({ roles: [allRoles[0]] });
-    seedProviders([owner]);
-    fixture.detectChanges();
-
-    component.onProviderChange(1);
-    // Intento de quitar admin_general del set seleccionado.
-    component.selectedRoleSlugs.set(['admin_local']);
-    component.save();
-
-    expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
-    expect(component.error()).toBeTruthy();
-  });
-
-  it('assigns roles via the store and updates the canonical store state', () => {
-    const owner = makeProvider({ roles: [allRoles[0]] });
-    seedProviders([owner]);
-    rolesApi.assignProviderRoles.mockReturnValue(of({ data: [allRoles[0], allRoles[1]] }));
-    fixture.detectChanges();
-
-    component.onProviderChange(1);
-    component.selectedRoleSlugs.set(['admin_general', 'admin_local']);
-    component.save();
-
-    expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['admin_general', 'admin_local']);
-    // El store patcha `providers` con el set canónico del server (sin patch manual).
-    expect(store.providers()[0].roles).toEqual([allRoles[0], allRoles[1]]);
-    expect(component.saving()).toBe(false);
-  });
-
-  it('builds providerOptions with a searchable name + role label and numeric ids', () => {
-    const provider = makeProvider({ id: 7, roles: [allRoles[0], allRoles[1]] });
-    seedProviders([provider]);
-    fixture.detectChanges();
-    fixture.detectChanges();
-
-    const opts = component.providerOptions();
-    expect(opts).toHaveLength(1);
-    expect(opts[0].id).toBe(7);
-    expect(opts[0].name).toBe('Ana García');
-    expect(opts[0].email).toBe('ana@test.com');
-    // El label concatena nombre + roles para que el filtro matchee ambos.
-    expect(opts[0].label).toBe(
-      `Ana García · ${component.roleLabel(allRoles[0])}, ${component.roleLabel(allRoles[1])}`,
-    );
-  });
-
-  it('renders a role chip row under the selected provider with its current roles', () => {
-    const provider = makeProvider({ roles: [allRoles[0], allRoles[1]] });
-    seedProviders([provider]);
-    fixture.detectChanges();
-
-    component.onProviderChange(1);
-    fixture.detectChanges();
-
-    const chips = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.provider-summary .role-chip'),
-    );
-    expect(chips).toHaveLength(2);
-    const texts = chips.map((el) => el.textContent?.trim());
-    expect(texts).toContain(component.roleLabel(allRoles[0]));
-    expect(texts).toContain(component.roleLabel(allRoles[1]));
+    expect(router.navigate).toHaveBeenCalledWith(['/onboarding']);
   });
 });

@@ -1,0 +1,77 @@
+<div class="permissions-wrap">
+  <p-message
+    severity="warn"
+    class="permissions-warning"
+    [text]="lang.t('roles.permissions.warning')"
+  />
+
+  @if (catalogLoading()) {
+    <div class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+  } @else if (catalogError() || !catalogReady()) {
+    <div class="catalog-state">
+      <i class="pi pi-exclamation-circle catalog-state__icon"></i>
+      <p class="catalog-state__text">
+        {{
+          lang.t(
+            catalogError() ? 'roles.permissions.catalog_error' : 'roles.permissions.catalog_empty'
+          )
+        }}
+      </p>
+      <p-button
+        [label]="lang.t('roles.permissions.retry')"
+        icon="pi pi-refresh"
+        (onClick)="retryCatalog()"
+      />
+    </div>
+  } @else {
+    <div class="matrix">
+      <aside class="role-list">
+        @for (role of roles(); track role.slug) {
+          <button
+            type="button"
+            class="role-list__item"
+            [class.active]="selectedRole()?.slug === role.slug"
+            (click)="selectRole(role)"
+          >
+            <i [class]="roleMeta(role.slug).icon"></i>
+            <span class="role-list__label">{{ roleLabel(role) }}</span>
+          </button>
+        }
+      </aside>
+
+      <section class="matrix-detail">
+        @if (selectedRole(); as role) {
+          @for (group of catalog(); track group.group) {
+            <div class="permission-group">
+              <h3 class="permission-group__title">{{ permissionGroupLabel(group.group) }}</h3>
+              <div class="permission-group__items">
+                @for (item of group.items; track item.key) {
+                  <label class="permission-item">
+                    <p-checkbox
+                      [ngModel]="isSelected(item.key)"
+                      (ngModelChange)="togglePermission(item.key, $event)"
+                      [binary]="true"
+                    />
+                    <span class="permission-item__label">{{ permissionLabel(item) }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+          }
+
+          <p-button
+            class="save-btn"
+            [label]="lang.t('roles.permissions.save')"
+            icon="pi pi-save"
+            [loading]="saving()"
+            (onClick)="save()"
+          />
+        } @else {
+          <p class="empty-state">{{ lang.t('roles.permissions.select_role') }}</p>
+        }
+      </section>
+    </div>
+  }
+</div>
+
+<p-confirmDialog styleClass="bw-delete-confirm" />

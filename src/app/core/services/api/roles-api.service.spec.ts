@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { RolesApiService } from './roles-api.service';
 import { environment } from '@env/environment';
-import { Role } from '@models';
+import { PermissionGroup, Role } from '@models';
 
 describe('RolesApiService', () => {
   let service: RolesApiService;
@@ -57,6 +57,48 @@ describe('RolesApiService', () => {
       const req = httpMock.expectOne(`${environment.apiUrl}/providers/5/roles`);
       expect(req.request.method).toBe('PATCH');
       expect(req.request.body).toEqual({ roles: selected });
+      req.flush(response);
+    });
+  });
+
+  describe('getPermissionCatalog', () => {
+    it('GETs /roles/permissions and unwraps { data: PermissionGroup[] }', () => {
+      const catalog: PermissionGroup[] = [
+        {
+          group: 'bookings',
+          items: [
+            { key: 'bookings.view', label: 'Ver turnos' },
+            { key: 'bookings.create', label: 'Crear turnos' },
+          ],
+        },
+        { group: 'clients', items: [{ key: 'clients.view', label: 'Ver clientes' }] },
+      ];
+
+      service.getPermissionCatalog().subscribe((res) => {
+        expect(res).toEqual(catalog);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/roles/permissions`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ data: catalog });
+    });
+  });
+
+  describe('updateRolePermissions', () => {
+    it('PATCHes /roles/{id}/permissions with { permissions: [...] }', () => {
+      const permissions = ['bookings.view', 'clients.create'];
+      const response = {
+        message: 'Permisos del rol actualizados exitosamente.',
+        data: { role_id: 2, slug: 'admin_local', permissions },
+      };
+
+      service.updateRolePermissions(2, permissions).subscribe((res) => {
+        expect(res).toEqual(response);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/roles/2/permissions`);
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ permissions });
       req.flush(response);
     });
   });

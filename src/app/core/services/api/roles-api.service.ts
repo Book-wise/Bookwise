@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { Role } from '@models';
+import { PermissionGroup, Role, RolePermissionsResponse } from '@models';
 
 @Injectable({ providedIn: 'root' })
 export class RolesApiService {
@@ -22,6 +22,30 @@ export class RolesApiService {
     return this.http.patch<{ data: Role[] }>(
       `${this.baseUrl}/providers/${providerId}/roles`,
       { roles: slugs },
+    );
+  }
+
+  /**
+   * GET /roles/permissions (Bearer) → global permission catalog grouped by
+   * group, unwrap { data: PermissionGroup[] }. Tenantless: the catalog is CORE.
+   */
+  getPermissionCatalog(): Observable<PermissionGroup[]> {
+    return this.http
+      .get<{ data: PermissionGroup[] }>(`${this.baseUrl}/roles/permissions`)
+      .pipe(map((r) => r.data));
+  }
+
+  /**
+   * PATCH /roles/{id}/permissions { permissions: [key] } → replace semantics.
+   * An empty array clears every permission for the role.
+   */
+  updateRolePermissions(
+    roleId: number,
+    permissions: string[],
+  ): Observable<RolePermissionsResponse> {
+    return this.http.patch<RolePermissionsResponse>(
+      `${this.baseUrl}/roles/${roleId}/permissions`,
+      { permissions },
     );
   }
 }
