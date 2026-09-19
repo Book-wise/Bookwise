@@ -6,7 +6,6 @@ import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { RolePermissionsComponent } from './role-permissions.component';
-import { ROLE_ICON_PROVIDERS } from './role-icons';
 import { RolesStore } from './roles.store';
 import { HttpErrorService } from '@services/http-error.service';
 import type { PermissionGroup, Role } from '@models';
@@ -92,10 +91,7 @@ describe('RolePermissionsComponent', () => {
     })
       .overrideComponent(RolePermissionsComponent, {
         set: {
-          providers: [
-            { provide: ConfirmationService, useValue: confirmation },
-            ...ROLE_ICON_PROVIDERS,
-          ],
+          providers: [{ provide: ConfirmationService, useValue: confirmation }],
         },
       })
       .compileComponents();
@@ -151,25 +147,12 @@ describe('RolePermissionsComponent', () => {
     const nativeEl = fixture.nativeElement as HTMLElement;
 
     expect(nativeEl.querySelector('p-select.role-select')).toBeTruthy();
+    // The badge component owns the icon/color rendering from the slug, so the
+    // options only carry the value + label.
     expect(component.roleOptions()).toEqual([
-      {
-        slug: 'admin_general',
-        label: component.roleLabel(allRoles[0]),
-        icon: 'crown',
-        color: '#0b3d95',
-      },
-      {
-        slug: 'admin_local',
-        label: component.roleLabel(allRoles[1]),
-        icon: 'store',
-        color: '#3b82f6',
-      },
-      {
-        slug: 'staff',
-        label: component.roleLabel(allRoles[2]),
-        icon: 'scissors',
-        color: '#f97316',
-      },
+      { slug: 'admin_general', label: component.roleLabel(allRoles[0]) },
+      { slug: 'admin_local', label: component.roleLabel(allRoles[1]) },
+      { slug: 'staff', label: component.roleLabel(allRoles[2]) },
     ]);
     expect(selectNgModel().model).toBe('admin_general');
 
@@ -177,6 +160,25 @@ describe('RolePermissionsComponent', () => {
     fixture.detectChanges();
 
     expect(selectNgModel().model).toBe('staff');
+  });
+
+  it('renders a visible label associated with the mobile role select', () => {
+    fixture.detectChanges();
+    const nativeEl = fixture.nativeElement as HTMLElement;
+
+    const label = nativeEl.querySelector<HTMLLabelElement>('.role-select-field__label');
+    expect(label?.textContent?.trim()).toBe(
+      component.lang.t('roles.permissions.role_select_label'),
+    );
+    expect(label?.getAttribute('for')).toBe('role-select');
+    expect(nativeEl.querySelector('#role-select')).toBeTruthy();
+  });
+
+  it('renders the shared role badge in the desktop role list', () => {
+    fixture.detectChanges();
+    const nativeEl = fixture.nativeElement as HTMLElement;
+
+    expect(nativeEl.querySelectorAll('.role-list__item bw-role-badge')).toHaveLength(3);
   });
 
   it('switches the active role and detail when another role is chosen in the select', () => {

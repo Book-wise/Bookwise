@@ -9,16 +9,17 @@
  *
  * Icons are Lucide identifiers (https://lucide.dev/icons), registered through
  * `ROLE_ICON_PROVIDERS`. They are deliberately distinct from the PrimeIcons
- * used elsewhere in the app (pi-building, pi-user, pi-users, pi-eye,
- * pi-id-card) so a role is never confused with a section of the product.
+ * used elsewhere in the app (pi-building, pi-user, pi-eye, pi-id-card) so a
+ * role is never confused with a section of the product. The `staff` roles use
+ * people glyphs because they represent professionals who attend appointments.
  */
 export type RoleIcon =
   | 'crown'
   | 'store'
   | 'concierge-bell'
   | 'clipboard-list'
-  | 'scissors'
-  | 'scissors-line-dashed'
+  | 'users'
+  | 'user-round'
   | 'circle-question-mark';
 
 export interface RoleMeta {
@@ -31,8 +32,8 @@ export const ROLE_META: Record<string, RoleMeta> = {
   admin_local: { color: '#3b82f6', icon: 'store' },
   recepcionista: { color: '#22c55e', icon: 'concierge-bell' },
   recepcionista_readonly: { color: '#14b8a6', icon: 'clipboard-list' },
-  staff: { color: '#f97316', icon: 'scissors' },
-  staff_readonly: { color: '#eab308', icon: 'scissors-line-dashed' },
+  staff: { color: '#f97316', icon: 'users' },
+  staff_readonly: { color: '#eab308', icon: 'user-round' },
 };
 
 const FALLBACK: RoleMeta = { color: '#6b7280', icon: 'circle-question-mark' };

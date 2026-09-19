@@ -3,7 +3,8 @@ import { ATTENTION_ROLES, hasAttentionRole, roleMeta } from './role-meta';
 describe('role-meta', () => {
   describe('roleMeta', () => {
     it('resolves color/icon metadata by slug', () => {
-      expect(roleMeta('staff').icon).toBe('scissors');
+      expect(roleMeta('staff').icon).toBe('users');
+      expect(roleMeta('staff_readonly').icon).toBe('user-round');
       expect(roleMeta('admin_general').icon).toBe('crown');
     });
 

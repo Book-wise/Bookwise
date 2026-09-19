@@ -6,13 +6,11 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { LucideAngularModule } from 'lucide-angular';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { PermissionItem, Role } from '@models';
-import { roleMeta } from './role-meta';
-import { ROLE_ICON_PROVIDERS } from './role-icons';
+import { RoleBadgeComponent } from './role-badge.component';
 import { ADMIN_GENERAL_ROLE } from './role-guards';
 import { RolesStore } from './roles.store';
 
@@ -37,9 +35,9 @@ import { RolesStore } from './roles.store';
     SelectModule,
     MessageModule,
     ConfirmDialogModule,
-    LucideAngularModule,
+    RoleBadgeComponent,
   ],
-  providers: [ConfirmationService, ...ROLE_ICON_PROVIDERS],
+  providers: [ConfirmationService],
   templateUrl: './role-permissions.component.html',
   styleUrls: ['./role-permissions.component.scss'],
 })
@@ -50,22 +48,17 @@ export class RolePermissionsComponent implements OnInit {
   private readonly messageService = inject(MessageService);
   readonly lang = inject(LanguageService);
 
-  /** Resolves a role's color/icon (gray + pi-user fallback). */
-  protected readonly roleMeta = roleMeta;
-
   readonly roles = computed(() => this.store.roles());
 
   /**
-   * Options for the mobile role picker: slug (value), i18n label and the role's
-   * icon + color so the option row mirrors the card badge. The desktop button
+   * Options for the mobile role picker: slug (value) + i18n label. The badge
+   * component owns the icon/color rendering from the slug. The desktop button
    * row keeps rendering `roles()` directly.
    */
   readonly roleOptions = computed(() =>
     this.roles().map((role) => ({
       slug: role.slug,
       label: this.roleLabel(role),
-      icon: roleMeta(role.slug).icon,
-      color: roleMeta(role.slug).color,
     })),
   );
 

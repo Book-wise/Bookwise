@@ -852,6 +852,7 @@ export const ES: Record<string, string> = {
   'roles.permissions.saved': 'Permisos actualizados',
   'roles.permissions.saved_detail': 'El rol ahora tiene los permisos seleccionados.',
   'roles.permissions.select_role': 'Selecciona un rol para editar sus permisos.',
+  'roles.permissions.role_select_label': 'Selecciona un rol para modificar sus permisos',
   'roles.permissions.admin_general_locked': 'El rol Admin General siempre tiene todos los permisos y no se puede editar.',
   'roles.permissions.empty_confirm_header': 'Quitar todos los permisos',
   'roles.permissions.empty_confirm_message': 'Vas a dejar este rol sin ningún permiso. ¿Confirmas la operación?',

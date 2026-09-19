@@ -6,9 +6,9 @@ import {
   Crown,
   LUCIDE_ICONS,
   LucideIconProvider,
-  Scissors,
-  ScissorsLineDashed,
   Store,
+  UserRound,
+  Users,
 } from 'lucide-angular';
 
 /**
@@ -23,8 +23,8 @@ export const ROLE_ICONS = {
   Store,
   ConciergeBell,
   ClipboardList,
-  Scissors,
-  ScissorsLineDashed,
+  Users,
+  UserRound,
   CircleQuestionMark,
 };
 

@@ -119,11 +119,18 @@ describe('RolesAssignmentComponent', () => {
     // The first card (admin_general) renders a colored circular badge holding a
     // Lucide glyph. `stroke="currentColor"` is what lets the white badge color
     // paint the icon.
-    const badge = nativeEl.querySelector<HTMLElement>('.role-card__icon');
+    const badge = nativeEl.querySelector<HTMLElement>('.role-card bw-role-badge');
     expect(badge?.style.background).toBe('rgb(11, 61, 149)');
     const glyph = badge?.querySelector('lucide-icon svg');
     expect(glyph).toBeTruthy();
     expect(glyph?.getAttribute('stroke')).toBe('currentColor');
+  });
+
+  it('renders a role badge beside every role checkbox', () => {
+    fixture.detectChanges();
+
+    const nativeEl = fixture.nativeElement as HTMLElement;
+    expect(nativeEl.querySelectorAll('.role-item bw-role-badge')).toHaveLength(6);
   });
 
   it('falls back to the backend name when the slug has no i18n key', () => {
@@ -244,12 +251,14 @@ describe('RolesAssignmentComponent', () => {
     component.onProviderChange(1);
     fixture.detectChanges();
 
-    const chips = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.provider-summary .role-chip'),
-    );
+    const nativeEl = fixture.nativeElement as HTMLElement;
+    const chips = Array.from(nativeEl.querySelectorAll('.provider-summary .role-chip'));
     expect(chips).toHaveLength(2);
     const texts = chips.map((el) => el.textContent?.trim());
     expect(texts).toContain(component.roleLabel(allRoles[0]));
     expect(texts).toContain(component.roleLabel(allRoles[1]));
+
+    // Each chip identifies the role with the shared badge, not a plain dot.
+    expect(nativeEl.querySelectorAll('.provider-summary .role-chip bw-role-badge')).toHaveLength(2);
   });
 });
