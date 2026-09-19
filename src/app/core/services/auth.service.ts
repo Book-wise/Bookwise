@@ -99,14 +99,33 @@ export class AuthService {
     this._meLoaded.set(true);
   }
 
-  /** Cambia el negocio activo (admin_general) y refresca el caché de /auth/me. */
+  /** Cambia el negocio activo (admin_general) y refresca identidad + caché de /auth/me.
+   *  Actualiza `user()` vía `setUser` — nunca `login()`, que navegaría. */
   switchTenant(tenantId: number): Observable<AuthMeData> {
     return this.authApi.switchTenant(tenantId).pipe(
       tap((me) => {
         this._me.set(me);
         this._meLoaded.set(true);
+        this.setUser(this.toUser(me));
       }),
     );
+  }
+
+  /** Mapea el payload de /auth/me a la forma persistida `User`. */
+  private toUser(me: AuthMeData): User {
+    return {
+      id: me.id,
+      email: me.email,
+      name: me.name,
+      phone: me.phone ?? undefined,
+      avatar_url: me.avatar_url ?? null,
+      role: me.role,
+      provider_id: me.provider_id ?? null,
+      tenant_id: me.tenant_id,
+      email_verified_at: me.email_verified_at,
+      onboarding_complete: me.onboarding_complete,
+      business: me.business,
+    };
   }
 
   private navigateByRole(role: UserRole): void {
@@ -129,9 +148,10 @@ export class AuthService {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
     }
-    // Limpia preferencias por usuario (p. ej. última sucursal de la agenda)
-    // para que no queden restos del usuario anterior en el mismo navegador.
-    this.calendarPrefs.setLastLocationId(userId, null);
+    // Limpia TODAS las preferencias tenant-scoped del usuario (sucursal +
+    // profesional, incl. la clave legacy user-only) para que no queden restos
+    // del usuario anterior en el mismo navegador.
+    this.calendarPrefs.clearForUser(userId);
     this.router.navigate(['/login']);
   }
 }

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from './auth.service';
 import { AuthApiService } from './api/auth-api.service';
+import { CalendarPrefsService } from './calendar-prefs.service';
 import type { AuthMeData, Business } from '@models';
 
 const business: Business = {
@@ -29,12 +30,13 @@ const me: AuthMeData = {
 };
 
 describe('AuthService', () => {
-  let authApi: { getMe: ReturnType<typeof vi.fn> };
+  let authApi: { getMe: ReturnType<typeof vi.fn>; switchTenant: ReturnType<typeof vi.fn> };
   let router: { navigate: ReturnType<typeof vi.fn> };
+  let calendarPrefs: CalendarPrefsService;
   let service: AuthService;
 
   beforeEach(() => {
-    authApi = { getMe: vi.fn() };
+    authApi = { getMe: vi.fn(), switchTenant: vi.fn() };
     router = { navigate: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
@@ -44,6 +46,7 @@ describe('AuthService', () => {
       ],
     });
     service = TestBed.inject(AuthService);
+    calendarPrefs = TestBed.inject(CalendarPrefsService);
   });
 
   describe('loadMe', () => {
@@ -120,10 +123,43 @@ describe('AuthService', () => {
     });
   });
 
+  describe('switchTenant', () => {
+    it('refreshes _me and persists the mapped user without navigating', () => {
+      const switched: AuthMeData = {
+        ...me,
+        name: 'Tenant B Admin',
+        tenant_id: 2,
+        provider_id: 3,
+      };
+      authApi.switchTenant.mockReturnValue(of(switched));
+
+      let result: AuthMeData | undefined;
+      service.switchTenant(2).subscribe((r) => (result = r));
+
+      expect(result).toEqual(switched);
+      expect(service.me()).toEqual(switched);
+      expect(service.meLoaded()).toBe(true);
+      expect(service.user()?.name).toBe('Tenant B Admin');
+      expect(service.user()?.tenant_id).toBe(2);
+      expect(service.user()?.provider_id).toBe(3);
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('maps null provider_id to null on the persisted user', () => {
+      authApi.switchTenant.mockReturnValue(of({ ...me, provider_id: null }));
+
+      service.switchTenant(1).subscribe();
+
+      expect(service.user()?.provider_id).toBeNull();
+    });
+  });
+
   describe('logout', () => {
-    it('clears auth state and the per-user last-location preference key', () => {
+    it('clears auth state and the tenant-scoped + legacy preference keys', () => {
       service.login('tok', { id: 7, email: 'admin@test.com', name: 'Admin', role: 'admin' });
       localStorage.setItem('bw:lastLocationId:7', '2');
+      localStorage.setItem('bw:lastLocationId:7:1', '2');
+      localStorage.setItem('bw:lastProviderId:7:1', '3');
       expect(service.user()?.id).toBe(7);
 
       service.logout();
@@ -133,7 +169,18 @@ describe('AuthService', () => {
       expect(localStorage.getItem('auth_token')).toBeNull();
       expect(localStorage.getItem('auth_user')).toBeNull();
       expect(localStorage.getItem('bw:lastLocationId:7')).toBeNull();
+      expect(localStorage.getItem('bw:lastLocationId:7:1')).toBeNull();
+      expect(localStorage.getItem('bw:lastProviderId:7:1')).toBeNull();
       expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('delegates preference cleanup to CalendarPrefsService.clearForUser', () => {
+      const clearSpy = vi.spyOn(calendarPrefs, 'clearForUser');
+      service.login('tok', { id: 7, email: 'admin@test.com', name: 'Admin', role: 'admin' });
+
+      service.logout();
+
+      expect(clearSpy).toHaveBeenCalledWith(7);
     });
 
     it('leaves other users\u2019 preference keys untouched when logging out an anonymous session', () => {

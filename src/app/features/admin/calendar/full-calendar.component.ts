@@ -548,6 +548,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         // con caída a la primera sucursal ACTIVA / primer item de la lista.
         const rememberedLocationId = this.calendarPrefs.getLastLocationId(
           this.auth.user()?.id ?? null,
+          this.auth.user()?.tenant_id ?? null,
         );
         const rememberedLocation =
           rememberedLocationId != null
@@ -815,7 +816,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Cambio intencional del usuario (dropdown de sucursales) → persiste la
       // última sucursal por usuario para abrir ahí la próxima visita a la agenda.
-      this.calendarPrefs.setLastLocationId(this.auth.user()?.id ?? null, this.selectedLocationId);
+      this.calendarPrefs.setLastLocationId(
+        this.auth.user()?.id ?? null,
+        this.auth.user()?.tenant_id ?? null,
+        this.selectedLocationId,
+      );
 
       // Propagate location timezone to the centralized service
       const loc = this.locations().find((l) => l.id === this.selectedLocationId);

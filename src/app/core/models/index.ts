@@ -300,6 +300,8 @@ export interface AuthMeData {
   phone?: string | null;
   avatar_url?: string | null;
   role: UserRole;
+  /** Provider id when the authenticated user is provider-scoped; null otherwise. */
+  provider_id?: number | null;
   tenant_id: number | null;
   email_verified_at: string | null;
   onboarding_complete: boolean;
