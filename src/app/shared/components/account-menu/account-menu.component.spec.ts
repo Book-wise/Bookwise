@@ -89,11 +89,16 @@ describe('AccountMenuComponent — tenant switch delegation', () => {
     const config = toast.add.mock.calls[0][0] as {
       key: string;
       severity: string;
-      detail: string;
+      summary: string;
+      detail?: string;
     };
     expect(config.key).toBe('global');
     expect(config.severity).toBe('success');
-    expect(config.detail).toBe('Kinesilk Norte');
+    expect(config.summary).toBe(
+      TestBed.inject(LanguageService).t('biz.switched_to', { name: 'Kinesilk Norte' }),
+    );
+    expect(config.summary).toContain('Kinesilk Norte');
+    expect(config.detail).toBeUndefined();
     expect(popover.hide).toHaveBeenCalled();
   });
 

@@ -315,11 +315,16 @@ describe('ProfileComponent', () => {
       const toastConfig = toast.add.mock.calls[0][0] as {
         key: string;
         severity: string;
-        detail: string;
+        summary: string;
+        detail?: string;
       };
       expect(toastConfig.key).toBe('global');
       expect(toastConfig.severity).toBe('success');
-      expect(toastConfig.detail).toBe('Kinesilk Norte');
+      expect(toastConfig.summary).toBe(
+        component.lang.t('biz.switched_to', { name: 'Kinesilk Norte' }),
+      );
+      expect(toastConfig.summary).toContain('Kinesilk Norte');
+      expect(toastConfig.detail).toBeUndefined();
     });
 
     it('maps a switch error to the tenant error key with a global error toast', () => {

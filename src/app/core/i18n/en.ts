@@ -253,6 +253,7 @@ export const EN: Record<string, string> = {
   'biz.edit.subtitle': 'Edit your business information (the RUT cannot be modified).',
   'biz.edit.not_found': 'Business not found.',
   'biz.negocios': 'Businesses',
+  'biz.switched_to': 'Switched to "{{name}}"',
   'biz.administrar': 'Manage',
   'biz.cambiar_a': 'Switch to this',
   'biz.nueva_empresa': 'New business',

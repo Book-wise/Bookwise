@@ -81,11 +81,14 @@ describe('BusinessesListComponent — tenant switch delegation', () => {
     const config = toast.add.mock.calls[0][0] as {
       key: string;
       severity: string;
-      detail: string;
+      summary: string;
+      detail?: string;
     };
     expect(config.key).toBe('global');
     expect(config.severity).toBe('success');
-    expect(config.detail).toBe('Kinesilk Norte');
+    expect(config.summary).toBe(component.lang.t('biz.switched_to', { name: 'Kinesilk Norte' }));
+    expect(config.summary).toContain('Kinesilk Norte');
+    expect(config.detail).toBeUndefined();
   });
 
   it('maps a switch error to the tenant error key with a global error toast', () => {

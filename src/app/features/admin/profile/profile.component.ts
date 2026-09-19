@@ -146,7 +146,7 @@ export class ProfileComponent implements OnInit {
     if (biz.id === this.activeBusinessId()) return;
     this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
+        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.switched_to', { name: biz.name }), key: 'global', life: 3500 });
       },
       error: (err) =>
         this.messageService.add({

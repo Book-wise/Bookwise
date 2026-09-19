@@ -68,8 +68,7 @@ export class AppHeaderComponent {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: this.lang.t('settings.business'),
-          detail: `${this.lang.t('settings.business')}: ${biz.name}`,
+          summary: this.lang.t('biz.switched_to', { name: biz.name }),
           key: 'global',
           life: 3500,
         });

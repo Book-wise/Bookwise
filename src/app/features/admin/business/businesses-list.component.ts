@@ -56,8 +56,7 @@ export class BusinessesListComponent {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: this.lang.t('biz.negocios'),
-          detail: biz.name,
+          summary: this.lang.t('biz.switched_to', { name: biz.name }),
           key: 'global',
           life: 3500,
         });
