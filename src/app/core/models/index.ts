@@ -315,11 +315,39 @@ export interface AuthMeResponse {
   user: AuthMeData;
 }
 
-/** Rol de negocio (capa separada de `UserRole`). name ∈ admin_general|admin_local|recepcionista|recepcionista_readonly|staff|staff_readonly */
+/**
+ * Business role (a layer separate from `UserRole`). `slug` is the identity used
+ * by every consumer: admin_general | admin_local | recepcionista |
+ * recepcionista_readonly | staff | staff_readonly. `name` is display-only and
+ * acts as the fallback label when no i18n key exists for the slug.
+ */
 export interface Role {
   id: number;
+  slug: string;
   name: string;
-  label?: string;
+  permissions: string[];
+}
+
+/** Single entry of the tenantless permission catalog (GET /v1/roles/permissions). */
+export interface PermissionItem {
+  key: string;
+  label: string;
+}
+
+/** Grouped permission catalog entry. */
+export interface PermissionGroup {
+  group: string;
+  items: PermissionItem[];
+}
+
+/** PATCH /v1/roles/{id}/permissions response body. */
+export interface RolePermissionsResponse {
+  message?: string;
+  data: {
+    role_id: number;
+    slug: string;
+    permissions: string[];
+  };
 }
 
 /** POST /businesses (Bearer) → cuerpo que SIEMPRE se valida en el front. */

@@ -43,7 +43,7 @@ function makeComuna(overrides: Partial<LocationComuna> = {}): LocationComuna {
 }
 
 function makeRole(overrides: Partial<Role> = {}): Role {
-  return { id: 5, name: 'staff', label: 'Staff', ...overrides };
+  return { id: 5, slug: 'staff', name: 'Staff', permissions: [], ...overrides };
 }
 
 // ---------------------------------------------------------------------------
@@ -314,7 +314,7 @@ describe('ReferenceStore', () => {
   // ── Provider mutations (store write methods, patrón BookingStore) ─────
 
   describe('provider mutations', () => {
-    const initialRoles = [makeRole({ id: 1, name: 'admin_local' })];
+    const initialRoles = [makeRole({ id: 1, slug: 'admin_local', name: 'Admin Local' })];
 
     beforeEach(() => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
@@ -373,7 +373,7 @@ describe('ReferenceStore', () => {
     });
 
     it('assignProviderRoles PATCHes roles and sets the canonical set from res.data', () => {
-      const canonical = [makeRole({ id: 5, name: 'staff' }), makeRole({ id: 6, name: 'staff_readonly' })];
+      const canonical = [makeRole({ id: 5, slug: 'staff' }), makeRole({ id: 6, slug: 'staff_readonly', name: 'Staff (solo lectura)' })];
       rolesApi.assignProviderRoles = vi.fn().mockReturnValue(of({ data: canonical }));
 
       store.assignProviderRoles(1, ['staff', 'staff_readonly']).subscribe();

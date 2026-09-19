@@ -84,6 +84,7 @@ export const EN: Record<string, string> = {
   'biz.past_booking':               'Past date/time',
   'biz.no_sessions_remaining':      'No sessions remaining',
   'biz.validation_error':           'Validation error',
+  'biz.onboarding_required':        'Complete your business',
 
   // Business errors — summary
   'biz.sale_already_exists':          'Duplicate sale',
@@ -105,6 +106,7 @@ export const EN: Record<string, string> = {
   'biz.past_booking.detail':               'Cannot move a booking to the past.',
   'biz.no_sessions_remaining.detail':      'The pack has no sessions remaining.',
   'biz.validation_error.detail':           'End time must be after start time.',
+  'biz.onboarding_required.detail':        'You must complete your business setup before viewing your role permissions.',
 
   // slot_collision — specific detail by conflict type
   'biz.slot_collision.detail.booking':      'The provider already has a booking at this time.',
@@ -765,6 +767,44 @@ export const EN: Record<string, string> = {
   'roles.card.desc.recepcionista_readonly': 'Views appointments and clients in read-only mode, without editing them.',
   'roles.card.desc.staff': 'Assists the team: views information and performs basic actions.',
   'roles.card.desc.staff_readonly': 'Collaborates with read-only access to check information.',
+
+  // Roles — tabs + permission matrix
+  'roles.tabs.assignment': 'Assignment',
+  'roles.tabs.permissions': 'Permissions',
+  'roles.load_error': 'Could not load the roles. Try again.',
+  'roles.permission.bookings.view': 'View appointments',
+  'roles.permission.bookings.create': 'Create appointments',
+  'roles.permission.bookings.confirm': 'Confirm appointments',
+  'roles.permission.bookings.cancel': 'Cancel appointments',
+  'roles.permission.clients.view': 'View clients',
+  'roles.permission.clients.create': 'Create clients',
+  'roles.permission.clients.update': 'Edit clients',
+  'roles.permission.providers.view': 'View professionals',
+  'roles.permission.providers.manage': 'Manage professionals',
+  'roles.permission.settings.view': 'View settings',
+  'roles.permission.settings.update': 'Edit settings',
+  'roles.permission.roles.view': 'View roles',
+  'roles.permission.roles.manage': 'Manage roles',
+  'roles.permission_group.bookings': 'Appointments',
+  'roles.permission_group.clients': 'Clients',
+  'roles.permission_group.providers': 'Professionals',
+  'roles.permission_group.settings': 'Settings',
+  'roles.permission_group.roles': 'Roles',
+  'roles.permissions.title': 'Permissions by role',
+  'roles.permissions.warning': 'Editing permissions does not change real access yet: enforcement of this matrix is still pending.',
+  'roles.permissions.save': 'Save permissions',
+  'roles.permissions.saved': 'Permissions updated',
+  'roles.permissions.saved_detail': 'The role now has the selected permissions.',
+  'roles.permissions.select_role': 'Select a role to edit its permissions.',
+  'roles.permissions.role_select_label': 'Select a role to modify its permissions',
+  'roles.permissions.admin_general_locked': 'The Admin General role always has every permission and cannot be edited.',
+  'roles.permissions.empty_confirm_header': 'Remove all permissions',
+  'roles.permissions.empty_confirm_message': 'You are about to leave this role with no permissions. Confirm the operation?',
+  'roles.permissions.empty_confirm_accept': 'Remove permissions',
+  'roles.permissions.catalog_error': 'Could not load the permission catalog.',
+  'roles.permissions.catalog_empty': 'The permission catalog is empty.',
+  'roles.permissions.retry': 'Retry',
+
 
   // Providers
   'providers.filter_roles': 'Roles',

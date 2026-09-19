@@ -103,7 +103,7 @@
           [options]="roleOptions()"
           optionLabel="label"
           optionValue="value"
-          [ngModel]="selectedRoleNames()"
+          [ngModel]="selectedRoleSlugs()"
           (ngModelChange)="onRoleFilterChange($event)"
           [placeholder]="lang.t('providers.filter_roles')"
           display="chip"
@@ -160,10 +160,10 @@
             <td>
               @if (providerRoles(provider).length > 0) {
                 <div class="table-roles">
-                  @for (role of providerRoles(provider); track role.name) {
-                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
-                      <span class="bw-chip__dot" [style.background]="roleMeta(role.name).color"></span>
-                      {{ roleLabel(role.name) }}
+                  @for (role of providerRoles(provider); track role.slug) {
+                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.slug).color">
+                      <span class="bw-chip__dot" [style.background]="roleMeta(role.slug).color"></span>
+                      {{ roleLabel(role) }}
                     </span>
                   }
                 </div>
@@ -236,10 +236,10 @@
               <span class="prov-card__label">Roles</span>
               @if (providerRoles(provider).length > 0) {
                 <div class="table-roles">
-                  @for (role of providerRoles(provider); track role.name) {
-                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
-                      <span class="bw-chip__dot" [style.background]="roleMeta(role.name).color"></span>
-                      {{ roleLabel(role.name) }}
+                  @for (role of providerRoles(provider); track role.slug) {
+                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.slug).color">
+                      <span class="bw-chip__dot" [style.background]="roleMeta(role.slug).color"></span>
+                      {{ roleLabel(role) }}
                     </span>
                   }
                 </div>

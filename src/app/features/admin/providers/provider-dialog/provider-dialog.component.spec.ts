@@ -19,15 +19,15 @@ import type { Provider, Role } from '@models';
 // ---------------------------------------------------------------------------
 
 const allRoles: Role[] = [
-  { id: 1, name: 'admin_general', label: 'Admin General' },
-  { id: 2, name: 'admin_local', label: 'Admin Local' },
-  { id: 3, name: 'recepcionista', label: 'Recepcionista' },
-  { id: 4, name: 'recepcionista_readonly', label: 'Recepcionista (solo lectura)' },
-  { id: 5, name: 'staff', label: 'Staff' },
-  { id: 6, name: 'staff_readonly', label: 'Staff (solo lectura)' },
+  { id: 1, slug: 'admin_general', name: 'Admin General', permissions: [] },
+  { id: 2, slug: 'admin_local', name: 'Admin Local', permissions: [] },
+  { id: 3, slug: 'recepcionista', name: 'Recepcionista', permissions: [] },
+  { id: 4, slug: 'recepcionista_readonly', name: 'Recepcionista (solo lectura)', permissions: [] },
+  { id: 5, slug: 'staff', name: 'Staff', permissions: [] },
+  { id: 6, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] },
 ];
 
-const role = (name: string): Role => allRoles.find((r) => r.name === name)!;
+const role = (slug: string): Role => allRoles.find((r) => r.slug === slug)!;
 
 function makeProvider(overrides: Partial<Provider> = {}): Provider {
   return {
@@ -141,13 +141,13 @@ describe('ProviderDialogComponent', () => {
     it('pre-selects the current provider roles when editing', () => {
       open('edit', makeProvider({ roles: [role('staff')] }));
 
-      expect(component.form.controls.roleNames.value).toEqual(['staff']);
+      expect(component.form.controls.roleSlugs.value).toEqual(['staff']);
     });
 
     it('starts with an empty roles selection when creating', () => {
       open('create', null);
 
-      expect(component.form.controls.roleNames.value).toEqual([]);
+      expect(component.form.controls.roleSlugs.value).toEqual([]);
     });
   });
 
@@ -160,7 +160,7 @@ describe('ProviderDialogComponent', () => {
 
     it('re-adds admin_general when its holder tries to remove it (onRolesChange)', () => {
       open('edit', makeProvider({ roles: [role('admin_general'), role('staff')] }));
-      const control = component.form.controls.roleNames;
+      const control = component.form.controls.roleSlugs;
 
       control.setValue(['staff']);
       component.onRolesChange();
@@ -171,7 +171,7 @@ describe('ProviderDialogComponent', () => {
     it('never saves a set without admin_general for its holder', () => {
       rolesApi.assignProviderRoles.mockReturnValue(of({ data: [] }));
       open('edit', makeProvider({ roles: [role('admin_general')] }));
-      const control = component.form.controls.roleNames;
+      const control = component.form.controls.roleSlugs;
 
       // Intento de quitar admin_general pasando por alto el sanitizador.
       control.setValue(['staff']);
@@ -183,7 +183,7 @@ describe('ProviderDialogComponent', () => {
     it('drops admin_general when a non-holder tries to save it', () => {
       rolesApi.assignProviderRoles.mockReturnValue(of({ data: [] }));
       open('edit', makeProvider({ roles: [role('staff')] }));
-      const control = component.form.controls.roleNames;
+      const control = component.form.controls.roleSlugs;
 
       control.setValue(['staff', 'admin_general']);
       component.onSave();
@@ -206,7 +206,7 @@ describe('ProviderDialogComponent', () => {
       providersApi.getProviders.mockReturnValue(of([provider]));
       store.invalidateProviders();
       open('edit', provider);
-      const control = component.form.controls.roleNames;
+      const control = component.form.controls.roleSlugs;
 
       const savedSpy = vi.spyOn(component.saved, 'emit');
       control.setValue(['staff', 'staff_readonly']);
@@ -258,7 +258,7 @@ describe('ProviderDialogComponent', () => {
     it('blocks saving when the roles set is empty (no requests)', () => {
       const provider = makeProvider({ roles: [role('staff')] });
       open('edit', provider);
-      const control = component.form.controls.roleNames;
+      const control = component.form.controls.roleSlugs;
 
       control.setValue([]);
       fixture.detectChanges(); // flush the form-status signal before asserting
@@ -310,8 +310,8 @@ describe('ProviderDialogComponent', () => {
     it('disables the roles control and pre-selects the current roles', () => {
       open('view', makeProvider({ roles: [role('staff'), role('staff_readonly')] }));
 
-      expect(component.form.controls.roleNames.disabled).toBe(true);
-      expect(component.form.controls.roleNames.value).toEqual(['staff', 'staff_readonly']);
+      expect(component.form.controls.roleSlugs.disabled).toBe(true);
+      expect(component.form.controls.roleSlugs.value).toEqual(['staff', 'staff_readonly']);
     });
   });
 });

@@ -84,6 +84,7 @@ export const ES: Record<string, string> = {
   'biz.past_booking':               'Fecha en el pasado',
   'biz.no_sessions_remaining':      'Sin sesiones disponibles',
   'biz.validation_error':           'Error de validación',
+  'biz.onboarding_required':        'Completa tu negocio',
 
   // Business errors — summary
   'biz.sale_already_exists':          'Venta duplicada',
@@ -105,6 +106,7 @@ export const ES: Record<string, string> = {
   'biz.past_booking.detail':               'No se puede mover una reserva a una fecha u horario pasado.',
   'biz.no_sessions_remaining.detail':      'El pack no tiene sesiones disponibles.',
   'biz.validation_error.detail':           'La hora de fin debe ser posterior a la hora de inicio.',
+  'biz.onboarding_required.detail':        'Debes completar la creación de tu negocio antes de ver los permisos de tus roles.',
 
   // slot_collision — specific detail by conflict type
   'biz.slot_collision.detail.booking':      'El profesional ya tiene una reserva a esa hora.',
@@ -821,6 +823,44 @@ export const ES: Record<string, string> = {
   'roles.card.desc.recepcionista_readonly': 'Consulta turnos y clientes en modo solo lectura, sin poder modificarlos.',
   'roles.card.desc.staff': 'Asiste al equipo: consulta información y realiza acciones básicas.',
   'roles.card.desc.staff_readonly': 'Colabora con acceso de solo lectura para consultar la información.',
+
+  // Roles — tabs + permission matrix
+  'roles.tabs.assignment': 'Asignación',
+  'roles.tabs.permissions': 'Permisos',
+  'roles.load_error': 'No se pudieron cargar los roles. Intenta de nuevo.',
+  'roles.permission.bookings.view': 'Ver turnos',
+  'roles.permission.bookings.create': 'Crear turnos',
+  'roles.permission.bookings.confirm': 'Confirmar turnos',
+  'roles.permission.bookings.cancel': 'Cancelar turnos',
+  'roles.permission.clients.view': 'Ver clientes',
+  'roles.permission.clients.create': 'Crear clientes',
+  'roles.permission.clients.update': 'Editar clientes',
+  'roles.permission.providers.view': 'Ver profesionales',
+  'roles.permission.providers.manage': 'Gestionar profesionales',
+  'roles.permission.settings.view': 'Ver configuración',
+  'roles.permission.settings.update': 'Editar configuración',
+  'roles.permission.roles.view': 'Ver roles',
+  'roles.permission.roles.manage': 'Gestionar roles',
+  'roles.permission_group.bookings': 'Turnos',
+  'roles.permission_group.clients': 'Clientes',
+  'roles.permission_group.providers': 'Profesionales',
+  'roles.permission_group.settings': 'Configuración',
+  'roles.permission_group.roles': 'Roles',
+  'roles.permissions.title': 'Permisos por rol',
+  'roles.permissions.warning': 'Editar los permisos todavía no cambia el acceso real: la aplicación de esta matriz está pendiente.',
+  'roles.permissions.save': 'Guardar permisos',
+  'roles.permissions.saved': 'Permisos actualizados',
+  'roles.permissions.saved_detail': 'El rol ahora tiene los permisos seleccionados.',
+  'roles.permissions.select_role': 'Selecciona un rol para editar sus permisos.',
+  'roles.permissions.role_select_label': 'Selecciona un rol para modificar sus permisos',
+  'roles.permissions.admin_general_locked': 'El rol Admin General siempre tiene todos los permisos y no se puede editar.',
+  'roles.permissions.empty_confirm_header': 'Quitar todos los permisos',
+  'roles.permissions.empty_confirm_message': 'Vas a dejar este rol sin ningún permiso. ¿Confirmas la operación?',
+  'roles.permissions.empty_confirm_accept': 'Quitar permisos',
+  'roles.permissions.catalog_error': 'No se pudo cargar el catálogo de permisos.',
+  'roles.permissions.catalog_empty': 'El catálogo de permisos está vacío.',
+  'roles.permissions.retry': 'Reintentar',
+
 
   // Profesionales
   'providers.filter_roles': 'Roles',

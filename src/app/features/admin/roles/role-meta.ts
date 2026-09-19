@@ -1,31 +1,46 @@
 /**
  * Single source-of-truth for business role metadata (color + icon).
  *
- * Keyed by role `name` (see `Role.name`: admin_general | admin_local |
+ * Keyed by role `slug` (see `Role.slug`: admin_general | admin_local |
  * recepcionista | recepcionista_readonly | staff | staff_readonly). Used by:
  *  - the Roles screen cards (/admin/roles), and
  *  - the Professionals list badges + role filter (/admin/providers)
  * so both stay visually consistent.
+ *
+ * Icons are Lucide identifiers (https://lucide.dev/icons), registered through
+ * `ROLE_ICON_PROVIDERS`. They are deliberately distinct from the PrimeIcons
+ * used elsewhere in the app (pi-building, pi-user, pi-eye, pi-id-card) so a
+ * role is never confused with a section of the product. The `staff` roles use
+ * people glyphs because they represent professionals who attend appointments.
  */
+export type RoleIcon =
+  | 'crown'
+  | 'store'
+  | 'concierge-bell'
+  | 'clipboard-list'
+  | 'users'
+  | 'user-round'
+  | 'circle-question-mark';
+
 export interface RoleMeta {
   color: string;
-  icon: string;
+  icon: RoleIcon;
 }
 
 export const ROLE_META: Record<string, RoleMeta> = {
-  admin_general: { color: '#0b3d95', icon: 'pi-shield' },
-  admin_local: { color: '#3b82f6', icon: 'pi-building' },
-  recepcionista: { color: '#22c55e', icon: 'pi-user' },
-  recepcionista_readonly: { color: '#14b8a6', icon: 'pi-eye' },
-  staff: { color: '#f97316', icon: 'pi-users' },
-  staff_readonly: { color: '#eab308', icon: 'pi-id-card' },
+  admin_general: { color: '#0b3d95', icon: 'crown' },
+  admin_local: { color: '#3b82f6', icon: 'store' },
+  recepcionista: { color: '#22c55e', icon: 'concierge-bell' },
+  recepcionista_readonly: { color: '#14b8a6', icon: 'clipboard-list' },
+  staff: { color: '#f97316', icon: 'users' },
+  staff_readonly: { color: '#eab308', icon: 'user-round' },
 };
 
-const FALLBACK: RoleMeta = { color: '#6b7280', icon: 'pi-user' };
+const FALLBACK: RoleMeta = { color: '#6b7280', icon: 'circle-question-mark' };
 
-/** Resolve metadata for a role name, falling back to gray + pi-user. */
-export function roleMeta(name: string): RoleMeta {
-  return ROLE_META[name] ?? FALLBACK;
+/** Resolve metadata for a role slug, falling back to gray + question mark. */
+export function roleMeta(slug: string): RoleMeta {
+  return ROLE_META[slug] ?? FALLBACK;
 }
 
 /**
@@ -36,7 +51,7 @@ export function roleMeta(name: string): RoleMeta {
  */
 export const ATTENTION_ROLES: readonly string[] = ['staff', 'staff_readonly'];
 
-/** True when at least one of `roles` is an attention role (staff / staff_readonly). */
-export function hasAttentionRole(roles?: { name: string }[] | null): boolean {
-  return !!roles && roles.some((role) => ATTENTION_ROLES.includes(role.name));
+/** True when at least one of `roles` is an attention role (staff / staff_readonly), matched by slug. */
+export function hasAttentionRole(roles?: { slug: string }[] | null): boolean {
+  return !!roles && roles.some((role) => ATTENTION_ROLES.includes(role.slug));
 }

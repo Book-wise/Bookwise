@@ -41,6 +41,7 @@
     "chart.js": "^4.5.1",
     "chartjs-plugin-datalabels": "^2.2.0",
     "intl-tel-input": "^28.0.4",
+    "lucide-angular": "^1.0.0",
     "luxon": "^1.28.1",
     "ngx-image-cropper": "^9.1.7",
     "primeicons": "^7.0.0",

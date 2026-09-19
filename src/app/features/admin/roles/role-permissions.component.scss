@@ -1,0 +1,223 @@
+.permissions-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 0.5rem;
+}
+
+.permissions-warning {
+  width: 100%;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  padding: 1rem 0;
+  font-size: 1.25rem;
+}
+
+.catalog-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--surface-border, #d1d5db);
+  border-radius: 8px;
+  color: #6b7280;
+
+  &__icon {
+    font-size: 1.75rem;
+    color: #f59e0b;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.matrix {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+// Mobile-only role picker field (label + select); the desktop button row
+// (`.role-list`) is hidden below 768px where a dropdown gives a clear selection
+// affordance. The wrapper — not the select — is what hides the field on
+// desktop, so it never occupies a grid cell there.
+.role-select-field {
+  display: none;
+}
+
+.role-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-right: 1px solid var(--bw-100, #e5e7eb);
+  padding-right: 0.75rem;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #374151;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s;
+
+    lucide-icon {
+      display: inline-flex;
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background: var(--bw-50, #f9fafb);
+    }
+
+    &.active {
+      background: var(--bw-100, #eef2ff);
+      color: var(--bw-900, #1e3a8a);
+      font-weight: 600;
+    }
+  }
+
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.matrix-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.permissions-lock {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--surface-border, #d1d5db);
+  border-radius: 6px;
+  background: var(--bw-50, #f9fafb);
+  color: #4b5563;
+  font-size: 0.85rem;
+
+  &__icon {
+    font-size: 0.9rem;
+    color: #9ca3af;
+  }
+}
+
+.permission-group {
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--bw-900, #111827);
+    margin: 0 0 0.625rem;
+    text-transform: capitalize;
+  }
+
+  &__items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem 1rem;
+  }
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+
+  &__label {
+    line-height: 1.3;
+  }
+}
+
+.save-btn {
+  align-self: flex-start;
+}
+
+.empty-state {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+// ── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .matrix {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  // The button row has no scroll affordance on touch: the dropdown replaces it.
+  .role-list {
+    display: none;
+  }
+
+  .role-select-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+
+    &__label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+    }
+  }
+
+  // PrimeNG puts the `.p-select` class on the host itself and lays it out as an
+  // inline-flex row. Forcing `display: block` stacked the label above the
+  // dropdown, which pushed the arrow outside the input border. Keep the host a
+  // full-width flex row instead, and let it shrink inside its grid track.
+  .role-select {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+  }
+
+  // Save is the pane's primary action: give it the full width.
+  .save-btn {
+    align-self: stretch;
+
+    :deep(.p-button) {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .permission-group__items {
+    grid-template-columns: 1fr;
+  }
+}

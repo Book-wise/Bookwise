@@ -7,11 +7,11 @@
  * drift apart. No Angular dependencies.
  */
 
-/** The unique admin role name (see `Role.name`). */
+/** The unique admin role slug (see `Role.slug`). */
 export const ADMIN_GENERAL_ROLE = 'admin_general';
 
 /**
- * True when the role `name` cannot be toggled by the UI for a provider whose
+ * True when the role `slug` cannot be toggled by the UI for a provider whose
  * current roles are `current`.
  *
  * The `admin_general` option is always locked: the holder cannot remove it and
@@ -20,8 +20,8 @@ export const ADMIN_GENERAL_ROLE = 'admin_general';
  * tooltip copy) differs, and {@link applyAdminGeneralInvariant} enforces each
  * branch.
  */
-export function isAdminGeneralLocked(current: string[], name: string): boolean {
-  return name === ADMIN_GENERAL_ROLE;
+export function isAdminGeneralLocked(current: string[], slug: string): boolean {
+  return slug === ADMIN_GENERAL_ROLE;
 }
 
 /**
@@ -42,7 +42,7 @@ export function applyAdminGeneralInvariant(current: string[], next: string[]): s
   if (holdsGeneral && !wantsGeneral) {
     result = [...next, ADMIN_GENERAL_ROLE];
   } else if (!holdsGeneral && wantsGeneral) {
-    result = next.filter((name) => name !== ADMIN_GENERAL_ROLE);
+    result = next.filter((slug) => slug !== ADMIN_GENERAL_ROLE);
   } else {
     result = [...next];
   }

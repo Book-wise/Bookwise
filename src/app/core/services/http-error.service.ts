@@ -31,6 +31,17 @@ export interface ToastConfig {
   key?: string;
 }
 
+/**
+ * True when the API rejected the request because the admin has no tenant yet.
+ *
+ * `GET /v1/roles` responds `409 { error: 'onboarding_required' }` for tenantless
+ * admins. Callers use this predicate to redirect to onboarding instead of
+ * surfacing the misleading generic conflict toast.
+ */
+export function isOnboardingRequired(err: HttpErrorResponse): boolean {
+  return err.status === 409 && err.error?.error === 'onboarding_required';
+}
+
 @Injectable({ providedIn: 'root' })
 export class HttpErrorService {
   private messageService = inject(MessageService);

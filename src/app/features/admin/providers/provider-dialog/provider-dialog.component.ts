@@ -85,7 +85,7 @@ export class ProviderDialogComponent {
     phone: new FormControl('', { nonNullable: true }),
     locationId: new FormControl<number | null>(null),
     active: new FormControl(true, { nonNullable: true }),
-    roleNames: new FormControl<string[]>([], {
+    roleSlugs: new FormControl<string[]>([], {
       nonNullable: true,
       validators: [rolesRequiredWhenEditing(() => this.internalMode())],
     }),
@@ -96,17 +96,17 @@ export class ProviderDialogComponent {
   isView = computed(() => this.internalMode() === 'view');
   isCreate = computed(() => this.internalMode() === 'create');
 
-  /** Roles actuales del provider editado (desde el input, holder de admin_general). */
-  private currentRoleNames(): string[] {
-    return (this.provider()?.roles ?? []).map((r) => r.name);
+  /** Slugs actuales del provider editado (desde el input, holder de admin_general). */
+  private currentRoleSlugs(): string[] {
+    return (this.provider()?.roles ?? []).map((r) => r.slug);
   }
 
   /** Roles del catálogo mapeados a opciones `{ label, value }` para el p-multiselect. */
   readonly roleOptions = computed<RoleOption[]>(() =>
     this.catalogRoles().map((r) => ({
-      label: this.roleLabel(r.name),
-      value: r.name,
-      disabled: this.roleIsLocked(r.name),
+      label: this.roleLabel(r),
+      value: r.slug,
+      disabled: this.roleIsLocked(r.slug),
     })),
   );
 
@@ -131,7 +131,7 @@ export class ProviderDialogComponent {
   readonly showRolesEmptyError = computed(() => {
     if (this.isCreate() || this.isView()) return false;
     void this.formStatus();
-    return (this.form.controls.roleNames.value ?? []).length === 0;
+    return (this.form.controls.roleSlugs.value ?? []).length === 0;
   });
 
   locationOptions = computed(() =>
@@ -148,7 +148,7 @@ export class ProviderDialogComponent {
       const prov = this.provider();
       this.internalMode.set(mode);
       untracked(() => {
-        const roleNames = prov ? (prov.roles ?? []).map((r) => r.name) : [];
+        const roleSlugs = prov ? (prov.roles ?? []).map((r) => r.slug) : [];
         if (prov) {
           this.form.patchValue({
             firstName: prov.first_name,
@@ -157,7 +157,7 @@ export class ProviderDialogComponent {
             phone: prov.phone ?? '',
             locationId: prov.location?.id ?? null,
             active: prov.active,
-            roleNames,
+            roleSlugs,
           });
         } else {
           this.form.reset({
@@ -167,7 +167,7 @@ export class ProviderDialogComponent {
             phone: '',
             locationId: null,
             active: true,
-            roleNames: [],
+            roleSlugs: [],
           });
         }
         if (mode === 'view') {
@@ -183,14 +183,15 @@ export class ProviderDialogComponent {
     this.editRequested.emit();
   }
 
-  roleLabel(name: string): string {
-    const key = `roles.role.${name}`;
-    return this.lang.has(key) ? this.lang.t(key) : name;
+  /** Resolves the display label: i18n key by slug, falling back to the backend `name`. */
+  roleLabel(role: Pick<Role, 'slug' | 'name'>): string {
+    const key = `roles.role.${role.slug}`;
+    return this.lang.has(key) ? this.lang.t(key) : role.name;
   }
 
   /** Regla compartida (role-guards): admin_general no puede removerse ni asignarse. */
-  private roleIsLocked(name: string): boolean {
-    return isAdminGeneralLocked(this.currentRoleNames(), name);
+  private roleIsLocked(slug: string): boolean {
+    return isAdminGeneralLocked(this.currentRoleSlugs(), slug);
   }
 
   isRoleOptionLocked(option: RoleOption): boolean {
@@ -199,15 +200,15 @@ export class ProviderDialogComponent {
 
   /** Sanitizador del multiselect: re-aplica la invariante de admin_general. */
   onRolesChange(): void {
-    const control = this.form.controls.roleNames;
-    const sanitized = applyAdminGeneralInvariant(this.currentRoleNames(), control.value);
+    const control = this.form.controls.roleSlugs;
+    const sanitized = applyAdminGeneralInvariant(this.currentRoleSlugs(), control.value);
     if (!this.sameRoleSet(sanitized, control.value)) {
       control.setValue(sanitized);
     }
   }
 
   private sameRoleSet(a: string[], b: string[]): boolean {
-    return a.length === b.length && a.every((name) => b.includes(name));
+    return a.length === b.length && a.every((slug) => b.includes(slug));
   }
 
   onSave(): void {
@@ -229,7 +230,7 @@ export class ProviderDialogComponent {
       this.saveCreate(payload);
       return;
     }
-    this.saveEdit(payload, raw.roleNames ?? []);
+    this.saveEdit(payload, raw.roleSlugs ?? []);
   }
 
   /** Create: un solo POST vía store (append con la respuesta del server). */
@@ -254,16 +255,16 @@ export class ProviderDialogComponent {
    * roles; un fallo de roles muestra toast específico y NO emite saved (el
    * dialog queda abierto; el PATCH de básicos es idempotente → reintento seguro).
    */
-  private saveEdit(payload: Record<string, any>, rawRoleNames: string[]): void {
+  private saveEdit(payload: Record<string, any>, rawRoleSlugs: string[]): void {
     const provider = this.provider();
     if (!provider) return;
 
-    const roleNames = applyAdminGeneralInvariant(this.currentRoleNames(), rawRoleNames);
+    const roleSlugs = applyAdminGeneralInvariant(this.currentRoleSlugs(), rawRoleSlugs);
 
     this.saving.set(true);
     this.refStore.saveProviderBasics(provider.id, payload).subscribe({
       next: (res) => {
-        this.refStore.assignProviderRoles(provider.id, roleNames).subscribe({
+        this.refStore.assignProviderRoles(provider.id, roleSlugs).subscribe({
           next: () => {
             this.saving.set(false);
             this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
