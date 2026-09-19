@@ -35,13 +35,17 @@
       >
         <ng-template pTemplate="item" let-opt>
           <div class="role-option">
-            <i [class]="'pi ' + opt.icon"></i>
+            <span class="role-option__badge" [style.background]="opt.color">
+              <lucide-icon [name]="opt.icon" [size]="14" />
+            </span>
             <span>{{ opt.label }}</span>
           </div>
         </ng-template>
         <ng-template pTemplate="selectedItem" let-opt>
           <div class="role-option">
-            <i [class]="'pi ' + opt.icon"></i>
+            <span class="role-option__badge" [style.background]="opt.color">
+              <lucide-icon [name]="opt.icon" [size]="14" />
+            </span>
             <span>{{ opt.label }}</span>
           </div>
         </ng-template>
@@ -55,7 +59,7 @@
             [class.active]="selectedRole()?.slug === role.slug"
             (click)="selectRole(role)"
           >
-            <i [class]="'pi ' + roleMeta(role.slug).icon"></i>
+            <lucide-icon [name]="roleMeta(role.slug).icon" [size]="16" />
             <span class="role-list__label">{{ roleLabel(role) }}</span>
           </button>
         }

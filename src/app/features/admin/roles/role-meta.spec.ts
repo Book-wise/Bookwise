@@ -3,12 +3,15 @@ import { ATTENTION_ROLES, hasAttentionRole, roleMeta } from './role-meta';
 describe('role-meta', () => {
   describe('roleMeta', () => {
     it('resolves color/icon metadata by slug', () => {
-      expect(roleMeta('staff').icon).toBe('pi-users');
-      expect(roleMeta('admin_general').icon).toBe('pi-shield');
+      expect(roleMeta('staff').icon).toBe('scissors');
+      expect(roleMeta('admin_general').icon).toBe('crown');
     });
 
-    it('falls back to gray + pi-user for an unknown slug', () => {
-      expect(roleMeta('unknown_slug')).toEqual({ color: '#6b7280', icon: 'pi-user' });
+    it('falls back to gray + question mark for an unknown slug', () => {
+      expect(roleMeta('unknown_slug')).toEqual({
+        color: '#6b7280',
+        icon: 'circle-question-mark',
+      });
     });
   });
 

@@ -115,6 +115,15 @@ describe('RolesAssignmentComponent', () => {
     expect(descs).toHaveLength(6);
     expect(descs[0]).toBeTruthy();
     expect(descs[0]).not.toBe(component.roleLabel(allRoles[0]));
+
+    // The first card (admin_general) renders a colored circular badge holding a
+    // Lucide glyph. `stroke="currentColor"` is what lets the white badge color
+    // paint the icon.
+    const badge = nativeEl.querySelector<HTMLElement>('.role-card__icon');
+    expect(badge?.style.background).toBe('rgb(11, 61, 149)');
+    const glyph = badge?.querySelector('lucide-icon svg');
+    expect(glyph).toBeTruthy();
+    expect(glyph?.getAttribute('stroke')).toBe('currentColor');
   });
 
   it('falls back to the backend name when the slug has no i18n key', () => {

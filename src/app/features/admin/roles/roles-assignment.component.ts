@@ -6,11 +6,13 @@ import { SelectModule } from 'primeng/select';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { LucideAngularModule } from 'lucide-angular';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Role } from '@models';
 import { roleMeta } from './role-meta';
+import { ROLE_ICON_PROVIDERS } from './role-icons';
 import { applyAdminGeneralInvariant, isAdminGeneralLocked } from './role-guards';
 import { RolesStore } from './roles.store';
 
@@ -44,7 +46,9 @@ interface ProviderOption {
     CheckboxModule,
     ButtonModule,
     MessageModule,
+    LucideAngularModule,
   ],
+  providers: [...ROLE_ICON_PROVIDERS],
   templateUrl: './roles-assignment.component.html',
   styleUrls: ['./roles-assignment.component.scss'],
 })

@@ -57,9 +57,22 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 
-  i {
-    color: #6b7280;
+  // Same visual as the role cards, scaled down for an option row.
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #fff;
+    flex-shrink: 0;
+
+    lucide-icon {
+      display: inline-flex;
+    }
   }
 }
 
@@ -83,6 +96,11 @@
     text-align: left;
     cursor: pointer;
     transition: background 0.12s;
+
+    lucide-icon {
+      display: inline-flex;
+      flex-shrink: 0;
+    }
 
     &:hover {
       background: var(--bw-50, #f9fafb);
@@ -178,9 +196,14 @@
     display: none;
   }
 
+  // PrimeNG puts the `.p-select` class on the host itself and lays it out as an
+  // inline-flex row. Forcing `display: block` stacked the label above the
+  // dropdown, which pushed the arrow outside the input border. Keep the host a
+  // full-width flex row instead, and let it shrink inside its grid track.
   .role-select {
-    display: block;
+    display: flex;
     width: 100%;
+    min-width: 0;
   }
 
   // Save is the pane's primary action: give it the full width.

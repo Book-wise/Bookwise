@@ -6,6 +6,7 @@ import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { RolePermissionsComponent } from './role-permissions.component';
+import { ROLE_ICON_PROVIDERS } from './role-icons';
 import { RolesStore } from './roles.store';
 import { HttpErrorService } from '@services/http-error.service';
 import type { PermissionGroup, Role } from '@models';
@@ -90,7 +91,12 @@ describe('RolePermissionsComponent', () => {
       ],
     })
       .overrideComponent(RolePermissionsComponent, {
-        set: { providers: [{ provide: ConfirmationService, useValue: confirmation }] },
+        set: {
+          providers: [
+            { provide: ConfirmationService, useValue: confirmation },
+            ...ROLE_ICON_PROVIDERS,
+          ],
+        },
       })
       .compileComponents();
 
@@ -146,9 +152,24 @@ describe('RolePermissionsComponent', () => {
 
     expect(nativeEl.querySelector('p-select.role-select')).toBeTruthy();
     expect(component.roleOptions()).toEqual([
-      { slug: 'admin_general', label: component.roleLabel(allRoles[0]), icon: 'pi-shield' },
-      { slug: 'admin_local', label: component.roleLabel(allRoles[1]), icon: 'pi-building' },
-      { slug: 'staff', label: component.roleLabel(allRoles[2]), icon: 'pi-users' },
+      {
+        slug: 'admin_general',
+        label: component.roleLabel(allRoles[0]),
+        icon: 'crown',
+        color: '#0b3d95',
+      },
+      {
+        slug: 'admin_local',
+        label: component.roleLabel(allRoles[1]),
+        icon: 'store',
+        color: '#3b82f6',
+      },
+      {
+        slug: 'staff',
+        label: component.roleLabel(allRoles[2]),
+        icon: 'scissors',
+        color: '#f97316',
+      },
     ]);
     expect(selectNgModel().model).toBe('admin_general');
 

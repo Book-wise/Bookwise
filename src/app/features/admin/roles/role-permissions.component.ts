@@ -6,11 +6,13 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { MessageModule } from 'primeng/message';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { LucideAngularModule } from 'lucide-angular';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { PermissionItem, Role } from '@models';
 import { roleMeta } from './role-meta';
+import { ROLE_ICON_PROVIDERS } from './role-icons';
 import { ADMIN_GENERAL_ROLE } from './role-guards';
 import { RolesStore } from './roles.store';
 
@@ -35,8 +37,9 @@ import { RolesStore } from './roles.store';
     SelectModule,
     MessageModule,
     ConfirmDialogModule,
+    LucideAngularModule,
   ],
-  providers: [ConfirmationService],
+  providers: [ConfirmationService, ...ROLE_ICON_PROVIDERS],
   templateUrl: './role-permissions.component.html',
   styleUrls: ['./role-permissions.component.scss'],
 })
@@ -53,14 +56,16 @@ export class RolePermissionsComponent implements OnInit {
   readonly roles = computed(() => this.store.roles());
 
   /**
-   * Options for the mobile role picker: slug (value), i18n label and role icon.
-   * The desktop button row keeps rendering `roles()` directly.
+   * Options for the mobile role picker: slug (value), i18n label and the role's
+   * icon + color so the option row mirrors the card badge. The desktop button
+   * row keeps rendering `roles()` directly.
    */
   readonly roleOptions = computed(() =>
     this.roles().map((role) => ({
       slug: role.slug,
       label: this.roleLabel(role),
       icon: roleMeta(role.slug).icon,
+      color: roleMeta(role.slug).color,
     })),
   );
 
