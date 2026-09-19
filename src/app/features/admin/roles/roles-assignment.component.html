@@ -52,17 +52,19 @@
       }
 
       @if (roles().length > 0) {
-        <div class="roles-list">
+        <div class="roles-list" role="radiogroup">
           @for (role of roles(); track role.slug) {
             <div class="role-item" [class.locked]="isRoleLocked(role.slug)">
-              <p-checkbox
-                [ngModel]="isRoleChecked(role.slug)"
-                (ngModelChange)="onRoleChange($event, role.slug)"
-                [binary]="true"
+              <p-radiobutton
+                [ngModel]="selectedRoleSlug()"
+                (ngModelChange)="onRoleChange($event)"
+                [value]="role.slug"
                 [disabled]="isRoleLocked(role.slug)"
+                [inputId]="'role-' + role.slug"
+                name="provider-role"
               />
               <bw-role-badge size="sm" [slug]="role.slug" />
-              <span class="role-label">{{ roleLabel(role) }}</span>
+              <label class="role-label" [for]="'role-' + role.slug">{{ roleLabel(role) }}</label>
               @if (isRoleLocked(role.slug)) {
                 <i class="pi pi-lock role-lock" [title]="lang.t('roles.admin_general_locked')"></i>
               }

@@ -48,3 +48,35 @@ export function applyAdminGeneralInvariant(current: string[], next: string[]): s
   }
   return [...new Set(result)];
 }
+
+/**
+ * Single-select counterpart of {@link isAdminGeneralLocked}: true when the
+ * radio for `slug` must be disabled in a one-role picker.
+ *
+ * Because a professional holds exactly one business role, the lock flips to the
+ * whole group: a provider that holds `admin_general` is locked to it (every
+ * other role is disabled), while a non-holder can pick any role except
+ * `admin_general`.
+ */
+export function isSingleSelectRoleLocked(current: string[], slug: string): boolean {
+  const holdsGeneral = current.includes(ADMIN_GENERAL_ROLE);
+  return holdsGeneral ? slug !== ADMIN_GENERAL_ROLE : slug === ADMIN_GENERAL_ROLE;
+}
+
+/**
+ * Single-select counterpart of {@link applyAdminGeneralInvariant}: normalizes a
+ * one-role selection against the `admin_general` uniqueness rule.
+ *
+ * - A holder is always forced back to `admin_general` (it can never move away).
+ * - A non-holder that attempts `admin_general` is normalized to `null`, which
+ *   the caller surfaces as the empty-selection error.
+ *
+ * Returns the normalized slug (or `null`); the inputs are never mutated.
+ */
+export function applyAdminGeneralSingleInvariant(
+  current: string[],
+  next: string | null,
+): string | null {
+  if (current.includes(ADMIN_GENERAL_ROLE)) return ADMIN_GENERAL_ROLE;
+  return next === ADMIN_GENERAL_ROLE ? null : next;
+}

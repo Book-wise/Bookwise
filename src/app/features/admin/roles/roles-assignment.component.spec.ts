@@ -126,10 +126,12 @@ describe('RolesAssignmentComponent', () => {
     expect(glyph?.getAttribute('stroke')).toBe('currentColor');
   });
 
-  it('renders a role badge beside every role checkbox', () => {
+  it('renders a single-select radio (not a checkbox) beside every role badge', () => {
     fixture.detectChanges();
 
     const nativeEl = fixture.nativeElement as HTMLElement;
+    expect(nativeEl.querySelectorAll('.role-item p-radiobutton')).toHaveLength(6);
+    expect(nativeEl.querySelectorAll('.role-item p-checkbox')).toHaveLength(0);
     expect(nativeEl.querySelectorAll('.role-item bw-role-badge')).toHaveLength(6);
   });
 
@@ -158,50 +160,90 @@ describe('RolesAssignmentComponent', () => {
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleSlugs.set([]);
+    component.selectedRoleSlug.set(null);
     component.save();
 
     expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
     expect(component.error()).toBeTruthy();
   });
 
-  it('blocks removing admin_general (no PATCH)', () => {
+  it('seeds the radio selection from the provider current role', () => {
+    const provider = makeProvider({ roles: [allRoles[2]] });
+    seedProviders([provider]);
+    fixture.detectChanges();
+
+    component.onProviderChange(1);
+
+    expect(component.selectedRoleSlug()).toBe('recepcionista');
+    expect(component.isRoleSelected('recepcionista')).toBe(true);
+    expect(component.isRoleSelected('admin_local')).toBe(false);
+  });
+
+  it('locks a provider that holds admin_general to that role (cannot move)', () => {
     const owner = makeProvider({ roles: [allRoles[0]] });
     seedProviders([owner]);
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleSlugs.set(['admin_local']);
+    expect(component.selectedRoleSlug()).toBe('admin_general');
+    expect(component.isRoleLocked('admin_general')).toBe(false);
+    expect(component.isRoleLocked('admin_local')).toBe(true);
+
+    // The handler is a no-op for every other role.
+    component.onRoleChange('admin_local');
+    expect(component.selectedRoleSlug()).toBe('admin_general');
+
+    // Even a forced selection is rejected by the save-time invariant.
+    component.selectedRoleSlug.set('admin_local');
     component.save();
 
     expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
     expect(component.error()).toBeTruthy();
   });
 
-  it('dedupes slugs before sending the PATCH', () => {
+  it('blocks selecting admin_general for a provider that does not hold it', () => {
+    const provider = makeProvider({ roles: [allRoles[1]] });
+    seedProviders([provider]);
+    fixture.detectChanges();
+
+    component.onProviderChange(1);
+    expect(component.isRoleLocked('admin_general')).toBe(true);
+    expect(component.isRoleLocked('admin_local')).toBe(false);
+
+    component.onRoleChange('admin_general');
+    expect(component.selectedRoleSlug()).toBe('admin_local');
+
+    // Even a forced selection is rejected by the save-time invariant.
+    component.selectedRoleSlug.set('admin_general');
+    component.save();
+    expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
+    expect(component.error()).toBeTruthy();
+  });
+
+  it('sends a one-element array for the selected role', () => {
     seedProviders([makeProvider()]);
     rolesApi.assignProviderRoles.mockReturnValue(of({ data: [allRoles[1]] }));
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleSlugs.set(['admin_local', 'admin_local', 'admin_local']);
+    component.selectedRoleSlug.set('admin_local');
     component.save();
 
     expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['admin_local']);
   });
 
-  it('assigns roles via the store and updates the canonical store state', () => {
-    const owner = makeProvider({ roles: [allRoles[0]] });
-    seedProviders([owner]);
-    rolesApi.assignProviderRoles.mockReturnValue(of({ data: [allRoles[0], allRoles[1]] }));
+  it('assigns a single role via the store and updates the canonical store state', () => {
+    const provider = makeProvider({ roles: [allRoles[1]] });
+    seedProviders([provider]);
+    rolesApi.assignProviderRoles.mockReturnValue(of({ data: [allRoles[2]] }));
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleSlugs.set(['admin_general', 'admin_local']);
+    component.onRoleChange('recepcionista');
     component.save();
 
-    expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['admin_general', 'admin_local']);
-    expect(store.providers()[0].roles).toEqual([allRoles[0], allRoles[1]]);
+    expect(rolesApi.assignProviderRoles).toHaveBeenCalledWith(1, ['recepcionista']);
+    expect(store.providers()[0].roles).toEqual([allRoles[2]]);
     expect(component.saving()).toBe(false);
   });
 
@@ -214,13 +256,13 @@ describe('RolesAssignmentComponent', () => {
     fixture.detectChanges();
 
     component.onProviderChange(1);
-    component.selectedRoleSlugs.set(['admin_local', 'recepcionista']);
+    component.selectedRoleSlug.set('recepcionista');
     const callsBefore = providersApi.getProviders.mock.calls.length;
 
     component.save();
 
     // Local selection reverts to the current server state.
-    expect(component.selectedRoleSlugs()).toEqual(['admin_local']);
+    expect(component.selectedRoleSlug()).toBe('admin_local');
     // Providers are refetched.
     expect(providersApi.getProviders.mock.calls.length).toBeGreaterThan(callsBefore);
     expect(httpError.handle).toHaveBeenCalled();

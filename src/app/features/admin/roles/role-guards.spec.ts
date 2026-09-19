@@ -1,7 +1,9 @@
 import {
   ADMIN_GENERAL_ROLE,
   applyAdminGeneralInvariant,
+  applyAdminGeneralSingleInvariant,
   isAdminGeneralLocked,
+  isSingleSelectRoleLocked,
 } from './role-guards';
 
 describe('role-guards', () => {
@@ -66,6 +68,51 @@ describe('role-guards', () => {
       const current = ['admin_general'];
       const next = ['staff', 'staff'];
       expect(applyAdminGeneralInvariant(current, next)).toEqual(['staff', 'admin_general']);
+    });
+  });
+
+  describe('isSingleSelectRoleLocked', () => {
+    it('locks every other role for a holder of admin_general, but not admin_general itself', () => {
+      expect(isSingleSelectRoleLocked(['admin_general'], 'admin_general')).toBe(false);
+      expect(isSingleSelectRoleLocked(['admin_general'], 'staff')).toBe(true);
+      expect(isSingleSelectRoleLocked(['admin_general', 'staff'], 'staff')).toBe(true);
+    });
+
+    it('locks only admin_general for a non-holder', () => {
+      expect(isSingleSelectRoleLocked(['staff'], 'admin_general')).toBe(true);
+      expect(isSingleSelectRoleLocked([], 'admin_general')).toBe(true);
+      expect(isSingleSelectRoleLocked(['staff'], 'staff')).toBe(false);
+      expect(isSingleSelectRoleLocked([], 'staff')).toBe(false);
+    });
+  });
+
+  describe('applyAdminGeneralSingleInvariant', () => {
+    it('forces a holder back to admin_general when it attempts to move away', () => {
+      expect(applyAdminGeneralSingleInvariant(['admin_general'], 'staff')).toBe('admin_general');
+    });
+
+    it('keeps admin_general for a holder that keeps it', () => {
+      expect(applyAdminGeneralSingleInvariant(['admin_general'], 'admin_general')).toBe(
+        'admin_general',
+      );
+    });
+
+    it('normalizes admin_general to null when a non-holder attempts to take it', () => {
+      expect(applyAdminGeneralSingleInvariant(['staff'], 'admin_general')).toBeNull();
+      expect(applyAdminGeneralSingleInvariant([], 'admin_general')).toBeNull();
+    });
+
+    it('keeps another role for a non-holder', () => {
+      expect(applyAdminGeneralSingleInvariant(['staff'], 'staff_readonly')).toBe('staff_readonly');
+    });
+
+    it('keeps null for a provider with no roles', () => {
+      expect(applyAdminGeneralSingleInvariant([], null)).toBeNull();
+      expect(applyAdminGeneralSingleInvariant(['staff'], null)).toBeNull();
+    });
+
+    it('forces a holder with a null selection back to admin_general', () => {
+      expect(applyAdminGeneralSingleInvariant(['admin_general'], null)).toBe('admin_general');
     });
   });
 });

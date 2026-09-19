@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
-import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { HttpErrorService } from '@services/http-error.service';
@@ -12,7 +12,10 @@ import { ReferenceStore } from '@core/stores/reference.store';
 import { Role } from '@models';
 import { roleMeta } from './role-meta';
 import { RoleBadgeComponent } from './role-badge.component';
-import { applyAdminGeneralInvariant, isAdminGeneralLocked } from './role-guards';
+import {
+  applyAdminGeneralSingleInvariant,
+  isSingleSelectRoleLocked,
+} from './role-guards';
 import { RolesStore } from './roles.store';
 
 /**
@@ -29,10 +32,12 @@ interface ProviderOption {
 }
 
 /**
- * "Asignación" tab: assign business roles to a provider. Role identity is the
- * `slug`; `name` is display-only. The role list comes from `RolesStore`; the
- * provider list is read from `ReferenceStore` (canonical source — the store
- * patches providers from the server response after a successful assignment).
+ * "Asignación" tab: assign a business role to a provider. A professional holds
+ * exactly ONE role, so the picker is a radio group (not a checkbox list). Role
+ * identity is the `slug`; `name` is display-only. The role list comes from
+ * `RolesStore`; the provider list is read from `ReferenceStore` (canonical
+ * source — the store patches providers from the server response after a
+ * successful assignment).
  */
 @Component({
   selector: 'bw-roles-assignment',
@@ -42,7 +47,7 @@ interface ProviderOption {
     FormsModule,
     CardModule,
     SelectModule,
-    CheckboxModule,
+    RadioButtonModule,
     ButtonModule,
     MessageModule,
     RoleBadgeComponent,
@@ -86,7 +91,8 @@ export class RolesAssignmentComponent {
   saving = signal(false);
   error = signal<string | null>(null);
   selectedProviderId = signal<number | null>(null);
-  selectedRoleSlugs = signal<string[]>([]);
+  /** The single role the selected provider will end up with (null = none yet). */
+  selectedRoleSlug = signal<string | null>(null);
 
   readonly selectedProvider = computed(() => {
     const id = this.selectedProviderId();
@@ -94,37 +100,35 @@ export class RolesAssignmentComponent {
   });
 
   /** Slugs the selected provider currently holds (from GET /providers). */
-  readonly currentProviderSlugs = computed<Set<string>>(() => {
+  readonly currentProviderSlugs = computed<string[]>(() => {
     const provider = this.selectedProvider();
-    return new Set((provider?.roles ?? []).map((r) => r.slug));
+    return (provider?.roles ?? []).map((r) => r.slug);
   });
 
   onProviderChange(id: number): void {
     this.selectedProviderId.set(id);
     this.error.set(null);
-    this.selectedRoleSlugs.set([...this.currentProviderSlugs()]);
+    // Seed the radio group from the current role, letting the shared guard
+    // resolve the admin_general holder (locked to it) vs. everyone else.
+    const current = this.currentProviderSlugs();
+    this.selectedRoleSlug.set(applyAdminGeneralSingleInvariant(current, current[0] ?? null));
   }
 
-  isRoleChecked(slug: string): boolean {
-    return this.selectedRoleSlugs().includes(slug);
+  isRoleSelected(slug: string): boolean {
+    return this.selectedRoleSlug() === slug;
   }
 
   /**
-   * `admin_general` is always locked through the shared guard: the holder cannot
-   * remove it and a non-holder cannot receive it.
+   * Single-select lock through the shared guard: a holder of `admin_general` is
+   * locked to it (every other radio disabled) and a non-holder cannot select it.
    */
   isRoleLocked(slug: string): boolean {
-    return isAdminGeneralLocked([...this.currentProviderSlugs()], slug);
+    return isSingleSelectRoleLocked(this.currentProviderSlugs(), slug);
   }
 
-  onRoleChange(checked: boolean, slug: string): void {
+  onRoleChange(slug: string): void {
     if (this.isRoleLocked(slug)) return;
-    this.selectedRoleSlugs.update((list) => {
-      const next = new Set(list);
-      if (checked) next.add(slug);
-      else next.delete(slug);
-      return [...next];
-    });
+    this.selectedRoleSlug.set(slug);
     this.error.set(null);
   }
 
@@ -145,10 +149,6 @@ export class RolesAssignmentComponent {
     return roles.map((r) => this.roleLabel(r)).join(', ');
   }
 
-  private sameRoleSet(a: string[], b: string[]): boolean {
-    return a.length === b.length && a.every((slug) => b.includes(slug));
-  }
-
   save(): void {
     const provider = this.selectedProvider();
     if (!provider) {
@@ -156,39 +156,43 @@ export class RolesAssignmentComponent {
       return;
     }
 
-    // Duplicate slugs are never sent, even if a caller seeded the selection.
-    const selected = [...new Set(this.selectedRoleSlugs())];
-    if (selected.length === 0) {
+    const selected = this.selectedRoleSlug();
+    if (!selected) {
       this.error.set(this.lang.t('roles.empty_error'));
       return;
     }
 
     const valid = new Set(this.roles().map((r) => r.slug));
-    if (selected.some((slug) => !valid.has(slug))) {
+    if (!valid.has(selected)) {
       this.error.set(this.lang.t('roles.empty_error'));
       return;
     }
 
-    const current = [...this.currentProviderSlugs()];
-    // Shared invariant: abort when the proposed set would remove admin_general
-    // from its holder or assign it to a non-holder.
-    const enforced = applyAdminGeneralInvariant(current, selected);
-    if (!this.sameRoleSet(enforced, selected)) {
+    const current = this.currentProviderSlugs();
+    // Shared invariant: abort when the selection would move the admin_general
+    // holder away or assign admin_general to a non-holder.
+    const enforced = applyAdminGeneralSingleInvariant(current, selected);
+    if (enforced !== selected) {
       this.error.set(this.lang.t('roles.admin_general_locked'));
       return;
     }
 
     this.error.set(null);
     this.saving.set(true);
-    this.refStore.assignProviderRoles(provider.id, selected).subscribe({
+    // PATCH /providers/{id}/roles takes an array; a single role travels as a
+    // one-element array.
+    this.refStore.assignProviderRoles(provider.id, [selected]).subscribe({
       next: () => {
         this.saving.set(false);
       },
       error: (err) => {
         this.saving.set(false);
-        // The API rejected the set (422 duplicate/display name, 404): revert the
-        // local selection to the current server state and refetch providers.
-        this.selectedRoleSlugs.set([...this.currentProviderSlugs()]);
+        // The API rejected the role (422/404): revert the local selection to the
+        // current server state and refetch providers.
+        const currentSlugs = this.currentProviderSlugs();
+        this.selectedRoleSlug.set(
+          applyAdminGeneralSingleInvariant(currentSlugs, currentSlugs[0] ?? null),
+        );
         this.refStore.invalidateProviders();
         this.httpError.handle(err, this.lang.t('roles.save'));
       },
