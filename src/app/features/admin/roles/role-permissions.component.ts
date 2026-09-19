@@ -150,6 +150,7 @@ export class RolePermissionsComponent implements OnInit {
           severity: 'success',
           summary: this.lang.t('roles.permissions.saved'),
           detail: this.lang.t('roles.permissions.saved_detail'),
+          key: 'global',
           life: 4000,
         });
       },

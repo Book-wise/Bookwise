@@ -160,6 +160,23 @@ describe('RolePermissionsComponent', () => {
     expect(updateRolePermissions).toHaveBeenCalledWith(1, ['bookings.view', 'roles.view']);
   });
 
+  it('emits the success toast on the global key so the app shell renders it', () => {
+    updateRolePermissions.mockReturnValue(
+      of({ data: { role_id: 1, slug: 'admin_general', permissions: ['bookings.view'] } }),
+    );
+    fixture.detectChanges();
+
+    component.draft.set(['bookings.view']);
+    component.save();
+
+    // Without `key: 'global'` PrimeNG routes the toast to the keyless toast,
+    // which the admin layout does not render, so the message is silently lost.
+    expect(messageService.add).toHaveBeenCalledTimes(1);
+    expect(messageService.add).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success', key: 'global' }),
+    );
+  });
+
   it('requires confirmation before clearing all permissions', () => {
     updateRolePermissions.mockReturnValue(
       of({ data: { role_id: 1, slug: 'admin_general', permissions: [] } }),
