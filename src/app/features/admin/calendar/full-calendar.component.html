@@ -136,7 +136,7 @@
 </div>
 
 <!-- Event hover tooltip -->
-<p-popover #eventTooltip class="event-tooltip-panel" [dismissable]="true"
+<p-popover #eventTooltip styleClass="event-tooltip-panel" [dismissable]="true"
   (onHide)="hoveredBooking.set(null)">
   @if (hoveredBooking()) {
     <div class="ev-tooltip">

@@ -15,11 +15,10 @@
 // ── Layout chrome ────────────────────────────────────────────────────────────
 
 .full-calendar-container {
-  padding: 1rem;
+  // No padding here — the layout's `.main-content` is the only spacer now.
+  padding: 0;
 
   @media (max-width: 768px) {
-    padding: 0;
-
     .p-card {
       border-radius: 0;
       box-shadow: none;
@@ -191,11 +190,14 @@
   padding: 0;
   font-size: 0.85rem;
   overflow: hidden;
+  // dayGrid events are rendered as <a> — kill the global link underline.
+  text-decoration: none;
 }
 
-// Excludes the selection mirror too: it is a `.fc-event` but must stay invisible
-// (it would otherwise inherit this 3px solid left border in currentColor → black).
-.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview):not(.fc-event-mirror) {
+// Month/week split: dayGrid (month) events carry their state in the inner pill,
+// so the outer 3px accent bar is timeGrid-only. Without this exclusion the
+// dayGrid `<a>` events fall back to currentColor (#000) → a black left bar.
+.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview):not(.fc-event-mirror):not(.fc-daygrid-event) {
   border-left-width: 3px !important;
   border-left-style: solid !important;
 }
@@ -479,11 +481,76 @@
   }
 }
 
+// ── Day popover (month "+N más") — Bookwise signature card ───────────────────
+// FullCalendar paints this card from its theme-dependent rules; we style it
+// explicitly so it is a solid, opaque Bookwise card with the signature left
+// accent (its theme background resolves to transparent in our setup).
+
+.fc .fc-popover {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--bw-300);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  opacity: 1;
+  overflow: hidden;
+  // Above our app overlays AND PrimeNG's dynamic overlay z-index
+  // (starts ~1000 and grows ~1000 per open overlay).
+  z-index: 10000 !important;
+}
+
+.fc .fc-popover-header {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.fc .fc-popover-title {
+  font-weight: 600;
+}
+
+.fc .fc-popover-close {
+  color: var(--text-color-secondary);
+  cursor: pointer;
+}
+
+.fc .fc-popover-body {
+  background: var(--surface-card);
+  padding: 0.5rem;
+}
+
 // ── Event hover tooltip ───────────────────────────────────────────────────────
 
 .event-tooltip-panel {
-  .p-overlaypanel-content {
+  // PrimeNG's anchored-overlay motion preset animates with a 300ms scale(.93),
+  // which feels heavy for a hover tooltip. Override it here (scoped to this
+  // tooltip) with a subtler fade + tiny slide on enter and leave.
+  &.p-anchored-overlay-enter-active {
+    animation: bw-tooltip-in 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &.p-anchored-overlay-leave-active {
+    animation: bw-tooltip-out 150ms cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  .p-popover-content {
     padding: 0.75rem 1rem;
+  }
+}
+
+@keyframes bw-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes bw-tooltip-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
   }
 }
 
@@ -562,7 +629,7 @@
   }
 
   &__label {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: #000;
     font-weight: 500;
     white-space: nowrap;

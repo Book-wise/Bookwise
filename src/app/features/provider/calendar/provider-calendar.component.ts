@@ -297,6 +297,10 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
           if (info.event.extendedProps['isBlocked']) return;
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
+          // Month view only: events listed inside FullCalendar's day popover
+          // ("+N más") must not raise our hover tooltip on top of that popover.
+          // That popover only exists in dayGrid/month, so this is month-scoped.
+          if (info.el.closest('.fc-popover')) return;
           this.ngZone.run(() => {
             this.hoveredBooking.set(booking);
             this.eventTooltip?.show(info.jsEvent, info.el);
