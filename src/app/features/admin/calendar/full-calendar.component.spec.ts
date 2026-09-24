@@ -609,11 +609,11 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.slotDurationMinutes()).toBe(40);
       expect(component.calendarOptions.slotDuration).toBe('00:40:00');
       expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '00:40:00');
-      // Selection snap must stay fixed at 1h
-      expect(component.calendarOptions.snapDuration).toBe('01:00:00');
+      // Snap follows slotDuration by FullCalendar default — never hardcoded
+      expect(component.calendarOptions.snapDuration).toBeUndefined();
     });
 
-    it('formats edge durations and never touches snapDuration', () => {
+    it('formats edge durations for the density control', () => {
       const calendarMock = setOptionStub();
       (component as unknown as { calendar: unknown }).calendar = calendarMock as never;
 
@@ -621,12 +621,13 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.slotDurationMinutes()).toBe(60);
       expect(component.calendarOptions.slotDuration).toBe('01:00:00');
       expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '01:00:00');
+      expect(component.calendarOptions.snapDuration).toBeUndefined();
 
       component.applySlotDuration(5);
       expect(component.slotDurationMinutes()).toBe(5);
       expect(component.calendarOptions.slotDuration).toBe('00:05:00');
       expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '00:05:00');
-      expect(component.calendarOptions.snapDuration).toBe('01:00:00');
+      expect(component.calendarOptions.snapDuration).toBeUndefined();
     });
 
     it('exposes the 8 duration options with localized labels', () => {

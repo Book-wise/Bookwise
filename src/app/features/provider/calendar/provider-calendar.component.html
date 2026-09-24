@@ -258,6 +258,7 @@
 <div class="slot-overlay" (click)="dismissSlotMenu()">
   <div
     class="slot-menu"
+    [class.slot-menu--above]="slotMenuAbove()"
     [style.left.px]="slotMenuPosition.x"
     [style.top.px]="slotMenuPosition.y"
     (click)="$event.stopPropagation()"
