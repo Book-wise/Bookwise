@@ -29,10 +29,17 @@
     <p-card [header]="lang.t('settings.appearance')" class="settings-card">
       <div class="setting-row">
         <div class="setting-row__label">
-          <span>{{ lang.t('settings.appearance.dark') }}</span>
-          <small>{{ lang.t('settings.appearance.dark.hint') }}</small>
+          <span>{{ lang.t('settings.appearance.mode') }}</span>
+          <small>{{ lang.t('settings.appearance.mode.hint') }}</small>
         </div>
-        <p-toggleswitch [ngModel]="darkMode()" (ngModelChange)="onDarkChange($event)" />
+        <p-select
+          [options]="appearanceOptions()"
+          [ngModel]="appearance()"
+          (ngModelChange)="onAppearanceChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          class="settings-select"
+        />
       </div>
 
       <div class="setting-row">

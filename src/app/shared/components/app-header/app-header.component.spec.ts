@@ -65,7 +65,7 @@ describe('AppHeaderComponent — tenant switch delegation', () => {
           },
         },
         { provide: TenantSwitchService, useValue: tenantSwitch },
-        { provide: ThemeService, useValue: { darkMode: signal(false), toggleDarkMode: vi.fn() } },
+        { provide: ThemeService, useValue: { appearance: 'light', setAppearance: vi.fn() } },
         { provide: MessageService, useValue: toast },
       ],
     }).compileComponents();

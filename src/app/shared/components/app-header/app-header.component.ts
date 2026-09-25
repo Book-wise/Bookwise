@@ -1,11 +1,13 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
-import { ThemeService } from '@services/theme.service';
+import { Appearance, APPEARANCE_OPTIONS, ThemeService } from '@services/theme.service';
 import { TenantSwitchService } from '@services/tenant-switch.service';
 import { Business } from '@models';
 import { AccountMenuComponent } from '@shared/components/account-menu/account-menu.component';
@@ -14,13 +16,16 @@ import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
 
 /**
  * Barra superior de la app: muestra el negocio en uso (multi-tenant) con selector
- * para admin_general, acciones (modo oscuro → futuro: notificaciones) y el menú
- * de usuario. Aligera el sidebar (que queda solo con navegación).
+ * para admin_general, el selector de apariencia (claro / oscuro / Kinesilk) y el
+ * menú de usuario. Aligera el sidebar (que queda solo con navegación).
  */
 @Component({
   selector: 'bw-app-header',
   standalone: true,
-  imports: [CommonModule, AccountMenuComponent, UserAvatarComponent, PopoverModule, ButtonModule],
+  imports: [
+    CommonModule, FormsModule, AccountMenuComponent, UserAvatarComponent,
+    PopoverModule, ButtonModule, SelectModule,
+  ],
   templateUrl: './app-header.component.html',
   styleUrls: ['./app-header.component.scss'],
 })
@@ -43,7 +48,12 @@ export class AppHeaderComponent {
   /** Solo admin_general con varios negocios puede alternar; provider es lectura. */
   readonly canSwitch = computed(() => this.businesses().length > 1);
 
-  readonly darkMode = computed(() => this.themeService.darkMode);
+  readonly appearance = computed(() => this.themeService.appearance);
+
+  /** 3-option selector labels resolved through i18n (reactive to language changes). */
+  readonly appearanceOptions = computed(() =>
+    APPEARANCE_OPTIONS.map((opt) => ({ label: this.lang.t(opt.labelKey), value: opt.value })),
+  );
 
   /** True cuando la sidebar está abierta en mobile (cambia hamburguesa ↔ ✕). */
   readonly mobileMenuOpen = input(false);
@@ -58,8 +68,8 @@ export class AppHeaderComponent {
     }
   }
 
-  toggleDarkMode(): void {
-    this.themeService.toggleDarkMode();
+  onAppearanceChange(mode: Appearance): void {
+    this.themeService.setAppearance(mode);
   }
 
   /** Cambia de negocio (admin_general) delegando en el coordinador del switch. */

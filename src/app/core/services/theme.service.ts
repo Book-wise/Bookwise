@@ -6,6 +6,12 @@ import Nora from '@primeng/themes/nora';
 
 export type ThemeName = 'aura' | 'lara' | 'nora';
 
+/**
+ * Application appearance, applied as a class on `body`:
+ * `light` → no class, `dark` → `body.dark-theme`, `kinesilk` → `body.theme-kinesilk`.
+ */
+export type Appearance = 'light' | 'dark' | 'kinesilk';
+
 export interface Theme {
   name: string;
   preset: typeof Aura;
@@ -17,21 +23,30 @@ export const THEMES: Record<ThemeName, Theme> = {
   nora: { name: 'Nora', preset: Nora },
 };
 
+/** Appearance options with their i18n label keys — shared by every selector. */
+export const APPEARANCE_OPTIONS: { labelKey: string; value: Appearance }[] = [
+  { labelKey: 'settings.appearance.mode.light', value: 'light' },
+  { labelKey: 'settings.appearance.mode.dark', value: 'dark' },
+  { labelKey: 'settings.appearance.mode.kinesilk', value: 'kinesilk' },
+];
+
 const THEME_STORAGE_KEY = 'appTheme';
-const DARK_MODE_KEY = 'darkMode';
+const APPEARANCE_STORAGE_KEY = 'appAppearance';
+/** Legacy boolean key — read once to migrate users coming from dark-mode only. */
+const LEGACY_DARK_MODE_KEY = 'darkMode';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private _currentTheme = signal<ThemeName>(this.getStoredTheme());
-  private _darkMode = signal<boolean>(this.getStoredDarkMode());
+  private _appearance = signal<Appearance>(this.getStoredAppearance());
 
   get currentTheme(): ThemeName {
     return this._currentTheme();
   }
 
-  /** Modo oscuro (body.dark-theme) — centralizado acá. */
-  get darkMode(): boolean {
-    return this._darkMode();
+  /** Current appearance (body class) — centralised here. */
+  get appearance(): Appearance {
+    return this._appearance();
   }
 
   get themeOptions(): { label: string; value: ThemeName }[] {
@@ -44,7 +59,7 @@ export class ThemeService {
 
   constructor() {
     this.applyTheme(this._currentTheme());
-    this.applyDarkMode(this._darkMode());
+    this.applyAppearance(this._appearance());
   }
 
   setTheme(themeName: ThemeName): void {
@@ -53,16 +68,11 @@ export class ThemeService {
     this.applyTheme(themeName);
   }
 
-  /** Enciende/apaga el modo oscuro (persiste + aplica body.dark-theme). */
-  setDarkMode(value: boolean): void {
-    this._darkMode.set(value);
-    localStorage.setItem(DARK_MODE_KEY, value ? 'true' : 'false');
-    this.applyDarkMode(value);
-  }
-
-  /** Toggle rápido de modo oscuro. */
-  toggleDarkMode(): void {
-    this.setDarkMode(!this._darkMode());
+  /** Sets the appearance (persists + applies the matching body class). */
+  setAppearance(mode: Appearance): void {
+    this._appearance.set(mode);
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, mode);
+    this.applyAppearance(mode);
   }
 
   private applyTheme(themeName: ThemeName): void {
@@ -72,9 +82,10 @@ export class ThemeService {
     }
   }
 
-  private applyDarkMode(value: boolean): void {
+  private applyAppearance(mode: Appearance): void {
     if (typeof document !== 'undefined') {
-      document.body.classList.toggle('dark-theme', value);
+      document.body.classList.toggle('dark-theme', mode === 'dark');
+      document.body.classList.toggle('theme-kinesilk', mode === 'kinesilk');
     }
   }
 
@@ -86,7 +97,16 @@ export class ThemeService {
     return 'aura';
   }
 
-  private getStoredDarkMode(): boolean {
-    return localStorage.getItem(DARK_MODE_KEY) === 'true';
+  private getStoredAppearance(): Appearance {
+    const stored = localStorage.getItem(APPEARANCE_STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark' || stored === 'kinesilk') {
+      return stored;
+    }
+    // Migrate the legacy boolean dark-mode flag: only `true` maps to `dark`,
+    // everything else (absent included) defaults to `light`.
+    if (localStorage.getItem(LEGACY_DARK_MODE_KEY) === 'true') {
+      return 'dark';
+    }
+    return 'light';
   }
 }

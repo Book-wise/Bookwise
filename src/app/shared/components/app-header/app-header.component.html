@@ -65,14 +65,16 @@
 
   <div class="app-header__right">
     <div class="app-header__actions">
-      <button
-        type="button"
-        class="app-header__icon-btn"
-        (click)="toggleDarkMode()"
-        [attr.title]="darkMode() ? (lang.t('ui.light_mode')) : (lang.t('ui.dark_mode'))"
-      >
-        <i class="pi" [class.pi-moon]="!darkMode()" [class.pi-sun]="darkMode()"></i>
-      </button>
+      <p-select
+        class="app-header__theme"
+        [options]="appearanceOptions()"
+        [ngModel]="appearance()"
+        (ngModelChange)="onAppearanceChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        [ariaLabel]="lang.t('settings.appearance.mode')"
+        appendTo="body"
+      />
       <!-- A futuro: notificaciones / mensajes -->
     </div>
     <bw-account-menu />

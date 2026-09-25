@@ -194,6 +194,94 @@ body.dark-theme {
 }
 
 // ============================================
+// KINESILK — pastel appearance (third skin)
+// Applied via body.theme-kinesilk, mirroring the dark-mode approach.
+// Only surfaces/brand/components are overridden — booking/payment status
+// colors are intentionally left untouched.
+// ============================================
+
+body.theme-kinesilk {
+  --surface-ground: #fcf9ea;      // cream page bg
+  --surface-card:   #fffdf7;      // warm white cards
+  --surface-0:      #fffdf7;
+  --surface-border: #ece4cb;      // warm border
+  --bw-surface-muted: #f5f1de;
+
+  --bw-50:  #eaf5f4;              // soft blue tint
+  --bw-100: #badede;              // powder blue
+  --bw-200: #ffbdbe;              // pink (accent)
+  --bw-300: #fea4a4;              // salmon (CTA)
+
+  --color-primary:     #e08f8f;
+  --color-primary-cta: #fea4a4;
+  --color-accent:      #87e9ce;
+  --bw-success:        #87e9ce;
+  --primary-color:     #fea4a4;
+
+  --text-color:           #3f3f33;
+  --text-color-secondary: #6f6f5c;
+  --text-heading:         #2f2f26;
+  --text-label:           #4a4a3c;
+
+  --bw-fc-btn-bg:            #fea4a4;
+  --bw-fc-btn-border:        #fea4a4;
+  --bw-fc-btn-hover-bg:      #f79090;
+  --bw-fc-btn-hover-border:  #f79090;
+  --bw-fc-btn-active-bg:     #e97b7b;
+  --bw-fc-btn-active-border: #e97b7b;
+  --bw-fc-today-bg:          rgba(186, 222, 218, 0.35);
+
+  // Sidebar: powder blue with DARK text (it is dark/light-text by default).
+  --sidebar-bg-from: #badede;
+  --sidebar-bg-to:   #a9d3d2;
+  --sidebar-text:        rgba(47, 47, 38, 0.72);
+  --sidebar-text-hover:  #2f2f26;
+  --sidebar-text-active: #2f2f26;
+  --sidebar-hover-bg:    rgba(47, 47, 38, 0.06);
+  --sidebar-active-bg:   rgba(47, 47, 38, 0.12);
+  --sidebar-active-border: #2f5d5a;
+  --sidebar-divider:     rgba(47, 47, 38, 0.12);
+  // The layout SCSS falls back to `rgba(255,255,255,0.65)` when this is unset
+  // (white-on-light); define it so the sidebar user role reads as dark text.
+  --sidebar-text-secondary: rgba(47, 47, 38, 0.6);
+
+  background: var(--surface-ground);
+  color: var(--text-color);
+
+  .main-content { background: var(--surface-ground) !important; }
+  .p-card { background: var(--surface-card) !important; }
+
+  // CTA buttons use white text on --bw-300 → dark text on the pastel salmon
+  .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary) { color: #2f2f26; }
+  .bw-day-btn.active { color: #2f2f26; }
+
+  // ── Sidebar hardcoded light/white spots (layout SCSS is always-dark chrome) ──
+  // The powder-blue sidebar is light, so flip the white chip/overlays to warm
+  // cream and darken the danger link for legible contrast.
+  // `!important` is required: Angular scopes the layout selectors with an
+  // attribute (e.g. `.sidebar-header[attr] .logo-wrapper[attr]`), which
+  // out-specifies these global selectors.
+  .sidebar-header {
+    background: rgba(252, 249, 234, 0.4) !important;
+
+    .logo-wrapper,
+    .logo-icon-wrapper {
+      background: rgba(252, 249, 234, 0.85) !important;
+    }
+  }
+
+  .sidebar-logout,
+  .nav-item.logout-btn {
+    color: #a14444 !important;
+
+    &:hover {
+      background: rgba(254, 164, 164, 0.28) !important;
+      color: #8f3030 !important;
+    }
+  }
+}
+
+// ============================================
 // Responsive Tables
 // ============================================
 

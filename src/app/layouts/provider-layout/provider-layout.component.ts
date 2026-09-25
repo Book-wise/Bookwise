@@ -35,7 +35,6 @@ export class ProviderLayoutComponent {
 
   // On mobile the sidebar is always in expanded format — collapsed is desktop-only
   readonly effectivelyCollapsed = computed(() => this.sidebarCollapsed() && !this.isMobile());
-  readonly darkMode = computed(() => this.themeService.darkMode);
 
   themeOptions = this.themeService.themeOptions;
   currentTheme = signal<ThemeName>(this.themeService.currentTheme);
@@ -81,10 +80,6 @@ export class ProviderLayoutComponent {
     } else {
       this.sidebarCollapsed.update((v) => !v);
     }
-  }
-
-  toggleDarkMode(): void {
-    this.themeService.toggleDarkMode();
   }
 
   onThemeChange(themeName: ThemeName): void {

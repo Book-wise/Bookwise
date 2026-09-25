@@ -229,23 +229,24 @@
   gap: var(--bw-space-xs);
 }
 
-.app-header__icon-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface-card);
-  color: var(--text-color);
-  border-radius: 8px;
-  cursor: pointer;
+// ── Selector de apariencia (claro / oscuro / Kinesilk) ─────────────────────────
+// Reemplaza el antiguo botón luna/sol. Se mantiene compacto para no alterar la
+// altura fija del header (67px).
+.app-header__theme {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  transition: background var(--bw-transition-base), color var(--bw-transition-base);
 
-  &:hover {
-    background: var(--surface-hover);
-    color: var(--color-primary);
+  // El p-select global mide 40px (--bw-control-height !important); en el header
+  // lo forzamos a 36px para igualar el resto de los controles compactos.
+  ::ng-deep .p-select {
+    height: 36px !important;
+    min-width: 7.25rem;
+    align-items: center;
+  }
+
+  ::ng-deep .p-select-label {
+    padding-block: 0;
+    font-size: 0.8125rem;
+    line-height: 1;
   }
 }

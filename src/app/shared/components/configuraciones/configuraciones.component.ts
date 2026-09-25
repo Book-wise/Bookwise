@@ -4,9 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { RouterLink } from '@angular/router';
-import { ThemeService, ThemeName } from '@services/theme.service';
+import { Appearance, APPEARANCE_OPTIONS, ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
 import { AuthService } from '@services/auth.service';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
@@ -16,7 +15,7 @@ import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.
   standalone: true,
   imports: [
     CommonModule, FormsModule, CardModule, ButtonModule, SelectModule,
-    ToggleSwitchModule, RouterLink, UserAvatarComponent,
+    RouterLink, UserAvatarComponent,
   ],
   templateUrl: './configuraciones.component.html',
   styleUrls: ['./configuraciones.component.scss'],
@@ -26,7 +25,10 @@ export class ConfiguracionesComponent {
   private themeService = inject(ThemeService);
   readonly lang = inject(LanguageService);
 
-  readonly darkMode = computed(() => this.themeService.darkMode);
+  readonly appearance = computed(() => this.themeService.appearance);
+  readonly appearanceOptions = computed(() =>
+    APPEARANCE_OPTIONS.map((opt) => ({ label: this.lang.t(opt.labelKey), value: opt.value })),
+  );
   readonly currentTheme = computed(() => this.themeService.currentTheme);
   readonly themeOptions = this.themeService.themeOptions;
 
@@ -52,8 +54,8 @@ export class ConfiguracionesComponent {
     this.themeService.setTheme(v);
   }
 
-  onDarkChange(v: boolean): void {
-    this.themeService.setDarkMode(v);
+  onAppearanceChange(mode: Appearance): void {
+    this.themeService.setAppearance(mode);
   }
 
   onLangChange(v: Language): void {
