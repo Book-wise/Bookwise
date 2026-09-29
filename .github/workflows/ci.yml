@@ -1,0 +1,106 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-signal:
+    name: Detect explicit dev deploy signal
+    runs-on: ubuntu-latest
+    outputs:
+      requested: ${{ steps.signal.outputs.requested }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - id: signal
+        shell: bash
+        run: |
+          if git log -1 --pretty=%B | grep -Fxq 'Deploy-Dev: true'; then
+            echo 'requested=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'requested=false' >> "$GITHUB_OUTPUT"
+          fi
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test -- --no-watch
+
+  package-release:
+    name: Build frontend release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build -- --configuration production
+
+      - name: Validate and package release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/bookwise/browser/index.html
+          if grep -R -q '127.0.0.1:9999' dist/bookwise/browser; then
+            echo 'Production bundle contains the local API URL' >&2
+            exit 1
+          fi
+          archive="bookwise-frontend-${GITHUB_SHA}.tar.gz"
+          tar -C dist/bookwise/browser -czf "$archive" .
+          sha256sum "$archive" > "$archive.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bookwise-frontend-${{ github.sha }}
+          path: |
+            bookwise-frontend-${{ github.sha }}.tar.gz
+            bookwise-frontend-${{ github.sha }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy-development:
+    name: Deploy frontend to dev.bookwise.cl
+    if: github.event_name == 'push' && needs.deploy-signal.outputs.requested == 'true'
+    needs: [deploy-signal, tests, package-release]
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev.bookwise.cl
+    concurrency:
+      group: bookwise-frontend-development
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bookwise-frontend-${{ github.sha }}
+      - name: Configure SSH
+        env:
+          DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+          DEV_SSH_HOST_KEY: ${{ secrets.DEV_SSH_HOST_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEV_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEV_SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: Deploy immutable frontend release
+        env:
+          DEV_SSH_HOST: ${{ secrets.DEV_SSH_HOST }}
+          DEV_SSH_USER: ${{ secrets.DEV_SSH_USER }}
+        run: ./scripts/deploy-dev.sh "bookwise-frontend-${GITHUB_SHA}.tar.gz"
