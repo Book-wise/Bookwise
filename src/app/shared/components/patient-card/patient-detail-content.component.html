@@ -65,12 +65,13 @@
         <div class="patient-detail-content__skeleton-list"><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /><p-skeleton height="3.5rem" /></div>
       } @else if (detailStore.packs().error) {
         <div class="patient-detail-content__state"><i class="pi pi-exclamation-circle"></i><span>No se pudieron cargar los planes.</span></div>
-      } @else if (activePacks().length === 0) {
-        <div class="patient-detail-content__state"><i class="pi pi-box"></i><span>Sin planes activos</span></div>
+      } @else if (packs().length === 0) {
+        <div class="patient-detail-content__state"><i class="pi pi-box"></i><span>Sin planes</span></div>
       } @else {
         <ul class="patient-detail-content__list">
-          @for (pack of activePacks(); track pack.id) {
-            <li><strong>{{ pack.service_pack?.name ?? 'Plan' }}</strong><span>{{ pack.used_sessions }} / {{ pack.total_sessions }} sesiones · {{ pack.remaining_sessions }} restantes</span><span class="bw-chip bw-chip--success">Activo</span></li>
+          @for (pack of packs(); track pack.id) {
+            @let chip = packStatusChip(pack);
+            <li><strong>{{ pack.service_pack?.name ?? 'Plan' }}</strong><span>{{ pack.used_sessions }} / {{ pack.total_sessions }} sesiones</span><span [class]="chip.cls">{{ chip.label }}</span></li>
           }
         </ul>
       }

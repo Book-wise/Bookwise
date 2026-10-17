@@ -3,6 +3,7 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ClientDetailStore, PatientTab } from '@core/stores/client-detail.store';
+import { ClientPack } from '@models';
 import { TimezoneService } from '@services/timezone.service';
 import { LanguageService } from '@services/language.service';
 
@@ -21,8 +22,10 @@ export class PatientDetailContentComponent {
   readonly view = input.required<PatientTab>();
   readonly returnRequested = output<void>();
 
+  /** Todos los packs del cliente (active + completed + abandoned). */
+  readonly packs = computed(() => this.detailStore.packs().data);
   readonly activePacks = computed(() =>
-    this.detailStore.packs().data.filter(pack => pack.status === 'active'),
+    this.packs().filter(pack => pack.status === 'active'),
   );
 
   readonly sessions = computed(() => this.activePacks().flatMap(pack => {
@@ -34,7 +37,7 @@ export class PatientDetailContentComponent {
     }));
   }));
 
-  readonly plansCount = computed(() => this.activePacks().length);
+  readonly plansCount = computed(() => this.packs().length);
   readonly sessionsCount = computed(() =>
     this.activePacks().reduce((sum, p) => sum + (p.total_sessions ?? 0), 0),
   );
@@ -44,6 +47,20 @@ export class PatientDetailContentComponent {
   readonly recentCount = computed(() =>
     this.detailStore.recent().loaded ? this.detailStore.recent().data.length : null,
   );
+
+  /** Chip de estado del pack (etiqueta i18n + clase de color por status). */
+  packStatusChip(pack: ClientPack): { label: string; cls: string } {
+    switch (pack.status) {
+      case 'completed':
+      case 'used':
+        return { label: this.lang.t('patient_card.pack.status.completed'), cls: 'bw-chip bw-chip--secondary' };
+      case 'abandoned':
+      case 'expired':
+        return { label: this.lang.t('patient_card.pack.status.abandoned'), cls: 'bw-chip bw-chip--warning' };
+      default:
+        return { label: this.lang.t('patient_card.pack.status.active'), cls: 'bw-chip bw-chip--success' };
+    }
+  }
 
   /** Cuenta visible por sección (null si aún no cargó → sin badge). */
   countFor(tab: PatientTab): number | null {
