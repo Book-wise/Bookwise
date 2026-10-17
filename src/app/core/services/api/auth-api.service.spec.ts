@@ -86,7 +86,7 @@ describe('AuthApiService', () => {
     req.flush({ message: 'ok' });
   });
 
-  it('getMe calls GET /auth/me and unwraps { user }', () => {
+  it('getMe calls GET /auth/me and returns the full { user, abilities } payload', () => {
     const me: AuthMeData = {
       id: 7,
       name: 'Admin',
@@ -98,14 +98,15 @@ describe('AuthApiService', () => {
       onboarding_complete: true,
       business: null,
     };
+    const abilities = ['bookings.view', 'roles.read'];
 
     service.getMe().subscribe((res) => {
-      expect(res).toEqual(me);
+      expect(res).toEqual({ user: me, abilities });
     });
 
     const req = httpMock.expectOne(`${environment.apiUrl}/auth/me`);
     expect(req.request.method).toBe('GET');
-    req.flush({ user: me });
+    req.flush({ user: me, abilities });
   });
 
   it('switchTenant calls POST /auth/switch-tenant and returns the full { token, user, abilities } payload', () => {

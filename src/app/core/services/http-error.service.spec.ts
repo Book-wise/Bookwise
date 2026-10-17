@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { isOnboardingRequired } from './http-error.service';
+import { isOnboardingRequired, isCapacityLimitError } from './http-error.service';
 
 /** Builds an HttpErrorResponse with the given status and body. */
 function apiError(status: number, error: unknown = null): HttpErrorResponse {
@@ -29,5 +29,23 @@ describe('isOnboardingRequired', () => {
 
   it('is false for a 500 with no business error', () => {
     expect(isOnboardingRequired(apiError(500, { message: 'Server Error' }))).toBe(false);
+  });
+});
+
+describe('isCapacityLimitError', () => {
+  it('is true for 403 account_tenant_limit_reached', () => {
+    expect(isCapacityLimitError(apiError(403, { error: 'account_tenant_limit_reached', limit: 3, current: 3 }))).toBe(true);
+  });
+
+  it('is true for 403 tenant_professional_limit_reached', () => {
+    expect(isCapacityLimitError(apiError(403, { error: 'tenant_professional_limit_reached', limit: 5, current: 5 }))).toBe(true);
+  });
+
+  it('is false for 403 with a different business error', () => {
+    expect(isCapacityLimitError(apiError(403, { error: 'forbidden' }))).toBe(false);
+  });
+
+  it('is false when the same body arrives with a non-403 status', () => {
+    expect(isCapacityLimitError(apiError(422, { error: 'account_tenant_limit_reached' }))).toBe(false);
   });
 });

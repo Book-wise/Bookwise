@@ -50,8 +50,10 @@ describe('AuthService', () => {
   });
 
   describe('loadMe', () => {
+    const meResponse = { user: me, abilities: ['bookings.view'] };
+
     it('fetches /auth/me and caches it on the first call', () => {
-      authApi.getMe.mockReturnValue(of(me));
+      authApi.getMe.mockReturnValue(of(meResponse));
 
       let result: AuthMeData | undefined;
       service.loadMe().subscribe((r) => (result = r));
@@ -62,8 +64,24 @@ describe('AuthService', () => {
       expect(authApi.getMe).toHaveBeenCalledTimes(1);
     });
 
+    it('captures top-level abilities from /auth/me (A1)', () => {
+      authApi.getMe.mockReturnValue(of(meResponse));
+
+      service.loadMe().subscribe();
+
+      expect(service.abilities()).toEqual(['bookings.view']);
+    });
+
+    it('defaults abilities to [] when /auth/me omits them', () => {
+      authApi.getMe.mockReturnValue(of({ user: me }));
+
+      service.loadMe().subscribe();
+
+      expect(service.abilities()).toEqual([]);
+    });
+
     it('does not refetch when the cache is already loaded', () => {
-      authApi.getMe.mockReturnValue(of(me));
+      authApi.getMe.mockReturnValue(of(meResponse));
 
       service.loadMe().subscribe();
       service.loadMe().subscribe();
@@ -72,7 +90,7 @@ describe('AuthService', () => {
     });
 
     it('force=true refetches even when the cache is loaded', () => {
-      authApi.getMe.mockReturnValue(of(me));
+      authApi.getMe.mockReturnValue(of(meResponse));
 
       service.loadMe().subscribe();
       authApi.getMe.mockClear();
@@ -120,6 +138,12 @@ describe('AuthService', () => {
       expect(service.token()).toBe('tok');
       expect(service.user()?.role).toBe('admin');
       expect(router.navigate).toHaveBeenCalledWith(['/admin']);
+    });
+
+    it('captures top-level abilities from the login response (A1)', () => {
+      service.login('tok', { id: 7, email: 'admin@test.com', name: 'Admin', role: 'admin' }, ['bookings.view']);
+
+      expect(service.abilities()).toEqual(['bookings.view']);
     });
   });
 

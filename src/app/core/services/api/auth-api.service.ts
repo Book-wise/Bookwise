@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { AuthMeData, AuthMeResponse, AuthResponse, AuthSwitchResponse, ChangePasswordData, LoginCredentials, RegisterData, RegisterResponse, ResetPasswordData, User } from '@models';
 
@@ -25,9 +25,10 @@ export class AuthApiService {
     );
   }
 
-  /** GET /auth/me (Bearer) → unwrap { user: AuthMeData } */
-  getMe(): Observable<AuthMeData> {
-    return this.http.get<AuthMeResponse>(`${this.baseUrl}/auth/me`).pipe(map((r) => r.user));
+  /** GET /auth/me (Bearer) → { user, abilities }. `abilities` viaja TOP-LEVEL (A1),
+   *  fuera de `user`, por eso se devuelve el payload completo y `AuthService` lo captura. */
+  getMe(): Observable<AuthMeResponse> {
+    return this.http.get<AuthMeResponse>(`${this.baseUrl}/auth/me`);
   }
 
   /** POST /auth/switch-tenant (Bearer) → { token, user, abilities } — cambia el

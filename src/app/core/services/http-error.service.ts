@@ -20,6 +20,11 @@ interface ApiErrorBody {
   };
   // amount_exceeds_remaining error — remaining balance
   remaining?: string;
+  /** Stable rule identifier (A1..A7, R8..R10) for telemetry/UI decisions — never user-facing. */
+  rule?: string;
+  /** Capacity-limit errors (e.g. account_tenant_limit_reached) carry current usage and the plan limit. */
+  limit?: number;
+  current?: number;
 }
 
 export interface ToastConfig {
@@ -40,6 +45,17 @@ export interface ToastConfig {
  */
 export function isOnboardingRequired(err: HttpErrorResponse): boolean {
   return err.status === 409 && err.error?.error === 'onboarding_required';
+}
+
+/**
+ * True when the API rejected the request because the account/plan hit a capacity
+ * limit. `POST /businesses` → 403 `account_tenant_limit_reached`; create/reactivate
+ * professional → 403 `tenant_professional_limit_reached` (both carry `limit`/`current`).
+ */
+export function isCapacityLimitError(err: HttpErrorResponse): boolean {
+  return err.status === 403 &&
+    (err.error?.error === 'account_tenant_limit_reached' ||
+     err.error?.error === 'tenant_professional_limit_reached');
 }
 
 @Injectable({ providedIn: 'root' })
@@ -165,6 +181,14 @@ export class HttpErrorService {
     // Append remaining balance for amount_exceeds_remaining
     if (body.remaining) {
       detail += ` Saldo: $${Number(body.remaining).toLocaleString('es-CL')}`;
+    }
+    // Capacity-limit errors carry current/limit — surface the usage so the user sees why.
+    if (body.limit !== undefined &&
+        (errorKey === 'account_tenant_limit_reached' || errorKey === 'tenant_professional_limit_reached')) {
+      detail += ' ' + this.lang.t('biz.capacity_usage', {
+        current: String(body.current ?? '?'),
+        limit:   String(body.limit),
+      });
     }
 
     return { severity: this.severity(status), summary, detail, life: 8000 };

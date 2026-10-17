@@ -46,8 +46,8 @@ export class LoginComponent {
     this.error.set(null);
 
     this.authApi.login(this.credentials).subscribe({
-      next: ({ token, user }) => {
-        this.auth.login(token, user);
+      next: ({ token, user, abilities }) => {
+        this.auth.login(token, user, abilities);
         this.loading.set(false);
       },
       error: (err) => {

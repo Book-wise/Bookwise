@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, of, tap, map } from 'rxjs';
 import { AuthMeData, AuthSwitchResponse, User, UserRole } from '@models';
 import { AuthApiService } from './api/auth-api.service';
 import { CalendarPrefsService } from './calendar-prefs.service';
@@ -81,9 +81,10 @@ export class AuthService {
     }
   }
 
-  login(token: string, user: User): void {
+  login(token: string, user: User, abilities?: string[]): void {
     this.setToken(token);
     this.setUser(user);
+    this._abilities.set(abilities ?? []);
     this.navigateByRole(user.role);
   }
 
@@ -97,10 +98,12 @@ export class AuthService {
       return of(this._me() as AuthMeData);
     }
     return this.authApi.getMe().pipe(
-      tap((me) => {
-        this._me.set(me);
+      tap((res) => {
+        this._me.set(res.user);
+        this._abilities.set(res.abilities ?? []);
         this._meLoaded.set(true);
       }),
+      map((res) => res.user),
     );
   }
 
