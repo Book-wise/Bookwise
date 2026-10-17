@@ -64,3 +64,8 @@ truth: `frontend-catchup.md` + `authorization-breaking-changes.md` (backend repo
   mock de `HistorialStore` sin `bookingsShowingCount`) — **pre-existentes**, fuera de este catch-up
   (arrancaron con cambios no commiteados de `reserva-tab.component.html` y
   `booking-form-dialog.component.html`).
+- **L6** — Commits (branch `feat/contract-catchup` desde `develop @ a8857fc`):
+  - `25d6e9f` feat(contract): types + i18n (T1, T2, modelos)
+  - `619ee59` feat(authz): error envelope + abilities login/me (T3)
+  - `89bf7f5` feat(entitlement): capacity CTA + subscription usage (T5, T6)
+  - `19799fa` feat(packs): position/total + estados (T7, T8)
