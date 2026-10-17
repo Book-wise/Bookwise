@@ -251,9 +251,45 @@ body.theme-kinesilk {
   .main-content { background: var(--surface-ground) !important; }
   .p-card { background: var(--surface-card) !important; }
 
-  // CTA buttons use white text on --bw-300 → dark text on the pastel salmon
-  .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary) { color: #2f2f26; }
+  // CTA buttons use white text on --bw-300 → dark text on the pastel salmon.
+  // Scoped to the primary filled button only: coloured severities (danger/
+  // success/warn/info/help/contrast) keep their white label for contrast.
+  .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-danger):not(.p-button-success):not(.p-button-warn):not(.p-button-info):not(.p-button-help):not(.p-button-contrast):not(.p-button-plain) { color: #2f2f26; }
   .bw-day-btn.active { color: #2f2f26; }
+
+  // Patient-card internal tabs (planes/sesiones/prepago/recientes): the active
+  // state resolves to a light/blue fill with white text and a salmon border —
+  // low contrast. Force the intense salmon fill with dark text, and make the
+  // white count badge dark-on-light.
+  .patient-detail-content__tab--active {
+    color: #2f2f26;
+    background: #fea4a4;
+    border-color: #fea4a4;
+  }
+  .patient-detail-content__badge { color: #2f2f26; background: rgba(47, 47, 38, 0.14); }
+  .patient-detail-content__tab--active .patient-detail-content__badge { background: rgba(47, 47, 38, 0.18); }
+  .bw-pc__panel-tab--active .bw-pc__panel-tab-badge { color: #2f2f26; background: rgba(47, 47, 38, 0.14); }
+
+  // Item tabs (planes/sesiones/prepago/recientes) + mobile items button: the
+  // muted olive label over the soft-blue strip reads washed out, and the
+  // disabled state (patient has no packs/sales/recent items) falls back to the
+  // browser default, which is nearly invisible on the pastel background.
+  // Darken the enabled label to --text-color (~9:1 on --bw-50) and keep a
+  // legible muted tone (--text-color-secondary) when disabled instead of the
+  // faint UA `GrayText`.
+  .bw-pc__tab,
+  .bw-pc__panel-tab,
+  .bw-pc__mobile-items-btn {
+    color: var(--text-color);
+  }
+  .bw-pc__tab:disabled,
+  .bw-pc__mobile-items-btn:disabled {
+    color: var(--text-color-secondary);
+    opacity: 1;
+  }
+  .bw-pc__panel-tab--active {
+    color: var(--bw-500);
+  }
 
   // ── Sidebar hardcoded light/white spots (layout SCSS is always-dark chrome) ──
   // The powder-blue sidebar is light, so flip the white chip/overlays to warm
@@ -395,12 +431,6 @@ input.p-inputtext {
   .p-toast-message {
     width: 100% !important;
   }
-}
-
-// ── p-select overlay z-index ────────────────────────────────────────────────
-// Ensure the overlay renders above PrimeNG dialog modal masks
-.p-select-overlay {
-  z-index: 9999 !important;
 }
 
 // ── Skeleton global ───────────────────────────────────────────────────────────
