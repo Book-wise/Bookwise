@@ -121,7 +121,7 @@ export interface ClientPack {
   total_sessions: number;
   used_sessions: number;
   remaining_sessions: number;
-  status: 'active' | 'used' | 'expired';
+  status: 'active' | 'used' | 'expired' | 'completed' | 'abandoned';
   created_at?: string;
   updated_at?: string;
 }
@@ -232,6 +232,8 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+  /** Top-level abilities granted by the backend (A1) — outside `user`. */
+  abilities?: string[];
 }
 
 export interface LoginCredentials {
@@ -315,6 +317,8 @@ export interface AuthMeData {
 
 export interface AuthMeResponse {
   user: AuthMeData;
+  /** Top-level abilities on /auth/me (A1) — outside `user`. */
+  abilities?: string[];
 }
 
 /** POST /auth/switch-tenant | /auth/switch-account (Bearer) → { token, user, abilities }.
@@ -407,4 +411,60 @@ export type { ClientPaginatedResponse } from './responses/client-paginated-respo
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
+}
+
+// ── Subscription usage (GET /subscription/usage) ──────────────────────────────
+/** Cuota plana del plan: `limit` es el máximo permitido y `current` el consumo actual. */
+export interface Quota {
+  limit: number;
+  current: number;
+}
+
+/** Uso por negocio. NO trae `name` — el front mapea `tenant_id` → nombre desde
+ *  `AuthService.me().businesses`. */
+export interface BusinessUsage {
+  tenant_id: number;
+  professionals: Quota;
+  locations: Quota;
+}
+
+/** Desglose por negocio del consumo de confirmaciones (bucket compartido de la cuenta). */
+export interface ConfirmationUsageByTenant {
+  tenant_id: number;
+  name: string;
+  consumed: number;
+}
+
+/** Consumo de confirmaciones de un canal. `consumed` es el TOTAL de la cuenta
+ *  (bucket compartido); `by_tenant` es el desglose por negocio.
+ *  `remaining = limit - consumed`. */
+export interface ConfirmationUsage {
+  limit: number;
+  consumed: number;
+  remaining: number;
+  period_start: string;
+  period_end: string;
+  pack_credit: number;
+  by_tenant: ConfirmationUsageByTenant[];
+}
+
+/** Payload de `GET /subscription/usage` (dentro del envoltorio `data`). */
+export interface UsageData {
+  account_id: number;
+  plan: {
+    slug: string;
+    billing_interval: string;
+  };
+  tenants: Quota;
+  users: Quota;
+  businesses: BusinessUsage[];
+  confirmations: {
+    email: ConfirmationUsage;
+    whatsapp: ConfirmationUsage;
+  };
+}
+
+/** Respuesta completa de `GET /subscription/usage`. */
+export interface UsageResponse {
+  data: UsageData;
 }

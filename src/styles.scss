@@ -423,3 +423,20 @@ input.p-inputtext {
   border-color: transparent !important;
   box-shadow: none !important;
 }
+
+// ── Capacity-limit CTA banner (plan limit reached) ───────────────────────────
+
+.bw-capacity-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  font-size: 0.875rem;
+
+  span {
+    flex: 1;
+  }
+}
