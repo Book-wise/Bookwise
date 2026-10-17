@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { SkeletonModule } from 'primeng/skeleton';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '@services/auth.service';
+import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { SubscriptionApiService } from '@services/api/subscription-api.service';
+import { ConfirmationUsage, Quota, UsageData } from '@models';
 import { formatCLP } from '@shared/config/currency.config';
 
 // ── Interfaces locales del chart (misma forma que en el dashboard) ─────────────
@@ -31,16 +36,20 @@ interface BillingChartOptions {
 
 type UsageStatus = 'success' | 'warning' | 'danger';
 
+type UsageMetricKey = 'tenants' | 'users' | 'professionals' | 'locations' | 'email' | 'whatsapp';
+
 interface UsageMetric {
-  key: 'locations' | 'providers' | 'clients';
+  key: UsageMetricKey;
   icon: string;
   used: number;
   limit: number;
   // Etiquetas pre-formateadas para mostrar con la separación de miles adecuada
   usedLabel: string;
   limitLabel: string;
+  remaining: number;
   hintKey: string;
-  hintCountLabel?: string;
+  hintParams?: Record<string, string>;
+  byTenantLabel?: string;
 }
 
 type InvoiceStatus = 'paid' | 'pending' | 'failed';
@@ -76,21 +85,26 @@ function hexToRgba(hex: string, alpha: number): string {
   selector: 'bw-billing',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, ChartModule, ProgressBarModule, RouterModule],
+  imports: [CommonModule, CardModule, ButtonModule, ChartModule, ProgressBarModule, SkeletonModule, RouterModule],
   templateUrl: './billing.component.html',
   styleUrls: ['./billing.component.scss'],
 })
-export class BillingComponent {
+export class BillingComponent implements OnInit {
   readonly lang = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+  private readonly subscriptionApi = inject(SubscriptionApiService);
+  private readonly httpError = inject(HttpErrorService);
 
   // ════════════════════════════════════════════════════════════════════════════
-  // DATOS MOCK — FASE 6 billing aún no expone endpoints. NO CABLEAR a la API.
+  // SECCIONES MOCK — FASE 6 billing aún no expone sus endpoints. NO CABLEAR a la API.
   //
   // TODO FASE 6: GET /v1/subscription   → plan activo, precio, renovación, período y días restantes.
   // TODO FASE 6: GET /v1/plans          → características del plan activo (Detalles del plan).
   // TODO FASE 6: GET /v1/payment-methods→ última tarjeta para el resumen del plan actual.
-  // TODO FASE 6: GET /v1/tenants        → conteos reales (sucursales/profesionales/clientes) para "Uso del plan" y "Consumo mensual".
   // TODO FASE 6: GET /v1/invoices       → historial de facturación.
+  //
+  // "Uso del plan" ya consume GET /subscription/usage (contrato S5); el
+  // "Consumo mensual" (serie histórica) sigue mock hasta que exista su endpoint.
   // ════════════════════════════════════════════════════════════════════════════
 
   // ── Plan actual (mock) ─────────────────────────────────────────────────────
@@ -107,38 +121,100 @@ export class BillingComponent {
   /** % del período ya transcurrido (12 días de 30) — solo visual. */
   readonly periodProgress = 40;
 
-  // ── Uso del plan por métrica (mock) ─────────────────────────────────────────
-  readonly usageMetrics: UsageMetric[] = [
-    {
-      key: 'locations',
-      icon: 'pi pi-building',
-      used: 3,
-      limit: 5,
-      usedLabel: '3',
-      limitLabel: '5',
-      hintKey: 'billing.usage.locations_hint',
-      hintCountLabel: '2',
-    },
-    {
-      key: 'providers',
-      icon: 'pi pi-users',
-      used: 7,
-      limit: 8,
-      usedLabel: '7',
-      limitLabel: '8',
-      hintKey: 'billing.usage.providers_warning',
-    },
-    {
-      key: 'clients',
-      icon: 'pi pi-user',
-      used: 41200,
-      limit: 100000,
-      usedLabel: '41.2K',
-      limitLabel: '100K',
-      hintKey: 'billing.usage.clients_hint',
-      hintCountLabel: '58.8K',
-    },
-  ];
+  // ── Uso del plan (real — GET /subscription/usage) ──────────────────────────
+  readonly usage = signal<UsageData | null>(null);
+  readonly loading = signal(true);
+
+  private readonly businessNames = computed<Map<number, string>>(() => {
+    const map = new Map<number, string>();
+    for (const b of this.auth.me()?.businesses ?? []) {
+      map.set(b.id, b.name);
+    }
+    return map;
+  });
+
+  /** Métricas del "Uso del plan": tenants/users (cuota de cuenta), profesionales
+   *  y sucursales (suma de `businesses[]`), y consumo de confirmaciones por canal. */
+  readonly usageMetrics = computed<UsageMetric[]>(() => {
+    const u = this.usage();
+    if (!u) return [];
+
+    const professionalsCurrent = u.businesses.reduce((sum, b) => sum + b.professionals.current, 0);
+    const professionalsLimit   = u.businesses.reduce((sum, b) => sum + b.professionals.limit, 0);
+    const locationsCurrent     = u.businesses.reduce((sum, b) => sum + b.locations.current, 0);
+    const locationsLimit       = u.businesses.reduce((sum, b) => sum + b.locations.limit, 0);
+
+    const quotaMetric = (key: UsageMetricKey, icon: string, q: Quota): UsageMetric => ({
+      key,
+      icon,
+      used: q.current,
+      limit: q.limit,
+      usedLabel: this.fmtCount(q.current),
+      limitLabel: this.fmtCount(q.limit),
+      remaining: q.limit - q.current,
+      hintKey: 'billing.usage.remaining_hint',
+      hintParams: { n: this.fmtCount(q.limit - q.current) },
+    });
+
+    const confirmationMetric = (
+      key: 'email' | 'whatsapp',
+      icon: string,
+      c: ConfirmationUsage,
+    ): UsageMetric => {
+      const byTenantLabel = c.by_tenant
+        .map((t) => `${this.businessName(t.tenant_id)}: ${this.fmtCount(t.consumed)}`)
+        .join(', ');
+      return {
+        key,
+        icon,
+        used: c.consumed,
+        limit: c.limit,
+        usedLabel: this.fmtCount(c.consumed),
+        limitLabel: this.fmtCount(c.limit),
+        remaining: c.remaining,
+        hintKey: 'billing.usage.confirmations_hint',
+        hintParams: { remaining: this.fmtCount(c.remaining), byTenant: byTenantLabel || '—' },
+        byTenantLabel,
+      };
+    };
+
+    return [
+      quotaMetric('tenants', 'pi pi-building', u.tenants),
+      quotaMetric('users', 'pi pi-users', u.users),
+      quotaMetric('professionals', 'pi pi-id-card', { limit: professionalsLimit, current: professionalsCurrent }),
+      quotaMetric('locations', 'pi pi-map-marker', { limit: locationsLimit, current: locationsCurrent }),
+      confirmationMetric('email', 'pi pi-envelope', u.confirmations.email),
+      confirmationMetric('whatsapp', 'pi pi-whatsapp', u.confirmations.whatsapp),
+    ];
+  });
+
+  ngOnInit(): void {
+    this.loadUsage();
+  }
+
+  private loadUsage(): void {
+    this.loading.set(true);
+    this.subscriptionApi.getUsage().subscribe({
+      next: (res) => {
+        this.usage.set(res.data ?? null);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.usage.set(null);
+        this.loading.set(false);
+        this.httpError.handle(err, this.lang.t('billing.usage_title'));
+      },
+    });
+  }
+
+  private businessName(tenantId: number): string {
+    return this.businessNames().get(tenantId) ?? `#${tenantId}`;
+  }
+
+  private fmtCount(n: number): string {
+    const locale = this.lang.lang() === 'es' ? 'es-CL' : 'en-US';
+    return n.toLocaleString(locale);
+  }
 
   // ── Detalles del plan (mock) ────────────────────────────────────────────────
   readonly planFeatures = [
@@ -213,6 +289,7 @@ export class BillingComponent {
 
   // ── Helpers de uso (pct / estado / hint) ───────────────────────────────────
   pctOf(metric: UsageMetric): number {
+    if (!metric.limit) return 0;
     return Math.round((metric.used / metric.limit) * 100);
   }
 
@@ -227,12 +304,9 @@ export class BillingComponent {
     return `bw-chip--${this.usageStatus(metric)}`;
   }
 
-  /** Texto de ayuda de cada métrica; las que incluyen un conteo lo interpolan. */
+  /** Texto de ayuda de cada métrica; los parámetros se interpolan en el i18n. */
   usageHint(metric: UsageMetric): string {
-    if (metric.hintCountLabel) {
-      return this.lang.t(metric.hintKey, { n: metric.hintCountLabel });
-    }
-    return this.lang.t(metric.hintKey);
+    return this.lang.t(metric.hintKey, metric.hintParams);
   }
 
   statusColor(metric: UsageMetric): string {

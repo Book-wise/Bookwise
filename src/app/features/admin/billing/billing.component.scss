@@ -251,6 +251,19 @@
     font-size: 0.8rem;
     line-height: 1.4;
   }
+
+  // Estado de carga (esqueletos) — la .usage ya aporta el layout en columna
+  &--loading {
+    min-height: 9rem;
+    justify-content: center;
+  }
+}
+
+.usage__empty {
+  margin: 0;
+  color: var(--text-color-secondary, #888);
+  font-size: 0.9rem;
+  grid-column: 1 / -1;
 }
 
 :host ::ng-deep .usage-card .p-progressbar,

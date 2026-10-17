@@ -14,7 +14,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { RolesApiService } from '@services/api/roles-api.service';
-import { HttpErrorService } from '@services/http-error.service';
+import { HttpErrorService, isCapacityLimitError } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
@@ -227,6 +227,10 @@ export class ProvidersListComponent implements OnInit {
       },
       error: (err) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         // A2: gate 409 SOLO en desactivación; reactivación nunca gatea.
         if (!newActive && err.status === 409 && err.error?.requires_confirmation) {
           this.showConflictDialog(provider, err.error);
@@ -251,7 +255,12 @@ export class ProvidersListComponent implements OnInit {
     this.pendingToggleProvider.set(null);
   }
 
+  goToBilling(): void {
+    this.router.navigate(['/admin/facturacion']);
+  }
+
   // ── Dialog ────────────────────────────────────────────────────────────────
+  readonly capacityError = signal(false);
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');
   selectedProvider = signal<Provider | null>(null);

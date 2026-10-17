@@ -15,6 +15,13 @@
   </ng-template>
 
   <div class="provider-form" [formGroup]="form">
+    @if (capacityError()) {
+      <div class="bw-capacity-cta">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ lang.t('biz.tenant_professional_limit_reached.detail') }}</span>
+        <p-button [label]="lang.t('biz.upgrade_cta')" [text]="true" size="small" icon="pi pi-arrow-right" (onClick)="goToBilling()" />
+      </div>
+    }
     <div class="field-row">
       <div class="field">
         <label>Nombre *</label>

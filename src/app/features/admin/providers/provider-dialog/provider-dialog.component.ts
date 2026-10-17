@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input, output, signal, comp
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -10,7 +11,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
-import { HttpErrorService } from '@services/http-error.service';
+import { HttpErrorService, isCapacityLimitError } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Provider, Role } from '@models';
@@ -55,6 +56,7 @@ export class ProviderDialogComponent {
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
+  private router = inject(Router);
   protected readonly lang = inject(LanguageService);
 
   /** Resuelve color/icono de un rol (fallback gris + pi-user). */
@@ -74,6 +76,7 @@ export class ProviderDialogComponent {
   editRequested = output<void>();
 
   saving = signal(false);
+  readonly capacityError = signal(false);
 
   /** Internal mode allows override from view→edit via switchToEdit(). */
   private internalMode = signal<DialogMode>('create');
@@ -244,6 +247,10 @@ export class ProviderDialogComponent {
       },
       error: (err) => {
         this.saving.set(false);
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         this.httpError.handle(err, 'guardar profesional');
       },
     });
@@ -282,9 +289,17 @@ export class ProviderDialogComponent {
       },
       error: (err) => {
         this.saving.set(false);
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         this.httpError.handle(err, 'guardar profesional');
       },
     });
+  }
+
+  goToBilling(): void {
+    this.router.navigate(['/admin/facturacion']);
   }
 
   onClose(): void {

@@ -57,27 +57,44 @@
     </div>
 
     <div class="usage-grid">
-      @for (metric of usageMetrics; track metric.key) {
-        <p-card class="usage-card">
-          <ng-template pTemplate="body">
-            <div class="usage">
-              <div class="usage__head">
-                <span class="usage__icon"><i class="pi" [ngClass]="metric.icon"></i></span>
-                <span class="usage__title">{{ lang.t('billing.usage.' + metric.key) }}</span>
+      @if (loading()) {
+        @for (i of [0, 1, 2, 3, 4, 5]; track i) {
+          <p-card class="usage-card">
+            <ng-template pTemplate="body">
+              <div class="usage usage--loading">
+                <p-skeleton width="2.5rem" height="2.5rem" borderRadius="8px" />
+                <p-skeleton width="60%" height="1rem" />
+                <p-skeleton width="80%" height="1.5rem" />
+                <p-skeleton width="100%" height="8px" />
               </div>
+            </ng-template>
+          </p-card>
+        }
+      } @else if (usageMetrics().length === 0) {
+        <p class="usage__empty">{{ lang.t('billing.usage.empty') }}</p>
+      } @else {
+        @for (metric of usageMetrics(); track metric.key) {
+          <p-card class="usage-card">
+            <ng-template pTemplate="body">
+              <div class="usage">
+                <div class="usage__head">
+                  <span class="usage__icon"><i class="pi" [ngClass]="metric.icon"></i></span>
+                  <span class="usage__title">{{ lang.t('billing.usage.' + metric.key) }}</span>
+                </div>
 
-              <div class="usage__count">{{ lang.t('billing.usage.allowed', { used: metric.usedLabel, limit: metric.limitLabel }) }}</div>
-              <span class="bw-chip usage__pct" [class]="usageChipClass(metric)">{{ pctOf(metric) }}%</span>
+                <div class="usage__count">{{ lang.t('billing.usage.allowed', { used: metric.usedLabel, limit: metric.limitLabel }) }}</div>
+                <span class="bw-chip usage__pct" [class]="usageChipClass(metric)">{{ pctOf(metric) }}%</span>
 
-              <p-progressBar
-                [value]="pctOf(metric)"
-                [showValue]="false"
-                [color]="statusColor(metric)" />
+                <p-progressBar
+                  [value]="pctOf(metric)"
+                  [showValue]="false"
+                  [color]="statusColor(metric)" />
 
-              <p class="usage__hint">{{ usageHint(metric) }}</p>
-            </div>
-          </ng-template>
-        </p-card>
+                <p class="usage__hint">{{ usageHint(metric) }}</p>
+              </div>
+            </ng-template>
+          </p-card>
+        }
       }
     </div>
   </div>
