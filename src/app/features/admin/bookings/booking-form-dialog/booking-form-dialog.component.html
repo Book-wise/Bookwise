@@ -133,6 +133,7 @@
           [filterPlaceholder]="lang.t('common.search')"
           showClear="true"
           class="w-full"
+          [appendTo]="'body'"
           (onFilter)="onClientFilter()"
           (onChange)="onClientChange()">
           <ng-template pTemplate="item" let-client>
@@ -170,6 +171,7 @@
         optionLabel="label"
         optionValue="value"
         class="w-full"
+        [appendTo]="'body'"
         (onChange)="onLocationChange()">
       </p-select>
     </div>
@@ -184,7 +186,8 @@
           [placeholder]="lang.t('booking_form.provider_placeholder')"
           [showClear]="true"
           [loading]="providersLoading()"
-          class="w-full">
+          class="w-full"
+          [appendTo]="'body'">
         </p-select>
       </div>
     }
@@ -199,6 +202,7 @@
         [filter]="true"
         [filterPlaceholder]="lang.t('common.search')"
         class="w-full"
+        [appendTo]="'body'"
         (onChange)="onServiceChange()">
         <ng-template pTemplate="header">
           <button class="service-create-btn" type="button" (click)="openServicePanel()">
