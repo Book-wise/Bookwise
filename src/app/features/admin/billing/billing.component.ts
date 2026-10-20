@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { SkeletonModule } from 'primeng/skeleton';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '@services/auth.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
-import { SubscriptionApiService } from '@services/api/subscription-api.service';
-import { ConfirmationUsage, Quota, UsageData } from '@models';
+import { SubscriptionStore } from '@core/stores/subscription.store';
+import { ConfirmationUsage, Quota } from '@models';
 import { formatCLP } from '@shared/config/currency.config';
 
 // ── Interfaces locales del chart (misma forma que en el dashboard) ─────────────
@@ -92,38 +92,91 @@ function hexToRgba(hex: string, alpha: number): string {
 export class BillingComponent implements OnInit {
   readonly lang = inject(LanguageService);
   private readonly auth = inject(AuthService);
-  private readonly subscriptionApi = inject(SubscriptionApiService);
+  private readonly store = inject(SubscriptionStore);
   private readonly httpError = inject(HttpErrorService);
+  private readonly router = inject(Router);
 
   // ════════════════════════════════════════════════════════════════════════════
-  // SECCIONES MOCK — FASE 6 billing aún no expone sus endpoints. NO CABLEAR a la API.
+  // SECCIONES MOCK — solo lo que AÚN no tiene endpoint.
   //
-  // TODO FASE 6: GET /v1/subscription   → plan activo, precio, renovación, período y días restantes.
-  // TODO FASE 6: GET /v1/plans          → características del plan activo (Detalles del plan).
-  // TODO FASE 6: GET /v1/payment-methods→ última tarjeta para el resumen del plan actual.
-  // TODO FASE 6: GET /v1/invoices       → historial de facturación.
+  // TODO FASE 6: GET /v1/payment-methods → última tarjeta para el resumen.
+  // TODO FASE 6: GET /v1/invoices      → historial de facturación.
   //
-  // "Uso del plan" ya consume GET /subscription/usage (contrato S5); el
+  // Real (ya cableado, vía SubscriptionStore):
+  // - GET /v1/subscription       → plan activo, precio, período y estado.
+  // - GET /v1/subscription/usage → uso vs límite + add-ons (pack_credit).
+  //
   // "Consumo mensual" (serie histórica) sigue mock hasta que exista su endpoint.
   // ════════════════════════════════════════════════════════════════════════════
 
-  // ── Plan actual (mock) ─────────────────────────────────────────────────────
-  readonly planName = 'Professional';
-  readonly planPrice = 34990;
-  readonly planPriceLabel = `${formatCLP(34990)} /mes`;
-  readonly accountId = 'F8R9X1';
-  readonly renewalDate = '12 Dic 2024';
-  readonly cardBrand = 'Visa';
-  readonly cardLast4 = '4242';
-  readonly periodStart = '12 Nov';
-  readonly periodEnd = '12 Dic';
-  readonly daysLeft = '18';
-  /** % del período ya transcurrido (12 días de 30) — solo visual. */
-  readonly periodProgress = 40;
+  constructor() {
+    // El error de uso se traduce a un toast (una única vez por fallo).
+    effect(() => {
+      const err = this.store.error().usage;
+      if (err) this.httpError.handle(err, this.lang.t('billing.usage_title'));
+    });
+  }
 
-  // ── Uso del plan (real — GET /subscription/usage) ──────────────────────────
-  readonly usage = signal<UsageData | null>(null);
-  readonly loading = signal(true);
+  /** Suscripción de la cuenta (cacheada por el store). */
+  readonly subscription = this.store.subscription;
+  /** Uso vs límite (cacheado por el store). */
+  readonly usage = this.store.usage;
+  readonly loading = computed(() => this.store.loading().usage);
+
+  /** Plan vigente de la suscripción (null mientras no haya suscripción viva). */
+  readonly plan = computed(() => this.subscription()?.plan ?? null);
+
+  readonly planName = computed(() => this.plan()?.name ?? '');
+  readonly planPriceLabel = computed(() => {
+    const p = this.plan();
+    if (!p) return '';
+    const suffix = p.billing_interval === 'year' ? '/año' : '/mes';
+    return `${formatCLP(p.price_clp)} ${suffix}`;
+  });
+  /** Etiqueta del intervalo de facturación (mensual/anual). */
+  readonly billingIntervalLabel = computed(() => {
+    const p = this.plan();
+    if (!p) return '';
+    return p.billing_interval === 'year'
+      ? this.lang.t('billing.yearly_billing')
+      : this.lang.t('billing.monthly_billing');
+  });
+  /** Número de cuenta real (desde GET /usage → account_id). */
+  readonly accountId = computed(() => {
+    const id = this.usage()?.account_id;
+    return id != null ? String(id) : '—';
+  });
+  /** Referencia pública corta de la cuenta (BW-XXXXXX), sin exponer el PK. */
+  readonly accountRef = computed(() => this.usage()?.account_reference ?? '');
+  /** Próxima renovación real (desde GET /subscription → next_billing_at). */
+  readonly renewalDate = computed(() => this.fmtDate(this.subscription()?.next_billing_at));
+  readonly periodStart = computed(() => this.fmtPeriod(this.subscription()?.current_period_start));
+  readonly periodEnd = computed(() => this.fmtPeriod(this.subscription()?.current_period_end));
+  readonly daysLeft = computed(() => this.fmtDaysLeft(this.subscription()?.current_period_end));
+  /** % del período ya transcurrido (0-100) — solo visual. */
+  readonly periodProgress = computed(() => {
+    const s = this.subscription();
+    if (!s?.current_period_start || !s?.current_period_end) return 0;
+    const start = new Date(s.current_period_start).getTime();
+    const end = new Date(s.current_period_end).getTime();
+    const now = Date.now();
+    if (end <= start) return 0;
+    const pct = Math.round(((now - start) / (end - start)) * 100);
+    return Math.min(100, Math.max(0, pct));
+  });
+
+  /** Ventana del período de consumo real (desde GET /usage → confirmations). */
+  readonly usagePeriodLabel = computed(() => {
+    const c = this.usage()?.confirmations?.email;
+    if (!c?.period_start || !c?.period_end) return '';
+    return this.lang.t('billing.usage_period', {
+      start: this.fmtPeriod(c.period_start),
+      end: this.fmtPeriod(c.period_end),
+    });
+  });
+
+  // Datos de pago e historial: aún sin endpoint → mock.
+  // (tarjeta no se muestra: no mantenemos info de pago todavía)
 
   private readonly businessNames = computed<Map<number, string>>(() => {
     const map = new Map<number, string>();
@@ -189,22 +242,8 @@ export class BillingComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadUsage();
-  }
-
-  private loadUsage(): void {
-    this.loading.set(true);
-    this.subscriptionApi.getUsage().subscribe({
-      next: (res) => {
-        this.usage.set(res.data ?? null);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.usage.set(null);
-        this.loading.set(false);
-        this.httpError.handle(err, this.lang.t('billing.usage_title'));
-      },
-    });
+    this.store.loadUsage();
+    this.store.loadSubscription();
   }
 
   private businessName(tenantId: number): string {
@@ -216,14 +255,52 @@ export class BillingComponent implements OnInit {
     return n.toLocaleString(locale);
   }
 
-  // ── Detalles del plan (mock) ────────────────────────────────────────────────
-  readonly planFeatures = [
-    'billing.feature.locations',
-    'billing.feature.providers',
-    'billing.feature.clients',
-    'billing.feature.support',
-    'billing.feature.messages',
-  ];
+  /** Fecha corta del período (ej. "12 Nov") según el idioma. */
+  private fmtPeriod(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const locale = this.lang.lang() === 'es' ? 'es-CL' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(iso));
+  }
+
+  /** Fecha con año (ej. "12 Nov 2026") para la próxima renovación. */
+  private fmtDate(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const locale = this.lang.lang() === 'es' ? 'es-CL' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso));
+  }
+
+  /** Días restantes del período (número como string). */
+  private fmtDaysLeft(iso: string | null | undefined): string {
+    if (!iso) return '0';
+    const end = new Date(iso).getTime();
+    const days = Math.ceil((end - Date.now()) / 86_400_000);
+    return String(Math.max(0, days));
+  }
+
+  /** Límites del plan actual + add-ons activos (pack_credit), como features. */
+  readonly planFeatures = computed<string[]>(() => {
+    const plan = this.plan();
+    if (!plan) return [];
+
+    const items: string[] = [];
+    if (plan.max_tenants != null) items.push(this.lang.t('plans.detail.tenants', { n: String(plan.max_tenants) }));
+    if (plan.max_profesionales != null) items.push(this.lang.t('plans.detail.professionals', { n: String(plan.max_profesionales) }));
+    if (plan.max_locations != null) items.push(this.lang.t('plans.detail.locations', { n: String(plan.max_locations) }));
+    if (plan.max_users != null) items.push(this.lang.t('plans.detail.users', { n: String(plan.max_users) }));
+    if (plan.email_monthly_limit != null) items.push(this.lang.t('plans.detail.email', { n: String(plan.email_monthly_limit) }));
+    if (plan.whatsapp_monthly_limit != null) items.push(this.lang.t('plans.detail.whatsapp', { n: String(plan.whatsapp_monthly_limit) }));
+
+    // Add-ons: créditos extra por packs de confirmación ya contratados.
+    const u = this.usage();
+    if (u) {
+      const emailPack = u.confirmations.email.pack_credit;
+      const waPack = u.confirmations.whatsapp.pack_credit;
+      if (emailPack > 0) items.push(this.lang.t('billing.addon.email', { n: String(emailPack) }));
+      if (waPack > 0) items.push(this.lang.t('billing.addon.whatsapp', { n: String(waPack) }));
+    }
+
+    return items;
+  });
 
   // ── Historial de facturación (mock) ─────────────────────────────────────────
   readonly invoices: Invoice[] = [
@@ -293,6 +370,11 @@ export class BillingComponent implements OnInit {
     return Math.round((metric.used / metric.limit) * 100);
   }
 
+  /** True cuando la métrica ya consumió el total permitido (sin cupo restante). */
+  isAtLimit(metric: UsageMetric): boolean {
+    return metric.limit > 0 && metric.used >= metric.limit;
+  }
+
   usageStatus(metric: UsageMetric): UsageStatus {
     const pct = this.pctOf(metric);
     if (pct > 90) return 'danger';
@@ -337,5 +419,10 @@ export class BillingComponent implements OnInit {
   /** Botón "Facturas": desplaza al historial de facturación. */
   scrollToHistory(): void {
     document.getElementById('billing-history')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /** CTA "Mejora tu plan" → página de planes. */
+  goToPlans(): void {
+    this.router.navigate(['/admin/planes']);
   }
 }

@@ -52,6 +52,8 @@ describe('ProfileComponent', () => {
     userRole: () => UserRole | null;
     isAdmin: () => boolean;
     isAdminGeneral: () => boolean;
+    isAdminLocal: () => boolean;
+    isAdminLocation: () => boolean;
     loadMe: ReturnType<typeof vi.fn>;
   };
   let api: { changePassword: ReturnType<typeof vi.fn>; updateProfile: ReturnType<typeof vi.fn> };
@@ -74,6 +76,8 @@ describe('ProfileComponent', () => {
       userRole: () => auth.user()?.role ?? null,
       isAdmin: () => auth.user()?.role === 'admin',
       isAdminGeneral: () => auth.me()?.is_admin_general ?? false,
+      isAdminLocal: () => auth.me()?.is_admin_local ?? false,
+      isAdminLocation: () => auth.me()?.is_admin_location ?? false,
       loadMe: vi.fn(),
     };
     api = { changePassword: vi.fn(), updateProfile: vi.fn() };

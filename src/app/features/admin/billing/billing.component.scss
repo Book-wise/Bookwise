@@ -252,6 +252,12 @@
     line-height: 1.4;
   }
 
+  // CTA que aparece cuando la métrica ya consumió el 100% del cupo.
+  &__upgrade {
+    margin-top: auto;
+    padding-top: 0.25rem;
+  }
+
   // Estado de carga (esqueletos) — la .usage ya aporta el layout en columna
   &--loading {
     min-height: 9rem;

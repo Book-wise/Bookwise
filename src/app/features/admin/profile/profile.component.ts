@@ -66,6 +66,17 @@ export class ProfileComponent implements OnInit {
     return '';
   });
 
+  /**
+   * Rol de NEGOCIO en lenguaje humano (distinto del rol técnico de sesión).
+   * Prioridad: admin_general > admin_local > admin_location. Sin rol → ''.
+   */
+  readonly businessRoleLabel = computed(() => {
+    if (this.auth.isAdminGeneral()) return this.lang.t('profile.role.admin_general');
+    if (this.auth.isAdminLocal()) return this.lang.t('profile.role.admin_local');
+    if (this.auth.isAdminLocation()) return this.lang.t('profile.role.admin_location');
+    return '';
+  });
+
   // ── Negocios (multi-tenant) ───────────────────────────────────────────────
   readonly businesses = computed(() => this.auth.me()?.businesses ?? []);
   readonly activeBusinessId = computed(() => this.auth.me()?.business?.id ?? null);

@@ -12,11 +12,12 @@ import { ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
 import { AppHeaderComponent } from '@shared/components/app-header/app-header.component';
 import { AgendaNavigatorComponent } from '@shared/components/agenda-navigator/agenda-navigator.component';
+import { SubscriptionInactiveDialogComponent } from '@shared/components/subscription-inactive-dialog/subscription-inactive-dialog.component';
 
 @Component({
   selector: 'bw-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, TooltipModule, AppHeaderComponent, AgendaNavigatorComponent],
+  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, TooltipModule, AppHeaderComponent, AgendaNavigatorComponent, SubscriptionInactiveDialogComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })

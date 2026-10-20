@@ -2,7 +2,8 @@
  * Single source-of-truth for business role metadata (color + icon).
  *
  * Keyed by role `slug` (see `Role.slug`: admin_general | admin_local |
- * recepcionista | recepcionista_readonly | staff | staff_readonly). Used by:
+ * admin_location | recepcionista | recepcionista_readonly | staff |
+ * staff_readonly). Used by:
  *  - the Roles screen cards (/admin/roles), and
  *  - the Professionals list badges + role filter (/admin/providers)
  * so both stay visually consistent.
@@ -16,6 +17,7 @@
 export type RoleIcon =
   | 'crown'
   | 'store'
+  | 'map-pin'
   | 'concierge-bell'
   | 'clipboard-list'
   | 'users'
@@ -30,6 +32,7 @@ export interface RoleMeta {
 export const ROLE_META: Record<string, RoleMeta> = {
   admin_general: { color: '#0b3d95', icon: 'crown' },
   admin_local: { color: '#3b82f6', icon: 'store' },
+  admin_location: { color: '#8b5cf6', icon: 'map-pin' },
   recepcionista: { color: '#22c55e', icon: 'concierge-bell' },
   recepcionista_readonly: { color: '#14b8a6', icon: 'clipboard-list' },
   staff: { color: '#f97316', icon: 'users' },

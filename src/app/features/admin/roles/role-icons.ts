@@ -6,6 +6,7 @@ import {
   Crown,
   LUCIDE_ICONS,
   LucideIconProvider,
+  MapPin,
   Store,
   UserRound,
   Users,
@@ -21,6 +22,7 @@ import {
 export const ROLE_ICONS = {
   Crown,
   Store,
+  MapPin,
   ConciergeBell,
   ClipboardList,
   Users,

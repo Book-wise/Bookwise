@@ -1,0 +1,169 @@
+<div class="plans">
+  <header class="plans__header">
+    <h1 class="plans__title">{{ lang.t('plans.change_title') }}</h1>
+    <p class="plans__subtitle">{{ lang.t('plans.change_subtitle') }}</p>
+
+    <div class="interval-toggle" role="group" [attr.aria-label]="lang.t('plans.change_subtitle')">
+      <button
+        type="button"
+        class="interval-toggle__btn"
+        [class.active]="interval() === 'month'"
+        (click)="setInterval('month')">
+        {{ lang.t('plans.interval.month') }}
+      </button>
+      <button
+        type="button"
+        class="interval-toggle__btn"
+        [class.active]="interval() === 'year'"
+        (click)="setInterval('year')">
+        {{ lang.t('plans.interval.year') }}
+        <span class="interval-toggle__badge">{{ lang.t('plans.interval.free_months') }}</span>
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="plans__layout">
+      <div class="plan-list">
+        @for (i of [0, 1, 2, 3]; track i) {
+          <p-skeleton height="5rem" borderRadius="10px" />
+        }
+      </div>
+    </div>
+  } @else if (catalog().length === 0) {
+    <p class="plans__empty">{{ lang.t('billing.usage.empty') }}</p>
+  } @else {
+    <div class="plans__layout">
+      <section class="plan-list">
+        <h2 class="plan-list__title">{{ lang.t('plans.choose') }}</h2>
+
+        @for (group of catalog(); track group.slug) {
+          <label
+            class="plan-option"
+            [class.plan-option--selected]="isSelected(group)"
+            [class.plan-option--current]="isCurrent(group)">
+            <input
+              class="plan-option__radio"
+              type="radio"
+              name="plan"
+              [checked]="isSelected(group)"
+              (change)="selectPlan(group)" />
+
+            <div class="plan-option__info">
+              <span class="plan-option__name">
+                {{ label(group) }}
+                @if (isCurrent(group)) {
+                  <span class="bw-chip bw-chip--success plan-option__badge">{{ lang.t('plans.current') }}</span>
+                }
+              </span>
+              <ul class="plan-option__features">
+                @for (feature of features(group); track feature) {
+                  <li>{{ feature }}</li>
+                }
+              </ul>
+            </div>
+
+            <div class="plan-option__price">{{ priceLabel(group) }}</div>
+          </label>
+        }
+      </section>
+
+      <aside class="summary">
+        <h3 class="summary__title">{{ lang.t('billing.current_plan') }}</h3>
+        @if (currentPlan(); as plan) {
+          <p class="summary__plan">{{ plan.name }}</p>
+          <p class="summary__price">{{ price(plan.price_clp) }}</p>
+        } @else {
+          <p class="summary__muted">{{ lang.t('plans.no_current') }}</p>
+        }
+
+        <div class="summary__divider"></div>
+
+        <h4 class="summary__subtitle">{{ lang.t('plans.addons_title') }}</h4>
+        @if (addons().length === 0) {
+          <p class="summary__muted">{{ lang.t('plans.addons_empty') }}</p>
+        } @else {
+          <ul class="summary__addons">
+            @for (addon of addons(); track addon.type) {
+              <li class="summary__addon">
+                <span>{{ addonLabel(addon) }}</span>
+                <span class="summary__addon-price">{{ price(addon.price_clp) }}</span>
+              </li>
+            }
+          </ul>
+          <div class="summary__total">
+            <span>{{ lang.t('plans.total') }}</span>
+            <span>{{ price(totalPrice()) }}</span>
+          </div>
+        }
+      </aside>
+    </div>
+
+    @if (selectedSlug()) {
+      <div class="plans__actions">
+        <p-button
+          [label]="lang.t('plans.continue')"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          (onClick)="goToBilling()" />
+      </div>
+    }
+
+    @if (addonCatalog().length > 0) {
+      <section class="addons">
+        <h2 class="addons__title">{{ lang.t('plans.addons_offer_title') }}</h2>
+
+        <div class="addons__grid">
+          @for (item of addonCatalog(); track item.type) {
+            <article class="addon-card">
+              <div class="addon-card__head">
+                <span class="addon-card__icon">
+                  <i class="pi" [ngClass]="item.type === 'whatsapp' ? 'pi-whatsapp' : 'pi-envelope'"></i>
+                </span>
+                <div class="addon-card__headings">
+                  <span class="addon-card__name">{{ lang.t('plans.addon.' + item.type + '.title') }}</span>
+                  <p class="addon-card__desc">{{ lang.t('plans.addon.' + item.type + '.desc') }}</p>
+                </div>
+              </div>
+
+              <p class="addon-card__offer">
+                {{ lang.t('plans.addon.pack_offer', { credits: '' + item.credits_per_pack, price: price(item.price_clp) }) }}
+              </p>
+
+              <div class="addon-card__stepper">
+                <button
+                  type="button"
+                  class="addon-card__step"
+                  [disabled]="quantityFor(item.type) === 0 || savingAddon() === item.type"
+                  [attr.aria-label]="lang.t('plans.addon.remove')"
+                  (click)="changeQuantity(item.type, -1)">
+                  <i class="pi pi-minus"></i>
+                </button>
+
+                <span class="addon-card__count">
+                  {{ lang.t('plans.addon.count', { n: '' + quantityFor(item.type) }) }}
+                </span>
+
+                <button
+                  type="button"
+                  class="addon-card__step"
+                  [disabled]="savingAddon() === item.type"
+                  [attr.aria-label]="lang.t('plans.addon.add')"
+                  (click)="changeQuantity(item.type, 1)">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+
+              <div class="addon-card__banner">
+                {{ lang.t('plans.addon.current_total', {
+                  n: '' + creditsFor(item.type),
+                  channel: lang.t('billing.usage.' + item.type)
+                }) }}
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

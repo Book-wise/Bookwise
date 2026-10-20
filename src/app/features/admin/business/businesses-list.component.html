@@ -10,6 +10,18 @@
       (onClick)="newBusiness()" />
   </div>
 
+  @if (currentPlanLabel()) {
+    <div class="account-plan">
+      <span class="account-plan__label">{{ lang.t('billing.current_plan') }}</span>
+      <a
+        class="account-plan__value"
+        [routerLink]="['/admin/planes']"
+        [attr.aria-label]="lang.t('billing.see_all_plans')">
+        {{ currentPlanLabel() }}
+      </a>
+    </div>
+  }
+
   @if (businesses().length === 0) {
     <div class="businesses-empty">
       <i class="pi pi-building"></i>
@@ -32,9 +44,6 @@
               @if (biz.id === activeBusinessId()) {
                 <span class="biz-row__badge biz-row__badge--active">{{ lang.t('biz.activo') }}</span>
               }
-              <span class="biz-row__plan" [class.biz-row__plan--enterprise]="biz.plan === 'enterprise'">
-                {{ biz.plan }}
-              </span>
             </div>
             <span class="biz-row__meta">
               @if (biz.rut) {

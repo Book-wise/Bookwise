@@ -313,6 +313,7 @@ export interface AuthMeData {
   /** Roles de NEGOCIO (distintos del rol técnico `role`). */
   is_admin_general?: boolean;
   is_admin_local?: boolean;
+  is_admin_location?: boolean;
 }
 
 export interface AuthMeResponse {
@@ -451,6 +452,8 @@ export interface ConfirmationUsage {
 /** Payload de `GET /subscription/usage` (dentro del envoltorio `data`). */
 export interface UsageData {
   account_id: number;
+  /** Referencia pública corta de la cuenta (BW-XXXXXX), no secuencial. */
+  account_reference?: string;
   plan: {
     slug: string;
     billing_interval: string;
@@ -467,4 +470,87 @@ export interface UsageData {
 /** Respuesta completa de `GET /subscription/usage`. */
 export interface UsageResponse {
   data: UsageData;
+}
+
+// ── Plan catalog & subscription (GET /v1/plans · GET /v1/subscription) ────────
+/** Límites de entitlement de un plan (eje-b). `null` = cupo sin definir aún. */
+export interface PlanLimits {
+  max_tenants: number;
+  max_profesionales: number;
+  max_locations: number | null;
+  max_users: number | null;
+  email_monthly_limit: number | null;
+  whatsapp_monthly_limit: number | null;
+}
+
+/** Fila completa de un plan (PlanResource) — tal como la expone el backend. */
+export interface Plan extends PlanLimits {
+  id: number;
+  slug: string;
+  name: string;
+  billing_interval: 'month' | 'year';
+  price_clp: number;
+}
+
+/** Intervalo de un plan dentro del catálogo agrupado (GET /v1/plans). */
+export interface PlanCatalogEntry extends PlanLimits {
+  billing_interval: 'month' | 'year';
+  price_clp: number;
+}
+
+/** Grupo del catálogo público: un slug con sus intervalos month/year. */
+export interface PlanCatalogGroup {
+  slug: string;
+  name: string;
+  display_order: number;
+  plans: PlanCatalogEntry[];
+}
+
+/** Respuesta de `GET /v1/plans` (catálogo público, sin auth). */
+export interface PlansCatalogResponse {
+  data: PlanCatalogGroup[];
+}
+
+/** Add-on (pack de confirmaciones) contratado por la cuenta. */
+export interface SubscriptionAddon {
+  type: 'email' | 'whatsapp';
+  quantity: number;
+  credits_per_pack: number;
+  /** Costo del add-on para el período (unitario × quantity). */
+  price_clp: number;
+}
+
+/** Pack de confirmaciones ofrecido (catálogo de add-ons). */
+export interface AddonCatalogItem {
+  type: 'email' | 'whatsapp';
+  credits_per_pack: number;
+  price_clp: number;
+}
+
+/** Suscripción de la cuenta activa (GET /v1/subscription). */
+export interface Subscription {
+  id: number;
+  status: string;
+  plan: Plan | null;
+  scheduled_plan: Plan | null;
+  cancel_at_period_end: boolean;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  next_billing_at: string | null;
+  activated_at: string | null;
+  paused_at: string | null;
+  cancelled_at: string | null;
+  /** Packs de confirmaciones contratados (aditivo). */
+  addons?: SubscriptionAddon[];
+  /** Costo total de los add-ons del período. */
+  addons_total_clp?: number;
+  /** Precio del plan + add-ons del período. */
+  total_price_clp?: number;
+  /** Catálogo de packs disponibles para contratar (aditivo). */
+  addon_catalog?: AddonCatalogItem[];
+}
+
+/** Respuesta de `GET /v1/subscription` (dentro del envoltorio `data`). */
+export interface SubscriptionResponse {
+  data: Subscription | null;
 }

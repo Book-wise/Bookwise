@@ -33,6 +33,7 @@ export class AuthService {
   /** Roles de NEGOCIO (multi-tenant) — expuestos por el backend en /auth/me. */
   readonly isAdminGeneral  = computed(() => this._me()?.is_admin_general ?? false);
   readonly isAdminLocal    = computed(() => this._me()?.is_admin_local ?? false);
+  readonly isAdminLocation = computed(() => this._me()?.is_admin_location ?? false);
   /** True cuando el usuario debe completar onboarding: sin negocio o negocio pendiente
    *  (name vacío). El backend crea el tenant en el registro, así que NO se usa
    *  `onboarding_complete` (siempre true cuando hay tenant_id). */

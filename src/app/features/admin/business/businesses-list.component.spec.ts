@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { BusinessesListComponent } from './businesses-list.component';
 import { AuthService } from '@services/auth.service';
 import { TenantSwitchService } from '@services/tenant-switch.service';
+import { SubscriptionStore } from '@core/stores/subscription.store';
 import type { AuthMeData, Business, User } from '@models';
 
 const business: Business = {
@@ -46,11 +47,22 @@ function makeUser(): User {
 describe('BusinessesListComponent — tenant switch delegation', () => {
   let tenantSwitch: { switchTenant: ReturnType<typeof vi.fn>; lastSwitch: ReturnType<typeof signal<unknown>> };
   let toast: { add: ReturnType<typeof vi.fn> };
+  let loadSubscription: ReturnType<typeof vi.fn>;
   let component: BusinessesListComponent;
 
   beforeEach(async () => {
     tenantSwitch = { switchTenant: vi.fn(() => of(void 0)), lastSwitch: signal(null) };
     toast = { add: vi.fn() };
+    loadSubscription = vi.fn();
+
+    const fakeStore = {
+      subscription: signal(null),
+      loading: signal({ subscription: false, usage: false, plans: false }),
+      error: signal({ subscription: null, usage: null, plans: null }),
+      loadSubscription,
+      loadUsage: vi.fn(),
+      loadPlans: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [BusinessesListComponent],
@@ -67,6 +79,7 @@ describe('BusinessesListComponent — tenant switch delegation', () => {
         { provide: TenantSwitchService, useValue: tenantSwitch },
         { provide: MessageService, useValue: toast },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: SubscriptionStore, useValue: fakeStore },
       ],
     }).compileComponents();
 

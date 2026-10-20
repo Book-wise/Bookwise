@@ -17,7 +17,7 @@
     <div class="profile-hero__content">
       <div class="profile-hero__identity">
         <span class="profile-hero__name">{{ me()?.name ?? lang.t('profile.not_available') }}</span>
-        <span class="profile-hero__role">{{ userRoleLabel() }}</span>
+        <span class="profile-hero__role">{{ businessRoleLabel() || userRoleLabel() }}</span>
       </div>
       <div class="profile-hero__meta">
         <span><i class="pi pi-envelope"></i> {{ me()?.email }}</span>
@@ -27,7 +27,6 @@
     </div>
     <div class="profile-hero__actions">
       <p-button label="{{ lang.t('settings.profile.edit') }}" icon="pi pi-pencil" size="small" />
-      <p-button label="{{ lang.t('biz.public_view') }}" icon="pi pi-eye" severity="secondary" [outlined]="true" size="small" />
     </div>
   </div>
 
@@ -206,8 +205,7 @@
                 }
               </div>
               <span class="biz-card__meta">
-                <span class="biz-card__plan" [class.biz-card__plan--enterprise]="biz.plan === 'enterprise'">{{ biz.plan }}</span>
-                <span>{{ lang.t('biz.rol') }}: {{ userRoleLabel() }}</span>
+                <span>{{ lang.t('biz.rol') }}: {{ businessRoleLabel() || userRoleLabel() }}</span>
               </span>
             </div>
             <div class="biz-card__actions">
@@ -236,10 +234,6 @@
             <div class="biz-stat">
               <div class="biz-stat__value">{{ providersCount() }}</div>
               <div class="biz-stat__label">{{ lang.t('biz.profesionales') }}</div>
-            </div>
-            <div class="biz-stat">
-              <div class="biz-stat__value">{{ biz.plan }}</div>
-              <div class="biz-stat__label">{{ lang.t('settings.business.plan') }}</div>
             </div>
           </div>
 

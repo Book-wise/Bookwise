@@ -6,6 +6,8 @@ describe('role-meta', () => {
       expect(roleMeta('staff').icon).toBe('users');
       expect(roleMeta('staff_readonly').icon).toBe('user-round');
       expect(roleMeta('admin_general').icon).toBe('crown');
+      expect(roleMeta('admin_local').icon).toBe('store');
+      expect(roleMeta('admin_location').icon).toBe('map-pin');
     });
 
     it('falls back to gray + question mark for an unknown slug', () => {

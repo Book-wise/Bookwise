@@ -18,33 +18,26 @@
       <div class="plan">
         <div class="plan__info">
           <div class="plan__heading">
-            <h2 class="plan__name">{{ planName }}</h2>
+            <h2 class="plan__name">{{ planName() }}</h2>
             <span class="bw-chip bw-chip--success"><i class="pi pi-check-circle"></i> {{ lang.t('billing.active') }}</span>
           </div>
           <p class="plan__meta">
-            {{ lang.t('billing.account_number', { id: accountId }) }} · {{ lang.t('billing.autorenew', { date: renewalDate }) }}
+            {{ lang.t('billing.account_number', { id: accountRef() || accountId() }) }} · {{ lang.t('billing.autorenew', { date: renewalDate() }) }} · {{ billingIntervalLabel() }}
           </p>
-          <div class="plan__payment">
-            <i class="pi pi-credit-card plan__payment-icon"></i>
-            <span>{{ cardBrand }} ···· {{ cardLast4 }}</span>
-            <span class="plan__payment-sep">·</span>
-            <span>{{ lang.t('billing.monthly_billing') }}</span>
-          </div>
         </div>
         <div class="plan__price">
-          <div class="plan__price-value">{{ planPriceLabel }}</div>
+          <div class="plan__price-value">{{ planPriceLabel() }}</div>
           <div class="plan__price-actions">
-            <p-button label="{{ lang.t('billing.change_plan') }}" severity="secondary" [outlined]="true" />
-            <p-button label="{{ lang.t('billing.manage_subscription') }}" />
+            <p-button label="{{ lang.t('billing.see_all_plans') }}" (onClick)="goToPlans()" />
           </div>
         </div>
       </div>
 
       <!-- Franja inferior del período -->
       <div class="plan__period">
-        <span class="plan__period-text">{{ lang.t('billing.current_period', { start: periodStart, end: periodEnd }) }}</span>
-        <span class="plan__days-left">{{ lang.t('billing.days_left', { n: daysLeft }) }}</span>
-        <p-progressBar [value]="periodProgress" [showValue]="false" styleClass="plan__progress" />
+        <span class="plan__period-text">{{ lang.t('billing.current_period', { start: periodStart(), end: periodEnd() }) }}</span>
+        <span class="plan__days-left">{{ lang.t('billing.days_left', { n: daysLeft() }) }}</span>
+        <p-progressBar [value]="periodProgress()" [showValue]="false" styleClass="plan__progress" />
       </div>
     </ng-template>
   </p-card>
@@ -53,7 +46,9 @@
   <div class="section">
     <div class="section__head">
       <h2 class="section__title">{{ lang.t('billing.usage_title') }}</h2>
-      <span class="section__muted">{{ lang.t('billing.updated_recent') }}</span>
+      @if (usagePeriodLabel()) {
+        <span class="section__muted">{{ usagePeriodLabel() }}</span>
+      }
     </div>
 
     <div class="usage-grid">
@@ -91,6 +86,15 @@
                   [color]="statusColor(metric)" />
 
                 <p class="usage__hint">{{ usageHint(metric) }}</p>
+
+                @if (isAtLimit(metric)) {
+                  <p-button
+                    label="{{ lang.t('billing.see_all_plans') }}"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="goToPlans()"
+                    class="usage__upgrade" />
+                }
               </div>
             </ng-template>
           </p-card>
@@ -117,10 +121,10 @@
       <p-card class="details-card" [header]="lang.t('billing.details_title')">
         <ng-template pTemplate="body">
           <ul class="features">
-            @for (feature of planFeatures; track feature) {
+            @for (feature of planFeatures(); track feature) {
               <li class="features__item">
                 <i class="pi pi-check-circle features__icon"></i>
-                <span>{{ lang.t(feature) }}</span>
+                <span>{{ feature }}</span>
               </li>
             }
           </ul>
@@ -128,6 +132,7 @@
             label="{{ lang.t('billing.see_all_plans') }}"
             severity="secondary"
             [outlined]="true"
+            (onClick)="goToPlans()"
             class="details-cta" />
         </ng-template>
       </p-card>

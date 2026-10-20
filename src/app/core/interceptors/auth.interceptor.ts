@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '@services/auth.service';
+import { SubscriptionStatusService } from '@services/subscription-status.service';
 
 /** Extracts the raw token from a `Bearer <token>` Authorization header. */
 function bearerToken(header: string | null): string | null {
@@ -12,6 +13,7 @@ function bearerToken(header: string | null): string | null {
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const subscriptionStatus = inject(SubscriptionStatusService);
   const token = authService.getToken();
 
   if (token) {
@@ -44,6 +46,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         } else {
           authService.logout();
         }
+      }
+      if (error.status === 402 && error.error?.error === 'subscription_inactive') {
+        // Account-level inactive: mark the session so the global dialog shows.
+        subscriptionStatus.markInactive();
       }
       return throwError(() => error);
     })
