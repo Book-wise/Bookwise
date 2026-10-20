@@ -44,7 +44,7 @@
     </button>
 
     <nav class="sidebar-nav">
-      @for (item of menuItems; track item.routerLink) {
+      @for (item of menuItems(); track item.routerLink) {
         <a [routerLink]="item.routerLink"
            class="nav-item"
            [class.active]="isActive(item.routerLink!)"

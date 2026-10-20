@@ -160,6 +160,7 @@ describe('AuthService', () => {
         token: 'rotated-token',
         user: switchedMe,
         abilities: ['bookings.view', 'agenda.manage'],
+        permissions: ['bookings.view', 'clients.view'],
       };
       authApi.switchTenant.mockReturnValue(of(response));
 
@@ -184,7 +185,7 @@ describe('AuthService', () => {
 
     it('maps null provider_id to null on the persisted user', () => {
       authApi.switchTenant.mockReturnValue(
-        of<AuthSwitchResponse>({ token: 'tok', user: { ...me, provider_id: null }, abilities: [] }),
+        of<AuthSwitchResponse>({ token: 'tok', user: { ...me, provider_id: null }, abilities: [], permissions: [] }),
       );
 
       service.switchTenant(1).subscribe();
@@ -194,7 +195,7 @@ describe('AuthService', () => {
 
     it('defaults abilities to an empty list when the payload omits them', () => {
       authApi.switchTenant.mockReturnValue(
-        of({ token: 'tok', user: me, abilities: undefined as unknown as string[] }),
+        of({ token: 'tok', user: me, abilities: undefined as unknown as string[], permissions: undefined as unknown as string[] }),
       );
 
       service.switchTenant(1).subscribe();

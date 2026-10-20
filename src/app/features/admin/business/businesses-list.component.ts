@@ -41,7 +41,6 @@ export class BusinessesListComponent implements OnInit {
 
   readonly businesses = computed(() => this.auth.me()?.businesses ?? []);
   readonly activeBusinessId = computed(() => this.auth.me()?.business?.id ?? null);
-  readonly isAdminGeneral = computed(() => this.auth.isAdminGeneral());
   readonly canSwitch = computed(() => this.businesses().length > 1);
 
   readonly loading = signal(false);

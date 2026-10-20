@@ -234,6 +234,8 @@ export interface AuthResponse {
   user: User;
   /** Top-level abilities granted by the backend (A1) — outside `user`. */
   abilities?: string[];
+  /** Effective permission keys of the active tenant (editable matrix). */
+  permissions?: string[];
 }
 
 export interface LoginCredentials {
@@ -320,15 +322,19 @@ export interface AuthMeResponse {
   user: AuthMeData;
   /** Top-level abilities on /auth/me (A1) — outside `user`. */
   abilities?: string[];
+  /** Effective permission keys of the active tenant (editable matrix), fail-closed. */
+  permissions?: string[];
 }
 
 /** POST /auth/switch-tenant | /auth/switch-account (Bearer) → { token, user, abilities }.
  *  The backend ROTATES the token on every switch and revokes the previous one,
- *  so callers MUST adopt `token`. `abilities` is TOP-LEVEL, never inside `user`. */
+ *  so callers MUST adopt `token`. `abilities` and `permissions` are TOP-LEVEL,
+ *  never inside `user`. */
 export interface AuthSwitchResponse {
   token: string;
   user: AuthMeData;
   abilities: string[];
+  permissions: string[];
 }
 
 /**

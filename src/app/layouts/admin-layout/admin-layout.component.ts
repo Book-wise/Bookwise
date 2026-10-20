@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '@services/auth.service';
 import { ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
+import { ABILITIES } from '@shared/config/abilities.config';
 import { AppHeaderComponent } from '@shared/components/app-header/app-header.component';
 import { AgendaNavigatorComponent } from '@shared/components/agenda-navigator/agenda-navigator.component';
 import { SubscriptionInactiveDialogComponent } from '@shared/components/subscription-inactive-dialog/subscription-inactive-dialog.component';
@@ -41,14 +42,21 @@ export class AdminLayoutComponent {
   readonly userName = computed(() => this.authService.user()?.name ?? '');
   readonly userRoleLabel = computed(() => this.roleLabel(this.authService.userRole()));
 
-  menuItems: MenuItem[] = [
-    { label: 'nav.dashboard', icon: 'pi pi-home',     routerLink: '/admin',           command: () => this.closeMenus() },
-    { label: 'nav.locations', icon: 'pi pi-building',  routerLink: '/admin/locations', command: () => this.closeMenus() },
-    { label: 'nav.providers', icon: 'pi pi-users',     routerLink: '/admin/providers', command: () => this.closeMenus() },
-    { label: 'nav.calendar',  icon: 'pi pi-calendar',  routerLink: '/admin/calendar',  command: () => this.closeMenus() },
-    { label: 'nav.clients',   icon: 'pi pi-user',      routerLink: '/admin/clients',   command: () => this.closeMenus() },
+  /** Ítems crudos del menú: cada uno declara el permission key requerido.
+   *  `ability` null = siempre visible (dashboard). */
+  private readonly allMenuItems: (MenuItem & { ability?: string })[] = [
+    { label: 'nav.dashboard', icon: 'pi pi-home',     routerLink: '/admin' },
+    { label: 'nav.locations', icon: 'pi pi-building',  routerLink: '/admin/locations', ability: ABILITIES.locationsView, command: () => this.closeMenus() },
+    { label: 'nav.providers', icon: 'pi pi-users',     routerLink: '/admin/providers', ability: ABILITIES.providersView, command: () => this.closeMenus() },
+    { label: 'nav.calendar',  icon: 'pi pi-calendar',  routerLink: '/admin/calendar',  ability: ABILITIES.bookingsView, command: () => this.closeMenus() },
+    { label: 'nav.clients',   icon: 'pi pi-user',      routerLink: '/admin/clients',   ability: ABILITIES.clientsView, command: () => this.closeMenus() },
     { label: 'nav.packs',     icon: 'pi pi-box',       routerLink: '/admin/packs',     command: () => this.closeMenus() },
   ];
+
+  /** Ítems visibles: filtra por permission key del tenant activo. */
+  readonly menuItems = computed(() =>
+    this.allMenuItems.filter((item) => !item.ability || this.authService.hasPermission(item.ability)),
+  );
 
   constructor() {
     this.checkScreenSize();

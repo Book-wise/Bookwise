@@ -20,12 +20,15 @@ export class AuthService {
   private _me    = signal<AuthMeData | null>(null);
   private _meLoaded = signal(false);
   private _abilities = signal<string[]>([]);
+  private _permissions = signal<string[]>([]);
 
   readonly token           = computed(() => this._token());
   readonly user            = computed(() => this._user());
   readonly me              = computed(() => this._me());
   readonly meLoaded        = computed(() => this._meLoaded());
   readonly abilities       = computed(() => this._abilities());
+  /** Permission keys efectivos del tenant activo (matriz editable), fail-closed. */
+  readonly permissions     = computed(() => this._permissions());
   readonly isAuthenticated = computed(() => !!this._token());
   readonly userRole        = computed(() => this._user()?.role ?? null);
   readonly isAdmin         = computed(() => this._user()?.role === 'admin');
@@ -82,10 +85,11 @@ export class AuthService {
     }
   }
 
-  login(token: string, user: User, abilities?: string[]): void {
+  login(token: string, user: User, abilities?: string[], permissions?: string[]): void {
     this.setToken(token);
     this.setUser(user);
     this._abilities.set(abilities ?? []);
+    this._permissions.set(permissions ?? []);
     this.navigateByRole(user.role);
   }
 
@@ -102,6 +106,7 @@ export class AuthService {
       tap((res) => {
         this._me.set(res.user);
         this._abilities.set(res.abilities ?? []);
+        this._permissions.set(res.permissions ?? []);
         this._meLoaded.set(true);
       }),
       map((res) => res.user),
@@ -126,6 +131,7 @@ export class AuthService {
         this._meLoaded.set(true);
         this.setUser(this.toUser(res.user));
         this._abilities.set(res.abilities ?? []);
+        this._permissions.set(res.permissions ?? []);
       }),
     );
   }
@@ -133,6 +139,23 @@ export class AuthService {
   /** True when the backend granted the given ability on the active session. */
   hasAbility(ability: string): boolean {
     return this._abilities().includes(ability);
+  }
+
+  /** True when the user holds the given permission key on the active tenant. */
+  hasPermission(permission: string): boolean {
+    return this._permissions().includes(permission);
+  }
+
+  /** True when the user holds ALL the given permission keys. */
+  hasAllPermissions(...permissions: string[]): boolean {
+    const set = new Set(this._permissions());
+    return permissions.every((p) => set.has(p));
+  }
+
+  /** True when the user holds AT LEAST ONE of the given permission keys. */
+  hasAnyPermission(...permissions: string[]): boolean {
+    const set = new Set(this._permissions());
+    return permissions.some((p) => set.has(p));
   }
 
   /** Mapea el payload de /auth/me a la forma persistida `User`. */
@@ -169,6 +192,7 @@ export class AuthService {
     this._me.set(null);
     this._meLoaded.set(false);
     this._abilities.set([]);
+    this._permissions.set([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);

@@ -125,6 +125,7 @@ describe('AuthApiService', () => {
       token: 'rotated-token',
       user,
       abilities: ['bookings.view', 'agenda.manage'],
+      permissions: ['bookings.view'],
     };
 
     service.switchTenant(2).subscribe((res) => {

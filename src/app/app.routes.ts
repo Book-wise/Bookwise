@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
 import { onboardingGuard } from './core/guards/onboarding.guard';
+import { abilityGuard } from './core/guards/ability.guard';
+import { ABILITIES } from '@shared/config/abilities.config';
 
 export const routes: Routes = [
   {
@@ -43,18 +45,22 @@ export const routes: Routes = [
       },
       {
         path: 'locations',
+        canActivate: [abilityGuard(ABILITIES.locationsView)],
         loadComponent: () => import('./features/admin/locations/locations-list.component').then(m => m.LocationsListComponent)
       },
       {
         path: 'providers',
+        canActivate: [abilityGuard(ABILITIES.providersView)],
         loadComponent: () => import('./features/admin/providers/providers-list.component').then(m => m.ProvidersListComponent)
       },
       {
         path: 'calendar',
+        canActivate: [abilityGuard(ABILITIES.bookingsView)],
         loadComponent: () => import('./features/admin/calendar/full-calendar.component').then(m => m.FullCalendarComponent)
       },
       {
         path: 'clients',
+        canActivate: [abilityGuard(ABILITIES.clientsView)],
         loadComponent: () => import('./features/admin/clients/clients-list.component').then(m => m.ClientsListComponent)
       },
       {
@@ -75,6 +81,7 @@ export const routes: Routes = [
       },
       {
         path: 'configuraciones',
+        canActivate: [abilityGuard(ABILITIES.settingsView)],
         loadComponent: () => import('@shared/components/configuraciones/configuraciones.component').then(m => m.ConfiguracionesComponent)
       },
       {
@@ -91,6 +98,7 @@ export const routes: Routes = [
       },
       {
         path: 'roles',
+        canActivate: [abilityGuard(ABILITIES.rolesView)],
         loadComponent: () => import('./features/admin/roles/roles.component').then(m => m.RolesComponent)
       }
     ]

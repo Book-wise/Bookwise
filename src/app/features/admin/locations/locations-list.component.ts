@@ -10,6 +10,8 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ABILITIES } from '@shared/config/abilities.config';
+import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
 import { Location } from '@models';
 import { LocationDialogComponent, DialogMode } from './location-dialog/location-dialog.component';
 
@@ -32,11 +34,15 @@ interface ConflictData {
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
     SkeletonModule, ToggleSwitchModule, DialogModule, LocationDialogComponent,
+    BwIfAbilityDirective,
   ],
   templateUrl: './locations-list.component.html',
   styleUrls: ['./locations-list.component.scss'],
 })
 export class LocationsListComponent {
+  /** Permission keys del catálogo (S5): el template nunca usa literales. */
+  protected readonly ABILITIES = ABILITIES;
+
   private httpError = inject(HttpErrorService);
   protected refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);

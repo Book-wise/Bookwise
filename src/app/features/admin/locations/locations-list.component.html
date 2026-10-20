@@ -1,5 +1,9 @@
 <div class="locations-toolbar">
-  <p-button icon="pi pi-plus" label="Nueva sucursal" (onClick)="openCreate()" />
+  <p-button
+    *bwIfAbility="ABILITIES.locationsManage"
+    icon="pi pi-plus"
+    label="Nueva sucursal"
+    (onClick)="openCreate()" />
 </div>
 
 <p-card header="Sucursales">
