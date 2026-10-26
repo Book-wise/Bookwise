@@ -251,3 +251,11 @@
     }
   }
 }
+
+// ── Card spacing ─────────────────────────────────────────────────────────────
+// El menú lateral consume ancho útil. Recortamos el padding interno de la card
+// del calendario (Aura: 1.25rem) para que la grilla gane espacio. Scoped a este
+// componente: el calendario del profesional conserva el suyo.
+:host ::ng-deep .p-card .p-card-body {
+  padding: 0.75rem;
+}
