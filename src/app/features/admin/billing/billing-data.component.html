@@ -1,0 +1,151 @@
+<div class="billing-data">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">{{ lang.t('billing.data.title') }}</h1>
+      <p class="page-subtitle">{{ lang.t('billing.data.subtitle') }}</p>
+    </div>
+  </div>
+
+  <p class="billing-data__banner">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <span>{{ lang.t('billing.data.banner') }}</span>
+  </p>
+
+  @if (!account()) {
+    <p-card>
+      <p class="billing-data__empty">{{ lang.t('billing.data.no_account') }}</p>
+    </p-card>
+  } @else {
+    @if (!canEdit()) {
+      <p class="billing-data__notice">
+        <i class="pi pi-lock" aria-hidden="true"></i>
+        <span>{{ lang.t('billing.data.readonly_notice') }}</span>
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="billing-data__form">
+      <!-- Información básica -->
+      <p-card [header]="lang.t('billing.data.section.basic')">
+        <div class="billing-data__grid">
+          <div class="field field--full">
+            <label>{{ lang.t('billing.data.taxpayer_type') }}</label>
+            <div class="billing-data__radios">
+              @for (option of taxpayerOptions; track option.value) {
+                <label class="billing-data__radio">
+                  <p-radiobutton
+                    [value]="option.value"
+                    formControlName="taxpayer_type"
+                    [inputId]="'taxpayer-' + option.value" />
+                  <span>{{ lang.t(option.labelKey) }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="rut">{{ lang.t('billing.data.rut') }}</label>
+            <input pInputText id="rut" formControlName="rut" class="w-full" autocomplete="off" />
+            @if (form.controls.rut.touched && form.controls.rut.invalid) {
+              <small class="field-error">{{ lang.t('billing.data.rut_invalid') }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="legal_name">{{ lang.t('billing.data.legal_name') }}</label>
+            <input pInputText id="legal_name" formControlName="legal_name" class="w-full" />
+          </div>
+
+          <div class="field field--full">
+            <label for="sii_activity">{{ lang.t('billing.data.sii_activity') }}</label>
+            <p-autocomplete
+              inputId="sii_activity"
+              formControlName="sii_activity"
+              [suggestions]="giroSuggestions()"
+              (completeMethod)="searchGiro($event)"
+              optionLabel="description"
+              [dropdown]="true"
+              [forceSelection]="true"
+              [delay]="300"
+              [appendTo]="'body'"
+              [placeholder]="lang.t('billing.data.sii_activity.placeholder')"
+              class="w-full" />
+            @if (form.controls.sii_activity.value; as giro) {
+              <small class="field-hint">{{ giro.code }} · {{ giro.description }}</small>
+            }
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Dirección de facturación -->
+      <p-card [header]="lang.t('billing.data.section.address')">
+        <div class="billing-data__grid">
+          <div class="field field--full">
+            <label for="billing_address">{{ lang.t('billing.data.address') }}</label>
+            <input pInputText id="billing_address" formControlName="billing_address" class="w-full" />
+          </div>
+
+          <div class="field">
+            <label for="billing_region_id">{{ lang.t('billing.data.region') }}</label>
+            <p-select
+              inputId="billing_region_id"
+              formControlName="billing_region_id"
+              [options]="regions()"
+              optionLabel="name"
+              optionValue="id"
+              [filter]="true"
+              [appendTo]="'body'"
+              [placeholder]="lang.t('billing.data.region')"
+              class="w-full" />
+          </div>
+
+          <div class="field">
+            <label for="billing_comuna_id">{{ lang.t('billing.data.comuna') }}</label>
+            <p-select
+              inputId="billing_comuna_id"
+              formControlName="billing_comuna_id"
+              [options]="comunas()"
+              optionLabel="name"
+              optionValue="id"
+              [filter]="true"
+              [appendTo]="'body'"
+              [placeholder]="lang.t('billing.data.comuna')"
+              [disabled]="!form.controls.billing_region_id.value"
+              class="w-full" />
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Datos de contacto -->
+      <p-card [header]="lang.t('billing.data.section.contact')">
+        <div class="billing-data__grid">
+          <div class="field">
+            <label for="billing_phone">{{ lang.t('billing.data.phone') }}</label>
+            <bw-phone-input
+              inputId="billing_phone"
+              formControlName="billing_phone"
+              [placeholder]="lang.t('billing.data.phone')" />
+          </div>
+
+          <div class="field">
+            <label for="billing_email">{{ lang.t('billing.data.email') }}</label>
+            <input pInputText id="billing_email" type="email" formControlName="billing_email" class="w-full" />
+            @if (form.controls.billing_email.touched && form.controls.billing_email.invalid) {
+              <small class="field-error">{{ lang.t('billing.data.email_invalid') }}</small>
+            }
+          </div>
+        </div>
+      </p-card>
+
+      @if (canEdit()) {
+        <div class="billing-data__actions">
+          <p-button
+            type="submit"
+            [label]="lang.t('billing.data.save')"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="form.invalid || saving()" />
+        </div>
+      }
+    </form>
+  }
+</div>

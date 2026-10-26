@@ -69,19 +69,35 @@ export const routes: Routes = [
       },
       {
         path: 'facturacion',
-        loadComponent: () => import('./features/admin/billing/billing.component').then(m => m.BillingComponent)
-      },
-      {
-        path: 'facturacion/historial',
-        loadComponent: () => import('./features/admin/billing/billing-history.component').then(m => m.BillingHistoryComponent)
-      },
-      {
-        path: 'planes/administrar',
-        loadComponent: () => import('./features/admin/plans/plans.component').then(m => m.PlansComponent)
+        loadComponent: () => import('./features/admin/account-settings/account-settings-shell.component').then(m => m.AccountSettingsShellComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/admin/billing/billing.component').then(m => m.BillingComponent)
+          },
+          {
+            path: 'historial',
+            loadComponent: () => import('./features/admin/billing/billing-history.component').then(m => m.BillingHistoryComponent)
+          },
+          {
+            path: 'datos',
+            loadComponent: () => import('./features/admin/billing/billing-data.component').then(m => m.BillingDataComponent)
+          },
+        ]
       },
       {
         path: 'planes',
-        loadComponent: () => import('./features/admin/plans/my-plan.component').then(m => m.MyPlanComponent)
+        loadComponent: () => import('./features/admin/account-settings/account-settings-shell.component').then(m => m.AccountSettingsShellComponent),
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/admin/plans/my-plan.component').then(m => m.MyPlanComponent)
+          },
+          {
+            path: 'administrar',
+            loadComponent: () => import('./features/admin/plans/plans.component').then(m => m.PlansComponent)
+          },
+        ]
       },
       {
         path: 'profile',
