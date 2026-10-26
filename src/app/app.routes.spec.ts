@@ -99,3 +99,34 @@ describe('admin routes — ability guards', () => {
     expect(navigatedTo).toEqual(['/login']);
   });
 });
+
+/**
+ * Contrato del rediseño de cuenta (S1/S10 de
+ * `odd/tasks/billing-datos-facturacion.md`): el hub de facturación y el de
+ * planes comparten un layout padre con la navegación agrupada, y las URLs no
+ * cambian (los hijos cuelgan de los mismos paths).
+ */
+describe('account area routes — grouped shell', () => {
+  function parentOf(path: string) {
+    return adminChildren().find((r) => r.path === path);
+  }
+
+  function childPaths(path: string) {
+    return (parentOf(path)?.children ?? []).map((c) => c.path);
+  }
+
+  it.each(['facturacion', 'planes'])('%s declara un layout padre con hijos', (path) => {
+    const parent = parentOf(path);
+
+    expect(parent?.loadComponent, `la ruta "${path}" no declara loadComponent`).toBeTypeOf('function');
+    expect(childPaths(path).length).toBeGreaterThan(0);
+  });
+
+  it('expone Datos de facturación bajo /admin/facturacion', () => {
+    expect(childPaths('facturacion')).toEqual(['', 'historial', 'datos']);
+  });
+
+  it('expone Mi plan y Administrar mi plan bajo /admin/planes', () => {
+    expect(childPaths('planes')).toEqual(['', 'administrar']);
+  });
+});

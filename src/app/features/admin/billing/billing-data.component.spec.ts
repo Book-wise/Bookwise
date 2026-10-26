@@ -83,9 +83,15 @@ describe('BillingDataComponent', () => {
     getComunas: ReturnType<typeof vi.fn>;
   };
 
-  function setup(overrides: { accounts?: AccountSummary[] } = {}) {
+  function setup(overrides: { accounts?: AccountSummary[]; currentAccountId?: number | null } = {}) {
+    const meData: AuthMeData = {
+      ...me,
+      current_account_id:
+        overrides.currentAccountId === undefined ? me.current_account_id : overrides.currentAccountId,
+      accounts: overrides.accounts ?? [account],
+    };
     auth = {
-      me: () => ({ ...me, accounts: overrides.accounts ?? [account] }),
+      me: () => meData,
       updateAccount: vi.fn(),
     };
     accountsApi = {
@@ -140,13 +146,36 @@ describe('BillingDataComponent', () => {
     expect(value.billing_comuna_id).toBe(141);
   });
 
-  it('disables the form when the account role cannot bill', () => {
-    const { fixture, component } = setup({ accounts: [{ ...account, role: 'admin' }] });
+  const GATING: Array<[Partial<AccountSummary>, boolean]> = [
+    [{ role: 'owner' }, true],
+    [{ role: 'billing' }, true],
+    [{ role: 'admin' }, false],
+    [{ role: 'owner', membership_status: 'inactive' }, false],
+    [{ role: 'billing', membership_status: 'inactive' }, false],
+  ];
+
+  it.each(GATING)('gates editing on account role + active membership: %o', (over, expected) => {
+    const { fixture, component } = setup({ accounts: [{ ...account, ...over }] });
     fixture.detectChanges();
 
-    expect(component.canEdit()).toBe(false);
-    expect(component.form.disabled).toBe(true);
-    expect((fixture.nativeElement as HTMLElement).querySelector('.billing-data__notice')).not.toBeNull();
+    expect(component.canEdit()).toBe(expected);
+    expect(component.form.disabled).toBe(!expected);
+    const notice = (fixture.nativeElement as HTMLElement).querySelector('.billing-data__notice');
+    expect(notice === null).toBe(expected);
+  });
+
+  it('resolves the account by current_account_id, not by position', () => {
+    const other: AccountSummary = { ...account, id: 99, reference: 'BW-OTHER', legal_name: 'Otra SpA' };
+    const { component } = setup({ accounts: [other, account], currentAccountId: 12 });
+
+    expect(component.account()?.id).toBe(12);
+  });
+
+  it('does not guess the account when current_account_id is missing and there are several', () => {
+    const other: AccountSummary = { ...account, id: 99, reference: 'BW-OTHER' };
+    const { component } = setup({ accounts: [other, account], currentAccountId: null });
+
+    expect(component.account()).toBeNull();
   });
 
   it('saves the fiscal profile sending sii_activity_id, never the denormalized object', () => {
@@ -163,6 +192,58 @@ describe('BillingDataComponent', () => {
     expect(payload.billing_phone).toBe('+56911112222');
     expect(payload.billing_region_id).toBe(13);
     expect(payload.billing_comuna_id).toBe(141);
+  });
+
+  it('sends exactly the nine contract keys, with sii_activity_id and no denormalized object', () => {
+    const { component } = setup();
+
+    component.save();
+
+    const [, payload] = accountsApi.updateBillingData.mock.calls[0];
+    expect(Object.keys(payload).sort()).toEqual([
+      'billing_address',
+      'billing_comuna_id',
+      'billing_email',
+      'billing_phone',
+      'billing_region_id',
+      'legal_name',
+      'rut',
+      'sii_activity_id',
+      'taxpayer_type',
+    ]);
+    expect(payload).not.toHaveProperty('sii_activity');
+    expect(payload).not.toHaveProperty('name');
+  });
+
+  it('sends the phone verbatim as E.164, without normalizing a non-CL number', () => {
+    const { component } = setup();
+    component.form.controls.billing_phone.setValue('+5491123456789');
+
+    component.save();
+
+    const [, payload] = accountsApi.updateBillingData.mock.calls[0];
+    expect(payload.billing_phone).toBe('+5491123456789');
+  });
+
+  it('never sends a comuna without its region', () => {
+    const { component } = setup();
+    component.form.controls.billing_region_id.setValue(null);
+
+    component.save();
+
+    const [, payload] = accountsApi.updateBillingData.mock.calls[0];
+    expect(payload.billing_region_id).toBeNull();
+    expect(payload.billing_comuna_id).toBeNull();
+  });
+
+  it('blocks the save when the RUT fails module 11', () => {
+    const { component } = setup();
+    component.form.controls.rut.setValue('11.111.111-2');
+
+    component.save();
+
+    expect(accountsApi.updateBillingData).not.toHaveBeenCalled();
+    expect(component.form.controls.rut.invalid).toBe(true);
   });
 
   it('replaces the cached account with the PATCH response instead of refetching', () => {

@@ -7,22 +7,13 @@ import { AccountSummary, UpdateAccountBillingData } from '@models';
 /**
  * Cuentas del usuario y su perfil fiscal (datos de facturación).
  *
- * El bloque fiscal vive en la COUNTA, no en el tenant: una cuenta puede tener N
+ * El bloque fiscal vive en la CUENTA, no en el tenant: una cuenta puede tener N
  * negocios y la suscripción que se factura es la de la cuenta.
  */
 @Injectable({ providedIn: 'root' })
 export class AccountsApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
-
-  /**
-   * GET /accounts (Bearer) → { data: AccountSummary[] }.
-   * Mismo shape que `user.accounts[]` de `/auth/me`; sirve para refrescar sin
-   * recargar la sesión.
-   */
-  getAccounts(): Observable<{ data: AccountSummary[] }> {
-    return this.http.get<{ data: AccountSummary[] }>(`${this.baseUrl}/accounts`);
-  }
 
   /**
    * PATCH /accounts/{id} (Bearer, rol de cuenta `owner`|`billing` con membership

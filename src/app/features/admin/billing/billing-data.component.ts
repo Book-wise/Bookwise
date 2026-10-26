@@ -84,8 +84,15 @@ export class BillingDataComponent implements OnInit {
     const me = this.auth.me();
     const accounts = me?.accounts ?? [];
     if (!accounts.length) return null;
+
     const id = me?.current_account_id ?? null;
-    return accounts.find((a) => a.id === id) ?? accounts[0];
+    const active = id == null ? undefined : accounts.find((a) => a.id === id);
+    if (active) return active;
+
+    // Sin `current_account_id` solo hay una respuesta segura cuando el usuario
+    // tiene una única cuenta: con varias no se adivina (se escribiría el perfil
+    // fiscal de una cuenta ajena).
+    return accounts.length === 1 ? accounts[0] : null;
   });
 
   /** Solo dueño o rol de facturación, con membership activa, editan. */

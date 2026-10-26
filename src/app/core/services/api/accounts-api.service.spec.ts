@@ -37,16 +37,6 @@ describe('AccountsApiService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('getAccounts calls GET /accounts and returns the { data } payload', () => {
-    service.getAccounts().subscribe((res) => {
-      expect(res).toEqual({ data: [account] });
-    });
-
-    const req = httpMock.expectOne(`${environment.apiUrl}/accounts`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ data: [account] });
-  });
-
   it('updateBillingData PATCHes /accounts/{id} with only the given fields', () => {
     const payload: UpdateAccountBillingData = { legal_name: 'Nueva SpA', sii_activity_id: 612 };
 
