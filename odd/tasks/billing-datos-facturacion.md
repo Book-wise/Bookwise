@@ -174,7 +174,28 @@ documenta que la futura tabla debe incluir `billed_tenant_id` nullable.
 - ✅ T5 [S2] i18n es/en (nav + fiscal). — HECHO.
 - ✅ T6 [S2] Specs + `ng build` verde + `ng test` **711 pass / 6 fail**, los 6
   PREEXISTENTES ajenos (calendar-navigation, historial-reserva ×3, booking-form-dialog ×2).
-- ⬜ T7 Work-unit commits. — PENDIENTE.
+- ✅ T7 Work-unit commits. — HECHO: `9348e19` (modelo + servicios), `3f7cc5b`
+  (pantalla + sidebar), `022cea5` (correcciones de la verificación).
+
+## Verificación independiente (2026-10-26)
+
+`gentle-ai-verify` (read-only, sobre `b71a8d2..HEAD`): **S1-S10 cubiertas**, 63/63 tests
+verdes en el alcance autorizado. Hallazgos corregidos en `022cea5`:
+
+1. `account()` caía a `accounts[0]` cuando faltaba `current_account_id`: con 2+ cuentas
+   habría mostrado y PATCHeado el perfil fiscal de otra cuenta. Ahora el fallback existe
+   solo si el usuario tiene **exactamente una** cuenta; si no, estado "no encontramos la
+   cuenta activa".
+2. `getAccounts()` era superficie muerta → eliminado.
+3. Typo de comentario `COUNTA` → `CUENTA`.
+
+Aceptados y documentados sin implementar: aviso de RUT duplicado (el front no puede saber
+si otro RUT existe) y `Preguntas frecuentes` (la sección no existe).
+
+**Suite final**: `ng build` verde · `ng test` **724 pass / 6 fail**, los 6 PREEXISTENTES
+y ajenos (calendar-navigation 1, historial-reserva 3, booking-form-dialog 2). Una corrida
+anterior dio 10 fallos por flakiness conocida de `providers`/`booking-detail` bajo carga
+paralela; la repetida volvió a 6.
 
 ### Pendientes conocidos (fuera de alcance, no silenciar)
 
