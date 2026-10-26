@@ -296,6 +296,80 @@ export interface Business {
   updated_at?: string;
 }
 
+// ── Perfil fiscal de la cuenta (Datos de facturación) ────────────────────────
+/** Tipo de contribuyente (`accounts.taxpayer_type`). Los valores viajan en
+ *  inglés; las etiquetas en español viven en i18n. */
+export type TaxpayerType = 'company' | 'individual';
+
+/** Actividad económica del SII (`GET /v1/sii-activities`): el "giro" fiscal. */
+export interface SiiActivity {
+  id: number;
+  /** Código oficial SII de 6 dígitos (ej. `960200`). */
+  code: string;
+  description: string;
+}
+
+/** Bloque fiscal de una cuenta. Todos los campos son nullable: toda cuenta nace
+ *  sin perfil fiscal, así que el formulario debe tratarlo como "incompleto". */
+export interface AccountBillingData {
+  rut: string | null;
+  taxpayer_type: TaxpayerType | null;
+  legal_name: string | null;
+  /** Giro ya desnormalizado por el backend (evita un lookup en el select). */
+  sii_activity: SiiActivity | null;
+  billing_email: string | null;
+  /** E.164 tal cual lo emite `bw-phone-input` (ej. `+56987524346`). */
+  billing_phone: string | null;
+  billing_address: string | null;
+  billing_region_id: number | null;
+  billing_comuna_id: number | null;
+}
+
+/** Rol de CUENTA del usuario, distinto de los roles de negocio `is_admin_*`. */
+export type AccountRole = 'owner' | 'admin' | 'billing';
+
+/** Negocio dentro del summary de cuenta. */
+export interface AccountTenantSummary {
+  id: number;
+  uuid?: string;
+  /** `business_name` del tenant. */
+  name: string;
+  /** Rol principal del usuario en ese negocio (`admin_general`, …). */
+  role: string | null;
+  membership_status: 'active' | 'inactive' | null;
+  provisioning_status?: string | null;
+}
+
+/** Summary de cuenta: shape compartido por `GET /v1/accounts`, `user.accounts[]`
+ *  de `/auth/me` y el `data` del `PATCH /v1/accounts/{id}`. */
+export interface AccountSummary extends AccountBillingData {
+  id: number;
+  uuid?: string;
+  /** Referencia pública corta (BW-XXXXXX), no secuencial. */
+  reference: string;
+  /** Nombre display de la cuenta; **distinto** de `legal_name` (razón social). */
+  name: string;
+  role: AccountRole;
+  membership_status: 'active' | 'inactive';
+  subscription?: Subscription | null;
+  tenants?: AccountTenantSummary[];
+}
+
+/** Payload de `PATCH /v1/accounts/{id}`. Update parcial: se manda solo lo que
+ *  cambia; un campo ausente no se toca y un `null` lo limpia.
+ *  Usa `sii_activity_id` (id del catálogo), nunca el objeto desnormalizado. */
+export interface UpdateAccountBillingData {
+  rut?: string | null;
+  taxpayer_type?: TaxpayerType | null;
+  legal_name?: string | null;
+  sii_activity_id?: number | null;
+  billing_email?: string | null;
+  billing_phone?: string | null;
+  billing_address?: string | null;
+  billing_region_id?: number | null;
+  billing_comuna_id?: number | null;
+}
+
 /** GET /auth/me (Bearer) → { user: AuthMeData }. El email del negocio no es editable. */
 export interface AuthMeData {
   id: number;
@@ -307,6 +381,11 @@ export interface AuthMeData {
   /** Provider id when the authenticated user is provider-scoped; null otherwise. */
   provider_id?: number | null;
   tenant_id: number | null;
+  /** Cuenta activa: la resuelve el backend, el front solo la lee. */
+  current_account_id?: number | null;
+  /** Cuentas del usuario, cada una con su bloque fiscal (mismo shape que
+   *  `GET /v1/accounts`). */
+  accounts?: AccountSummary[];
   email_verified_at: string | null;
   onboarding_complete: boolean;
   business: Business | null;

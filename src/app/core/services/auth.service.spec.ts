@@ -5,7 +5,7 @@ import { of } from 'rxjs';
 import { AuthService } from './auth.service';
 import { AuthApiService } from './api/auth-api.service';
 import { CalendarPrefsService } from './calendar-prefs.service';
-import type { AuthMeData, AuthSwitchResponse, Business } from '@models';
+import type { AuthMeData, AccountSummary, AuthSwitchResponse, Business } from '@models';
 
 const business: Business = {
   id: 1,
@@ -261,6 +261,52 @@ describe('AuthService', () => {
       service.logout();
 
       expect(localStorage.getItem('bw:lastLocationId:9')).toBe('2');
+    });
+  });
+
+  describe('updateAccount', () => {
+    const accountA: AccountSummary = {
+      id: 12,
+      reference: 'BW-7K3M9Q',
+      name: 'Kinesilk SpA',
+      rut: null,
+      taxpayer_type: null,
+      legal_name: null,
+      sii_activity: null,
+      billing_email: null,
+      billing_phone: null,
+      billing_address: null,
+      billing_region_id: null,
+      billing_comuna_id: null,
+      role: 'owner',
+      membership_status: 'active',
+    };
+    const accountB: AccountSummary = { ...accountA, id: 13, reference: 'BW-OTHER', role: 'billing' };
+
+    it('replaces the matching account in the cached /auth/me payload', () => {
+      service.setMe({ ...me, current_account_id: 12, accounts: [accountA, accountB] });
+
+      service.updateAccount({ ...accountA, legal_name: 'Nueva SpA' });
+
+      const accounts = service.me()?.accounts ?? [];
+      expect(accounts[0].legal_name).toBe('Nueva SpA');
+      expect(accounts[1]).toEqual(accountB);
+    });
+
+    it('leaves the cache untouched when that account is not loaded', () => {
+      service.setMe({ ...me, accounts: [accountB] });
+
+      service.updateAccount(accountA);
+
+      expect(service.me()?.accounts).toEqual([accountB]);
+    });
+
+    it('is a no-op when /auth/me has no accounts at all', () => {
+      service.setMe({ ...me });
+
+      service.updateAccount(accountA);
+
+      expect(service.me()?.accounts).toBeUndefined();
     });
   });
 });

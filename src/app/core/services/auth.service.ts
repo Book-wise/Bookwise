@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, tap, map } from 'rxjs';
-import { AuthMeData, AuthSwitchResponse, User, UserRole } from '@models';
+import { AccountSummary, AuthMeData, AuthSwitchResponse, User, UserRole } from '@models';
 import { AuthApiService } from './api/auth-api.service';
 import { CalendarPrefsService } from './calendar-prefs.service';
 
@@ -117,6 +117,22 @@ export class AuthService {
   setMe(me: AuthMeData): void {
     this._me.set(me);
     this._meLoaded.set(true);
+  }
+
+  /**
+   * Reemplaza una cuenta dentro del caché de /auth/me con el summary devuelto
+   * por el backend (p. ej. el `data` del `PATCH /v1/accounts/{id}`), sin refetch.
+   * Si la cuenta no está cacheada, no hace nada.
+   */
+  updateAccount(account: AccountSummary): void {
+    const me = this._me();
+    const accounts = me?.accounts;
+    if (!me || !accounts?.length) return;
+    const index = accounts.findIndex((a) => a.id === account.id);
+    if (index < 0) return;
+    const next = accounts.slice();
+    next[index] = account;
+    this._me.set({ ...me, accounts: next });
   }
 
   /** Cambia el negocio activo (admin_general) y adopta la sesión rotada.
