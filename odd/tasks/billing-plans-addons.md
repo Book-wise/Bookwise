@@ -1,7 +1,26 @@
 # Billing · Planes · Add-ons (estado al 2026-10-17)
 
 Documento de continuidad. Registra **qué se hizo**, **qué contratos del backend se usan** y
-**qué queda pendiente**. No contiene decisiones nuevas: la sesión se cerró acá.
+**qué queda pendiente**.
+
+---
+
+## 0. Estado al 2026-10-20 (commiteado)
+
+Todo lo listado abajo quedó **commiteado** en 4 work-unit commits sobre
+`feat/contract-catchup` (sin push):
+
+| Commit | Alcance |
+|---|---|
+| `09eff74` `docs(odd)` | feature docs ODD |
+| `a0c6855` `fix(bookings)` | `appendTo='body'` en dropdowns de bookings |
+| `ae1d44c` `feat(entitlement)` | Fase A: planes/billing/add-ons/perfil/diálogo 402 |
+| `fac2012` `feat(authz)` | Fase B: RBAC por permission key |
+
+Verificación: `ng build` verde + 108/108 tests (10 specs tocados).
+
+Sin commitear (decisión pendiente): `.atl/skill-registry.md` (tooling auto-gen) e
+imagen `src/assets/images/landing_page/salon de belleza_dresden.jpg`.
 
 ---
 
@@ -79,7 +98,7 @@ Verificación: `npx ng build` verde + **20/20 tests** (billing, negocios, planes
 ## 3. Pendiente
 
 ### Pendientes de frontend
-- **#11 Fase B**: migrar los gates `is_admin_*` a `hasPermission(...)` + verificación final.
+- ~~**#11 Fase B**: migrar los gates `is_admin_*` a `hasPermission(...)` + verificación final.~~ ✅ cerrada (`fac2012`).
 - **#12 Límites de creación**: bloquear "Nuevo profesional" / "Nueva sucursal" al llegar al tope
   del plan, con diálogo y CTA de upgrade (hoy solo se avisa en las cards de facturación).
 - **#17 Popover de desglose** en "Mi plan" (tabla Plan / Add-ons / Impuestos / Total +
@@ -104,6 +123,8 @@ Verificación: `npx ng build` verde + **20/20 tests** (billing, negocios, planes
   mensajes/recordatorios en varios meses y (b) **endpoint de serie histórica mensual**
   (hoy `/subscription/usage` devuelve solo el período actual). Con solo el seed el gráfico
   de `/admin/facturacion` seguiría mock.
+  → **Pedido escrito (2026-10-21):** `openspec/changes/2026-10-21-confirmation-usage-series/proposal.md`
+  (contrato `GET /v1/subscription/usage/history?months=6` + seed de 6 meses). Pendiente respuesta BE.
 
 ---
 
