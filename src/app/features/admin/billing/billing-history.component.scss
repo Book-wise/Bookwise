@@ -1,0 +1,125 @@
+// ── Historial de facturación ─────────────────────────────────────────────────
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 0.25rem 0 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// ── Encabezado de página ─────────────────────────────────────────────────────
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+.page-title {
+  margin: 0;
+  color: var(--text-heading, #333);
+  font-size: var(--bw-font-h2, 1.5rem);
+  font-weight: var(--bw-weight-bold, 700);
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--text-color-secondary, #888);
+  font-size: var(--bw-font-caption, 0.9rem);
+}
+
+// ── Tabla de facturas ────────────────────────────────────────────────────────
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--bw-radius-lg, 8px);
+  border: 1px solid var(--surface-border, #e2e8f0);
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 640px;
+
+  th {
+    text-align: left;
+    padding: 0.875rem 1rem;
+    background: var(--surface-100, #f1f5f9);
+    color: var(--text-color-secondary, #888);
+    font-weight: var(--bw-weight-semibold, 600);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  td {
+    padding: 0.875rem 1rem;
+    border-top: 1px solid var(--surface-border, #e2e8f0);
+    color: var(--text-color, #333);
+  }
+
+  tbody tr {
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--bw-300, #046af4) 4%, transparent);
+    }
+  }
+
+  &__id {
+    font-weight: var(--bw-weight-medium, 500);
+    white-space: nowrap;
+  }
+
+  &__amount {
+    font-weight: var(--bw-weight-medium, 500);
+    white-space: nowrap;
+  }
+
+  &__action-col {
+    text-align: right;
+  }
+
+  &__action {
+    text-align: right;
+  }
+}
+
+.invoice-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: var(--bw-radius-md, 6px);
+  background: var(--surface-0, #fff);
+  color: var(--text-color-secondary, #888);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--surface-100, #f1f5f9);
+    color: var(--bw-300, #046af4);
+  }
+}
+
+// ── Responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .history {
+    padding: 0 0 1rem;
+    gap: 1.5rem;
+  }
+}

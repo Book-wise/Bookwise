@@ -197,10 +197,10 @@ describe('BillingComponent — plan usage wiring', () => {
     expect(component.usageMetrics()).toEqual([]);
   });
 
-  it('goToPlans navigates to /admin/planes', () => {
+  it('goToPlans navigates to /admin/planes/administrar', () => {
     component.goToPlans();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/admin/planes']);
+    expect(router.navigate).toHaveBeenCalledWith(['/admin/planes/administrar']);
   });
 
   it('loads the real plan from the cached subscription and renders its price and period', () => {

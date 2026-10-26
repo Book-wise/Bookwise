@@ -54,9 +54,9 @@ export class BusinessesListComponent implements OnInit {
     planLabel(this.lang, this.store.subscription()?.plan?.slug ?? null),
   );
 
-  /** Navega a la página de planes y precios. */
+  /** Navega a administrar el plan (cambio de plan / add-ons). */
   goToPlans(): void {
-    this.router.navigate(['/admin/planes']);
+    this.router.navigate(['/admin/planes/administrar']);
   }
 
   /** Navega a la edición de un negocio. */

@@ -72,8 +72,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/billing/billing.component').then(m => m.BillingComponent)
       },
       {
-        path: 'planes',
+        path: 'facturacion/historial',
+        loadComponent: () => import('./features/admin/billing/billing-history.component').then(m => m.BillingHistoryComponent)
+      },
+      {
+        path: 'planes/administrar',
         loadComponent: () => import('./features/admin/plans/plans.component').then(m => m.PlansComponent)
+      },
+      {
+        path: 'planes',
+        loadComponent: () => import('./features/admin/plans/my-plan.component').then(m => m.MyPlanComponent)
       },
       {
         path: 'profile',

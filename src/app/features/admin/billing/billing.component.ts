@@ -32,6 +32,7 @@ interface BillingChartOptions {
   plugins?: Record<string, unknown>;
   maintainAspectRatio?: boolean;
   scales?: Record<string, unknown>;
+  interaction?: Record<string, unknown>;
 }
 
 type UsageStatus = 'success' | 'warning' | 'danger';
@@ -50,16 +51,6 @@ interface UsageMetric {
   hintKey: string;
   hintParams?: Record<string, string>;
   byTenantLabel?: string;
-}
-
-type InvoiceStatus = 'paid' | 'pending' | 'failed';
-
-interface Invoice {
-  id: string;
-  date: string;
-  plan: string;
-  amount: number;
-  status: InvoiceStatus;
 }
 
 const PRIMARY_COLOR = '#046af4';          // azul marca (--bw-300)
@@ -100,7 +91,7 @@ export class BillingComponent implements OnInit {
   // SECCIONES MOCK — solo lo que AÚN no tiene endpoint.
   //
   // TODO FASE 6: GET /v1/payment-methods → última tarjeta para el resumen.
-  // TODO FASE 6: GET /v1/invoices      → historial de facturación.
+  // TODO FASE 6: GET /v1/invoices      → historial de facturación (vive en billing-history.component).
   //
   // Real (ya cableado, vía SubscriptionStore):
   // - GET /v1/subscription       → plan activo, precio, período y estado.
@@ -302,15 +293,6 @@ export class BillingComponent implements OnInit {
     return items;
   });
 
-  // ── Historial de facturación (mock) ─────────────────────────────────────────
-  readonly invoices: Invoice[] = [
-    { id: 'INV-2024-011', date: '12 Nov 2024', plan: 'Professional', amount: 34990, status: 'paid' },
-    { id: 'INV-2024-010', date: '12 Oct 2024', plan: 'Professional', amount: 34990, status: 'paid' },
-    { id: 'INV-2024-009', date: '12 Sep 2024', plan: 'Professional', amount: 34990, status: 'pending' },
-    { id: 'INV-2024-008', date: '12 Ago 2024', plan: 'Professional', amount: 34990, status: 'failed' },
-    { id: 'INV-2024-007', date: '12 Jul 2024', plan: 'Professional', amount: 34990, status: 'paid' },
-  ];
-
   // ── Consumo mensual (chart) ────────────────────────────────────────────────
   /** Etiquetas de mes (últimos 6 meses) sensibles al idioma. */
   readonly consumptionLabels = computed<string[]>(() => {
@@ -357,10 +339,22 @@ export class BillingComponent implements OnInit {
     responsive: true,
     resizeDelay: 0,
     maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom' } },
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { boxWidth: 12, boxHeight: 12, padding: 14, font: { size: 11 } },
+      },
+    },
     scales: {
-      x: { grid: { display: false } },
-      y: { beginAtZero: true },
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { maxTicksLimit: 6, precision: 0 },
+      },
     },
   };
 
@@ -395,34 +389,13 @@ export class BillingComponent implements OnInit {
     return STATUS_COLOR[this.usageStatus(metric)];
   }
 
-  statusKey(status: InvoiceStatus): string {
-    switch (status) {
-      case 'pending': return 'billing.pending';
-      case 'failed':  return 'billing.failed';
-      default:        return 'billing.paid';
-    }
+  /** Botón "Facturas": navega al historial de facturación. */
+  goToHistory(): void {
+    this.router.navigate(['/admin/facturacion/historial']);
   }
 
-  statusChipClass(status: InvoiceStatus): string {
-    switch (status) {
-      case 'pending': return 'bw-chip--warning';
-      case 'failed':  return 'bw-chip--danger';
-      default:        return 'bw-chip--success';
-    }
-  }
-
-  /** Formatea montos CLP de las facturas (mismo formatter del repo). */
-  price(value: number): string {
-    return formatCLP(value);
-  }
-
-  /** Botón "Facturas": desplaza al historial de facturación. */
-  scrollToHistory(): void {
-    document.getElementById('billing-history')?.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  /** CTA "Mejora tu plan" → página de planes. */
+  /** CTA "Mejora tu plan" → administrar plan. */
   goToPlans(): void {
-    this.router.navigate(['/admin/planes']);
+    this.router.navigate(['/admin/planes/administrar']);
   }
 }

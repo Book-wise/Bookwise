@@ -1,0 +1,106 @@
+<div class="my-plan">
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">{{ lang.t('plans.my_title') }}</h1>
+      <p class="page-subtitle">{{ lang.t('plans.my_subtitle') }}</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="my-plan__skeleton">
+      <p-skeleton height="8rem" borderRadius="10px" />
+      <p-skeleton height="7rem" borderRadius="10px" />
+    </div>
+  } @else if (!currentPlan()) {
+    <p class="my-plan__empty">{{ lang.t('plans.no_current') }}</p>
+  } @else {
+    <div class="my-plan__layout">
+      <!-- Plan actual -->
+      <p-card class="plan-card">
+        <ng-template pTemplate="body">
+          <div class="plan-card__head">
+            <div class="plan-card__identity">
+              <div class="plan-card__heading">
+                <h2 class="plan-card__name">{{ planName() }}</h2>
+                <span class="bw-chip bw-chip--success"><i class="pi pi-check-circle"></i> {{ lang.t('billing.active') }}</span>
+              </div>
+              <p class="plan-card__meta">{{ lang.t('plans.current') }}</p>
+            </div>
+            <div class="plan-card__price">
+              <span class="plan-card__amount">{{ price(planPrice()) }}</span>
+              <span class="plan-card__interval">{{ intervalSuffix() }}</span>
+            </div>
+          </div>
+
+          <div class="plan-card__actions">
+            <p-button [label]="lang.t('plans.manage')" (onClick)="goToManage()" />
+            <button
+              type="button"
+              class="plan-card__breakdown"
+              (click)="breakdown.toggle($event)">
+              <i class="pi pi-info-circle"></i>
+              <span>{{ lang.t('plans.breakdown') }}</span>
+            </button>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Caja azul informativa (#19) -->
+      <section class="next-billing">
+        <span class="next-billing__label">{{ lang.t('plans.next_billing') }}</span>
+        <strong class="next-billing__date">{{ nextBillingDate() }}</strong>
+        <p class="next-billing__notice">{{ lang.t('plans.billing_notice', { date: nextBillingDate() }) }}</p>
+        <div class="next-billing__total">
+          <span>{{ lang.t('plans.breakdown.total') }}</span>
+          <strong>{{ price(totalPrice()) }}</strong>
+        </div>
+      </section>
+
+      <!-- Add-ons contratados (solo lectura) -->
+      <section class="my-addons">
+        <h3 class="my-addons__title">{{ lang.t('plans.addons_title') }}</h3>
+        @if (addons().length === 0) {
+          <p class="my-addons__empty">{{ lang.t('plans.addons_empty') }}</p>
+        } @else {
+          <ul class="my-addons__list">
+            @for (addon of addons(); track addon.type) {
+              <li class="my-addons__item">
+                <span>{{ addonLabel(addon) }}</span>
+                <span class="my-addons__price">{{ price(addon.price_clp) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  }
+</div>
+
+<!-- Desglose de la suscripción (#17) -->
+<p-popover #breakdown class="breakdown-popover" [dismissable]="true">
+  <div class="breakdown">
+    <h4 class="breakdown__title">{{ lang.t('plans.breakdown_title') }}</h4>
+    <ul class="breakdown__rows">
+      <li class="breakdown__row">
+        <span>{{ lang.t('plans.breakdown.plan') }}</span>
+        <span>{{ price(planPrice()) }}</span>
+      </li>
+      <li class="breakdown__row">
+        <span>{{ lang.t('plans.breakdown.addons') }}</span>
+        <span>{{ price(addonsTotal()) }}</span>
+      </li>
+      <li class="breakdown__row breakdown__row--muted">
+        <span>{{ lang.t('plans.breakdown.taxes') }}</span>
+        <span>{{ lang.t('plans.taxes_pending') }}</span>
+      </li>
+      <li class="breakdown__row breakdown__row--total">
+        <span>{{ lang.t('plans.breakdown.total') }}</span>
+        <span>{{ price(totalPrice()) }}</span>
+      </li>
+    </ul>
+    <button type="button" class="breakdown__more" (click)="breakdown.hide(); goToBilling()">
+      <span>{{ lang.t('plans.breakdown.more') }}</span>
+      <i class="pi pi-arrow-right"></i>
+    </button>
+  </div>
+</p-popover>

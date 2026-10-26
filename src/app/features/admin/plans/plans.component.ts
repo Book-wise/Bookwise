@@ -14,7 +14,7 @@ import { planLabel } from '@shared/utils/plan-label.util';
 type BillingInterval = 'month' | 'year';
 
 /**
- * Página "Planes y precios" (/admin/planes) — cambio de plan.
+ * Página "Administrar plan" (/admin/planes/administrar) — cambio de plan.
  *
  * Consume el catálogo REAL del backend (GET /v1/plans, público y cacheado) y la
  * suscripción de la cuenta (GET /v1/subscription, cacheada) para mostrar:
@@ -25,6 +25,8 @@ type BillingInterval = 'month' | 'year';
  * El cobro todavía no está integrado (backend sin gateway): esta pantalla
  * presenta la información y la selección; el submit real se cablea cuando el
  * endpoint de cambio de plan esté habilitado para la UI.
+ *
+ * La vista de SOLO LECTURA vive en `/admin/planes` (my-plan.component).
  */
 @Component({
   selector: 'bw-plans',

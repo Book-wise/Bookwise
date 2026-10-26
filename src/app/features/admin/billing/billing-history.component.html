@@ -1,0 +1,45 @@
+<div class="history">
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">{{ lang.t('billing.history_title') }}</h1>
+      <p class="page-subtitle">{{ lang.t('billing.history.subtitle') }}</p>
+    </div>
+    <p-button
+      label="{{ lang.t('billing.back') }}"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      (onClick)="goBack()" />
+  </header>
+
+  <div class="table-wrap">
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>{{ lang.t('billing.invoice') }}</th>
+          <th>{{ lang.t('billing.date') }}</th>
+          <th>{{ lang.t('billing.plan_col') }}</th>
+          <th>{{ lang.t('billing.amount') }}</th>
+          <th>{{ lang.t('billing.status') }}</th>
+          <th class="invoice-table__action-col">{{ lang.t('billing.action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (invoice of invoices; track invoice.id) {
+          <tr>
+            <td class="invoice-table__id">#{{ invoice.id }}</td>
+            <td>{{ invoice.date }}</td>
+            <td>{{ invoice.plan }}</td>
+            <td class="invoice-table__amount">{{ price(invoice.amount) }}</td>
+            <td><span class="bw-chip" [class]="statusChipClass(invoice.status)">{{ lang.t(statusKey(invoice.status)) }}</span></td>
+            <td class="invoice-table__action">
+              <button type="button" class="invoice-download" [attr.aria-label]="lang.t('billing.action')">
+                <i class="pi pi-download"></i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
