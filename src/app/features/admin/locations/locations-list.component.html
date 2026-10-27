@@ -52,7 +52,7 @@
   } @else {
     <!-- ── Desktop table ── -->
     <div class="locations-table-view">
-      <p-table [value]="locations()">
+      <p-table [value]="pagedLocations()">
         <ng-template pTemplate="header">
           <tr>
             <th>ID</th>
@@ -90,11 +90,17 @@
           <tr><td colspan="6" class="text-center">No se encontraron sucursales</td></tr>
         </ng-template>
       </p-table>
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
     </div>
 
     <!-- ── Mobile cards ── -->
     <div class="locations-cards-view">
-      @for (location of locations(); track location.id) {
+      @for (location of pagedLocations(); track location.id) {
         <div class="bw-card bw-card--elevated loc-card">
           <div class="loc-card__header">
             <span class="loc-card__name">{{ location.name }}</span>
@@ -130,6 +136,12 @@
       @empty {
         <div class="text-center">No se encontraron sucursales</div>
       }
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
     </div>
   }
 </p-card>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -52,7 +53,7 @@ interface ConflictData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
+    CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, MultiSelectModule,
     ToggleSwitchModule, DialogModule,
     ProviderDialogComponent, BwIfAbilityDirective,
@@ -97,6 +98,32 @@ export class ProvidersListComponent implements OnInit {
   searchQuery = signal('');
   selectedLocationIds = signal<Set<number>>(new Set());
   selectedRoleSlugs = signal<string[]>([]);
+
+  // ── Paginación ──────────────────────────────────────────────────────────
+  // La paginación es de cliente: `ReferenceStore` publica la lista completa
+  // (los services agregan todas las páginas del backend) y acá se muestra de a
+  // `pageSize` para que la pantalla no trunque ni cargue cientos de filas.
+  readonly pageSize = 10;
+  /** Página visible, 1-based. */
+  readonly page = signal(1);
+
+  readonly totalRecords = computed(() => this.sortedProviders().length);
+
+  readonly pagedProviders = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.sortedProviders().slice(start, start + this.pageSize);
+  });
+
+  /** `p-paginator` entrega la página 0-based. */
+  onPageChange(event: { page?: number }): void {
+    this.page.set((event.page ?? 0) + 1);
+  }
+
+  /** Cualquier cambio de filtro invalida la página actual. */
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.page.set(1);
+  }
 
   /** Roles del catálogo mapeados a opciones `{ label, value }` para el p-multiselect. */
   readonly roleOptions = computed(() =>
@@ -239,6 +266,9 @@ export class ProvidersListComponent implements OnInit {
     this.refStore.toggleProviderActive(id, newActive).subscribe({
       next: (res) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
+        // El CTA de cuota pertenece al intento anterior: una acción que sale
+        // bien prueba que el cupo ya no está agotado.
+        this.capacityError.set(false);
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
       },
       error: (err) => {
@@ -286,6 +316,8 @@ export class ProvidersListComponent implements OnInit {
     this.dialogMode.set('create');
     this.selectedProvider.set(null);
     this.dialogVisible.set(true);
+    // Abrir el alta es un intento nuevo: no arrastrar el CTA del rechazo previo.
+    this.capacityError.set(false);
   }
 
   openEdit(provider: Provider): void {
@@ -333,6 +365,7 @@ export class ProvidersListComponent implements OnInit {
       else next.add(id);
       return next;
     });
+    this.page.set(1);
   }
 
   /**
@@ -342,5 +375,6 @@ export class ProvidersListComponent implements OnInit {
    */
   onRoleFilterChange(value: string[] | null): void {
     this.selectedRoleSlugs.set(Array.isArray(value) ? value : []);
+    this.page.set(1);
   }
 }

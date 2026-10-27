@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -33,7 +34,7 @@ interface ConflictData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
+    CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     SkeletonModule, ToggleSwitchModule, DialogModule, LocationDialogComponent,
     BwIfAbilityDirective,
   ],
@@ -58,6 +59,25 @@ export class LocationsListComponent {
   /** Skeleton mientras el store no termina de cargar locations. */
   readonly loading = computed(() => this.refStore.loading().locations);
   toggling = signal<Set<number>>(new Set());
+
+  // ── Paginación ──────────────────────────────────────────────────────────
+  // De cliente: `ReferenceStore` publica la lista completa (los services
+  // agregan todas las páginas del backend) y acá se muestra de a `pageSize`.
+  readonly pageSize = 10;
+  /** Página visible, 1-based. */
+  readonly page = signal(1);
+
+  readonly totalRecords = computed(() => this.locations().length);
+
+  readonly pagedLocations = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.locations().slice(start, start + this.pageSize);
+  });
+
+  /** `p-paginator` entrega la página 0-based. */
+  onPageChange(event: { page?: number }): void {
+    this.page.set((event.page ?? 0) + 1);
+  }
 
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');

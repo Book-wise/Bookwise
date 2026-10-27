@@ -70,7 +70,7 @@
           type="text"
           pInputText
           [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event)"
+          (ngModelChange)="onSearchChange($event)"
           placeholder="Buscar profesional…"
           class="p-inputtext-sm"
         />
@@ -144,7 +144,7 @@
 
     <!-- ── Desktop table ── -->
     <div class="providers-table-view">
-      <p-table [value]="sortedProviders()" [tableStyle]="{ 'min-width': '50rem' }">
+      <p-table [value]="pagedProviders()" [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template pTemplate="header">
           <tr>
             <th>Nombre</th>
@@ -215,11 +215,17 @@
           </tr>
         </ng-template>
       </p-table>
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
     </div>
 
     <!-- ── Mobile cards ── -->
     <div class="providers-cards-view">
-      @for (provider of sortedProviders(); track provider.id) {
+      @for (provider of pagedProviders(); track provider.id) {
         <div
           class="bw-card bw-card--elevated prov-card"
           [style.border-left]="'4px solid ' + (locationColorMap().get(provider.location?.id) ?? 'var(--surface-border)')"
@@ -294,6 +300,12 @@
       } @empty {
         <div class="text-center">No se encontraron profesionales</div>
       }
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
     </div>
   </p-card>
 }

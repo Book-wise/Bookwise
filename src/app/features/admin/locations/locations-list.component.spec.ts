@@ -215,4 +215,32 @@ describe('LocationsListComponent', () => {
       expect(store.locations()[0].active).toBe(true);
     });
   });
+
+  // ── Paginación (S6: la lista no trunca) ──────────────────────────
+
+  describe('paginación', () => {
+    /** 12 sucursales: más de una página de 10. */
+    function seedMany(): void {
+      seedLocations(
+        Array.from({ length: 12 }, (_, i) => baseLocation({ id: i + 1, name: `Sucursal ${i + 1}` })),
+      );
+      fixture.detectChanges();
+      fixture.detectChanges();
+    }
+
+    it('muestra como máximo 10 sucursales por página y conoce el total', () => {
+      seedMany();
+
+      expect(component.totalRecords()).toBe(12);
+      expect(component.pagedLocations()).toHaveLength(10);
+    });
+
+    it('la segunda página trae el resto', () => {
+      seedMany();
+
+      component.onPageChange({ page: 1 });
+
+      expect(component.pagedLocations()).toHaveLength(2);
+    });
+  });
 });
