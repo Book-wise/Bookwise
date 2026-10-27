@@ -33,8 +33,35 @@ Segunda tanda sobre el mismo feature: corregir los 3 hallazgos *informational* d
   `tenant_location_limit_reached` que dispara el CTA de `location-dialog` **nunca** matcheaba, así
   que esa rama era código muerto y el 403 caía como toast genérico. Los códigos viven ahora en
   `CAPACITY_LIMIT_ERROR_CODES` y el spec cubre los tres.
-- El `per_page` de fetch sigue en **25** (`LIST_PAGE_SIZE`); lo que cambió es que se piden
-  **todas** las páginas y la UI muestra **10** filas por página.
+- El `per_page` de fetch va en **100** (`LIST_PAGE_SIZE`, tope duro del API 1–100) y la UI
+  muestra **10** filas por página.
+
+## Corrección de contrato (2026-10-27, sesión 3) — el listado NO trae envelope
+
+El backend avisó que `per_page` en `/providers` y `/locations` quedó validado como entero
+**1–100** (fuera de rango → 422 `errors.per_page`) y, al responder la duda, **confirmó con
+prueba contra la app real** algo que este doc tenía al revés: ambos endpoints devuelven
+**array plano en la raíz**, sin `{data, links, meta}`.
+
+Causa en el backend: los dos `index` hacen `return response()->json(Resource::collection($paginator))`;
+`ResourceCollection::toArray()` devuelve la lista plana y `json_encode` la emite tal cual. El
+envelope lo agrega `PaginatedResourceResponse`, que vive en `toResponse()` y **nunca se ejecuta**
+porque el controlador no retorna la colección.
+
+**Consecuencia en el frontend (P0)**: `c2c55ed` (ya en `origin`) tipó `{data, links, meta}` y hace
+`map(res => res.data)` → con array plano `res.data` es `undefined` → **las dos listas quedaban
+vacías** contra el API real. Los tests no lo detectaron porque **mockeaban el envelope**: el spec
+codificaba la suposición equivocada. Nada de esto lo podía ver el review, porque es un hecho de
+contrato, no un defecto visible en el código.
+
+**Arreglo** (`collect-paginated.ts`): el helper acepta las dos formas
+(`Array.isArray(res) ? res : res.data`), pide `per_page=100` y detecta el fin de lista por página
+corta (`rows.length < per_page`) cuando no hay `meta`, o por `meta.last_page` cuando el backend
+mande el envelope. Así el cliente sirve antes y después del fix del API, sin tocarlo de nuevo.
+
+**Pedido al backend**: devolver la colección con `->response()` (o sin envolver en
+`response()->json(...)`) para que exista `meta.last_page` y la paginación real sea posible. Hoy el
+cliente solo puede pedir la página y deducir el final por tamaño.
 
 ## Estado (2026-10-27) — IMPLEMENTADO (T4 sigue abierta en un punto)
 
@@ -70,7 +97,8 @@ viva: la key de `PATCH /providers/{id}/roles`, que el backend todavía tiene que
 - ✅ T1 [S2] Cerrar contrato con `Bookwise-API`. — HECHO (respuesta del mantenedor, ver
   "Contrato cerrado").
 - ✅ T2 [S1] Alinear `providers-api.service` / `locations-api.service` con la forma real de
-  listado (`{data, links, meta}`, `per_page` sin tope server-side). — HECHO.
+  listado. — HECHO, y **corregido** en la sesión 3: la forma real es **array plano**, no
+  `{data, links, meta}` (ver «Corrección de contrato»).
 - ✅ T3 [S1] Alta de profesional: botón "Nuevo profesional" gated + `openCreate()` +
   `location_id` **requerido solo al crear** (`ProviderUpdateRequest` lo trata `sometimes`, así
   que un profesional legacy sin sucursal sigue siendo editable). — HECHO (+3 specs).
@@ -150,8 +178,12 @@ delegarla** a otros usuarios (403 A5).
 
 Datos verificados para no inventar copy:
 
-- **Listado paginado**: `{data, links, meta}`, `per_page` default **15** y **sin validación ni
-  tope server-side** → mandar un valor razonable, no depender de 1000.
+- **Listado paginado**: **array plano en la raíz** (sin `data`/`links`/`meta`), `per_page`
+  default **15** y **validado 1–100** (fuera de rango → 422 `errors.per_page`). Sin `meta` no se
+  puede saber la última página: el cliente la deduce por página corta.
+- ✅ T15 [S6, corrección] `collect-paginated.ts` tolerante a array plano **y** envelope,
+  `per_page=100`, fin de lista por página corta o `meta.last_page`, con specs propios contra la
+  forma real. — HECHO.
 - **`location_id` obligatorio** al crear profesional ("La sucursal es obligatoria.").
 - **Teléfono de profesional: texto libre `max:50`, NO E.164.** Las **sucursales no tienen
   teléfono**. No reutilizar el contrato de `accounts.billing_phone`.
@@ -220,3 +252,12 @@ Backend (`Bookwise-API` @ `develop`):
   (`5aebf50..ad3b7be`) por decisión del usuario.
 - L9 (usuario, verbatim): "1 corrije/actualiza 2 termina esos pendientes" → se abre esta
   segunda tanda: doc, los 3 hallazgos *informational* del review y el paginador declarado.
+- L10 (backend, aviso de contrato, verbatim): "`per_page` quedó acotado en dos listados que ya
+  consumen (...) `N` debe ser entero **1–100**. Fuera de rango (...) ahora responde **422**
+  `errors.per_page` (...)". Sin impacto inmediato: el cliente manda un valor fijo.
+- L11 (backend, respuesta a la duda sobre la forma, verbatim): "en `develop` (`36d9f15`) ambos
+  endpoints devuelven **array plano en la raíz**, NO el envelope `{data, links, meta}` (...)
+  `ResourceCollection::toArray()` devuelve la lista plana (...) el envelope lo agrega
+  `toResponse()`, que **nunca se ejecuta** (...)". Confirma el P0 de listas vacías.
+- L12 (usuario, decisión): "Arreglar el cliente ya (tolerante a ambas formas)" → T15, sin esperar
+  el despliegue del fix del API.

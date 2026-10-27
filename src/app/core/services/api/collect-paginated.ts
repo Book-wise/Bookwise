@@ -6,26 +6,46 @@ import { buildHttpParams } from './build-http-params';
 /**
  * Tamaño de página con el que se piden los listados paginados.
  *
- * El backend pagina (`{data, links, meta}`, default 15) y **no valida ni acota
- * `per_page`**, así que pedimos un valor explícito y acotado.
+ * El API **valida `per_page` como entero 1–100** (fuera de rango responde 422
+ * `errors.per_page`), así que 100 es el máximo pedible y minimiza las requests
+ * de la agregación. El default del servidor es 15.
  */
-export const LIST_PAGE_SIZE = 25;
+export const LIST_PAGE_SIZE = 100;
 
 /**
- * Tope de seguridad de la agregación: nunca se siguen más de 40 páginas (1000
- * registros con `LIST_PAGE_SIZE`). Evita que un `meta.last_page` absurdo
- * encadene requests sin fin; si se alcanza, se devuelve lo reunido hasta ahí.
+ * Tope de seguridad de la agregación: nunca se siguen más de 40 páginas (4000
+ * registros). Evita encadenar requests sin fin si el servidor mintiera sobre el
+ * tamaño de página; si se alcanza, se devuelve lo reunido hasta ahí.
  */
 export const LIST_MAX_PAGES = 40;
 
 /**
- * Recorre **todas** las páginas de un endpoint paginado y devuelve un único
- * array plano.
+ * Lo que puede llegar en el body de un listado. El API hoy devuelve **array
+ * plano en la raíz** (el controlador hace `response()->json(Resource::collection($paginator))`,
+ * que salta el `PaginatedResourceResponse` y por eso no hay `{data, links, meta}`),
+ * pero el envelope es la forma documentada a la que va a migrar el backend.
+ * El cliente tiene que servir con las dos.
+ */
+type ListPage<T> = T[] | PaginatedResponse<T> | null | undefined;
+
+/** Filas de la página, venga como array plano o como envelope. */
+function extractRows<T>(res: ListPage<T>): T[] {
+  if (Array.isArray(res)) return res;
+  return res?.data ?? [];
+}
+
+/**
+ * Recorre las páginas de un endpoint paginado y devuelve un único array plano.
  *
  * `ReferenceStore` publica arrays completos y los comparten agenda, reservas,
- * roles y el dashboard: quedarse con la primera página truncaba esas pantallas
- * a 25 registros. Las páginas se piden en serie (una depende del `last_page` de
- * la anterior) y se cortan en `LIST_MAX_PAGES`.
+ * roles y el dashboard.
+ *
+ * Fin de la lista, en este orden:
+ * - página vacía;
+ * - si el body trae `meta`, se respeta `meta.last_page`;
+ * - si **no** trae `meta` (caso actual del API), una página más corta que
+ *   `per_page` es la última;
+ * - y siempre el tope `LIST_MAX_PAGES`.
  */
 export function collectPaginatedPages<T>(
   http: HttpClient,
@@ -34,16 +54,19 @@ export function collectPaginatedPages<T>(
 ): Observable<T[]> {
   const load = (page: number): Observable<T[]> =>
     http
-      .get<PaginatedResponse<T>>(url, {
+      .get<ListPage<T>>(url, {
         params: buildHttpParams({ ...(params ?? {}), per_page: LIST_PAGE_SIZE, page }),
       })
       .pipe(
         switchMap((res) => {
-          const batch = res.data ?? [];
-          const lastPage = res.meta?.last_page ?? page;
-          const exhausted = batch.length === 0 || page >= lastPage || page >= LIST_MAX_PAGES;
-          if (exhausted) return of(batch);
-          return load(page + 1).pipe(map((rest) => [...batch, ...rest]));
+          const rows = extractRows(res);
+          const lastPage = Array.isArray(res) ? undefined : res?.meta?.last_page;
+          const exhausted =
+            rows.length === 0 ||
+            (lastPage !== undefined ? page >= lastPage : rows.length < LIST_PAGE_SIZE) ||
+            page >= LIST_MAX_PAGES;
+          if (exhausted) return of(rows);
+          return load(page + 1).pipe(map((rest) => [...rows, ...rest]));
         }),
       );
 

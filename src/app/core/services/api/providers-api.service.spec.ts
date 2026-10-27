@@ -28,10 +28,10 @@ describe('ProvidersApiService', () => {
     const url = `${environment.apiUrl}/providers`;
 
     /** Envelope tal cual lo devuelve el backend (Laravel paginator). */
-    const envelope = (data: Provider[], current: number, last: number, total = last * 25) => ({
+    const envelope = (data: Provider[], current: number, last: number, total = last * 100) => ({
       data,
       links: {},
-      meta: { current_page: current, from: 1, last_page: last, per_page: 25, to: data.length, total },
+      meta: { current_page: current, from: 1, last_page: last, per_page: 100, to: data.length, total },
     });
 
     it('unwraps the paginated envelope into a provider array', () => {
@@ -48,11 +48,11 @@ describe('ProvidersApiService', () => {
       req.flush(envelope(mock, 1, 1));
     });
 
-    it('asks for a bounded page size (the backend does not cap per_page)', () => {
+    it('asks for a page size inside the API cap (1..100)', () => {
       service.getProviders().subscribe();
 
       const req = httpMock.expectOne((r) => r.url === url);
-      expect(req.request.params.get('per_page')).toBe('25');
+      expect(req.request.params.get('per_page')).toBe('100');
       expect(req.request.params.get('page')).toBe('1');
       req.flush(envelope([], 1, 1, 0));
     });

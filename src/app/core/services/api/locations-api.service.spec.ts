@@ -26,10 +26,10 @@ describe('LocationsApiService', () => {
   });
 
   /** Envelope tal cual lo devuelve el backend (Laravel paginator). */
-  const envelope = (data: Location[], current: number, last: number, total = last * 25) => ({
+  const envelope = (data: Location[], current: number, last: number, total = last * 100) => ({
     data,
     links: {},
-    meta: { current_page: current, from: 1, last_page: last, per_page: 25, to: data.length, total },
+    meta: { current_page: current, from: 1, last_page: last, per_page: 100, to: data.length, total },
   });
 
   it('GET /locations via getLocations() unwraps the paginated envelope', () => {
@@ -43,7 +43,7 @@ describe('LocationsApiService', () => {
 
     const req = httpMock.expectOne((r) => r.url === `${baseUrl}/locations` && r.method === 'GET');
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('per_page')).toBe('25');
+    expect(req.request.params.get('per_page')).toBe('100');
     expect(req.request.params.get('page')).toBe('1');
     req.flush(envelope(dummy, 1, 1, 1));
   });
