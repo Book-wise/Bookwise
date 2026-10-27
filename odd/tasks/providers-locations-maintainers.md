@@ -8,9 +8,33 @@ acción por permiso (inicialmente solo administradores).
 
 - Árbol limpio; commits `c2c55ed` (fix del listado paginado) y `8021fb9` (mantenedores).
 - `ng build` verde; `ng test` **728 pass / 6 fail** (los 6 preexistentes y ajenos).
-- `booking-detail-dialog` aparece como 7º fallo bajo carga paralela pero **pasa aislado 11/11**:
-  flakiness conocida del repo, no regresión de este trabajo.
-- Sin push (decisión del usuario).
+- `booking-detail-dialog` aparecía como 7º fallo bajo carga paralela. **Corrección posterior**: en
+  esta máquina falla también **aislado** (9/11) y falla igual en un worktree limpio sobre `ad3b7be`
+  sin los cambios de la segunda tanda, así que es **preexistente y ajeno**, no flakiness de carga
+  ni regresión de este trabajo.
+- **Pusheado** a `origin/feat/contract-catchup` (`5aebf50..ad3b7be`) el 2026-10-27, por decisión
+  del usuario.
+
+## Cierre de pendientes (2026-10-27, sesión 2)
+
+Segunda tanda sobre el mismo feature: corregir los 3 hallazgos *informational* del review
+`review-ae52cee6185c5e67` y cerrar el paginador declarado como pendiente.
+
+### Resultado
+
+- Commits: `c4c41c8` `fix(api)` agregación de páginas + código de cuota de sucursales ·
+  `7dfedb9` `fix(providers)` CTA de cuota y escritura parcial · `601c99a` `feat(lists)` paginador
+  de 10 · y el `docs(odd)` de este archivo. **Sin push**.
+- `ng build` **verde**. `ng test` **745 pass / 8 fail**, y los 8 están atribuidos: 6 preexistentes
+  (calendar-navigation 1, historial-reserva 3, booking-form-dialog 2) + 2 de
+  `booking-detail-dialog`, verificados como preexistentes en un worktree limpio sobre `ad3b7be`.
+- **Bug real encontrado al escribir el test de cuota de sucursales**: `isCapacityLimitError()`
+  solo reconocía `account_tenant_limit_reached` y `tenant_professional_limit_reached`. El
+  `tenant_location_limit_reached` que dispara el CTA de `location-dialog` **nunca** matcheaba, así
+  que esa rama era código muerto y el 403 caía como toast genérico. Los códigos viven ahora en
+  `CAPACITY_LIMIT_ERROR_CODES` y el spec cubre los tres.
+- El `per_page` de fetch sigue en **25** (`LIST_PAGE_SIZE`); lo que cambió es que se piden
+  **todas** las páginas y la UI muestra **10** filas por página.
 
 ## Estado (2026-10-27) — IMPLEMENTADO (T4 sigue abierta en un punto)
 
@@ -30,6 +54,16 @@ viva: la key de `PATCH /providers/{id}/roles`, que el backend todavía tiene que
   decir implementar los mantenedores, con RBAC y control de permisos para la accion."
 - S2 (usuario, verbatim): "Puedes dejar esto añadido a la lista de tareas, y coordinándolo
   con el agente de Backend para asegurar la consistencia de contratos y permisos."
+- S3 (usuario, verbatim): "1 corrije/actualiza 2 termina esos pendientes" — 1 = corregir el
+  doc que decía "Sin push"; 2 = terminar los pendientes declarados (los 3 hallazgos del
+  review y el paginador).
+- S4: el CTA de cuota (`capacityError`) **no puede quedar pegado**: se limpia al reabrir el
+  diálogo y cuando la operación siguiente sale bien.
+- S5: el guardado de edición **nunca es silencioso**: sin ninguna de las dos keys se avisa con
+  error, y si los datos se guardaron y los roles fallaron el mensaje lo dice (escritura
+  parcial explícita, no "falló el guardado").
+- S6: las listas de profesionales y sucursales **no truncan**: el store carga todas las
+  páginas y la UI pagina de a 10.
 
 ## Tasks
 
@@ -56,15 +90,31 @@ viva: la key de `PATCH /providers/{id}/roles`, que el backend todavía tiene que
   con su conteo de reservas. — HECHO.
 - ✅ T8 [S1] Tests + `ng build` + `ng test`. — HECHO.
 - ✅ T9 [S1] Work-unit commits (`c2c55ed`, `8021fb9`). — HECHO.
+- ✅ T10 [S3] Corregir el doc: la línea "Sin push" ya no es cierta. — HECHO.
+- ✅ T11 [S4] Reset de `capacityError` en `provider-dialog`, `location-dialog` y `providers-list`
+  (al reabrir el diálogo y al completar una operación con éxito) + specs. — HECHO.
+- ✅ T12 [S5] `saveEdit` sin no-op silencioso (toast `providers.save_not_permitted`) y mensaje
+  explícito de escritura parcial (`providers.save_roles_failed_partial`) + i18n es/en + specs.
+  — HECHO.
+- ✅ T13 [S5] Reescribir los 2 specs de RBAC por sección para asertar comportamiento observable
+  (requests + `saved`) en vez de señales internas. — HECHO.
+- ✅ T14 [S6] Paginador real: los services agregan todas las páginas (`meta.last_page`, tope de
+  seguridad 40 páginas) y las dos listas paginan de a 10 con `p-paginator` (tabla y tarjetas
+  móviles). — HECHO.
 
 ### Lo que queda declarado como pendiente (no silenciado)
 
-- **Sin paginador en la UI**: `per_page` quedó en 25 (a pedido del usuario, páginas chicas) y
-  las listas no paginan, así que **más de 25 registros se truncan**. Un paginador real es el
-  siguiente paso natural.
+- **Atomicidad real del guardado de edición**: datos y roles son dos PATCH distintos; si el de
+  roles falla después del de datos, la escritura queda parcial y ahora se **avisa** como tal.
+  Cerrarlo de verdad requiere un endpoint atómico en `Bookwise-API` (pedido al backend, fuera
+  del alcance del frontend).
 - **Reasignación masiva**: no existe endpoint; mover profesionales es uno por uno.
 - **Backfill de la key en tenants provisionados**: `php artisan permissions:apply-baseline`.
   Si un `admin_location` no ve la acción de roles o recibe 403, falta ese paso en su tenant.
+- **Costo de arranque**: los consumidores de `refStore.providers()`/`locations()` ahora reciben
+  la lista completa (antes venían truncados a 25), así que en tenants grandes el bootstrap hace
+  varias requests paginadas (tope duro: 40 páginas / 1000 registros). Si eso molesta, el paso
+  siguiente es paginar server-side por pantalla en vez de hidratar todo el store.
 
 ## Contrato cerrado (respuesta del mantenedor, 2026-10-27)
 
@@ -166,3 +216,7 @@ Backend (`Bookwise-API` @ `develop`):
 - L7 (bug encontrado al implementar): el `location_id` requerido sin condición rompía la
   **edición** de profesionales legacy sin sucursal (el backend solo lo exige al crear). Se pasó
   a un validador `locationRequiredWhenCreating`, calcado de `rolesRequiredWhenEditing`.
+- L8 (usuario, verbatim): "continuamos?" → se pushearon los 3 commits pendientes
+  (`5aebf50..ad3b7be`) por decisión del usuario.
+- L9 (usuario, verbatim): "1 corrije/actualiza 2 termina esos pendientes" → se abre esta
+  segunda tanda: doc, los 3 hallazgos *informational* del review y el paginador declarado.
