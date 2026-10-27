@@ -187,8 +187,12 @@ export class ProviderDialogComponent {
     effect(() => {
       const mode = this.mode();
       const prov = this.provider();
+      // `visible` como dependencia: al reabrir el diálogo se limpia el CTA de
+      // cuota, que es estado de la operación anterior y no de esta.
+      const isOpen = this.visible();
       this.internalMode.set(mode);
       untracked(() => {
+        if (isOpen) this.capacityError.set(false);
         const roleSlugs = prov ? (prov.roles ?? []).map((r) => r.slug) : [];
         if (prov) {
           this.form.patchValue({
@@ -280,6 +284,7 @@ export class ProviderDialogComponent {
     this.refStore.createProvider(payload).subscribe({
       next: (res) => {
         this.saving.set(false);
+        this.capacityError.set(false);
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
         this.saved.emit();
       },
@@ -306,12 +311,23 @@ export class ProviderDialogComponent {
 
     const wantBasics = this.canEditBasics();
     const wantRoles = this.canEditRoles();
-    if (!wantBasics && !wantRoles) return;
+    if (!wantBasics && !wantRoles) {
+      // Defensivo: la acción de editar ya está gateada con `manage` O `roles`,
+      // pero si se llegara acá sin ninguna de las dos no hay que fallar en
+      // silencio — el usuario tiene que saber que no se guardó nada.
+      this.messageService.add({
+        severity: 'error',
+        summary: this.lang.t('providers.save_not_permitted'),
+        key: 'global',
+      });
+      return;
+    }
 
     const roleSlugs = applyAdminGeneralInvariant(this.currentRoleSlugs(), rawRoleSlugs);
 
     const finish = (summary: string) => {
       this.saving.set(false);
+      this.capacityError.set(false);
       this.messageService.add({ severity: 'success', summary, key: 'global' });
       this.saved.emit();
     };
@@ -327,9 +343,14 @@ export class ProviderDialogComponent {
         next: () => finish(summary),
         error: () => {
           this.saving.set(false);
+          // Si los datos ya se guardaron, el fallo de roles deja una escritura
+          // parcial: el mensaje tiene que decirlo para que el reintento tenga
+          // sentido (el PATCH de básicos es idempotente).
           this.messageService.add({
             severity: 'error',
-            summary: this.lang.t('providers.save_roles_failed'),
+            summary: this.lang.t(
+              wantBasics ? 'providers.save_roles_failed_partial' : 'providers.save_roles_failed',
+            ),
             key: 'global',
           });
         },

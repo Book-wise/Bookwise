@@ -955,6 +955,8 @@ export const EN: Record<string, string> = {
   'providers.dialog.roles': 'Roles',
   'providers.dialog.roles_hint': 'Roles determine the provider\'s permissions. At least one role is required.',
   'providers.save_roles_failed': 'The roles could not be saved. Please try again.',
+  'providers.save_roles_failed_partial': 'The professional details were saved, but the roles were not. Retry to complete the change.',
+  'providers.save_not_permitted': 'You do not have permission to save changes to this professional.',
   'providers.saved_roles_only': 'Roles updated.',
   'providers.toggle_activate': 'Activate provider',
   'providers.toggle_deactivate': 'Deactivate provider',

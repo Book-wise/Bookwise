@@ -90,8 +90,12 @@ export class LocationDialogComponent {
     effect(() => {
       const mode = this.mode();
       const loc = this.location();
+      // `visible` como dependencia: al reabrir el diálogo se limpia el CTA de
+      // cuota, que pertenece a la operación anterior.
+      const isOpen = this.visible();
       this.internalMode.set(mode);
       untracked(() => {
+        if (isOpen) this.capacityError.set(false);
         if (loc) {
           this.form.patchValue({
             name: loc.name,
@@ -188,6 +192,7 @@ export class LocationDialogComponent {
     obs.subscribe({
       next: (res) => {
         this.saving.set(false);
+        this.capacityError.set(false);
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
         this.saved.emit();
       },

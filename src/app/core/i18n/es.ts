@@ -1011,6 +1011,8 @@ export const ES: Record<string, string> = {
   'providers.dialog.roles': 'Roles',
   'providers.dialog.roles_hint': 'Los roles determinan los permisos del profesional. Se requiere al menos un rol.',
   'providers.save_roles_failed': 'No se pudieron guardar los roles. Inténtelo nuevamente.',
+  'providers.save_roles_failed_partial': 'Los datos del profesional se guardaron, pero los roles no. Reintenta para completar el cambio.',
+  'providers.save_not_permitted': 'No tienes permiso para guardar cambios en este profesional.',
   'providers.saved_roles_only': 'Roles actualizados.',
   'providers.toggle_activate': 'Activar profesional',
   'providers.toggle_deactivate': 'Desactivar profesional',

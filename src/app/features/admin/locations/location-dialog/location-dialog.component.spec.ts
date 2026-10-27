@@ -147,4 +147,65 @@ describe('LocationDialogComponent', () => {
       expect(component.saving()).toBe(false);
     });
   });
+
+  // ── Cuota agotada: el CTA de upgrade no queda pegado ────────────────
+
+  describe('capacity limit CTA', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    const quotaError = () =>
+      new HttpErrorResponse({
+        status: 403,
+        error: { error: 'tenant_location_limit_reached', detail: 'sin cupo' },
+      });
+
+    /** Completa el alta mínima válida y dispara el guardado. */
+    function submitCreate(): void {
+      component.form.controls.name.setValue(required.name);
+      component.form.controls.address.setValue(required.address);
+      component.form.controls.city.setValue(required.city);
+      component.form.controls.regionId.setValue(required.regionId);
+      fixture.detectChanges();
+      component.onSave();
+    }
+
+    it('muestra el CTA y no emite saved cuando el backend rechaza el alta por cuota', () => {
+      open('create', null);
+      locationsApi.createLocation.mockReturnValue(throwError(() => quotaError()));
+      const savedSpy = vi.spyOn(component.saved, 'emit');
+
+      submitCreate();
+
+      expect(component.capacityError()).toBe(true);
+      expect(savedSpy).not.toHaveBeenCalled();
+      expect(httpErrorHandle).not.toHaveBeenCalled();
+    });
+
+    it('limpia el CTA al reabrir el diálogo', () => {
+      open('create', null);
+      locationsApi.createLocation.mockReturnValue(throwError(() => quotaError()));
+      submitCreate();
+      expect(component.capacityError()).toBe(true);
+
+      fixture.componentRef.setInput('visible', false);
+      fixture.detectChanges();
+      open('create', null);
+
+      expect(component.capacityError()).toBe(false);
+    });
+
+    it('limpia el CTA cuando el reintento sale bien', () => {
+      open('create', null);
+      locationsApi.createLocation.mockReturnValue(throwError(() => quotaError()));
+      submitCreate();
+      expect(component.capacityError()).toBe(true);
+
+      locationsApi.createLocation.mockReturnValue(of({ message: 'ok', data: baseLocation() }));
+      submitCreate();
+
+      expect(component.capacityError()).toBe(false);
+    });
+  });
 });

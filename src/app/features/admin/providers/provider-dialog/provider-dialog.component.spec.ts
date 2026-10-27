@@ -210,24 +210,59 @@ describe('ProviderDialogComponent', () => {
       await setup([ABILITIES.providersRoles]);
       rolesApi.assignProviderRoles.mockReturnValue(of({ data: [role('staff')] }));
       open('edit', makeProvider({ roles: [role('staff')] }));
+      const savedSpy = vi.spyOn(component.saved, 'emit');
 
       component.onSave();
 
+      // Comportamiento observable: no se toca el endpoint de datos, sí el de
+      // roles, y el diálogo se cierra.
       expect(providersApi.updateProvider).not.toHaveBeenCalled();
       expect(rolesApi.assignProviderRoles).toHaveBeenCalledTimes(1);
-      expect(component.canEditBasics()).toBe(false);
-      expect(component.basicsDisabled()).toBe(true);
+      expect(savedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('con solo providers.roles, un fallo de roles es total (no hubo escritura parcial)', async () => {
+      await setup([ABILITIES.providersRoles]);
+      rolesApi.assignProviderRoles.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 500 })),
+      );
+      open('edit', makeProvider({ roles: [role('staff')] }));
+
+      component.onSave();
+
+      expect(messageAdd).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error', summary: 'providers.save_roles_failed' }),
+      );
     });
 
     it('sin providers.roles guarda los datos pero no reasigna roles', async () => {
       await setup([ABILITIES.providersManage]);
       open('edit', makeProvider({ roles: [role('staff')] }));
+      const savedSpy = vi.spyOn(component.saved, 'emit');
 
       component.onSave();
 
+      // Comportamiento observable: se patchean los datos, no se tocan los roles
+      // y el diálogo se cierra.
       expect(providersApi.updateProvider).toHaveBeenCalled();
       expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
-      expect(component.rolesDisabled()).toBe(true);
+      expect(savedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('avisa con un error en vez de no hacer nada cuando no tiene ninguna de las dos keys', async () => {
+      await setup([]);
+      open('edit', makeProvider({ roles: [role('staff')] }));
+      const savedSpy = vi.spyOn(component.saved, 'emit');
+
+      component.onSave();
+
+      expect(providersApi.updateProvider).not.toHaveBeenCalled();
+      expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
+      expect(savedSpy).not.toHaveBeenCalled();
+      expect(messageAdd).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error', summary: 'providers.save_not_permitted' }),
+      );
+      expect(component.saving()).toBe(false);
     });
   });
 
@@ -277,7 +312,7 @@ describe('ProviderDialogComponent', () => {
       expect(component.saving()).toBe(false);
     });
 
-    it('shows save_roles_failed toast and does NOT emit saved when roles fail', () => {
+    it('informa escritura parcial cuando los datos se guardaron y los roles fallaron', () => {
       const provider = makeProvider({ roles: [role('staff')] });
       rolesApi.assignProviderRoles.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500 })),
@@ -287,10 +322,14 @@ describe('ProviderDialogComponent', () => {
 
       component.onSave();
 
+      expect(providersApi.updateProvider).toHaveBeenCalled();
       expect(savedSpy).not.toHaveBeenCalled();
       expect(component.saving()).toBe(false);
       expect(messageAdd).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'error', summary: 'providers.save_roles_failed' }),
+        expect.objectContaining({
+          severity: 'error',
+          summary: 'providers.save_roles_failed_partial',
+        }),
       );
     });
 
@@ -371,6 +410,69 @@ describe('ProviderDialogComponent', () => {
 
       expect(component.form.controls.roleSlugs.disabled).toBe(true);
       expect(component.form.controls.roleSlugs.value).toEqual(['staff', 'staff_readonly']);
+    });
+  });
+
+  // ── Cuota agotada: el CTA de upgrade no queda pegado ────────────────
+
+  describe('capacity limit CTA', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    const quotaError = () =>
+      new HttpErrorResponse({
+        status: 403,
+        error: { error: 'tenant_professional_limit_reached', detail: 'sin cupo' },
+      });
+
+    /** Completa el alta mínima válida y dispara el guardado. */
+    function submitCreate(): void {
+      component.form.controls.firstName.setValue('Bruno');
+      component.form.controls.lastName.setValue('Díaz');
+      component.form.controls.email.setValue('bruno@test.com');
+      component.form.controls.locationId.setValue(1);
+      fixture.detectChanges();
+      component.onSave();
+    }
+
+    it('muestra el CTA y no emite saved cuando el backend rechaza el alta por cuota', () => {
+      open('create', null);
+      providersApi.createProvider.mockReturnValue(throwError(() => quotaError()));
+      const savedSpy = vi.spyOn(component.saved, 'emit');
+
+      submitCreate();
+
+      expect(component.capacityError()).toBe(true);
+      expect(savedSpy).not.toHaveBeenCalled();
+      expect(component.saving()).toBe(false);
+    });
+
+    it('limpia el CTA al reabrir el diálogo', () => {
+      open('create', null);
+      providersApi.createProvider.mockReturnValue(throwError(() => quotaError()));
+      submitCreate();
+      expect(component.capacityError()).toBe(true);
+
+      fixture.componentRef.setInput('visible', false);
+      fixture.detectChanges();
+      open('create', null);
+
+      expect(component.capacityError()).toBe(false);
+    });
+
+    it('limpia el CTA cuando el reintento sale bien', () => {
+      open('create', null);
+      providersApi.createProvider.mockReturnValue(throwError(() => quotaError()));
+      submitCreate();
+      expect(component.capacityError()).toBe(true);
+
+      providersApi.createProvider.mockReturnValue(
+        of({ message: 'ok', data: makeProvider({ id: 9 }) }),
+      );
+      submitCreate();
+
+      expect(component.capacityError()).toBe(false);
     });
   });
 });
