@@ -1,27 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResponse, Provider } from '@models';
-import { buildHttpParams } from './build-http-params';
-
-/**
- * Tamaño de página al listar. El backend pagina (`{data, links, meta}`, default
- * 15) y **no valida ni acota `per_page`**, así que pedimos un valor explícito y
- * acotado en vez de depender de un número enorme.
- */
-const LIST_PER_PAGE = 25;
+import { Provider } from '@models';
+import { collectPaginatedPages } from './collect-paginated';
 
 @Injectable({ providedIn: 'root' })
 export class ProvidersApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
+  /**
+   * Listado completo: agrega todas las páginas del envelope paginado (ver
+   * `collectPaginatedPages`). `ReferenceStore` publica este array como fuente
+   * canónica y lo comparten agenda, reservas, roles y dashboard.
+   */
   getProviders(params?: { location_id?: number }): Observable<Provider[]> {
-    const query = buildHttpParams({ ...params, per_page: LIST_PER_PAGE });
-    return this.http
-      .get<PaginatedResponse<Provider>>(`${this.baseUrl}/providers`, { params: query })
-      .pipe(map((res) => res.data));
+    return collectPaginatedPages<Provider>(this.http, `${this.baseUrl}/providers`, params);
   }
 
   getProvider(id: number): Observable<Provider> {

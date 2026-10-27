@@ -48,14 +48,23 @@ export function isOnboardingRequired(err: HttpErrorResponse): boolean {
 }
 
 /**
+ * Códigos con los que la API reporta que se agotó una cuota del plan (403).
+ * `POST /businesses` → `account_tenant_limit_reached`; crear/reactivar
+ * profesional → `tenant_professional_limit_reached`; crear sucursal →
+ * `tenant_location_limit_reached`. Los tres traen `limit`/`current`.
+ */
+export const CAPACITY_LIMIT_ERROR_CODES: readonly string[] = [
+  'account_tenant_limit_reached',
+  'tenant_professional_limit_reached',
+  'tenant_location_limit_reached',
+];
+
+/**
  * True when the API rejected the request because the account/plan hit a capacity
- * limit. `POST /businesses` → 403 `account_tenant_limit_reached`; create/reactivate
- * professional → 403 `tenant_professional_limit_reached` (both carry `limit`/`current`).
+ * limit (ver `CAPACITY_LIMIT_ERROR_CODES`).
  */
 export function isCapacityLimitError(err: HttpErrorResponse): boolean {
-  return err.status === 403 &&
-    (err.error?.error === 'account_tenant_limit_reached' ||
-     err.error?.error === 'tenant_professional_limit_reached');
+  return err.status === 403 && CAPACITY_LIMIT_ERROR_CODES.includes(err.error?.error);
 }
 
 @Injectable({ providedIn: 'root' })
@@ -183,8 +192,7 @@ export class HttpErrorService {
       detail += ` Saldo: $${Number(body.remaining).toLocaleString('es-CL')}`;
     }
     // Capacity-limit errors carry current/limit — surface the usage so the user sees why.
-    if (body.limit !== undefined &&
-        (errorKey === 'account_tenant_limit_reached' || errorKey === 'tenant_professional_limit_reached')) {
+    if (body.limit !== undefined && CAPACITY_LIMIT_ERROR_CODES.includes(errorKey)) {
       detail += ' ' + this.lang.t('biz.capacity_usage', {
         current: String(body.current ?? '?'),
         limit:   String(body.limit),

@@ -1,27 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { Location, PaginatedResponse, Region, LocationComuna } from '@models';
-import { buildHttpParams } from './build-http-params';
-
-/**
- * Tamaño de página al listar. El backend pagina (`{data, links, meta}`, default
- * 15) y no acota `per_page`, así que pedimos un valor explícito y acotado.
- */
-const LIST_PER_PAGE = 25;
+import { Location, Region, LocationComuna } from '@models';
+import { collectPaginatedPages } from './collect-paginated';
 
 @Injectable({ providedIn: 'root' })
 export class LocationsApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
+  /**
+   * Listado completo: agrega todas las páginas del envelope paginado (ver
+   * `collectPaginatedPages`). `ReferenceStore` publica este array como fuente
+   * canónica y lo comparten agenda, reservas y dashboard.
+   */
   getLocations(): Observable<Location[]> {
-    return this.http
-      .get<PaginatedResponse<Location>>(`${this.baseUrl}/locations`, {
-        params: buildHttpParams({ per_page: LIST_PER_PAGE }),
-      })
-      .pipe(map((res) => res.data));
+    return collectPaginatedPages<Location>(this.http, `${this.baseUrl}/locations`);
   }
 
   getLocation(id: number): Observable<Location> {

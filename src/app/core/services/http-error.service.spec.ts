@@ -41,6 +41,12 @@ describe('isCapacityLimitError', () => {
     expect(isCapacityLimitError(apiError(403, { error: 'tenant_professional_limit_reached', limit: 5, current: 5 }))).toBe(true);
   });
 
+  it('is true for 403 tenant_location_limit_reached', () => {
+    // Crear sucursal devuelve este código; sin cubrirlo, el CTA de upgrade de
+    // `location-dialog` era código muerto y el 403 caía como toast genérico.
+    expect(isCapacityLimitError(apiError(403, { error: 'tenant_location_limit_reached', limit: 2, current: 2 }))).toBe(true);
+  });
+
   it('is false for 403 with a different business error', () => {
     expect(isCapacityLimitError(apiError(403, { error: 'forbidden' }))).toBe(false);
   });

@@ -25,6 +25,13 @@ describe('LocationsApiService', () => {
     httpMock.verify();
   });
 
+  /** Envelope tal cual lo devuelve el backend (Laravel paginator). */
+  const envelope = (data: Location[], current: number, last: number, total = last * 25) => ({
+    data,
+    links: {},
+    meta: { current_page: current, from: 1, last_page: last, per_page: 25, to: data.length, total },
+  });
+
   it('GET /locations via getLocations() unwraps the paginated envelope', () => {
     const dummy: Location[] = [
       { id: 1, name: 'Santiago', address: 'Av. Principal 123', city: 'Santiago', timezone: 'America/Santiago', active: true },
@@ -37,11 +44,29 @@ describe('LocationsApiService', () => {
     const req = httpMock.expectOne((r) => r.url === `${baseUrl}/locations` && r.method === 'GET');
     expect(req.request.method).toBe('GET');
     expect(req.request.params.get('per_page')).toBe('25');
-    req.flush({
-      data: dummy,
-      links: {},
-      meta: { current_page: 1, from: 1, last_page: 1, per_page: 15, to: 1, total: 1 },
-    });
+    expect(req.request.params.get('page')).toBe('1');
+    req.flush(envelope(dummy, 1, 1, 1));
+  });
+
+  it('GET /locations via getLocations() aggregates every page', () => {
+    const first: Location[] = [
+      { id: 1, name: 'Santiago', address: 'Av. Principal 123', city: 'Santiago', timezone: 'America/Santiago', active: true },
+    ];
+    const second: Location[] = [
+      { id: 2, name: 'Providencia', address: 'Av. Providencia 456', city: 'Santiago', timezone: 'America/Santiago', active: true },
+    ];
+    let result: Location[] | undefined;
+
+    service.getLocations().subscribe(data => (result = data));
+
+    httpMock
+      .expectOne((r) => r.url === `${baseUrl}/locations` && r.params.get('page') === '1')
+      .flush(envelope(first, 1, 2));
+    httpMock
+      .expectOne((r) => r.url === `${baseUrl}/locations` && r.params.get('page') === '2')
+      .flush(envelope(second, 2, 2));
+
+    expect(result).toEqual([...first, ...second]);
   });
 
   it('GET /locations/:id via getLocation()', () => {

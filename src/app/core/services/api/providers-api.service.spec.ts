@@ -25,6 +25,15 @@ describe('ProvidersApiService', () => {
   });
 
   describe('getProviders', () => {
+    const url = `${environment.apiUrl}/providers`;
+
+    /** Envelope tal cual lo devuelve el backend (Laravel paginator). */
+    const envelope = (data: Provider[], current: number, last: number, total = last * 25) => ({
+      data,
+      links: {},
+      meta: { current_page: current, from: 1, last_page: last, per_page: 25, to: data.length, total },
+    });
+
     it('unwraps the paginated envelope into a provider array', () => {
       const mock: Provider[] = [
         { id: 1, first_name: 'Ana', last_name: 'García', email: 'ana@test.com', active: true },
@@ -34,30 +43,69 @@ describe('ProvidersApiService', () => {
         expect(res).toEqual(mock);
       });
 
-      const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/providers`);
+      const req = httpMock.expectOne((r) => r.url === url);
       expect(req.request.method).toBe('GET');
-      req.flush({
-        data: mock,
-        links: {},
-        meta: { current_page: 1, from: 1, last_page: 1, per_page: 15, to: 1, total: 1 },
-      });
+      req.flush(envelope(mock, 1, 1));
     });
 
     it('asks for a bounded page size (the backend does not cap per_page)', () => {
       service.getProviders().subscribe();
 
-      const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/providers`);
+      const req = httpMock.expectOne((r) => r.url === url);
       expect(req.request.params.get('per_page')).toBe('25');
-      req.flush({ data: [], links: {}, meta: { current_page: 1, from: 0, last_page: 1, per_page: 25, to: 0, total: 0 } });
+      expect(req.request.params.get('page')).toBe('1');
+      req.flush(envelope([], 1, 1, 0));
+    });
+
+    it('aggregates every page so consumers never get a truncated list', () => {
+      const first: Provider[] = [
+        { id: 1, first_name: 'Ana', last_name: 'García', email: 'ana@test.com', active: true },
+      ];
+      const second: Provider[] = [
+        { id: 2, first_name: 'Luis', last_name: 'Pérez', email: 'luis@test.com', active: true },
+      ];
+      let result: Provider[] | undefined;
+
+      service.getProviders().subscribe((res) => (result = res));
+
+      httpMock.expectOne((r) => r.url === url && r.params.get('page') === '1').flush(envelope(first, 1, 2));
+      httpMock
+        .expectOne((r) => r.url === url && r.params.get('page') === '2')
+        .flush(envelope(second, 2, 2));
+
+      expect(result).toEqual([...first, ...second]);
+    });
+
+    it('stops at the safety cap instead of following an unbounded last_page', () => {
+      let result: Provider[] = [];
+
+      service.getProviders().subscribe((res) => (result = res));
+
+      for (let page = 1; page <= 40; page++) {
+        const item: Provider = {
+          id: page,
+          first_name: `P${page}`,
+          last_name: 'X',
+          email: `p${page}@test.com`,
+          active: true,
+        };
+        httpMock
+          .expectOne((r) => r.url === url && r.params.get('page') === String(page))
+          .flush(envelope([item], page, 99, 99 * 25));
+      }
+
+      expect(result.length).toBe(40);
+      // No queda ninguna request pendiente: la cadena se detuvo en el tope.
+      httpMock.expectNone((r) => r.url === url);
     });
 
     it('passes location_id as query param', () => {
       service.getProviders({ location_id: 2 }).subscribe();
 
-      const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/providers`);
+      const req = httpMock.expectOne((r) => r.url === url);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('location_id')).toBe('2');
-      req.flush({ data: [], links: {}, meta: { current_page: 1, from: 0, last_page: 1, per_page: 25, to: 0, total: 0 } });
+      req.flush(envelope([], 1, 1, 0));
     });
   });
 
