@@ -9,7 +9,9 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
-import { HttpErrorService } from '@services/http-error.service';
+import { HttpErrorService, isCapacityLimitError } from '@services/http-error.service';
+import { LanguageService } from '@services/language.service';
+import { Router } from '@angular/router';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location } from '@models';
 
@@ -30,6 +32,11 @@ export class LocationDialogComponent {
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
+  private router = inject(Router);
+  protected readonly lang = inject(LanguageService);
+
+  /** Cuota de sucursales agotada (403 `tenant_location_limit_reached`). */
+  readonly capacityError = signal(false);
 
   visible = input(false);
   mode = input<DialogMode>('create');
@@ -186,6 +193,12 @@ export class LocationDialogComponent {
       },
       error: (err) => {
         this.saving.set(false);
+        // 403 `tenant_location_limit_reached`: cupo del plan agotado. Se muestra
+        // CTA de upgrade en vez del toast genérico.
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         this.httpError.handle(err, 'guardar sucursal');
       },
     });
@@ -193,5 +206,9 @@ export class LocationDialogComponent {
 
   onClose(): void {
     this.closed.emit();
+  }
+
+  goToBilling(): void {
+    this.router.navigate(['/admin/facturacion']);
   }
 }

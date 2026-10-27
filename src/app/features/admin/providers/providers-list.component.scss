@@ -54,6 +54,12 @@
   font-weight: var(--bw-weight-medium);
 }
 
+.providers-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0.5rem 0.75rem 0;
+}
+
 .list-skeleton {
   display: flex;
   flex-direction: column;

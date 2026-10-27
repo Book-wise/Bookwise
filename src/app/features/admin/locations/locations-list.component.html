@@ -74,12 +74,15 @@
                 <span class="bw-chip" [class]="location.active ? 'bw-chip--success' : 'bw-chip--danger'">
                   {{ location.active ? 'Activo' : 'Inactivo' }}
                 </span>
-                <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
+                <p-toggleswitch
+                  *bwIfAbility="ABILITIES.locationsManage"
+                  [ngModel]="location.active"
+                  (ngModelChange)="toggleActive(location)" />
               </div>
             </td>
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(location)" />
-              <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(location)" />
+              <p-button icon="pi pi-pencil" *bwIfAbility="ABILITIES.locationsManage" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(location)" />
             </td>
           </tr>
         </ng-template>
@@ -110,14 +113,17 @@
                 <span class="bw-chip" [class]="location.active ? 'bw-chip--success' : 'bw-chip--danger'">
                   {{ location.active ? 'Activo' : 'Inactivo' }}
                 </span>
-                <p-toggleswitch [ngModel]="location.active" (ngModelChange)="toggleActive(location)" />
+                <p-toggleswitch
+                  *bwIfAbility="ABILITIES.locationsManage"
+                  [ngModel]="location.active"
+                  (ngModelChange)="toggleActive(location)" />
               </div>
             </div>
           </div>
 
           <div class="loc-card__actions">
             <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(location)" />
-            <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(location)" />
+            <p-button icon="pi pi-pencil" *bwIfAbility="ABILITIES.locationsManage" label="Editar" size="small" (onClick)="openEdit(location)" />
           </div>
         </div>
       }
@@ -148,7 +154,7 @@
 >
   <ng-template pTemplate="header">
     <div class="location-dialog-header">
-      <span class="location-dialog-title">Desactivar sucursal</span>
+      <span class="location-dialog-title">{{ lang.t('locations.deactivate.title') }}</span>
     </div>
   </ng-template>
 
@@ -157,20 +163,25 @@
       <div class="conflict-warning">⚠️ {{ data.message }}</div>
       <p-table [value]="data.affects.bookings">
         <ng-template pTemplate="header">
-          <tr><th>#</th><th>Fecha</th><th>Hora</th><th>Profesional</th></tr>
+          <tr>
+            <th>{{ lang.t('locations.deactivate.col_id') }}</th>
+            <th>{{ lang.t('locations.deactivate.col_date') }}</th>
+            <th>{{ lang.t('locations.deactivate.col_time') }}</th>
+            <th>{{ lang.t('locations.deactivate.col_provider') }}</th>
+          </tr>
         </ng-template>
         <ng-template pTemplate="body" let-booking>
           <tr><td>{{ booking.id }}</td><td>{{ booking.date }}</td><td>{{ booking.time }}</td><td>{{ booking.provider_name }}</td></tr>
         </ng-template>
       </p-table>
-      <p class="conflict-question">¿Desea continuar? Las reservas se verán afectadas.</p>
+      <p class="conflict-question">{{ lang.t('locations.deactivate.question') }}</p>
     </div>
   }
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
-      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cancelDeactivate()" />
-      <p-button label="Sí, desactivar" icon="pi pi-ban" severity="danger" (onClick)="confirmDeactivate()" />
+      <p-button label="{{ lang.t('ui.cancel') }}" severity="secondary" [outlined]="true" (onClick)="cancelDeactivate()" />
+      <p-button label="{{ lang.t('locations.deactivate.confirm') }}" icon="pi pi-ban" severity="danger" (onClick)="confirmDeactivate()" />
     </div>
   </ng-template>
 </p-dialog>

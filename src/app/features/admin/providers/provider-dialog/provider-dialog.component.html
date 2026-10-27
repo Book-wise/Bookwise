@@ -25,22 +25,22 @@
     <div class="field-row">
       <div class="field">
         <label>Nombre *</label>
-        <input pInputText formControlName="firstName" [disabled]="isView()" placeholder="Juan" class="w-full" />
+        <input pInputText formControlName="firstName" [disabled]="basicsDisabled()" placeholder="Juan" class="w-full" />
       </div>
       <div class="field">
         <label>Apellido *</label>
-        <input pInputText formControlName="lastName" [disabled]="isView()" placeholder="Pérez" class="w-full" />
+        <input pInputText formControlName="lastName" [disabled]="basicsDisabled()" placeholder="Pérez" class="w-full" />
       </div>
     </div>
 
     <div class="field">
       <label>Email *</label>
-      <input pInputText formControlName="email" [disabled]="isView()" placeholder="juan@correo.com" class="w-full" />
+      <input pInputText formControlName="email" [disabled]="basicsDisabled()" placeholder="juan@correo.com" class="w-full" />
     </div>
 
     <div class="field">
       <label>Teléfono</label>
-      <input pInputText formControlName="phone" [disabled]="isView()" placeholder="+56 9 1234 5678" class="w-full" />
+      <input pInputText formControlName="phone" [disabled]="basicsDisabled()" placeholder="+56 9 1234 5678" class="w-full" />
     </div>
 
     <div class="field">
@@ -48,7 +48,7 @@
       <p-select
         formControlName="locationId"
         [options]="locationOptions()"
-        [disabled]="isView()"
+        [disabled]="basicsDisabled()"
         placeholder="Seleccionar sucursal..."
         [appendTo]="'body'"
         class="w-full"
@@ -59,7 +59,7 @@
     <div class="field">
       <label>Activo</label>
       <div class="toggle-row">
-        <p-toggleswitch formControlName="active" [disabled]="isView()" />
+        <p-toggleswitch formControlName="active" [disabled]="basicsDisabled()" />
         <span class="toggle-label" [class.active]="form.controls.active.value">
           {{ form.controls.active.value ? 'Sí, está activo' : 'No, está inactivo' }}
         </span>
@@ -75,7 +75,7 @@
           optionLabel="label"
           optionValue="value"
           optionDisabled="disabled"
-          [disabled]="isView()"
+          [disabled]="rolesDisabled()"
           [placeholder]="lang.t('providers.dialog.roles_hint')"
           display="chip"
           [showClear]="false"

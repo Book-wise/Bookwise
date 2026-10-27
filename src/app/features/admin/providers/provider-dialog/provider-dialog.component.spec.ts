@@ -7,6 +7,8 @@ import { ProviderDialogComponent } from './provider-dialog.component';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { AuthService } from '@services/auth.service';
+import { ABILITIES } from '@shared/config/abilities.config';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { RolesApiService } from '@services/api/roles-api.service';
 import { LocationsApiService } from '@services/api/locations-api.service';
@@ -56,11 +58,20 @@ describe('ProviderDialogComponent', () => {
   };
   let messageAdd: ReturnType<typeof vi.fn>;
 
-  async function setup() {
+  async function setup(
+    grantedKeys: string[] = [ABILITIES.providersManage, ABILITIES.providersRoles],
+  ) {
     await TestBed.configureTestingModule({
       imports: [ProviderDialogComponent],
       providers: [
         provideZonelessChangeDetection(),
+        {
+          provide: AuthService,
+          useValue: {
+            hasPermission: (key: string) => grantedKeys.includes(key),
+            hasAnyPermission: (...keys: string[]) => keys.some((k) => grantedKeys.includes(k)),
+          },
+        },
         { provide: ClientsApiService, useValue: { getClients: vi.fn(() => of([])) } },
         {
           provide: LocationsApiService,
@@ -192,6 +203,34 @@ describe('ProviderDialogComponent', () => {
     });
   });
 
+  // ── RBAC por sección: providers.manage vs providers.roles ──────────
+
+  describe('RBAC por sección', () => {
+    it('con solo providers.roles reasigna roles sin tocar los datos', async () => {
+      await setup([ABILITIES.providersRoles]);
+      rolesApi.assignProviderRoles.mockReturnValue(of({ data: [role('staff')] }));
+      open('edit', makeProvider({ roles: [role('staff')] }));
+
+      component.onSave();
+
+      expect(providersApi.updateProvider).not.toHaveBeenCalled();
+      expect(rolesApi.assignProviderRoles).toHaveBeenCalledTimes(1);
+      expect(component.canEditBasics()).toBe(false);
+      expect(component.basicsDisabled()).toBe(true);
+    });
+
+    it('sin providers.roles guarda los datos pero no reasigna roles', async () => {
+      await setup([ABILITIES.providersManage]);
+      open('edit', makeProvider({ roles: [role('staff')] }));
+
+      component.onSave();
+
+      expect(providersApi.updateProvider).toHaveBeenCalled();
+      expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
+      expect(component.rolesDisabled()).toBe(true);
+    });
+  });
+
   // ── Edit save: basics → roles (sequential, store-routed) ────────────
 
   describe('edit save', () => {
@@ -286,6 +325,7 @@ describe('ProviderDialogComponent', () => {
       component.form.controls.firstName.setValue('Bruno');
       component.form.controls.lastName.setValue('Díaz');
       component.form.controls.email.setValue('bruno@test.com');
+      component.form.controls.locationId.setValue(1);
       component.onSave();
 
       expect(providersApi.createProvider).toHaveBeenCalledWith({
@@ -294,9 +334,28 @@ describe('ProviderDialogComponent', () => {
         email: 'bruno@test.com',
         phone: null,
         active: true,
+        location_id: 1,
       });
       expect(rolesApi.assignProviderRoles).not.toHaveBeenCalled();
       expect(savedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('blocks the create when no location is selected (backend requires it)', () => {
+      open('create', null);
+
+      component.form.controls.firstName.setValue('Bruno');
+      component.form.controls.lastName.setValue('Díaz');
+      component.form.controls.email.setValue('bruno@test.com');
+      component.onSave();
+
+      expect(component.form.controls.locationId.hasError('required')).toBe(true);
+      expect(providersApi.createProvider).not.toHaveBeenCalled();
+    });
+
+    it('does not force a location when editing a provider that has none', () => {
+      open('edit', makeProvider({ roles: [role('staff')] }));
+
+      expect(component.form.controls.locationId.hasError('required')).toBe(false);
     });
   });
 

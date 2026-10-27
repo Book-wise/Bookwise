@@ -24,6 +24,12 @@ export const ABILITIES = {
 
   providersView: 'providers.view',
   providersManage: 'providers.manage',
+  /**
+   * Reasignar roles de un profesional. Key propia del backend (`min_level` 80):
+   * `admin_location` la tiene por baseline y PUEDE reasignar en su sucursal,
+   * pero NO puede delegarla. No confundir con `providers.manage` (crear/editar).
+   */
+  providersRoles: 'providers.roles',
 
   settingsView: 'settings.view',
   settingsUpdate: 'settings.update',

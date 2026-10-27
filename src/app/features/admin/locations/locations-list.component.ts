@@ -9,6 +9,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
+import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { ABILITIES } from '@shared/config/abilities.config';
 import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
@@ -46,6 +47,7 @@ export class LocationsListComponent {
   private httpError = inject(HttpErrorService);
   protected refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
+  protected readonly lang = inject(LanguageService);
 
   /**
    * Sucursales leídas de ReferenceStore (fuente canónica, U6): el store carga en

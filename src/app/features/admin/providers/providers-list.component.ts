@@ -23,6 +23,9 @@ import { roleMeta } from '../roles/role-meta';
 import { locationColor } from '@shared/utils/location-palette.util';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
+import { ABILITIES } from '@shared/config/abilities.config';
+import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
+import { AuthService } from '@services/auth.service';
 
 // ── Color palette for location grouping ────────────────────────────────
 // Los colores de sucursal se resuelven en shared/utils/location-palette.util
@@ -52,7 +55,7 @@ interface ConflictData {
     CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
     SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, MultiSelectModule,
     ToggleSwitchModule, DialogModule,
-    ProviderDialogComponent,
+    ProviderDialogComponent, BwIfAbilityDirective,
   ],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss'],
@@ -63,11 +66,24 @@ export class ProvidersListComponent implements OnInit {
   private router = inject(Router);
   private calNav = inject(CalendarNavigationService);
   private messageService = inject(MessageService);
+  private auth = inject(AuthService);
   protected refStore = inject(ReferenceStore);
   protected readonly lang = inject(LanguageService);
 
   /** Resuelve color/icono de un rol (fallback gris + pi-user). */
   protected readonly roleMeta = roleMeta;
+
+  /** Catálogo de permission keys (nunca literales, S5 de `fase-b-rbac-cierre`). */
+  protected readonly ABILITIES = ABILITIES;
+
+  /**
+   * Editar se abre con `providers.manage` (datos) **o** `providers.roles`
+   * (reasignar roles): `admin_location` tiene solo la segunda. Cada bloque del
+   * diálogo se habilita por separado.
+   */
+  protected readonly canEditProvider = computed(() =>
+    this.auth.hasAnyPermission(ABILITIES.providersManage, ABILITIES.providersRoles),
+  );
 
   // ── Data ────────────────────────────────────────────────────────────────
   // Los providers se leen de ReferenceStore (fuente canónica; U3 cierra el
@@ -264,6 +280,13 @@ export class ProvidersListComponent implements OnInit {
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');
   selectedProvider = signal<Provider | null>(null);
+
+  /** Alta de profesional. Requiere `providers.manage` (gateado en el template). */
+  openCreate(): void {
+    this.dialogMode.set('create');
+    this.selectedProvider.set(null);
+    this.dialogVisible.set(true);
+  }
 
   openEdit(provider: Provider): void {
     this.dialogMode.set('edit');

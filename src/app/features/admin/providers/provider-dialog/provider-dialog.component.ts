@@ -13,7 +13,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { HttpErrorService, isCapacityLimitError } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { AuthService } from '@services/auth.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ABILITIES } from '@shared/config/abilities.config';
 import { Provider, Role } from '@models';
 import { roleMeta } from '../../roles/role-meta';
 import { applyAdminGeneralInvariant, isAdminGeneralLocked } from '../../roles/role-guards';
@@ -33,6 +35,19 @@ interface RoleOption {
  * excluded from form validity; in create mode the roles section does not
  * exist, so the empty default must not invalidate the form.
  */
+/**
+ * `location_id` es obligatorio **solo al crear** (`ProviderStoreRequest` exige
+ * "La sucursal es obligatoria."). En edición el backend lo trata `sometimes`,
+ * así que un profesional legacy sin sucursal debe poder seguir editándose.
+ */
+function locationRequiredWhenCreating(mode: () => DialogMode): ValidatorFn {
+  return (control: AbstractControl) => {
+    if (mode() !== 'create') return null;
+    const value = control.value;
+    return value === null || value === undefined || value === '' ? { required: true } : null;
+  };
+}
+
 function rolesRequiredWhenEditing(mode: () => DialogMode): ValidatorFn {
   return (control: AbstractControl): { rolesRequired: true } | null => {
     if (mode() === 'create') return null;
@@ -57,6 +72,7 @@ export class ProviderDialogComponent {
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private auth = inject(AuthService);
   protected readonly lang = inject(LanguageService);
 
   /** Resuelve color/icono de un rol (fallback gris + pi-user). */
@@ -86,13 +102,35 @@ export class ProviderDialogComponent {
     lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     phone: new FormControl('', { nonNullable: true }),
-    locationId: new FormControl<number | null>(null),
+    // El backend exige `location_id` al crear ("La sucursal es obligatoria."):
+    // sin esta validación el formulario enviaría el alta sin sucursal y daría 422.
+    locationId: new FormControl<number | null>(null, {
+      validators: [locationRequiredWhenCreating(() => this.internalMode())],
+    }),
     active: new FormControl(true, { nonNullable: true }),
     roleSlugs: new FormControl<string[]>([], {
       nonNullable: true,
       validators: [rolesRequiredWhenEditing(() => this.internalMode())],
     }),
   });
+
+  /** Catálogo de permission keys (nunca literales). */
+  protected readonly ABILITIES = ABILITIES;
+
+  /**
+   * Dos fronteras distintas, tal como las modela el backend:
+   * - `providers.manage` → crear/editar los datos del profesional.
+   * - `providers.roles` → reasignar sus roles (key propia, `min_level` 80).
+   * `admin_location` tiene la segunda y no la primera, así que el diálogo se
+   * abre con cualquiera de las dos y cada bloque se habilita por separado.
+   */
+  readonly canEditBasics = computed(() => this.auth.hasPermission(ABILITIES.providersManage));
+  readonly canEditRoles = computed(() => this.auth.hasPermission(ABILITIES.providersRoles));
+
+  /** Campos de datos: deshabilitados en vista o sin `providers.manage`. */
+  readonly basicsDisabled = computed(() => this.isView() || !this.canEditBasics());
+  /** Selector de roles: deshabilitado en vista o sin `providers.roles`. */
+  readonly rolesDisabled = computed(() => this.isView() || !this.canEditRoles());
 
   private formStatus = toSignal(this.form.statusChanges, { initialValue: 'INVALID' });
 
@@ -266,27 +304,48 @@ export class ProviderDialogComponent {
     const provider = this.provider();
     if (!provider) return;
 
+    const wantBasics = this.canEditBasics();
+    const wantRoles = this.canEditRoles();
+    if (!wantBasics && !wantRoles) return;
+
     const roleSlugs = applyAdminGeneralInvariant(this.currentRoleSlugs(), rawRoleSlugs);
 
+    const finish = (summary: string) => {
+      this.saving.set(false);
+      this.messageService.add({ severity: 'success', summary, key: 'global' });
+      this.saved.emit();
+    };
+
+    // Roles: se guardan solo si el usuario tiene la key; si no, el PATCH daría
+    // 403 `permission_required`.
+    const saveRoles = (summary: string) => {
+      if (!wantRoles) {
+        finish(summary);
+        return;
+      }
+      this.refStore.assignProviderRoles(provider.id, roleSlugs).subscribe({
+        next: () => finish(summary),
+        error: () => {
+          this.saving.set(false);
+          this.messageService.add({
+            severity: 'error',
+            summary: this.lang.t('providers.save_roles_failed'),
+            key: 'global',
+          });
+        },
+      });
+    };
+
     this.saving.set(true);
+
+    // Camino "solo roles" (`admin_location`): no se tocan los datos.
+    if (!wantBasics) {
+      saveRoles(this.lang.t('providers.saved_roles_only'));
+      return;
+    }
+
     this.refStore.saveProviderBasics(provider.id, payload).subscribe({
-      next: (res) => {
-        this.refStore.assignProviderRoles(provider.id, roleSlugs).subscribe({
-          next: () => {
-            this.saving.set(false);
-            this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
-            this.saved.emit();
-          },
-          error: () => {
-            this.saving.set(false);
-            this.messageService.add({
-              severity: 'error',
-              summary: this.lang.t('providers.save_roles_failed'),
-              key: 'global',
-            });
-          },
-        });
-      },
+      next: (res) => saveRoles(res.message),
       error: (err) => {
         this.saving.set(false);
         if (isCapacityLimitError(err)) {

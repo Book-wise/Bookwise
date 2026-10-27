@@ -1,3 +1,11 @@
+<div class="providers-toolbar">
+  <p-button
+    *bwIfAbility="ABILITIES.providersManage"
+    icon="pi pi-plus"
+    label="{{ lang.t('providers.new') }}"
+    (onClick)="openCreate()" />
+</div>
+
 @if (capacityError()) {
   <div class="bw-capacity-cta">
     <i class="pi pi-exclamation-triangle"></i>
@@ -184,6 +192,7 @@
                   {{ provider.active ? 'Activo' : 'Inactivo' }}
                 </span>
                 <p-toggleswitch
+                  *bwIfAbility="ABILITIES.providersManage"
                   [ngModel]="provider.active"
                   (ngModelChange)="toggleActive(provider)"
                   [disabled]="toggling().has(provider.id)"
@@ -193,7 +202,9 @@
             </td>
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
-              <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
+              @if (canEditProvider()) {
+                <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
+              }
               <p-button icon="pi pi-calendar" class="p-button-text" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
             </td>
           </tr>
@@ -262,6 +273,7 @@
                   {{ provider.active ? 'Activo' : 'Inactivo' }}
                 </span>
                 <p-toggleswitch
+                  *bwIfAbility="ABILITIES.providersManage"
                   [ngModel]="provider.active"
                   (ngModelChange)="toggleActive(provider)"
                   [disabled]="toggling().has(provider.id)"
@@ -273,7 +285,9 @@
 
           <div class="prov-card__actions">
             <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(provider)" />
-            <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
+            @if (canEditProvider()) {
+              <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
+            }
             <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
           </div>
         </div>
