@@ -5,10 +5,9 @@ Documento de continuidad. Registra **qué se hizo**, **qué contratos del backen
 
 ---
 
-## 0. Estado al 2026-10-20 (commiteado)
+## 0. Estado al 2026-10-26 (commiteado, SIN PUSH)
 
-Todo lo listado abajo quedó **commiteado** en 4 work-unit commits sobre
-`feat/contract-catchup` (sin push):
+Rama `feat/contract-catchup`. **La rama NO existe en `origin`**: ningún commit fue pusheado.
 
 | Commit | Alcance |
 |---|---|
@@ -16,11 +15,17 @@ Todo lo listado abajo quedó **commiteado** en 4 work-unit commits sobre
 | `a0c6855` `fix(bookings)` | `appendTo='body'` en dropdowns de bookings |
 | `ae1d44c` `feat(entitlement)` | Fase A: planes/billing/add-ons/perfil/diálogo 402 |
 | `fac2012` `feat(authz)` | Fase B: RBAC por permission key |
+| `ebed53e` `feat(plans)` | Split Pago/Plan: Mi plan (lectura), Administrar plan (edición), Historial (#17 #19 #22) |
+| `c6dc097` `fix(calendar)` | Padding de la card del calendario admin (1.25rem→0.75rem) |
+| `b71a8d2` `docs(openspec)` | Pedido FE→BE de serie histórica de consumo (#23) |
 
-Verificación: `ng build` verde + 108/108 tests (10 specs tocados).
+Verificación última (2026-10-26): `ng build` verde + `ng test` **692/698 pass**. Los 6 fallos son
+PRE-EXISTENTES y ajenos: `booking-form-dialog` patient-card (`window.matchMedia`),
+`historial-reserva` (`bookingsShowingCount`), `calendar-navigation`.
 
-Sin commitear (decisión pendiente): `.atl/skill-registry.md` (tooling auto-gen) e
-imagen `src/assets/images/landing_page/salon de belleza_dresden.jpg`.
+Sin commitear (decisión pendiente): `.atl/skill-registry.md` (tooling auto-gen),
+`src/assets/images/landing_page/salon de belleza_dresden.jpg` y `odd/tasks/creation-limits.md`
+(doc de #12, pausado).
 
 ---
 
@@ -101,15 +106,17 @@ Verificación: `npx ng build` verde + **20/20 tests** (billing, negocios, planes
 - ~~**#11 Fase B**: migrar los gates `is_admin_*` a `hasPermission(...)` + verificación final.~~ ✅ cerrada (`fac2012`).
 - **#12 Límites de creación**: bloquear "Nuevo profesional" / "Nueva sucursal" al llegar al tope
   del plan, con diálogo y CTA de upgrade (hoy solo se avisa en las cards de facturación).
-- **#17 Popover de desglose** en "Mi plan" (tabla Plan / Add-ons / Impuestos / Total +
-  "Ver más detalles").
+  → **EN CURSO (pausado 2026-10-26)**: doc `odd/tasks/creation-limits.md` (diseño cerrado, **nada
+  implementado, sin commitear**). Descubrimiento: **no existe botón "Nuevo profesional"** (el
+  `provider-dialog` en modo create quedó sin punto de entrada) → se bloquean solo las altas
+  alcanzables: "Nueva sucursal" (`max_locations`) y "Nuevo negocio" (`max_tenants`).
+- ~~**#17 Popover de desglose** en "Mi plan"~~ ✅ cerrada (`ebed53e`, `MyPlanComponent`).
 - **#18 Draft + barra flotante** "Tienes cambios en tu plan" con **Cancelar** y
-  **Confirmar cambio** (sin prorrateo: el backend es D.8).
-- **#19 Caja azul informativa**: total de la suscripción + próxima fecha de facturación
-  (`next_billing_at`) + aviso de cobro.
-- **#22 Reestructurar pantallas (separar Pago de Plan)**:
-  - Pago: `/admin/facturacion` (+ `/historial`, `/datos`)
-  - Plan: `/admin/planes` = Mi plan (lectura) · `/admin/planes/administrar` = edición
+  **Confirmar cambio** (sin prorrateo: el backend es D.8). — pendiente.
+- ~~**#19 Caja azul informativa**: total + `next_billing_at` + aviso de cobro~~ ✅ cerrada (`ebed53e`, `MyPlanComponent`).
+- ~~**#22 Reestructurar pantallas (separar Pago de Plan)**~~ ✅ cerrada (`ebed53e`):
+  `/admin/facturacion` (+ `/historial`) · `/admin/planes` = Mi plan (lectura) ·
+  `/admin/planes/administrar` = edición. `/datos` sigue bloqueado por #21.
 - **#21 Datos de facturación**: `billing_profiles` (`taxpayer_type: company|person`,
   `legal_name`, `tax_id`, `giro`, dirección, `billing_email`). Requiere backend.
 
