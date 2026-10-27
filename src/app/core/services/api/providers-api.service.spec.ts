@@ -25,7 +25,7 @@ describe('ProvidersApiService', () => {
   });
 
   describe('getProviders', () => {
-    it('fetches all providers without params', () => {
+    it('unwraps the paginated envelope into a provider array', () => {
       const mock: Provider[] = [
         { id: 1, first_name: 'Ana', last_name: 'García', email: 'ana@test.com', active: true },
       ];
@@ -34,10 +34,21 @@ describe('ProvidersApiService', () => {
         expect(res).toEqual(mock);
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/providers`);
+      const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/providers`);
       expect(req.request.method).toBe('GET');
-      expect(req.request.params.keys().length).toBe(0);
-      req.flush(mock);
+      req.flush({
+        data: mock,
+        links: {},
+        meta: { current_page: 1, from: 1, last_page: 1, per_page: 15, to: 1, total: 1 },
+      });
+    });
+
+    it('asks for a bounded page size (the backend does not cap per_page)', () => {
+      service.getProviders().subscribe();
+
+      const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/providers`);
+      expect(req.request.params.get('per_page')).toBe('25');
+      req.flush({ data: [], links: {}, meta: { current_page: 1, from: 0, last_page: 1, per_page: 25, to: 0, total: 0 } });
     });
 
     it('passes location_id as query param', () => {
@@ -46,7 +57,7 @@ describe('ProvidersApiService', () => {
       const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/providers`);
       expect(req.request.method).toBe('GET');
       expect(req.request.params.get('location_id')).toBe('2');
-      req.flush([]);
+      req.flush({ data: [], links: {}, meta: { current_page: 1, from: 0, last_page: 1, per_page: 25, to: 0, total: 0 } });
     });
   });
 

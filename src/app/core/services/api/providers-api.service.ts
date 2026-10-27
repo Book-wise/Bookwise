@@ -1,9 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
-import { Provider } from '@models';
+import { PaginatedResponse, Provider } from '@models';
 import { buildHttpParams } from './build-http-params';
+
+/**
+ * Tamaño de página al listar. El backend pagina (`{data, links, meta}`, default
+ * 15) y **no valida ni acota `per_page`**, así que pedimos un valor explícito y
+ * acotado en vez de depender de un número enorme.
+ */
+const LIST_PER_PAGE = 25;
 
 @Injectable({ providedIn: 'root' })
 export class ProvidersApiService {
@@ -11,9 +18,10 @@ export class ProvidersApiService {
   private readonly baseUrl = environment.apiUrl;
 
   getProviders(params?: { location_id?: number }): Observable<Provider[]> {
-    return this.http.get<Provider[]>(`${this.baseUrl}/providers`, {
-      params: params ? buildHttpParams(params) : undefined,
-    });
+    const query = buildHttpParams({ ...params, per_page: LIST_PER_PAGE });
+    return this.http
+      .get<PaginatedResponse<Provider>>(`${this.baseUrl}/providers`, { params: query })
+      .pipe(map((res) => res.data));
   }
 
   getProvider(id: number): Observable<Provider> {

@@ -25,7 +25,7 @@ describe('LocationsApiService', () => {
     httpMock.verify();
   });
 
-  it('GET /locations via getLocations()', () => {
+  it('GET /locations via getLocations() unwraps the paginated envelope', () => {
     const dummy: Location[] = [
       { id: 1, name: 'Santiago', address: 'Av. Principal 123', city: 'Santiago', timezone: 'America/Santiago', active: true },
     ];
@@ -34,9 +34,14 @@ describe('LocationsApiService', () => {
       expect(data).toEqual(dummy);
     });
 
-    const req = httpMock.expectOne(`${baseUrl}/locations`);
+    const req = httpMock.expectOne((r) => r.url === `${baseUrl}/locations` && r.method === 'GET');
     expect(req.request.method).toBe('GET');
-    req.flush(dummy);
+    expect(req.request.params.get('per_page')).toBe('25');
+    req.flush({
+      data: dummy,
+      links: {},
+      meta: { current_page: 1, from: 1, last_page: 1, per_page: 15, to: 1, total: 1 },
+    });
   });
 
   it('GET /locations/:id via getLocation()', () => {

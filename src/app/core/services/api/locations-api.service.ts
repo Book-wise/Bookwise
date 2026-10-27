@@ -1,8 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
-import { Location, Region, LocationComuna } from '@models';
+import { Location, PaginatedResponse, Region, LocationComuna } from '@models';
+import { buildHttpParams } from './build-http-params';
+
+/**
+ * Tamaño de página al listar. El backend pagina (`{data, links, meta}`, default
+ * 15) y no acota `per_page`, así que pedimos un valor explícito y acotado.
+ */
+const LIST_PER_PAGE = 25;
 
 @Injectable({ providedIn: 'root' })
 export class LocationsApiService {
@@ -10,7 +17,11 @@ export class LocationsApiService {
   private readonly baseUrl = environment.apiUrl;
 
   getLocations(): Observable<Location[]> {
-    return this.http.get<Location[]>(`${this.baseUrl}/locations`);
+    return this.http
+      .get<PaginatedResponse<Location>>(`${this.baseUrl}/locations`, {
+        params: buildHttpParams({ per_page: LIST_PER_PAGE }),
+      })
+      .pipe(map((res) => res.data));
   }
 
   getLocation(id: number): Observable<Location> {
