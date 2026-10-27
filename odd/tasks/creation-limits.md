@@ -25,8 +25,9 @@ pausó la tarea para abrir gentle-shell y pasar imágenes de referencia.
 - ⬜ T2 [S1] `locations-list`: "Nueva sucursal" bloquea al tope de `locations` del negocio activo. — PENDIENTE.
 - ⬜ T3 [S1] `businesses-list`: "Nuevo negocio" bloquea al tope de `tenants` de la cuenta. — PENDIENTE.
 - ⬜ T4 [S1] i18n es/en (keys de límite de sucursal) + build/tests verdes. — PENDIENTE.
-- ⬜ T5 [S3] Commit work-unit + push a `origin/feat/contract-catchup`. — **PENDIENTE y NO ejecutado**:
-  la rama **no existe en origin**; los 3 commits previos siguen solo locales.
+- ⬜ T5 [S3] Commit work-unit + push a `origin/feat/contract-catchup`. — **PENDIENTE** (el push
+  de esta tarea). La rama ya existe en `origin` con tracking desde el 2026-10-26, así que
+  alcanza con `git push` al cerrar T1-T4.
 
 ## Diseño ya decidido (para no re-explorar)
 

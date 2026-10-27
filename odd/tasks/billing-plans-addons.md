@@ -5,9 +5,10 @@ Documento de continuidad. Registra **qué se hizo**, **qué contratos del backen
 
 ---
 
-## 0. Estado al 2026-10-26 (commiteado, SIN PUSH)
+## 0. Estado al 2026-10-26 (commiteado y pusheado)
 
-Rama `feat/contract-catchup`. **La rama NO existe en `origin`**: ningún commit fue pusheado.
+Rama `feat/contract-catchup`, ya publicada en `origin` (primer push 2026-10-26, con tracking).
+Lo que sigue sin pushear es solo lo que se agregue de acá en adelante.
 
 | Commit | Alcance |
 |---|---|
