@@ -15,6 +15,12 @@
 // ── Layout chrome ────────────────────────────────────────────────────────────
 
 .full-calendar-container {
+  // Full-bleed: cancela el padding lateral/bottom del `.main-content` del layout.
+  margin: 0 -1.25rem -1.25rem;
+
+  @media (max-width: 991px) {
+    margin: 0 -1rem -1rem;
+  }
   // No padding here — the layout's `.main-content` is the only spacer now.
   padding: 0;
 
@@ -46,7 +52,7 @@
 
     @media (max-width: 425px) {
       flex-direction: row;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: flex-start;
       justify-content: flex-start;
       padding: 0.75rem;
@@ -96,6 +102,12 @@
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+
+    // En mobile (S/M) los dos controles bajan a su propia línea.
+    @media (max-width: 425px) {
+      flex-basis: 100%;
+      justify-content: center;
+    }
   }
 
   .calendar-area {
