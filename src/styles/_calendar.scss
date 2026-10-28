@@ -15,11 +15,12 @@
 // ── Layout chrome ────────────────────────────────────────────────────────────
 
 .full-calendar-container {
-  // Full-bleed: cancela el padding lateral/bottom del `.main-content` del layout.
-  margin: 0 -1.25rem -1.25rem;
+  // Full-bleed y sin gap arriba: cancela el margen inferior del app-header y el
+  // padding lateral/bottom del `.main-content`.
+  margin: calc(-1 * var(--bw-space-lg)) -1.25rem -1.25rem;
 
   @media (max-width: 991px) {
-    margin: 0 -1rem -1rem;
+    margin: calc(-1 * var(--bw-space-md)) -1rem -1rem;
   }
   // No padding here — the layout's `.main-content` is the only spacer now.
   padding: 0;
