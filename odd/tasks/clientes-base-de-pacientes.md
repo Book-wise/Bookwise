@@ -54,10 +54,13 @@ El mantenedor de `Bookwise-API` respondió los 10 puntos (verificado contra deve
   `location_id`, `provider_id`, `service_id`, `booking_status_id`, `has_booked`, `gender`,
   `birth_date_from/to`, `created_from/to`, `sort/direction` (vía `whereHas`, como AND sobre el scope).
 - **5. Sort → allowlist.** Default real: `first_name asc` (no `last_name`).
-- **6. Desactivación → DECIDIDO por seba**: **bloquear y confirmar** — impide agendar reservas
-  nuevas y, si hay reservas futuras o packs con sesiones, pide confirmación (force flow, como
-  providers/locations).
-- **2.4 `has_booked` → DECIDIDO por seba**: exponer `ever` y `upcoming` como dos valores.
+- **6. Desactivación → DECIDIDO**: **bloquear y confirmar**. Regla final del backend: desactivar
+  con reservas futuras o packs con sesiones → `409 requires_confirmation` con payload `affects`
+  (el front confirma y reintenta); cliente desactivado **no recibe reservas nuevas** (`403`/`422`
+  al intentar agendar).
+- **2.4 `has_booked` → DECIDIDO**: enum `ever|upcoming` (no booleano); el filtro expone ambos.
+- **Contrato CERRADO** (2026-10-28). Puntos mecánicos (1,2,5,8) en curso; (3) y (6) arrancan con
+  estas reglas. El backend avisará con el hash del commit.
 - **8. `per_page` → tope 1–100** (hoy sin tope; `abc` → 500).
 - **RUT único por tenant**, `ChileanRutRule`, duplicado → `422 errors.rut`.
 - **RBAC**: GET → `clients:read`+`view`; POST → `clients:write`+`create`; PATCH/deactivate →
@@ -137,3 +140,8 @@ no re-preguntar.
 - L6 (usuario, decisiones, 2026-10-28): desactivación = **bloquear y confirmar** (impide agendar
   nuevas; confirmación si hay reservas futuras o packs con sesiones); `has_booked` = **ambos**
   (`ever` y `upcoming` como dos valores). Retransmitido al backend.
+- L7 (backend, contrato cerrado, 2026-10-28): reglas finales — (6) desactivar con reservas futuras
+  o packs con sesiones → `409 requires_confirmation` + payload `affects` (el front confirma y
+  reintenta); cliente desactivado no recibe reservas nuevas (`403`/`422`); (2.4) `has_booked` =
+  enum `ever|upcoming` (no booleano). Contrato **COMPLETO**. Puntos mecánicos (1,2,5,8) en curso;
+  (3) y (6) arrancan con estas reglas. Backend avisará con el hash.
