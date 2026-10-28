@@ -787,7 +787,7 @@ export const EN: Record<string, string> = {
   'clients.deactivate.confirm': 'Deactivate anyway',
   'clients.deactivate.success': 'Client deactivated',
   'clients.deactivate.already_inactive': 'Client is already inactive',
-  'clients.deactivate.remaining_sessions': '{{n}} sessions',
+  'clients.deactivate.remaining_sessions': '{{n}} left',
 
   'patient_card.warning.contact_missing': 'Patient is missing email or phone',
   'patient_card.tab.plans':    'Plans',
