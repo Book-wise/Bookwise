@@ -93,6 +93,12 @@
   gap: 0.35rem;
 }
 
+/* Las filas con rango (dos inputs de fecha) ocupan todo el ancho del panel:
+   los date inputs tienen un min-width nativo y no entran en una celda de ~200px. */
+.cfl__field--wide {
+  grid-column: 1 / -1;
+}
+
 .cfl__label {
   font-size: 0.8rem;
   color: var(--p-text-muted-color, #6b7280);
@@ -105,10 +111,13 @@
 .cfl__range {
   display: flex;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .cfl__range input {
-  width: 100%;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
 }
 
 .cfl__actions {

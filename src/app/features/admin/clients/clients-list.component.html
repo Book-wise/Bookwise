@@ -90,7 +90,7 @@
           <input pInputText [ngModel]="fGender()" (ngModelChange)="fGender.set($event)" />
         </label>
 
-        <div class="cfl__field">
+        <div class="cfl__field cfl__field--wide">
           <span class="cfl__label">{{ lang.t('clients.filter.created') }}</span>
           <div class="cfl__range">
             <input pInputText type="date" [ngModel]="fCreatedFrom()" (ngModelChange)="fCreatedFrom.set($event)" />
