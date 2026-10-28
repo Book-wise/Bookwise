@@ -87,6 +87,9 @@
             <div class="dialog-role-option">
               <span class="dialog-role-option__dot" [style.background]="roleMeta(item.value).color"></span>
               <span class="dialog-role-option__label">{{ item.label }}</span>
+              @if (item.professional) {
+                <span class="dialog-role-option__tag">{{ lang.t('providers.dialog.role_professional') }}</span>
+              }
               @if (isRoleOptionLocked(item)) {
                 <i class="pi pi-lock dialog-role-option__lock" pTooltip="{{ lang.t('roles.admin_general_locked') }}" tooltipPosition="left"></i>
               }
@@ -95,6 +98,9 @@
         </p-multiselect>
         @if (showRolesEmptyError()) {
           <small class="field-error">{{ lang.t('roles.empty_error') }}</small>
+        }
+        @if (showNoProfessionalRoleWarning()) {
+          <small class="field-warning">{{ lang.t('providers.dialog.no_professional_role') }}</small>
         }
         <small class="field-hint">{{ lang.t('providers.dialog.roles_hint') }}</small>
       </div>

@@ -1007,6 +1007,8 @@ export const EN: Record<string, string> = {
   'providers.new': 'New professional',
   'providers.dialog.roles': 'Roles',
   'providers.dialog.roles_hint': 'Roles determine the provider\'s permissions. At least one role is required.',
+  'providers.dialog.role_professional': 'Professional',
+  'providers.dialog.no_professional_role': 'Without an attention role (staff / staff readonly) they will not appear in the calendar or receive bookings.',
   'providers.save_roles_failed': 'The roles could not be saved. Please try again.',
   'providers.save_roles_failed_partial': 'The professional details were saved, but the roles were not. Retry to complete the change.',
   'providers.save_not_permitted': 'You do not have permission to save changes to this professional.',

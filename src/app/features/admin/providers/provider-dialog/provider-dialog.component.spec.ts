@@ -143,10 +143,28 @@ describe('ProviderDialogComponent', () => {
       open('edit', makeProvider({ roles: [role('staff')] }), allRoles.slice(0, 3));
 
       expect(component.roleOptions()).toEqual([
-        { label: 'roles.role.admin_general', value: 'admin_general', disabled: true },
-        { label: 'roles.role.admin_local', value: 'admin_local', disabled: false },
-        { label: 'roles.role.recepcionista', value: 'recepcionista', disabled: false },
+        { label: 'roles.role.admin_general', value: 'admin_general', disabled: true, professional: false },
+        { label: 'roles.role.admin_local', value: 'admin_local', disabled: false, professional: false },
+        { label: 'roles.role.recepcionista', value: 'recepcionista', disabled: false, professional: false },
       ]);
+    });
+
+    it('marks staff/staff_readonly as professional', () => {
+      open('edit', makeProvider({ roles: [role('staff')] }), [role('staff'), role('recepcionista')]);
+
+      const opts = component.roleOptions();
+      expect(opts.find((o) => o.value === 'staff')?.professional).toBe(true);
+      expect(opts.find((o) => o.value === 'recepcionista')?.professional).toBe(false);
+    });
+
+    it('warns when the role set has roles but no attention role', () => {
+      open('edit', makeProvider({ roles: [role('recepcionista')] }), [role('staff'), role('recepcionista')]);
+
+      component.form.controls.roleSlugs.setValue(['recepcionista']);
+      expect(component.showNoProfessionalRoleWarning()).toBe(true);
+
+      component.form.controls.roleSlugs.setValue(['staff']);
+      expect(component.showNoProfessionalRoleWarning()).toBe(false);
     });
 
     it('pre-selects the current provider roles when editing', () => {

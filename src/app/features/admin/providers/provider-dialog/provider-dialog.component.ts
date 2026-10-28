@@ -17,7 +17,7 @@ import { AuthService } from '@services/auth.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { ABILITIES } from '@shared/config/abilities.config';
 import { Provider, Role } from '@models';
-import { roleMeta } from '../../roles/role-meta';
+import { roleMeta, ATTENTION_ROLES } from '../../roles/role-meta';
 import { applyAdminGeneralInvariant, isAdminGeneralLocked } from '../../roles/role-guards';
 
 export type DialogMode = 'create' | 'edit' | 'view';
@@ -27,6 +27,8 @@ interface RoleOption {
   value: string;
   /** P-multiselect disables per option via a property name (optionDisabled="disabled"). */
   disabled: boolean;
+  /** Rol de atención (staff/staff_readonly): habilita agenda y reservas. */
+  professional: boolean;
 }
 
 /**
@@ -133,6 +135,8 @@ export class ProviderDialogComponent {
   readonly rolesDisabled = computed(() => this.isView() || !this.canEditRoles());
 
   private formStatus = toSignal(this.form.statusChanges, { initialValue: 'INVALID' });
+  /** Valor actual del form como señal: los computeds de roles reaccionan a CUALQUIER cambio. */
+  private formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
 
   isView = computed(() => this.internalMode() === 'view');
   isCreate = computed(() => this.internalMode() === 'create');
@@ -148,6 +152,7 @@ export class ProviderDialogComponent {
       label: this.roleLabel(r),
       value: r.slug,
       disabled: this.roleIsLocked(r.slug),
+      professional: ATTENTION_ROLES.includes(r.slug),
     })),
   );
 
@@ -171,8 +176,18 @@ export class ProviderDialogComponent {
    */
   readonly showRolesEmptyError = computed(() => {
     if (this.isCreate() || this.isView()) return false;
-    void this.formStatus();
-    return (this.form.controls.roleSlugs.value ?? []).length === 0;
+    return (this.formValue()?.roleSlugs ?? []).length === 0;
+  });
+
+  /**
+   * Aviso (no bloqueante) cuando el set tiene roles pero **ninguno de atención**
+   * (staff/staff_readonly): ese profesional deja de aparecer en la agenda y no
+   * puede recibir reservas. El backend hoy permite vaciarlo; se advierte en UI.
+   */
+  readonly showNoProfessionalRoleWarning = computed(() => {
+    if (this.isCreate() || this.isView()) return false;
+    const slugs: string[] = this.formValue()?.roleSlugs ?? [];
+    return slugs.length > 0 && !slugs.some((s) => ATTENTION_ROLES.includes(s));
   });
 
   locationOptions = computed(() =>

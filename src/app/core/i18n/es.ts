@@ -1063,6 +1063,8 @@ export const ES: Record<string, string> = {
   'providers.new': 'Nuevo profesional',
   'providers.dialog.roles': 'Roles',
   'providers.dialog.roles_hint': 'Los roles determinan los permisos del profesional. Se requiere al menos un rol.',
+  'providers.dialog.role_professional': 'Profesional',
+  'providers.dialog.no_professional_role': 'Sin un rol de atención (staff / staff readonly) no aparecerá en la agenda ni podrá recibir reservas.',
   'providers.save_roles_failed': 'No se pudieron guardar los roles. Inténtelo nuevamente.',
   'providers.save_roles_failed_partial': 'Los datos del profesional se guardaron, pero los roles no. Reintenta para completar el cambio.',
   'providers.save_not_permitted': 'No tienes permiso para guardar cambios en este profesional.',
