@@ -104,6 +104,11 @@ export class LocationsListComponent implements OnInit {
     this.page.set((event.page ?? 0) + 1);
   }
 
+  /** `HH:MM:SS` (o null) → `HH:MM` para mostrar; `—` si no está configurado. */
+  timeLabel(value?: string | null): string {
+    return value ? value.slice(0, 5) : '—';
+  }
+
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');
   selectedLocation = signal<Location | null>(null);

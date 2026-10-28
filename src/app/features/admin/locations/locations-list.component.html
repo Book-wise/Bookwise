@@ -59,6 +59,8 @@
             <th>Nombre</th>
             <th>Dirección</th>
             <th>Ciudad</th>
+            <th>Apertura</th>
+            <th>Cierre</th>
             <th>Estado</th>
             <th>Acciones</th>
           </tr>
@@ -69,6 +71,8 @@
             <td>{{ location.name }}</td>
             <td>{{ location.address }}</td>
             <td>{{ location.city }}</td>
+            <td>{{ timeLabel(location.opening_time) }}</td>
+            <td>{{ timeLabel(location.closing_time) }}</td>
             <td>
               <div class="status-cell">
                 <span class="bw-chip" [class]="location.active ? 'bw-chip--success' : 'bw-chip--danger'">
@@ -87,7 +91,7 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
-          <tr><td colspan="6" class="text-center">No se encontraron sucursales</td></tr>
+          <tr><td colspan="8" class="text-center">No se encontraron sucursales</td></tr>
         </ng-template>
       </p-table>
       <p-paginator
@@ -111,6 +115,16 @@
             <div class="loc-card__row">
               <span class="loc-card__label">Ubicación</span>
               <span class="loc-card__value">{{ location.address }}{{ location.city ? ', ' + location.city : '' }}</span>
+            </div>
+
+            <div class="loc-card__row">
+              <span class="loc-card__label">Apertura</span>
+              <span class="loc-card__value">{{ timeLabel(location.opening_time) }}</span>
+            </div>
+
+            <div class="loc-card__row">
+              <span class="loc-card__label">Cierre</span>
+              <span class="loc-card__value">{{ timeLabel(location.closing_time) }}</span>
             </div>
 
             <div class="loc-card__row">
