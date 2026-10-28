@@ -39,11 +39,18 @@ con el hash cuando esté en `develop`.
 - `effective_opening_time` / `effective_closing_time`: lo que hay que **usar**, nunca `null`.
 - **Default sin configurar: 08:00 → 22:00**. Lo resuelve el backend — **NO hardcodear en el front**.
 
-### Agenda
+### Agenda (ACTUALIZADO 2026-10-28 por decisión de seba)
 
-- Al elegir una sucursal, dibujar la grilla desde `effective_opening_time` → `effective_closing_time`.
-- El backend ya lo aplica en `GET /available_slots` (los slots salen sólo dentro de ese rango, en la
-  TZ de la location).
+- La grilla del calendario es **FIJA 08:00–22:00 siempre**, se elija o no sucursal. **NO** se
+  redimensiona con `effective_opening_time`/`effective_closing_time`.
+- **Motivo**: la vista inicial carga sin sucursal; si la grilla cambiara al elegir una, “saltaría”
+  entre dos comportamientos → peor UX que una grilla estable.
+- El backend **sí** acota los slots al horario real de la sucursal: dentro de la grilla fija vas a ver
+  slots sólo en el rango real (ej. 10:00–12:00) y el resto vacío. `GET /available_slots` **no cambió**.
+- `effective_opening_time`/`effective_closing_time` se usan **sólo para mostrar** la config (ej. en el
+  diálogo), **no** para la grilla.
+- Limitación aceptada: si una sucursal abre antes de 08:00 o cierra después de 22:00, esos slots no
+  se ven en la grilla.
 
 ### Migración de datos
 
@@ -58,8 +65,8 @@ configuradas distinto se conservan.
   cuando `opening_time`/`closing_time` son `null`; enviar `opening_time`/`closing_time` en el PATCH.
   Validar en el front "cierre > apertura" (además del 422 del backend) y mapear
   `errors.opening_time`/`errors.closing_time`.
-- ⬜ T3 Agenda: dibujar la grilla desde `effective_opening_time` → `effective_closing_time` de la
-  sucursal activa (no hardcodear 09:00/19:00 ni 08:00/22:00).
+- ⬜ T3 Agenda: dejar la grilla **fija 08:00–22:00** y verificar que **no** dependa de la sucursal
+  seleccionada (no redimensionar con `effective_*`).
 - ⬜ T4 i18n es/en (`locations.form.opening_time` / `closing_time` + mensaje de validación).
 - ⬜ T5 Specs + `ng build` + suite.
 
@@ -67,3 +74,8 @@ configuradas distinto se conservan.
 
 - L1 (backend, contrato, 2026-10-28): feature de horario por sucursal en `feat/location-hours`
   (no mergeada). Contrato completo arriba. Se captura acá para implementar en cuanto se mergee.
+- L2 (backend, CAMBIO de contrato, 2026-10-28): **la grilla del calendario es FIJA 08:00–22:00**, no
+  se redimensiona con `effective_*`. La config de horas sigue existiendo (dos campos en el diálogo de
+  sucursal); `effective_*` se usa sólo para **mostrar** la config, no para la grilla. El backend sigue
+  acotando los slots al horario real vía `GET /available_slots`. Rama `feat/location-hours`
+  (`380bb53` + `1a12dc8` docs), aún sin mergear.
