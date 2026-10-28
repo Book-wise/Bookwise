@@ -134,8 +134,6 @@ export class ClientsListComponent implements OnInit {
   readonly fBookingStatusId = signal<number | null>(null);
   readonly fHasBooked = signal<'ever' | 'upcoming' | null>(null);
   readonly fGender = signal('');
-  readonly fBirthFrom = signal('');
-  readonly fBirthTo = signal('');
   readonly fCreatedFrom = signal('');
   readonly fCreatedTo = signal('');
   /** Filtros aplicados (los que se envían al servicio, no los del borrador). */
@@ -217,8 +215,6 @@ export class ClientsListComponent implements OnInit {
     if (statusId != null) filters.booking_status_id = statusId;
     if (hasBooked) filters.has_booked = hasBooked;
     if (this.fGender().trim()) filters.gender = this.fGender().trim();
-    if (this.fBirthFrom()) filters.birth_date_from = this.fBirthFrom();
-    if (this.fBirthTo()) filters.birth_date_to = this.fBirthTo();
     if (this.fCreatedFrom()) filters.created_from = this.fCreatedFrom();
     if (this.fCreatedTo()) filters.created_to = this.fCreatedTo();
 
@@ -235,8 +231,6 @@ export class ClientsListComponent implements OnInit {
     this.fBookingStatusId.set(null);
     this.fHasBooked.set(null);
     this.fGender.set('');
-    this.fBirthFrom.set('');
-    this.fBirthTo.set('');
     this.fCreatedFrom.set('');
     this.fCreatedTo.set('');
     this.appliedFilters.set({});

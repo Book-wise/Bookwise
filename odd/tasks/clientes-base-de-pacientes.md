@@ -65,6 +65,16 @@ El mantenedor de `Bookwise-API` respondió los 10 puntos (verificado contra deve
   y `952507b` (punto 2 `birth_date` date nullable, expuesta `YYYY-MM-DD`, aceptada en POST/PATCH no
   futura). **Ojo**: `GET /clients` ahora devuelve `{data, links, meta}` (antes array plano);
   `listClients` ya lo consume vía `collectPaginatedPages`.
+- **Contrato COMPLETO** (rama `feat/clients-management-contract`, base `develop` @ `00aa24a`, sin
+  pushear/mergear): Unidad 2 `2bf64ec` (sort/direction allowlist, default `last_name asc`) y
+  `1ae9658` (`gender`, `created_from/to`, `search` incluye RUT); Unidad 3 `5b3cf1b`
+  (`location_id`/`provider_id`/`service_id`/`booking_status_id`) y `24a31ed`
+  (`has_booked=ever|upcoming`); Unidad 4 `37b0159` (desactivar `409 requires_confirmation` +
+  `affects` + `force`; inactivo no recibe reservas) y `a1ff571` (`docs/api/clients-frontend.md`).
+- **Follow-ups del backend**: `birth_date_from/to` (rango "Cumpleaños") y `custom_attributes[...]`
+  como filtro **NO** están implementados; `birth_date` sí es editable. => el panel **no** muestra
+  el rango de cumpleaños por ahora.
+- **Pendiente de mergear**: la rama del backend la decide seba.
 - **8. `per_page` → tope 1–100** (hoy sin tope; `abc` → 500).
 - **RUT único por tenant**, `ChileanRutRule`, duplicado → `422 errors.rut`.
 - **RBAC**: GET → `clients:read`+`view`; POST → `clients:write`+`create`; PATCH/deactivate →

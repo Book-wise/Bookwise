@@ -91,14 +91,6 @@
         </label>
 
         <div class="cfl__field">
-          <span class="cfl__label">{{ lang.t('clients.filter.birth_date') }}</span>
-          <div class="cfl__range">
-            <input pInputText type="date" [ngModel]="fBirthFrom()" (ngModelChange)="fBirthFrom.set($event)" />
-            <input pInputText type="date" [ngModel]="fBirthTo()" (ngModelChange)="fBirthTo.set($event)" />
-          </div>
-        </div>
-
-        <div class="cfl__field">
           <span class="cfl__label">{{ lang.t('clients.filter.created') }}</span>
           <div class="cfl__range">
             <input pInputText type="date" [ngModel]="fCreatedFrom()" (ngModelChange)="fCreatedFrom.set($event)" />
