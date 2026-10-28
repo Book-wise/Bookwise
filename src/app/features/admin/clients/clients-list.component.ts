@@ -19,11 +19,14 @@ import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
+import { DialogModule } from 'primeng/dialog';
+import { MessageService } from 'primeng/api';
 import { Subject, debounceTime } from 'rxjs';
-import { ClientsApiService, ClientListFilters } from '@services/api/clients-api.service';
+import { ClientListFilters } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { PatientTab } from '@core/stores/client-detail.store';
+import { ClientsStore } from '@core/stores/clients.store';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ClientDetailDialogComponent } from './client-detail-dialog/client-detail-dialog.component';
@@ -33,6 +36,35 @@ import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive
 import { Client } from '@models';
 
 type SortField = 'name' | 'rut' | 'email' | 'phone';
+
+/** Item de `affects.bookings[]` del 409 `deactivation_conflict` (campos tolerantes). */
+interface DeactivationBooking {
+  id: number;
+  start_time?: string;
+  date?: string;
+  time?: string;
+  status?: string | number;
+  status_id?: number;
+  provider_name?: string;
+  client_name?: string;
+  service?: { name?: string } | null;
+  provider?: { name?: string; first_name?: string; last_name?: string } | null;
+}
+
+/** Item de `affects.packs[]` del 409 (campos tolerantes). */
+interface DeactivationPack {
+  id: number;
+  name?: string;
+  service_pack?: { name?: string } | null;
+  total_sessions?: number;
+  used_sessions?: number;
+  remaining_sessions?: number;
+}
+
+interface DeactivationAffects {
+  bookings: DeactivationBooking[];
+  packs: DeactivationPack[];
+}
 
 /**
  * "Base de Pacientes": listado de clientes con buscador global, contador
@@ -46,24 +78,25 @@ type SortField = 'name' | 'rut' | 'email' | 'phone';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
-    InputTextModule, IconFieldModule, InputIconModule, SkeletonModule, TooltipModule, SelectModule,
+    InputTextModule, IconFieldModule, InputIconModule, SkeletonModule, TooltipModule, SelectModule, DialogModule,
     ClientDetailDialogComponent, ClientFormDialogComponent, BwIfAbilityDirective,
   ],
   templateUrl: './clients-list.component.html',
   styleUrls: ['./clients-list.component.scss'],
 })
 export class ClientsListComponent implements OnInit {
-  private readonly clientsApi = inject(ClientsApiService);
+  private readonly clientsStore = inject(ClientsStore);
   private readonly httpError = inject(HttpErrorService);
   private readonly refStore = inject(ReferenceStore);
+  private readonly messageService = inject(MessageService);
   protected readonly lang = inject(LanguageService);
   private readonly searchSubject = new Subject<void>();
 
   /** Catálogo de permission keys (nunca literales). */
   protected readonly ABILITIES = ABILITIES;
 
-  readonly clients = signal<Client[]>([]);
-  readonly loading = signal(false);
+  readonly clients = computed(() => this.clientsStore.clients());
+  readonly loading = computed(() => this.clientsStore.loading());
   readonly searchTerm = signal('');
 
   // ── Orden (client-side sobre la lista agregada) ──────────────────────────
@@ -126,6 +159,12 @@ export class ClientsListComponent implements OnInit {
   readonly formVisible = signal(false);
   readonly formClient = signal<Client | null>(null);
 
+  // ── Desactivación (soft, 409 + force) ───────────────────────────────────
+  readonly deactivateDialogVisible = signal(false);
+  readonly deactivatingId = signal<number | null>(null);
+  readonly pendingDeactivateClient = signal<Client | null>(null);
+  readonly deactivateAffects = signal<DeactivationAffects | null>(null);
+
   // ── Filtros avanzados (T3) ──────────────────────────────────────────────
   readonly filtersOpen = signal(false);
   readonly fLocationId = signal<number | null>(null);
@@ -172,21 +211,12 @@ export class ClientsListComponent implements OnInit {
     this.loadClients();
   }
 
-  /** Carga la lista completa agregada (todas las páginas) con búsqueda + filtros. */
+  /** Carga la lista agregada con búsqueda + filtros (vía ClientsStore). */
   loadClients(): void {
-    this.loading.set(true);
-    this.clientsApi
-      .listClients({ search: this.searchTerm() || undefined, ...this.appliedFilters() })
+    this.clientsStore
+      .load({ search: this.searchTerm() || undefined, ...this.appliedFilters() })
       .subscribe({
-        next: (clients) => {
-          this.clients.set(clients);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.clients.set([]);
-          this.loading.set(false);
-          this.httpError.handle(err, 'cargar clientes');
-        },
+        error: (err) => this.httpError.handle(err, 'cargar clientes'),
       });
   }
 
@@ -289,10 +319,108 @@ export class ClientsListComponent implements OnInit {
     this.formVisible.set(true);
   }
 
-  /** Tras crear o editar: refresca la lista agregada. */
+  /** Tras crear o editar: cierra el form (el ClientsStore ya parcheó la lista). */
   onFormSaved(): void {
     this.formVisible.set(false);
-    this.loadClients();
+  }
+
+  // ── Desactivación ───────────────────────────────────────────────────────
+
+  /** Desactivar (soft). Intenta sin `force`; si hay conflicto (409) abre el diálogo. */
+  deactivateClient(client: Client): void {
+    if (this.deactivatingId() === client.id) return;
+    this.deactivatingId.set(client.id);
+    this.clientsStore.deactivate(client.id).subscribe({
+      next: (res) => {
+        this.deactivatingId.set(null);
+        this.onClientDeactivated(res);
+      },
+      error: (err) => {
+        this.deactivatingId.set(null);
+        if (err?.status === 409 && err.error?.requires_confirmation) {
+          const affects = err.error.affects ?? {};
+          this.pendingDeactivateClient.set(client);
+          this.deactivateAffects.set({
+            bookings: Array.isArray(affects.bookings) ? affects.bookings : [],
+            packs: Array.isArray(affects.packs) ? affects.packs : [],
+          });
+          this.deactivateDialogVisible.set(true);
+          return;
+        }
+        if (err?.status === 422 && err.error?.error === 'already_inactive') {
+          this.messageService.add({
+            severity: 'info',
+            summary: this.lang.t('clients.deactivate.already_inactive'),
+            key: 'global',
+          });
+          return;
+        }
+        this.httpError.handle(err, 'desactivar cliente');
+      },
+    });
+  }
+
+  /** Reintento con `force:true` desde el diálogo de confirmación. */
+  confirmDeactivate(): void {
+    const client = this.pendingDeactivateClient();
+    if (!client) return;
+    this.deactivatingId.set(client.id);
+    this.deactivateDialogVisible.set(false);
+    this.clientsStore.deactivate(client.id, true).subscribe({
+      next: (res) => {
+        this.deactivatingId.set(null);
+        this.clearDeactivateDialog();
+        this.onClientDeactivated(res);
+      },
+      error: (err) => {
+        this.deactivatingId.set(null);
+        this.clearDeactivateDialog();
+        this.httpError.handle(err, 'desactivar cliente');
+      },
+    });
+  }
+
+  cancelDeactivate(): void {
+    this.clearDeactivateDialog();
+  }
+
+  /** Etiqueta compacta de una reserva afectada. */
+  bookingLabel(b: DeactivationBooking): string {
+    const when = b.start_time
+      ? new Date(b.start_time).toLocaleString()
+      : [b.date, b.time].filter(Boolean).join(' ');
+    const who =
+      (typeof b.service === 'object' ? b.service?.name : undefined) ?? b.provider_name ?? '';
+    return [when, who].filter(Boolean).join(' · ');
+  }
+
+  /** Etiqueta compacta de un pack afectado. */
+  packLabel(p: DeactivationPack): string {
+    const name = p.service_pack?.name ?? p.name ?? '';
+    const remaining =
+      p.remaining_sessions ??
+      (p.total_sessions != null && p.used_sessions != null
+        ? p.total_sessions - p.used_sessions
+        : null);
+    return remaining != null
+      ? this.lang.t('clients.deactivate.remaining_sessions', { n: String(remaining) }) + ' · ' + name
+      : name;
+  }
+
+  private clearDeactivateDialog(): void {
+    this.deactivateDialogVisible.set(false);
+    this.pendingDeactivateClient.set(null);
+    this.deactivateAffects.set(null);
+  }
+
+  private onClientDeactivated(client: Client): void {
+    void client;
+    // El ClientsStore ya parcheó la lista: no se re-consulta el backend.
+    this.messageService.add({
+      severity: 'success',
+      summary: this.lang.t('clients.deactivate.success'),
+      key: 'global',
+    });
   }
 
   private sortValue(c: Client, field: SortField): string {

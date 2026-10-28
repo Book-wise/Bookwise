@@ -1,6 +1,8 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { MessageService } from 'primeng/api';
 import { ClientsListComponent } from './clients-list.component';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -30,10 +32,18 @@ function makeClient(overrides: Partial<Client> = {}): Client {
 describe('ClientsListComponent', () => {
   let fixture: ComponentFixture<ClientsListComponent>;
   let component: ClientsListComponent;
-  let mockClientsApi: { listClients: ReturnType<typeof vi.fn> };
+  let mockClientsApi: {
+    listClients: ReturnType<typeof vi.fn>;
+    updateClient: ReturnType<typeof vi.fn>;
+    createClient: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
-    mockClientsApi = { listClients: vi.fn(() => of([])) };
+    mockClientsApi = {
+      listClients: vi.fn(() => of([])),
+      updateClient: vi.fn((id: number, data: Partial<Client>) => of({ ...makeClient({ id }), ...data } as Client)),
+      createClient: vi.fn((data: Partial<Client>) => of({ ...makeClient({ id: 99 }), ...data } as Client)),
+    };
 
     await TestBed.configureTestingModule({
       imports: [ClientsListComponent],
@@ -41,6 +51,7 @@ describe('ClientsListComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ClientsApiService, useValue: mockClientsApi },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
+        { provide: MessageService, useValue: { add: vi.fn() } },
         {
           provide: ReferenceStore,
           useValue: { locations: signal([]), providers: signal([]), services: signal([]) },
@@ -141,5 +152,68 @@ describe('ClientsListComponent', () => {
     expect(component.appliedFilters()).toEqual({});
     expect(component.activeFilterCount()).toBe(0);
     expect(component.fLocationId()).toBeNull();
+  });
+
+  // ── Desactivación (409 + force) ───────────────────────────────
+
+  it('desactiva sin re-consultar la lista: parchea el store', () => {
+    seed([makeClient({ id: 1, active: true }), makeClient({ id: 2 })]);
+    mockClientsApi.listClients.mockClear();
+    mockClientsApi.updateClient.mockReturnValue(of(makeClient({ id: 1, active: false })));
+
+    component.deactivateClient(component.clients()[0]);
+
+    expect(mockClientsApi.updateClient).toHaveBeenCalledWith(1, { active: false });
+    expect(mockClientsApi.listClients).not.toHaveBeenCalled();
+    expect(component.clients().find((c) => c.id === 1)?.active).toBe(false);
+  });
+
+  it('abre el diálogo con los afectados cuando el 409 pide confirmación', () => {
+    seed([makeClient({ id: 1, active: true })]);
+    mockClientsApi.updateClient.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: {
+              error: 'deactivation_conflict',
+              message: 'x',
+              requires_confirmation: true,
+              affects: {
+                bookings: [{ id: 10, date: '2026-11-01', time: '10:00' }],
+                packs: [{ id: 20, remaining_sessions: 3 }],
+              },
+            },
+          }),
+      ),
+    );
+
+    component.deactivateClient(component.clients()[0]);
+
+    expect(component.deactivateDialogVisible()).toBe(true);
+    expect(component.deactivateAffects()?.bookings.length).toBe(1);
+    expect(component.deactivateAffects()?.packs.length).toBe(1);
+  });
+
+  it('reintenta con force al confirmar y parchea la lista', () => {
+    seed([makeClient({ id: 1, active: true })]);
+    mockClientsApi.updateClient.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: { requires_confirmation: true, affects: { bookings: [], packs: [] } },
+          }),
+      ),
+    );
+    component.deactivateClient(component.clients()[0]);
+    expect(component.deactivateDialogVisible()).toBe(true);
+
+    mockClientsApi.updateClient.mockReturnValueOnce(of(makeClient({ id: 1, active: false })));
+    component.confirmDeactivate();
+
+    expect(mockClientsApi.updateClient).toHaveBeenLastCalledWith(1, { active: false, force: true });
+    expect(component.clients().find((c) => c.id === 1)?.active).toBe(false);
+    expect(component.deactivateDialogVisible()).toBe(false);
   });
 });

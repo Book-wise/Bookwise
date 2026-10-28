@@ -52,6 +52,22 @@
   width: 100%;
 }
 
+.cdlg__message {
+  margin: 0 0 0.75rem;
+}
+
+.cdlg__section {
+  margin: 0.75rem 0 0.35rem;
+  font-weight: 600;
+}
+
+.cdlg__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .cfl {
   margin-bottom: 1rem;
 }

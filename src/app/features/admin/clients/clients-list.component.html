@@ -165,6 +165,16 @@
           <td>
             <p-button icon="pi pi-eye" class="p-button-text" [pTooltip]="lang.t('clients.action.view')" (onClick)="openView(client)"></p-button>
             <p-button icon="pi pi-shopping-cart" class="p-button-text" [pTooltip]="lang.t('clients.action.packs')" (onClick)="openPacks(client)"></p-button>
+            @if (client.active) {
+              <p-button
+                *bwIfAbility="ABILITIES.clientsUpdate"
+                icon="pi pi-ban"
+                severity="danger"
+                class="p-button-text"
+                [pTooltip]="lang.t('clients.action.deactivate')"
+                [loading]="deactivatingId() === client.id"
+                (onClick)="deactivateClient(client)" />
+            }
           </td>
         </tr>
       </ng-template>
@@ -207,3 +217,42 @@
   [client]="formClient()"
   (closed)="formVisible.set(false)"
   (saved)="onFormSaved()" />
+
+<p-dialog
+  [visible]="deactivateDialogVisible()"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '560px' }">
+  <ng-template pTemplate="header">
+    <span>{{ lang.t('clients.deactivate.title') }}</span>
+  </ng-template>
+
+  @if (deactivateAffects(); as affects) {
+    <div class="cdlg">
+      <p class="cdlg__message">{{ lang.t('clients.deactivate.message') }}</p>
+
+      @if (affects.bookings.length > 0) {
+        <p class="cdlg__section">{{ lang.t('clients.deactivate.bookings') }}</p>
+        <ul class="cdlg__list">
+          @for (b of affects.bookings; track b.id) {
+            <li>{{ bookingLabel(b) }}</li>
+          }
+        </ul>
+      }
+
+      @if (affects.packs.length > 0) {
+        <p class="cdlg__section">{{ lang.t('clients.deactivate.packs') }}</p>
+        <ul class="cdlg__list">
+          @for (p of affects.packs; track p.id) {
+            <li>{{ packLabel(p) }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="lang.t('common.cancel')" severity="secondary" [outlined]="true" (onClick)="cancelDeactivate()" />
+    <p-button [label]="lang.t('clients.deactivate.confirm')" severity="danger" (onClick)="confirmDeactivate()" />
+  </ng-template>
+</p-dialog>

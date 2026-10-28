@@ -834,6 +834,15 @@ export const ES: Record<string, string> = {
   'clients.filter.created': 'Creado en el período',
   'clients.filter.from': 'Desde',
   'clients.filter.to': 'Hasta',
+  'clients.action.deactivate': 'Desactivar',
+  'clients.deactivate.title': 'Desactivar cliente',
+  'clients.deactivate.message': 'El cliente tiene reservas futuras o packs con sesiones disponibles. ¿Querés desactivarlo igual?',
+  'clients.deactivate.bookings': 'Reservas afectadas',
+  'clients.deactivate.packs': 'Packs afectados',
+  'clients.deactivate.confirm': 'Desactivar igual',
+  'clients.deactivate.success': 'Cliente desactivado',
+  'clients.deactivate.already_inactive': 'El cliente ya está inactivo',
+  'clients.deactivate.remaining_sessions': '{{n}} sesiones',
 
   // Patient card
   'patient_card.warning.contact_missing': 'Falta email o teléfono del paciente',

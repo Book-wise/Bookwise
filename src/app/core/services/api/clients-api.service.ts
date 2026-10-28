@@ -62,7 +62,7 @@ export class ClientsApiService {
     return this.http.post<Client>(`${this.baseUrl}/clients`, client);
   }
 
-  updateClient(id: number, data: Partial<Client>): Observable<Client> {
+  updateClient(id: number, data: Partial<Client> & { force?: boolean }): Observable<Client> {
     return this.http
       .patch<{ data: Client }>(`${this.baseUrl}/clients/${id}`, data)
       .pipe(map((r) => r.data));

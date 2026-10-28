@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { ClientsApiService } from '@services/api/clients-api.service';
+import { ClientsStore } from '@core/stores/clients.store';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { isValidRut } from '@shared/validators/rut.validator';
@@ -34,7 +34,7 @@ import { Client } from '@models';
   styleUrl: './client-form-dialog.component.scss',
 })
 export class ClientFormDialogComponent {
-  private readonly clientsApi = inject(ClientsApiService);
+  private readonly clientsStore = inject(ClientsStore);
   private readonly httpError = inject(HttpErrorService);
   protected readonly lang = inject(LanguageService);
 
@@ -98,8 +98,8 @@ export class ClientFormDialogComponent {
 
     this.saving.set(true);
     const request$ = editing
-      ? this.clientsApi.updateClient(editing.id, payload)
-      : this.clientsApi.createClient(payload);
+      ? this.clientsStore.update(editing.id, payload)
+      : this.clientsStore.create(payload);
 
     request$.subscribe({
       next: (res) => {
