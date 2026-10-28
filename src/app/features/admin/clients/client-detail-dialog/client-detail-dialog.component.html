@@ -1,0 +1,31 @@
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '760px' }"
+  [breakpoints]="{ '960px': '92vw' }"
+  (onHide)="onDialogHide()">
+  <ng-template pTemplate="header">
+    <span>{{ lang.t('clients.detail.title') }}</span>
+  </ng-template>
+
+  @if (client(); as c) {
+    @if (detailStore.activeView() === 'reserva') {
+      <bw-patient-card
+        [client]="c"
+        [dialogMode]="true"
+        [showNotifications]="true"
+        [showEdit]="false"
+        (patientTabSelected)="onPatientTabSelected($event)"
+        (editRequested)="onEdit()" />
+    } @else {
+      <bw-patient-detail-content
+        [view]="activeDetailTab()"
+        (returnRequested)="returnToReservation()" />
+    }
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="lang.t('common.close')" severity="secondary" (onClick)="close()" />
+  </ng-template>
+</p-dialog>

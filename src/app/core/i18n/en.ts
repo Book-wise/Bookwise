@@ -752,6 +752,7 @@ export const EN: Record<string, string> = {
   'clients.empty': 'No clients found',
   'clients.action.view': 'View',
   'clients.action.packs': 'View Packs',
+  'clients.detail.title': 'Client detail',
 
   'patient_card.warning.contact_missing': 'Patient is missing email or phone',
   'patient_card.tab.plans':    'Plans',

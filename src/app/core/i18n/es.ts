@@ -807,6 +807,7 @@ export const ES: Record<string, string> = {
   'clients.empty': 'No se encontraron clientes',
   'clients.action.view': 'Ver',
   'clients.action.packs': 'Ver Packs',
+  'clients.detail.title': 'Detalle del cliente',
 
   // Patient card
   'patient_card.warning.contact_missing': 'Falta email o teléfono del paciente',

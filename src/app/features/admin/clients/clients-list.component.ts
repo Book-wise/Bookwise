@@ -22,6 +22,8 @@ import { Subject, debounceTime } from 'rxjs';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { PatientTab } from '@core/stores/client-detail.store';
+import { ClientDetailDialogComponent } from './client-detail-dialog/client-detail-dialog.component';
 import { Client } from '@models';
 
 type SortField = 'name' | 'rut' | 'email' | 'phone';
@@ -39,6 +41,7 @@ type SortField = 'name' | 'rut' | 'email' | 'phone';
   imports: [
     CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     InputTextModule, IconFieldModule, InputIconModule, SkeletonModule, TooltipModule,
+    ClientDetailDialogComponent,
   ],
   templateUrl: './clients-list.component.html',
   styleUrls: ['./clients-list.component.scss'],
@@ -104,6 +107,11 @@ export class ClientsListComponent implements OnInit {
     });
   }
 
+  // ── Detalle ─────────────────────────────────────────────────────────────
+  readonly detailVisible = signal(false);
+  readonly selectedClient = signal<Client | null>(null);
+  readonly detailInitialTab = signal<PatientTab | null>(null);
+
   ngOnInit(): void {
     this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.loadClients());
     this.loadClients();
@@ -152,6 +160,20 @@ export class ClientsListComponent implements OnInit {
 
   isSortedAsc(field: SortField): boolean {
     return this.sortField() === field && this.sortDir() === 'asc';
+  }
+
+  /** "Ver": abre el detalle del cliente. */
+  openView(client: Client): void {
+    this.selectedClient.set(client);
+    this.detailInitialTab.set(null);
+    this.detailVisible.set(true);
+  }
+
+  /** "Ver Packs": abre el detalle en la tab de planes. */
+  openPacks(client: Client): void {
+    this.selectedClient.set(client);
+    this.detailInitialTab.set('planes');
+    this.detailVisible.set(true);
   }
 
   private sortValue(c: Client, field: SortField): string {

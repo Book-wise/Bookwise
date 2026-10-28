@@ -69,8 +69,8 @@
             </span>
           </td>
           <td>
-            <p-button icon="pi pi-eye" class="p-button-text" [pTooltip]="lang.t('clients.action.view')"></p-button>
-            <p-button icon="pi pi-shopping-cart" class="p-button-text" [pTooltip]="lang.t('clients.action.packs')"></p-button>
+            <p-button icon="pi pi-eye" class="p-button-text" [pTooltip]="lang.t('clients.action.view')" (onClick)="openView(client)"></p-button>
+            <p-button icon="pi pi-shopping-cart" class="p-button-text" [pTooltip]="lang.t('clients.action.packs')" (onClick)="openPacks(client)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -100,3 +100,9 @@
     </div>
   }
 </p-card>
+
+<bw-client-detail-dialog
+  [visible]="detailVisible()"
+  [client]="selectedClient()"
+  [initialTab]="detailInitialTab()"
+  (closed)="detailVisible.set(false)" />
