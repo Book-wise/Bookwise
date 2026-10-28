@@ -242,5 +242,22 @@ describe('LocationsListComponent', () => {
 
       expect(component.pagedLocations()).toHaveLength(2);
     });
+
+    it('clampa la página cuando el total baja y deja de quedar vacía', () => {
+      seedMany();
+      component.onPageChange({ page: 1 });
+      expect(component.page()).toBe(2);
+      expect(component.pagedLocations()).toHaveLength(2);
+
+      // El total baja a 5 (una sola página): la página 2 ya no existe.
+      seedLocations(
+        Array.from({ length: 5 }, (_, i) => baseLocation({ id: i + 1, name: `Sucursal ${i + 1}` })),
+      );
+      fixture.detectChanges();
+      fixture.detectChanges();
+
+      expect(component.page()).toBe(1);
+      expect(component.pagedLocations()).toHaveLength(5);
+    });
   });
 });

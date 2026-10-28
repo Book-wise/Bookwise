@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { collectPaginatedPages, LIST_MAX_PAGES, LIST_PAGE_SIZE } from './collect-paginated';
+import { TimeoutError } from 'rxjs';
+import { collectPaginatedPages, LIST_MAX_PAGES, LIST_PAGE_SIZE, LIST_REQUEST_TIMEOUT_MS } from './collect-paginated';
 
 interface Row {
   id: number;
@@ -113,5 +114,26 @@ describe('collectPaginatedPages', () => {
 
     expect(box.rows?.length).toBe(LIST_PAGE_SIZE * LIST_MAX_PAGES);
     httpMock.expectNone((r) => r.params.get('page') === String(LIST_MAX_PAGES + 1));
+  });
+
+  it('errors with TimeoutError when a page hangs past the timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const box: { rows?: Row[]; error?: unknown } = {};
+      collectPaginatedPages<Row>(http, url).subscribe({
+        next: (r) => (box.rows = r),
+        error: (e) => (box.error = e),
+      });
+
+      // Página 1 pedida pero nunca resuelta.
+      httpMock.expectOne((r) => r.params.get('page') === '1');
+
+      await vi.advanceTimersByTimeAsync(LIST_REQUEST_TIMEOUT_MS + 1);
+
+      expect(box.error).toBeInstanceOf(TimeoutError);
+      expect(box.rows).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

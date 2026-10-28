@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, of, switchMap } from 'rxjs';
+import { Observable, map, of, switchMap, timeout } from 'rxjs';
 import { PaginatedResponse } from '@models';
 import { buildHttpParams } from './build-http-params';
 
@@ -18,6 +18,13 @@ export const LIST_PAGE_SIZE = 100;
  * tamaño de página; si se alcanza, se devuelve lo reunido hasta ahí.
  */
 export const LIST_MAX_PAGES = 40;
+
+/**
+ * Timeout por página de la agregación. Si una request cuelga más que esto, la
+ * recolección falla con `TimeoutError` (el store lo traga y marca el error de
+ * la entidad) en lugar de encadenar requests sin fin.
+ */
+export const LIST_REQUEST_TIMEOUT_MS = 15_000;
 
 /**
  * Lo que puede llegar en el body de un listado. El API hoy devuelve **array
@@ -58,6 +65,7 @@ export function collectPaginatedPages<T>(
         params: buildHttpParams({ ...(params ?? {}), per_page: LIST_PAGE_SIZE, page }),
       })
       .pipe(
+        timeout(LIST_REQUEST_TIMEOUT_MS),
         switchMap((res) => {
           const rows = extractRows(res);
           const lastPage = Array.isArray(res) ? undefined : res?.meta?.last_page;

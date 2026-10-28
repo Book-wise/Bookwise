@@ -19,8 +19,8 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 |---|---|---|---|
 | 1.1 | **Clientes**: lo que no depende del contrato — i18n es/en, columna RUT, acciones reales, detalle con `bw-patient-detail-content`, alta/edición (`clients.create/update` ya existen) | `clientes-base-de-pacientes.md` T4, T5, T7 | implementar |
 | 1.2 | **#12 Límites de creación** (bloqueo **proactivo** al tope del plan) | `creation-limits.md` T1–T5 | implementar (diseño cerrado). Ojo: el botón "Nuevo profesional" **ya existe** (lo agregó `8021fb9`), así que #12 lo cubre también |
-| 1.3 | **Clamp de página** en las dos listas: si el total baja, la página actual queda vacía | hallazgos `R3-PAGE-CLAMP` y `R3-PAGE-NO-UPPER-BOUND` | fix chico |
-| 1.4 | **Timeout/cancelación** del agregador `collect-paginated.ts` | hallazgo `R3-COLLECT-TIMEOUT` | fix chico |
+| 1.3 | **Clamp de página** en las dos listas: si el total baja, la página actual queda vacía | hallazgos `R3-PAGE-CLAMP` y `R3-PAGE-NO-UPPER-BOUND` | ✅ cerrado (clamp vía `effect` en ambas listas) |
+| 1.4 | **Timeout/cancelación** del agregador `collect-paginated.ts` | hallazgo `R3-COLLECT-TIMEOUT` | ✅ cerrado (`timeout` por página) |
 | 1.5 | **#18 Borrador + barra flotante** "Tienes cambios en tu plan" (Cancelar / Confirmar, sin prorrateo) | `billing-plans-addons.md` §3 | implementar; hay referencia visual `cambios en plan.png` |
 | 1.6 | **#20 Reacción post pre-check** | `billing-plans-addons.md` §3 | **DESBLOQUEADA**: la imagen `confirmacion de cambio luego del pre-checkeo.png` ya está en `D:\documentos\trabajo\bookwise\` |
 
@@ -54,7 +54,16 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 
 ## Orden sugerido
 
-1. **1.3 + 1.4** (dos fixes chicos, cierran deuda del review en una sola tanda).
+1. **1.3 + 1.4** ✅ cerrados (clamp de página + timeout del agregador).
 2. **1.1** clientes sin contrato (avanza la pantalla grande mientras el backend responde 2.1).
 3. **1.2** #12, que ya tiene diseño cerrado.
 4. Al volver el contrato: **2.1** → T2/T3 de clientes (filtros + contadores).
+
+## Actualización 2026-10-28
+
+- **1.3 + 1.4 cerrados** en `feat/contract-catchup` (work-unit commit). `ng build` verde.
+- `ng test` actual: **756 pass / 8 fail**. De los 8, **6 son los ya conocidos**
+  (calendar-navigation 1, historial-reserva 3, booking-form-dialog 2) y **2 son nuevos de observar**
+  pero preexistentes: `booking-detail-dialog` agota el timeout de 5s en el área de detalle de
+  paciente (`keeps Reserva mounted…`, `shows the patient detail content…`), ajenos a esta tanda
+  (tocan `ClientDetailStore` / paciente, no la paginación).

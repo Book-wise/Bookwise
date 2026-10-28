@@ -416,6 +416,23 @@ describe('ProvidersListComponent', () => {
 
       expect(component.page()).toBe(1);
     });
+
+    it('clampa la página cuando el total baja y deja de quedar vacía', () => {
+      seedMany();
+      component.onPageChange({ page: 1 });
+      expect(component.page()).toBe(2);
+      expect(component.pagedProviders()).toHaveLength(2);
+
+      // El total baja a 5 (una sola página): la página 2 ya no existe.
+      seedProviders(
+        Array.from({ length: 5 }, (_, i) => baseProvider({ id: i + 1, email: `p${i + 1}@test.com` })),
+      );
+      fixture.detectChanges();
+      fixture.detectChanges();
+
+      expect(component.page()).toBe(1);
+      expect(component.pagedProviders()).toHaveLength(5);
+    });
   });
 
   // ── Cuota agotada: el CTA de upgrade no queda pegado ────────────────

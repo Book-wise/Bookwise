@@ -160,8 +160,10 @@ y dejó **6 hallazgos `informational`**. Ninguno bloquea; dos son deuda real de 
 
 **Estado de entrega**: los 6 commits de la tanda están **pusheados** a
 `origin/feat/contract-catchup` (`ad3b7be..e84fcc8`); el árbol publicado es idéntico al revisado.
-Los dos fixes chicos (1.3 clamp de página y 1.4 timeout del agregador) están en
-`odd/tasks/pendientes.md`.
+Los dos fixes chicos de esta deuda están **cerrados**: `R3-PAGE-CLAMP` / `R3-PAGE-NO-UPPER-BOUND`
+(clamp de página vía `effect` en ambas listas) y `R3-COLLECT-TIMEOUT` (`timeout` por página en
+`collect-paginated.ts`). Los demás hallazgos (`R3-COVERAGE-GAPS`, `R3-CTA-CLEAR-REMOVAL`,
+`R3-CAPACITY-CODES`) siguen abiertos en `odd/tasks/pendientes.md`.
 
 ## Contrato cerrado (respuesta del mantenedor, 2026-10-27)
 

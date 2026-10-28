@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -109,10 +109,27 @@ export class ProvidersListComponent implements OnInit {
 
   readonly totalRecords = computed(() => this.sortedProviders().length);
 
+  /** Última página válida para el total actual (mínimo 1). */
+  private readonly maxPage = computed(() =>
+    Math.max(1, Math.ceil(this.totalRecords() / this.pageSize)),
+  );
+
   readonly pagedProviders = computed(() => {
     const start = (this.page() - 1) * this.pageSize;
     return this.sortedProviders().slice(start, start + this.pageSize);
   });
+
+  constructor() {
+    // Si el total baja (p. ej. un filtro o una recarga trae menos filas), la
+    // página actual puede quedar fuera de rango y mostrar una página vacía: se
+    // la clampa a la última página válida.
+    effect(() => {
+      const max = this.maxPage();
+      if (this.page() > max) {
+        this.page.set(max);
+      }
+    });
+  }
 
   /** `p-paginator` entrega la página 0-based. */
   onPageChange(event: { page?: number }): void {
