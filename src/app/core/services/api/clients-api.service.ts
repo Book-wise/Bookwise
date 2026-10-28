@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { Client, ClientPack, PaginatedResponse } from '@models';
 import { buildHttpParams } from './build-http-params';
+import { collectPaginatedPages } from './collect-paginated';
 
 @Injectable({ providedIn: 'root' })
 export class ClientsApiService {
@@ -19,6 +20,17 @@ export class ClientsApiService {
     return this.http.get<Client[]>(`${this.baseUrl}/clients`, {
       params: params ? buildHttpParams(params) : undefined,
     });
+  }
+
+  /**
+   * Listado completo de clientes para la pantalla "Base de Pacientes": agrega
+   * todas las páginas (igual que providers/locations) para que el contador
+   * "Mostrando X de N" sea real y la búsqueda no trunque a 15. Cuando el
+   * backend entregue el envelope `{data, links, meta}` (contrato §1),
+   * `collectPaginatedPages` ya lo consume sin cambios.
+   */
+  listClients(params?: { location_id?: number; search?: string }): Observable<Client[]> {
+    return collectPaginatedPages<Client>(this.http, `${this.baseUrl}/clients`, params);
   }
 
   getClient(id: number): Observable<Client> {

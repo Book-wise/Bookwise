@@ -792,6 +792,22 @@ export const ES: Record<string, string> = {
   'similar_patients.cancel': 'Cancelar',
   'similar_patients.accept': 'Aceptar',
 
+  // Clients (Base de Pacientes)
+  'clients.title': 'Clientes',
+  'clients.search_placeholder': 'Buscar cliente...',
+  'clients.col.rut': 'RUT',
+  'clients.col.name': 'Nombre',
+  'clients.col.email': 'Email',
+  'clients.col.phone': 'Teléfono',
+  'clients.col.status': 'Estado',
+  'clients.col.actions': 'Acciones',
+  'clients.status.active': 'Activo',
+  'clients.status.inactive': 'Inactivo',
+  'clients.showing': 'Mostrando {{from}}-{{to}} de {{total}}',
+  'clients.empty': 'No se encontraron clientes',
+  'clients.action.view': 'Ver',
+  'clients.action.packs': 'Ver Packs',
+
   // Patient card
   'patient_card.warning.contact_missing': 'Falta email o teléfono del paciente',
   'patient_card.tab.plans':    'Planes',

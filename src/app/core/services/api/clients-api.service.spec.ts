@@ -47,6 +47,29 @@ describe('ClientsApiService', () => {
     req.flush([]);
   });
 
+  it('GET /clients via listClients() aggregates every page with per_page=100', () => {
+    const page1 = Array.from(
+      { length: 100 },
+      (_, i) => ({ id: i + 1, first_name: 'C', last_name: String(i), email: `c${i}@t.com`, active: true }) as Client,
+    );
+    const page2 = [{ id: 101, first_name: 'Z', last_name: 'Last', email: 'z@t.com', active: true } as Client];
+
+    let result: Client[] | undefined;
+    service.listClients({ search: 'x' }).subscribe((r) => (result = r));
+
+    const req1 = httpMock.expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '1');
+    expect(req1.request.method).toBe('GET');
+    expect(req1.request.params.get('per_page')).toBe('100');
+    expect(req1.request.params.get('search')).toBe('x');
+    req1.flush(page1);
+
+    const req2 = httpMock.expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '2');
+    req2.flush(page2);
+
+    expect(result?.length).toBe(101);
+    expect(result?.[100].id).toBe(101);
+  });
+
   it('GET /clients/:id via getClient()', () => {
     const dummy: Client = { id: 5, first_name: 'Ana', last_name: 'García', email: 'ana@test.com', active: true };
 

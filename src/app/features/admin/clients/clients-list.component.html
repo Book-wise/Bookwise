@@ -1,12 +1,11 @@
-<p-card header="Clientes">
+<p-card [header]="lang.t('clients.title')">
   <div class="mb-3">
     <p-iconfield>
       <p-inputicon class="pi pi-search" />
       <input
         type="text"
-        type="text"
         pInputText
-        placeholder="Buscar cliente..."
+        [placeholder]="lang.t('clients.search_placeholder')"
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event); onSearch()"
       />
@@ -17,58 +16,87 @@
     <div class="list-skeleton">
       @for (row of [1,2,3,4,5]; track row) {
         <div class="list-sk-row bw-sk-card">
-          <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
-          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="14%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
-          <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="80px" height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="14%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="10%"  height="1.5rem" borderRadius="12px" />
+          <p-skeleton width="70px" height="1rem" borderRadius="4px" />
         </div>
       }
     </div>
   } @else {
-  <p-table
-    [value]="clients()"
-    [tableStyle]="{ 'min-width': '50rem' }"
-    [paginator]="true"
-    [rows]="10"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Email</th>
-        <th>Teléfono</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-client>
-      <tr>
-        <td>{{ client.id }}</td>
-        <td>{{ client.first_name }} {{ client.last_name }}</td>
-        <td>{{ client.email }}</td>
-        <td>{{ client.phone }}</td>
-        <td>
-          <span class="bw-chip" [class]="client.active ? 'bw-chip--success' : 'bw-chip--danger'">
-            {{ client.active ? 'Activo' : 'Inactivo' }}
-          </span>
-        </td>
-        <td>
-          <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver"></p-button>
-          <p-button
-            icon="pi pi-shopping-cart"
-            class="p-button-text"
-            pTooltip="Ver Packs"
-          ></p-button>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="6" class="text-center">No se encontraron clientes</td>
-      </tr>
-    </ng-template>
-  </p-table>
+    <p-table [value]="pagedClients()" [tableStyle]="{ 'min-width': '50rem' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="bw-th-sort" (click)="toggleSort('rut')">
+            {{ lang.t('clients.col.rut') }}
+            @if (isSorted('rut')) {
+              <i class="pi" [class]="isSortedAsc('rut') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th class="bw-th-sort" (click)="toggleSort('name')">
+            {{ lang.t('clients.col.name') }}
+            @if (isSorted('name')) {
+              <i class="pi" [class]="isSortedAsc('name') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th class="bw-th-sort" (click)="toggleSort('email')">
+            {{ lang.t('clients.col.email') }}
+            @if (isSorted('email')) {
+              <i class="pi" [class]="isSortedAsc('email') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th class="bw-th-sort" (click)="toggleSort('phone')">
+            {{ lang.t('clients.col.phone') }}
+            @if (isSorted('phone')) {
+              <i class="pi" [class]="isSortedAsc('phone') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th>{{ lang.t('clients.col.status') }}</th>
+          <th>{{ lang.t('clients.col.actions') }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-client>
+        <tr>
+          <td>{{ client.rut || '—' }}</td>
+          <td>{{ client.first_name }} {{ client.last_name }}</td>
+          <td>{{ client.email }}</td>
+          <td>{{ client.phone || '—' }}</td>
+          <td>
+            <span class="bw-chip" [class]="client.active ? 'bw-chip--success' : 'bw-chip--danger'">
+              {{ client.active ? lang.t('clients.status.active') : lang.t('clients.status.inactive') }}
+            </span>
+          </td>
+          <td>
+            <p-button icon="pi pi-eye" class="p-button-text" [pTooltip]="lang.t('clients.action.view')"></p-button>
+            <p-button icon="pi pi-shopping-cart" class="p-button-text" [pTooltip]="lang.t('clients.action.packs')"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">{{ lang.t('clients.empty') }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="list-footer">
+      <span class="list-footer__count">
+        {{
+          lang.t('clients.showing', {
+            from: rangeFrom().toString(),
+            to: rangeTo().toString(),
+            total: totalRecords().toString(),
+          })
+        }}
+      </span>
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
+    </div>
   }
 </p-card>

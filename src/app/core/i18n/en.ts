@@ -737,6 +737,22 @@ export const EN: Record<string, string> = {
   'similar_patients.accept': 'Accept',
 
   // Patient card
+  // Clients (Patient base)
+  'clients.title': 'Clients',
+  'clients.search_placeholder': 'Search client...',
+  'clients.col.rut': 'RUT',
+  'clients.col.name': 'Name',
+  'clients.col.email': 'Email',
+  'clients.col.phone': 'Phone',
+  'clients.col.status': 'Status',
+  'clients.col.actions': 'Actions',
+  'clients.status.active': 'Active',
+  'clients.status.inactive': 'Inactive',
+  'clients.showing': 'Showing {{from}}-{{to}} of {{total}}',
+  'clients.empty': 'No clients found',
+  'clients.action.view': 'View',
+  'clients.action.packs': 'View Packs',
+
   'patient_card.warning.contact_missing': 'Patient is missing email or phone',
   'patient_card.tab.plans':    'Plans',
   'patient_card.tab.sessions': 'Sessions',

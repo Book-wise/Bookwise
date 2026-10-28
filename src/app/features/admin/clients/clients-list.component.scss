@@ -19,3 +19,23 @@
   padding: 0.75rem 1rem;
   border-radius: 6px;
 }
+
+.list-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.list-footer__count {
+  color: var(--p-text-muted-color, #6b7280);
+  font-size: 0.875rem;
+}
+
+.bw-th-sort {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
