@@ -17,7 +17,7 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 
 | # | Ítem | Fuente | Qué falta |
 |---|---|---|---|
-| 1.1 | **Clientes**: lo que no depende del contrato — i18n es/en, columna RUT, acciones reales, detalle con `bw-patient-detail-content`, alta/edición (`clients.create/update` ya existen) | `clientes-base-de-pacientes.md` T4, T5, T7 | implementar |
+| 1.1 | **Clientes** ("Base de Pacientes"): listado server-side, detalle, alta/edición, desactivar (409+force), filtros avanzados, i18n | `clientes-base-de-pacientes.md` | ✅ implementado (contrato cerrado y mergeado en BE `79ed586`) |
 | 1.2 | **#12 Límites de creación** (bloqueo **proactivo** al tope del plan) | `creation-limits.md` T1–T5 | implementar (diseño cerrado). Ojo: el botón "Nuevo profesional" **ya existe** (lo agregó `8021fb9`), así que #12 lo cubre también |
 | 1.3 | **Clamp de página** en las dos listas: si el total baja, la página actual queda vacía | hallazgos `R3-PAGE-CLAMP` y `R3-PAGE-NO-UPPER-BOUND` | ✅ cerrado (clamp vía `effect` en ambas listas) |
 | 1.4 | **Timeout/cancelación** del agregador `collect-paginated.ts` | hallazgo `R3-COLLECT-TIMEOUT` | ✅ cerrado (`timeout` por página) |
@@ -62,8 +62,20 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 ## Actualización 2026-10-28
 
 - **1.3 + 1.4 cerrados** en `feat/contract-catchup` (work-unit commit). `ng build` verde.
-- `ng test` actual: **756 pass / 8 fail**. De los 8, **6 son los ya conocidos**
-  (calendar-navigation 1, historial-reserva 3, booking-form-dialog 2) y **2 son nuevos de observar**
-  pero preexistentes: `booking-detail-dialog` agota el timeout de 5s en el área de detalle de
-  paciente (`keeps Reserva mounted…`, `shows the patient detail content…`), ajenos a esta tanda
-  (tocan `ClientDetailStore` / paciente, no la paginación).
+- `ng test` actual: **798 pass / 7 fail**, todos flaky preexistentes (calendar-navigation,
+  booking-detail-dialog, booking-form-dialog ×2, historial-reserva ×3); ninguno en clientes,
+  locations ni calendario.
+- **Clientes COMPLETO**: listado **server-side** (`meta.total/from/to/last_page` + sort allowlist),
+  detalle, alta/edición (RUT + `birth_date`), desactivar (409 `deactivation_conflict` + force),
+  filtros avanzados, i18n. **`ClientsStore`** centraliza lista + mutaciones (parchea cache, sin
+  re-fetch). Falta: merge a `develop` + deploy + verificar contra dev.
+- **Calendario** (admin + profesional): grilla **00:00–24:00** (scroll a 08:00) para clínicas 24h;
+  card **full-bleed** (sin padding/margen/esquinas); botón de duración de slots + guía de estados
+  inline en desktop y en su propia línea en mobile S/M.
+- **Locations**: la tabla muestra **apertura/cierre** (`opening_time`/`closing_time`).
+- **Provider dialog**: roles `staff`/`staff_readonly` marcados **"Profesional"** + aviso si el set
+  queda sin rol de atención (caso Ana en Providencia: tenía `recepcionista` → no aparecía).
+- **Fix**: `getClients` desenvuelve el envelope (`{data}`) — rompía `ReferenceStore.clients` y el
+  `clientOptions` del booking-form ("map is not a function").
+- **Pendiente backend (sin mergear)**: `feat/location-hours` y `feat/business-days` (días laborables
+  + feriados). Contratos capturados en `odd/tasks/location-hours.md` y `odd/tasks/business-days.md`.

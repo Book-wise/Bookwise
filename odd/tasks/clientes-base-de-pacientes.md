@@ -93,23 +93,23 @@ El mantenedor de `Bookwise-API` respondió los 10 puntos (verificado contra deve
 4. **Orden por columna**: tiene que ser server-side si la paginación lo es.
 5. **Consecuencia de desactivar**: qué pasa con reservas futuras y packs del cliente.
 
-## Tasks
+## Tasks — ✅ implementadas (2026-10-28, ver Estado abajo)
 
-- ⏳ T1 [S3] Cerrar contrato con `Bookwise-API`. — **BLOQUEADA**: esperando respuesta al
-  `openspec/changes/2026-10-27-clients-management/proposal.md`.
-- ⏳ T2 [S1] Listado: buscador global (nombre, apellido, RUT, email, teléfono), contador
-  "Mostrando X de N", columnas ordenables, RUT visible, acciones reales. Depende de T1
-  (paginación/totales/orden).
-- ⏳ T3 [S1] Panel "Filtros avanzados" colapsable: Local/sede, Profesional/prestador, Servicios,
-  Estado de la reserva, Género, Cumpleaños, Paciente creado en el período, ¿Ha reservado?,
-  Personalizados; con **Buscar** y **Reestablecer**. Depende de T1.
-- ⏳ T4 [S1] Detalle de cliente reusando `bw-patient-detail-content` + reservas y packs.
-- ⏳ T5 [S1] Alta y edición de cliente desde la lista (RUT validado por `ChileanRutRule` en el
-  backend), gateadas con `clients.create` / `clients.update`.
-- ⏳ T6 [S4] Desactivar cliente (soft, `active: false`) con confirmación y consecuencias
-  explicadas; el historial de reservas se preserva.
-- ⏳ T7 [S1] i18n es/en de toda la pantalla (hoy no existe ninguna clave `clients.*`).
-- ⏳ T8 [S1] Specs + `ng build` + `ng test`.
+- ✅ T1 [S3] Cerrar contrato con `Bookwise-API`. — **CERRADO** y mergeado en el backend (`79ed586`).
+- ✅ T2 [S1] Listado: buscador global, contador "Mostrando X-Y de N" (`meta.total`/`from`/`to`),
+  columnas ordenables (server-side), RUT visible y acciones reales. **Server-side** (1 request por
+  página); fallback tolerante a array plano.
+- ✅ T3 [S1] Panel "Filtros avanzados" colapsable: Local/sede, Profesional, Servicio, Estado de la
+  reserva, ¿Ha reservado? (`ever`/`upcoming`), Género, Creado desde/hasta; con **Buscar** y
+  **Reestablecer**. ⚠️ **Cumpleaños (rango) NO implementado** en el backend → follow-up.
+- ✅ T4 [S1] Detalle (`bw-client-detail-dialog`) reusando `bw-patient-card` + `bw-patient-detail-content`.
+- ✅ T5 [S1] Alta y edición (`bw-client-form-dialog`) con RUT (módulo 11) y `birth_date`; gateadas
+  con `clients.create`/`clients.update`.
+- ✅ T6 [S4] Desactivar (soft) con 409 `deactivation_conflict` → diálogo con afectados (reservas +
+  packs con `total`/`used`/`remaining`) → reintento con `force`; 422 `already_inactive`.
+- ✅ T7 [S1] i18n es/en de toda la pantalla (claves `clients.*`).
+- ✅ T8 [S1] Specs + `ng build` + `ng test` (servicio, lista, detalle, form).
+- ✅ **Extra**: `ClientsStore` centraliza lista + mutaciones (parchea el cache, sin re-fetch).
 - ❌ Fuera de alcance declarado: **Importar pacientes** y **Crear una audiencia con este
   listado** (CRM/marketing, no pedido).
 
