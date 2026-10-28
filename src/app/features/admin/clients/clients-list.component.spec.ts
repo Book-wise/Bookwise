@@ -190,7 +190,15 @@ describe('ClientsListComponent', () => {
                     status: 'Confirmado',
                   },
                 ],
-                packs: [{ id: 20, service_pack: 'Pack 4 sesiones', remaining_sessions: 3 }],
+                packs: [
+                  {
+                    id: 20,
+                    service_pack: 'Pack 4 sesiones',
+                    total_sessions: 4,
+                    used_sessions: 3,
+                    remaining_sessions: 1,
+                  },
+                ],
               },
             },
           }),
@@ -208,7 +216,7 @@ describe('ClientsListComponent', () => {
     expect(component.bookingLabel(booking)).toContain('Pro A');
     const pack = component.deactivateAffects()!.packs[0];
     expect(component.packLabel(pack)).toContain('Pack 4 sesiones');
-    expect(component.packLabel(pack)).toContain('3');
+    expect(component.packLabel(pack)).toContain('1 de 4');
   });
 
   it('reintenta con force al confirmar y parchea la lista', () => {

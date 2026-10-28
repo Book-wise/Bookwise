@@ -54,6 +54,9 @@ interface DeactivationPack {
   id: number;
   /** Nombre del pack (string, NO objeto). */
   service_pack: string;
+  total_sessions?: number;
+  used_sessions?: number;
+  /** Calculado por el backend: no recalcular. */
   remaining_sessions: number;
 }
 
@@ -387,11 +390,18 @@ export class ClientsListComponent implements OnInit {
     return [when, who, b.status].filter(Boolean).join(' · ');
   }
 
-  /** Etiqueta de un pack afectado (`service_pack` es el nombre). */
+  /** Etiqueta de un pack afectado: nombre + "N de M restantes" (`service_pack` es el nombre). */
   packLabel(p: DeactivationPack): string {
-    return p.remaining_sessions != null
-      ? `${this.lang.t('clients.deactivate.remaining_sessions', { n: String(p.remaining_sessions) })} · ${p.service_pack}`
-      : p.service_pack;
+    const sessions =
+      p.total_sessions != null
+        ? this.lang.t('clients.deactivate.pack_sessions', {
+            remaining: String(p.remaining_sessions),
+            total: String(p.total_sessions),
+          })
+        : this.lang.t('clients.deactivate.remaining_sessions', {
+            n: String(p.remaining_sessions),
+          });
+    return [p.service_pack, sessions].filter(Boolean).join(' · ');
   }
 
   private clearDeactivateDialog(): void {

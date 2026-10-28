@@ -843,6 +843,7 @@ export const ES: Record<string, string> = {
   'clients.deactivate.success': 'Cliente desactivado',
   'clients.deactivate.already_inactive': 'El cliente ya está inactivo',
   'clients.deactivate.remaining_sessions': '{{n}} restantes',
+  'clients.deactivate.pack_sessions': '{{remaining}} de {{total}} restantes',
 
   // Patient card
   'patient_card.warning.contact_missing': 'Falta email o teléfono del paciente',
