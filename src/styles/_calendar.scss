@@ -18,6 +18,12 @@
   // No padding here — the layout's `.main-content` is the only spacer now.
   padding: 0;
 
+  // El calendario ocupa todo el card: sin padding interno del card.
+  .p-card-body,
+  .p-card-content {
+    padding: 0;
+  }
+
   @media (max-width: 768px) {
     .p-card {
       border-radius: 0;
@@ -84,19 +90,12 @@
     }
   }
 
-  // ── Herramientas (identity + slots + guía) — fila propia, visible en todos los tamaños ──
+  // Herramientas (slots + guía) inline en la fila de filtros — ahorra una fila.
   .calendar-tools {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    justify-content: center;
     flex-wrap: wrap;
-    padding: 0 1rem 0.75rem;
-
-    @media (max-width: 768px) {
-      justify-content: center;
-      padding: 0 0.75rem 0.5rem;
-    }
   }
 
   .calendar-area {

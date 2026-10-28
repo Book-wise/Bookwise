@@ -215,8 +215,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin, luxonPlugin],
     initialView: 'timeGridWeek',
-    slotMinTime: '09:00:00',
-    slotMaxTime: '21:00:00',
+    slotMinTime: '08:00:00',
+    slotMaxTime: '22:00:00',
+    scrollTime: '08:00:00',
     locale: this.lang.lang() === 'en' ? 'en' : esLocale,
     // Timezone desde servicio centralizado
     timeZone: this.tzService.activeTimezone(),
