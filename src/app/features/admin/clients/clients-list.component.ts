@@ -6,6 +6,7 @@ import {
   inject,
   OnInit,
   signal,
+  untracked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -98,53 +99,35 @@ export class ClientsListComponent implements OnInit {
   readonly loading = computed(() => this.clientsStore.loading());
   readonly searchTerm = signal('');
 
-  // ── Orden (client-side sobre la lista agregada) ──────────────────────────
+  // ── Orden (server-side, allowlist del backend) ──────────────────────────
   readonly sortField = signal<SortField>('name');
   readonly sortDir = signal<'asc' | 'desc'>('asc');
 
-  // ── Paginación (S6: la lista no se trunca a 15) ──────────────────────────
+  /** Mapeo del campo de UI a la allowlist del backend (default `last_name asc`). */
+  private readonly sortMap: Record<SortField, string> = {
+    name: 'last_name',
+    rut: 'rut',
+    email: 'email',
+    phone: 'phone',
+  };
+
+  // ── Paginación (server-side: una página por request) ──────────────────────────
   readonly pageSize = 10;
   /** Página visible, 1-based. */
   readonly page = signal(1);
 
-  readonly totalRecords = computed(() => this.sortedClients().length);
-
-  /** Última página válida para el total actual (mínimo 1). */
-  private readonly maxPage = computed(() =>
-    Math.max(1, Math.ceil(this.totalRecords() / this.pageSize)),
-  );
-
-  readonly pagedClients = computed(() => {
-    const start = (this.page() - 1) * this.pageSize;
-    return this.sortedClients().slice(start, start + this.pageSize);
-  });
-
-  /** Rango "Mostrando X-Y de N". */
-  readonly rangeFrom = computed(() =>
-    this.totalRecords() === 0 ? 0 : (this.page() - 1) * this.pageSize + 1,
-  );
-  readonly rangeTo = computed(() => Math.min(this.page() * this.pageSize, this.totalRecords()));
-
-  readonly sortedClients = computed(() => {
-    const field = this.sortField();
-    const dir = this.sortDir();
-    const rows = this.clients().slice();
-    rows.sort((a, b) => {
-      const cmp = this.sortValue(a, field).localeCompare(this.sortValue(b, field), 'es', {
-        sensitivity: 'base',
-      });
-      return dir === 'asc' ? cmp : -cmp;
-    });
-    return rows;
-  });
+  readonly totalRecords = computed(() => this.clientsStore.total());
+  /** Rango "Mostrando X-Y de N" (lo informa `meta.from`/`meta.to`). */
+  readonly rangeFrom = computed(() => this.clientsStore.from());
+  readonly rangeTo = computed(() => this.clientsStore.to());
 
   constructor() {
-    // Si el total baja (búsqueda más restrictiva), la página actual puede quedar
-    // fuera de rango y mostrar una lista vacía: se la clampa.
+    // Si el total baja y la página actual queda fuera de rango, se la clampa.
     effect(() => {
-      const max = this.maxPage();
-      if (this.page() > max) {
-        this.page.set(max);
+      const lastPage = Math.max(1, this.clientsStore.lastPage());
+      if (this.page() > lastPage) {
+        this.page.set(lastPage);
+        untracked(() => this.loadClients());
       }
     });
   }
@@ -210,10 +193,16 @@ export class ClientsListComponent implements OnInit {
     this.loadClients();
   }
 
-  /** Carga la lista agregada con búsqueda + filtros (vía ClientsStore). */
+  /** Carga una página del listado (server-side) con búsqueda + orden + filtros. */
   loadClients(): void {
     this.clientsStore
-      .load({ search: this.searchTerm() || undefined, ...this.appliedFilters() })
+      .load({
+        page: this.page(),
+        perPage: this.pageSize,
+        sort: this.sortMap[this.sortField()],
+        direction: this.sortDir(),
+        filters: { search: this.searchTerm() || undefined, ...this.appliedFilters() },
+      })
       .subscribe({
         error: (err) => this.httpError.handle(err, 'cargar clientes'),
       });
@@ -263,6 +252,9 @@ export class ClientsListComponent implements OnInit {
     this.fCreatedFrom.set('');
     this.fCreatedTo.set('');
     this.appliedFilters.set({});
+    // Volver al orden default del backend.
+    this.sortField.set('name');
+    this.sortDir.set('asc');
     this.page.set(1);
     this.loadClients();
   }
@@ -270,9 +262,10 @@ export class ClientsListComponent implements OnInit {
   /** `p-paginator` entrega la página 0-based. */
   onPageChange(event: { page?: number }): void {
     this.page.set((event.page ?? 0) + 1);
+    this.loadClients();
   }
 
-  /** Toggle de orden al clickear un encabezado. */
+  /** Toggle de orden al clickear un encabezado (recarga server-side). */
   toggleSort(field: SortField): void {
     if (this.sortField() === field) {
       this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -281,6 +274,7 @@ export class ClientsListComponent implements OnInit {
       this.sortDir.set('asc');
     }
     this.page.set(1);
+    this.loadClients();
   }
 
   isSorted(field: SortField): boolean {
@@ -420,16 +414,4 @@ export class ClientsListComponent implements OnInit {
     });
   }
 
-  private sortValue(c: Client, field: SortField): string {
-    switch (field) {
-      case 'rut':
-        return c.rut ?? '';
-      case 'email':
-        return c.email ?? '';
-      case 'phone':
-        return c.phone ?? '';
-      default:
-        return `${c.first_name} ${c.last_name}`;
-    }
-  }
 }

@@ -120,7 +120,7 @@
       }
     </div>
   } @else {
-    <p-table [value]="pagedClients()" [tableStyle]="{ 'min-width': '50rem' }">
+    <p-table [value]="clients()" [tableStyle]="{ 'min-width': '50rem' }">
       <ng-template pTemplate="header">
         <tr>
           <th class="bw-th-sort" (click)="toggleSort('rut')">

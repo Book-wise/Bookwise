@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { ClientsListComponent } from './clients-list.component';
-import { ClientsApiService } from '@services/api/clients-api.service';
+import { ClientsApiService, ClientPage } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
@@ -29,18 +29,28 @@ function makeClient(overrides: Partial<Client> = {}): Client {
   } as Client;
 }
 
+function makePage(
+  rows: Client[],
+  total = rows.length,
+  from = rows.length ? 1 : 0,
+  to = rows.length,
+  lastPage = Math.max(1, Math.ceil(total / 10)),
+): ClientPage {
+  return { rows, total, from, to, lastPage, currentPage: 1 };
+}
+
 describe('ClientsListComponent', () => {
   let fixture: ComponentFixture<ClientsListComponent>;
   let component: ClientsListComponent;
   let mockClientsApi: {
-    listClients: ReturnType<typeof vi.fn>;
+    listClientsPage: ReturnType<typeof vi.fn>;
     updateClient: ReturnType<typeof vi.fn>;
     createClient: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
     mockClientsApi = {
-      listClients: vi.fn(() => of([])),
+      listClientsPage: vi.fn(() => of(makePage([]))),
       updateClient: vi.fn((id: number, data: Partial<Client>) => of({ ...makeClient({ id }), ...data } as Client)),
       createClient: vi.fn((data: Partial<Client>) => of({ ...makeClient({ id: 99 }), ...data } as Client)),
     };
@@ -64,58 +74,79 @@ describe('ClientsListComponent', () => {
     component = fixture.componentInstance;
   });
 
-  /** Setea el mock y dispara el primer load (ngOnInit corre en detectChanges). */
-  function seed(clients: Client[]): void {
-    mockClientsApi.listClients.mockReturnValue(of(clients));
+  /** Setea el mock con una página y dispara el primer load (ngOnInit). */
+  function seed(rows: Client[], total = rows.length, page = makePage(rows, total)): void {
+    mockClientsApi.listClientsPage.mockReturnValue(of(page));
     fixture.detectChanges();
   }
 
-  it('carga la lista agregada vía listClients', () => {
+  it('carga una página vía listClientsPage (server-side)', () => {
     seed([makeClient({ id: 1 }), makeClient({ id: 2 })]);
 
-    expect(mockClientsApi.listClients).toHaveBeenCalled();
+    expect(mockClientsApi.listClientsPage).toHaveBeenCalled();
     expect(component.clients()).toHaveLength(2);
   });
 
-  it('pagina de a 10 y reporta el rango "Mostrando X-Y de N"', () => {
-    seed(Array.from({ length: 12 }, (_, i) => makeClient({ id: i + 1 })));
+  it('usa meta.total/from/to de la página para el contador', () => {
+    seed([makeClient()], 42, makePage([makeClient()], 42, 11, 20, 5));
 
-    expect(component.totalRecords()).toBe(12);
-    expect(component.pagedClients()).toHaveLength(10);
-    expect(component.rangeFrom()).toBe(1);
-    expect(component.rangeTo()).toBe(10);
-
-    component.onPageChange({ page: 1 });
-
-    expect(component.pagedClients()).toHaveLength(2);
+    expect(component.totalRecords()).toBe(42);
     expect(component.rangeFrom()).toBe(11);
-    expect(component.rangeTo()).toBe(12);
+    expect(component.rangeTo()).toBe(20);
   });
 
-  it('ordena client-side por la columna clickeada (y togglea la dirección)', () => {
-    seed([
-      makeClient({ id: 1, last_name: 'Zeta' }),
-      makeClient({ id: 2, last_name: 'Alfa' }),
-    ]);
+  it('onPageChange recarga server-side con la página pedida', () => {
+    seed([makeClient()], 25);
+    mockClientsApi.listClientsPage.mockClear();
 
-    // Default: nombre asc → "Ana Alfa" antes que "Ana Zeta"
-    expect(component.pagedClients().map((c) => c.id)).toEqual([2, 1]);
+    component.onPageChange({ page: 1 }); // 0-based → página 2
 
-    component.toggleSort('name');
-    expect(component.pagedClients().map((c) => c.id)).toEqual([1, 2]);
-  });
-
-  it('clampa la página si el total baja y deja de quedar vacía', () => {
-    seed(Array.from({ length: 12 }, (_, i) => makeClient({ id: i + 1 })));
-    component.onPageChange({ page: 1 });
     expect(component.page()).toBe(2);
+    expect(mockClientsApi.listClientsPage).toHaveBeenCalledWith(expect.anything(), 2, 10);
+  });
 
-    mockClientsApi.listClients.mockReturnValue(of(Array.from({ length: 3 }, (_, i) => makeClient({ id: i + 1 }))));
-    component.loadClients();
-    fixture.detectChanges();
+  it('toggleSort recarga server-side con sort/direction', () => {
+    seed([makeClient()]);
+    mockClientsApi.listClientsPage.mockClear();
 
-    expect(component.page()).toBe(1);
-    expect(component.pagedClients()).toHaveLength(3);
+    component.toggleSort('email');
+
+    expect(component.sortField()).toBe('email');
+    expect(mockClientsApi.listClientsPage).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: 'email', direction: 'asc' }),
+      1,
+      10,
+    );
+  });
+
+  it('aplica los filtros del borrador al servicio (applyFilters)', () => {
+    seed([makeClient()]);
+    component.fLocationId.set(3);
+    component.fHasBooked.set('upcoming');
+    component.fGender.set('F');
+    mockClientsApi.listClientsPage.mockClear();
+
+    component.applyFilters();
+
+    expect(component.activeFilterCount()).toBe(3);
+    expect(mockClientsApi.listClientsPage).toHaveBeenCalledWith(
+      expect.objectContaining({ location_id: 3, has_booked: 'upcoming', gender: 'F' }),
+      1,
+      10,
+    );
+  });
+
+  it('reestablece borrador, filtros y orden (resetFilters)', () => {
+    seed([makeClient()]);
+    component.fLocationId.set(3);
+    component.toggleSort('email');
+
+    component.resetFilters();
+
+    expect(component.appliedFilters()).toEqual({});
+    expect(component.fLocationId()).toBeNull();
+    expect(component.sortField()).toBe('name');
+    expect(component.sortDir()).toBe('asc');
   });
 
   it('muestra la columna RUT', () => {
@@ -125,46 +156,17 @@ describe('ClientsListComponent', () => {
     expect(el.textContent).toContain('12345678-9');
   });
 
-  // ── Filtros avanzados (T3) ────────────────────────────────────
-
-  it('aplica los filtros del borrador al servicio (applyFilters)', () => {
-    seed([makeClient()]);
-    component.fLocationId.set(3);
-    component.fHasBooked.set('upcoming');
-    component.fGender.set('F');
-
-    component.applyFilters();
-
-    expect(component.activeFilterCount()).toBe(3);
-    expect(mockClientsApi.listClients).toHaveBeenLastCalledWith(
-      expect.objectContaining({ location_id: 3, has_booked: 'upcoming', gender: 'F' }),
-    );
-  });
-
-  it('reestablece el borrador y los filtros aplicados (resetFilters)', () => {
-    seed([makeClient()]);
-    component.fLocationId.set(3);
-    component.applyFilters();
-    expect(component.activeFilterCount()).toBe(1);
-
-    component.resetFilters();
-
-    expect(component.appliedFilters()).toEqual({});
-    expect(component.activeFilterCount()).toBe(0);
-    expect(component.fLocationId()).toBeNull();
-  });
-
   // ── Desactivación (409 + force) ───────────────────────────────
 
   it('desactiva sin re-consultar la lista: parchea el store', () => {
     seed([makeClient({ id: 1, active: true }), makeClient({ id: 2 })]);
-    mockClientsApi.listClients.mockClear();
+    mockClientsApi.listClientsPage.mockClear();
     mockClientsApi.updateClient.mockReturnValue(of(makeClient({ id: 1, active: false })));
 
     component.deactivateClient(component.clients()[0]);
 
     expect(mockClientsApi.updateClient).toHaveBeenCalledWith(1, { active: false });
-    expect(mockClientsApi.listClients).not.toHaveBeenCalled();
+    expect(mockClientsApi.listClientsPage).not.toHaveBeenCalled();
     expect(component.clients().find((c) => c.id === 1)?.active).toBe(false);
   });
 

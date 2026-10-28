@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { ClientsApiService } from './clients-api.service';
+import { ClientsApiService, ClientPage } from './clients-api.service';
 import { environment } from '@env/environment';
 import { Client, ClientPack, PaginatedResponse } from '@models';
 
@@ -47,52 +47,53 @@ describe('ClientsApiService', () => {
     req.flush([]);
   });
 
-  it('GET /clients via listClients() aggregates every page with per_page=100', () => {
-    const page1 = Array.from(
-      { length: 100 },
-      (_, i) => ({ id: i + 1, first_name: 'C', last_name: String(i), email: `c${i}@t.com`, active: true }) as Client,
-    );
-    const page2 = [{ id: 101, first_name: 'Z', last_name: 'Last', email: 'z@t.com', active: true } as Client];
+  it('listClientsPage reads meta.total/from/to/last_page from the envelope', () => {
+    let page: ClientPage | undefined;
+    service
+      .listClientsPage({ search: 'x', sort: 'last_name', direction: 'asc' }, 2, 10)
+      .subscribe((p) => (page = p));
 
-    let result: Client[] | undefined;
-    service.listClients({ search: 'x' }).subscribe((r) => (result = r));
+    const req = httpMock.expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '2');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('per_page')).toBe('10');
+    expect(req.request.params.get('search')).toBe('x');
+    expect(req.request.params.get('sort')).toBe('last_name');
+    expect(req.request.params.get('direction')).toBe('asc');
+    req.flush({
+      data: [{ id: 1, first_name: 'A', last_name: 'B', email: 'a@b.c', active: true }],
+      links: {},
+      meta: { current_page: 2, from: 11, last_page: 3, per_page: 10, to: 20, total: 25 },
+    });
 
-    const req1 = httpMock.expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '1');
-    expect(req1.request.method).toBe('GET');
-    expect(req1.request.params.get('per_page')).toBe('100');
-    expect(req1.request.params.get('search')).toBe('x');
-    req1.flush(page1);
-
-    const req2 = httpMock.expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '2');
-    req2.flush(page2);
-
-    expect(result?.length).toBe(101);
-    expect(result?.[100].id).toBe(101);
+    expect(page?.total).toBe(25);
+    expect(page?.from).toBe(11);
+    expect(page?.to).toBe(20);
+    expect(page?.lastPage).toBe(3);
+    expect(page?.rows.length).toBe(1);
   });
 
-  it('GET /clients via listClients() consumes the {data, links, meta} envelope', () => {
-    const envelope = (data: Client[], current: number, last: number) => ({
-      data,
-      links: {},
-      meta: { current_page: current, from: 1, last_page: last, per_page: 100, to: data.length, total: last * 100 },
-    });
-    const page1 = Array.from(
-      { length: 100 },
-      (_, i) => ({ id: i + 1, first_name: 'C', last_name: String(i), email: `c${i}@t.com`, active: true }) as Client,
-    );
-    const page2 = [{ id: 101, first_name: 'Z', last_name: 'Last', email: 'z@t.com', active: true } as Client];
+  it('listClientsPage falls back to aggregation when the backend returns a flat array', () => {
+    let page: ClientPage | undefined;
+    service.listClientsPage({}, 1, 10).subscribe((p) => (page = p));
 
-    let result: Client[] | undefined;
-    service.listClients().subscribe((r) => (result = r));
-
+    // Request inicial (per_page=10) devuelve array plano → dispara el fallback.
     httpMock
-      .expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '1')
-      .flush(envelope(page1, 1, 2));
-    httpMock
-      .expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('page') === '2')
-      .flush(envelope(page2, 2, 2));
+      .expectOne((r) => r.url === `${baseUrl}/clients` && r.params.get('per_page') === '10')
+      .flush([]);
 
-    expect(result?.length).toBe(101);
+    // collectPaginatedPages pide per_page=100&page=1.
+    httpMock
+      .expectOne(
+        (r) =>
+          r.url === `${baseUrl}/clients` &&
+          r.params.get('per_page') === '100' &&
+          r.params.get('page') === '1',
+      )
+      .flush([{ id: 1, first_name: 'A', last_name: 'B', email: 'a@b.c', active: true }]);
+
+    expect(page?.rows.length).toBe(1);
+    expect(page?.total).toBe(1);
+    expect(page?.lastPage).toBe(1);
   });
 
   it('GET /clients/:id via getClient()', () => {
