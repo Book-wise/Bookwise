@@ -39,3 +39,9 @@
   user-select: none;
   white-space: nowrap;
 }
+
+.clients-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}

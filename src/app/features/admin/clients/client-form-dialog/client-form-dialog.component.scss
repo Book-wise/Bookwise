@@ -1,0 +1,29 @@
+.cf {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cf__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cf__field input {
+  width: 100%;
+}
+
+.cf__label {
+  font-size: 0.875rem;
+}
+
+.cf__error {
+  color: var(--p-red-500, #ef4444);
+}
+
+@media (max-width: 560px) {
+  .cf {
+    grid-template-columns: 1fr;
+  }
+}

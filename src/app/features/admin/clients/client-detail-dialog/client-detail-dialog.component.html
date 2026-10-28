@@ -15,7 +15,7 @@
         [client]="c"
         [dialogMode]="true"
         [showNotifications]="true"
-        [showEdit]="false"
+        [showEdit]="canEdit()"
         (patientTabSelected)="onPatientTabSelected($event)"
         (editRequested)="onEdit()" />
     } @else {

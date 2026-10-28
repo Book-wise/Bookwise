@@ -808,6 +808,16 @@ export const ES: Record<string, string> = {
   'clients.action.view': 'Ver',
   'clients.action.packs': 'Ver Packs',
   'clients.detail.title': 'Detalle del cliente',
+  'clients.new': 'Nuevo cliente',
+  'clients.form.title_create': 'Nuevo cliente',
+  'clients.form.title_edit': 'Editar cliente',
+  'clients.form.first_name': 'Nombre',
+  'clients.form.last_name': 'Apellido',
+  'clients.form.email': 'Email',
+  'clients.form.phone': 'Teléfono',
+  'clients.form.rut': 'RUT',
+  'clients.form.gender': 'Género',
+  'clients.form.rut_invalid': 'RUT inválido',
 
   // Patient card
   'patient_card.warning.contact_missing': 'Falta email o teléfono del paciente',

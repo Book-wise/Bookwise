@@ -1,0 +1,62 @@
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '520px' }">
+  <ng-template pTemplate="header">
+    <span>{{ mode() === 'edit' ? lang.t('clients.form.title_edit') : lang.t('clients.form.title_create') }}</span>
+  </ng-template>
+
+  <div class="cf">
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.first_name') }} *</span>
+      <input pInputText [ngModel]="firstName()" (ngModelChange)="firstName.set($event)" />
+    </label>
+
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.last_name') }} *</span>
+      <input pInputText [ngModel]="lastName()" (ngModelChange)="lastName.set($event)" />
+    </label>
+
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.email') }} *</span>
+      <input pInputText type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" />
+    </label>
+
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.phone') }}</span>
+      <input pInputText [ngModel]="phone()" (ngModelChange)="phone.set($event)" />
+    </label>
+
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.rut') }}</span>
+      <input
+        pInputText
+        [ngModel]="rut()"
+        (ngModelChange)="rut.set($event)"
+        [class.ng-invalid]="rutInvalid()"
+        [class.ng-dirty]="rutInvalid()" />
+      @if (rutInvalid()) {
+        <small class="cf__error">{{ lang.t('clients.form.rut_invalid') }}</small>
+      }
+    </label>
+
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.gender') }}</span>
+      <input pInputText [ngModel]="gender()" (ngModelChange)="gender.set($event)" />
+    </label>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="lang.t('common.cancel')"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="close()" />
+    <p-button
+      [label]="lang.t('biz.save')"
+      [disabled]="!canSave()"
+      [loading]="saving()"
+      (onClick)="save()" />
+  </ng-template>
+</p-dialog>

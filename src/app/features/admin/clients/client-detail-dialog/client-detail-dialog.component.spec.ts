@@ -3,6 +3,7 @@ import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ClientDetailDialogComponent } from './client-detail-dialog.component';
 import { ClientDetailStore, PatientTab, PatientView } from '@core/stores/client-detail.store';
 import { LanguageService } from '@services/language.service';
+import { AuthService } from '@services/auth.service';
 import type { Client } from '@models';
 
 if (!window.matchMedia) {
@@ -77,6 +78,7 @@ describe('ClientDetailDialogComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         { provide: ClientDetailStore, useValue: store },
+        { provide: AuthService, useValue: { hasPermission: vi.fn(() => true) } },
         LanguageService,
       ],
     }).compileComponents();

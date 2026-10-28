@@ -1,3 +1,11 @@
+<div class="clients-toolbar">
+  <p-button
+    *bwIfAbility="ABILITIES.clientsCreate"
+    icon="pi pi-plus"
+    [label]="lang.t('clients.new')"
+    (onClick)="openCreateClient()" />
+</div>
+
 <p-card [header]="lang.t('clients.title')">
   <div class="mb-3">
     <p-iconfield>
@@ -105,4 +113,11 @@
   [visible]="detailVisible()"
   [client]="selectedClient()"
   [initialTab]="detailInitialTab()"
-  (closed)="detailVisible.set(false)" />
+  (closed)="detailVisible.set(false)"
+  (editRequested)="onEditClient($event)" />
+
+<bw-client-form-dialog
+  [visible]="formVisible()"
+  [client]="formClient()"
+  (closed)="formVisible.set(false)"
+  (saved)="onFormSaved()" />

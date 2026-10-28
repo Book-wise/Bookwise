@@ -24,6 +24,9 @@ import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { PatientTab } from '@core/stores/client-detail.store';
 import { ClientDetailDialogComponent } from './client-detail-dialog/client-detail-dialog.component';
+import { ClientFormDialogComponent } from './client-form-dialog/client-form-dialog.component';
+import { ABILITIES } from '@shared/config/abilities.config';
+import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
 import { Client } from '@models';
 
 type SortField = 'name' | 'rut' | 'email' | 'phone';
@@ -41,7 +44,7 @@ type SortField = 'name' | 'rut' | 'email' | 'phone';
   imports: [
     CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     InputTextModule, IconFieldModule, InputIconModule, SkeletonModule, TooltipModule,
-    ClientDetailDialogComponent,
+    ClientDetailDialogComponent, ClientFormDialogComponent, BwIfAbilityDirective,
   ],
   templateUrl: './clients-list.component.html',
   styleUrls: ['./clients-list.component.scss'],
@@ -51,6 +54,9 @@ export class ClientsListComponent implements OnInit {
   private readonly httpError = inject(HttpErrorService);
   protected readonly lang = inject(LanguageService);
   private readonly searchSubject = new Subject<void>();
+
+  /** Catálogo de permission keys (nunca literales). */
+  protected readonly ABILITIES = ABILITIES;
 
   readonly clients = signal<Client[]>([]);
   readonly loading = signal(false);
@@ -111,6 +117,10 @@ export class ClientsListComponent implements OnInit {
   readonly detailVisible = signal(false);
   readonly selectedClient = signal<Client | null>(null);
   readonly detailInitialTab = signal<PatientTab | null>(null);
+
+  // ── Alta / edición ──────────────────────────────────────────────────────
+  readonly formVisible = signal(false);
+  readonly formClient = signal<Client | null>(null);
 
   ngOnInit(): void {
     this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.loadClients());
@@ -174,6 +184,25 @@ export class ClientsListComponent implements OnInit {
     this.selectedClient.set(client);
     this.detailInitialTab.set('planes');
     this.detailVisible.set(true);
+  }
+
+  /** "Nuevo cliente": abre el form en modo alta. */
+  openCreateClient(): void {
+    this.formClient.set(null);
+    this.formVisible.set(true);
+  }
+
+  /** Edición desde el detalle: cierra el detalle y abre el form precargado. */
+  onEditClient(client: Client): void {
+    this.detailVisible.set(false);
+    this.formClient.set(client);
+    this.formVisible.set(true);
+  }
+
+  /** Tras crear o editar: refresca la lista agregada. */
+  onFormSaved(): void {
+    this.formVisible.set(false);
+    this.loadClients();
   }
 
   private sortValue(c: Client, field: SortField): string {

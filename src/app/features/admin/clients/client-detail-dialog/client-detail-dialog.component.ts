@@ -14,6 +14,8 @@ import { PatientCardComponent } from '@shared/components/patient-card';
 import { PatientDetailContentComponent } from '@shared/components/patient-card/patient-detail-content.component';
 import { ClientDetailStore, PatientTab } from '@core/stores/client-detail.store';
 import { LanguageService } from '@services/language.service';
+import { AuthService } from '@services/auth.service';
+import { ABILITIES } from '@shared/config/abilities.config';
 import { Client } from '@models';
 
 /**
@@ -40,6 +42,10 @@ import { Client } from '@models';
 export class ClientDetailDialogComponent {
   readonly detailStore = inject(ClientDetailStore);
   readonly lang = inject(LanguageService);
+  private readonly auth = inject(AuthService);
+
+  /** Editar requiere `clients.update` (gated también en el template). */
+  readonly canEdit = computed(() => this.auth.hasPermission(ABILITIES.clientsUpdate));
 
   readonly visible = input<boolean>(false);
   readonly client = input<Client | null>(null);
