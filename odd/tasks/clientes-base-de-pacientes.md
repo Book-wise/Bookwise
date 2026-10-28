@@ -41,6 +41,27 @@ total real, columnas ordenables, detalle del cliente, alta/edición y desactivac
   (columna RUT, acciones reales).
 - Vista consolidada de todo lo abierto: `odd/tasks/pendientes.md`.
 
+## Contrato: respuesta del backend (2026-10-28)
+
+El mantenedor de `Bookwise-API` respondió los 10 puntos (verificado contra develop `e94d2f7`).
+**Nada implementado aún**; ETA 1–2 unidades para lo mecánico.
+
+- **1. Listado + `meta.total` → GO.** Réplica de providers/locations (`{data, links, meta}`).
+  `meta.total` es el total **visible para el actor** (boundary intra-tenant), no el global.
+- **2. `birth_date` → GO, aditivo.** `date nullable` + validación `before_or_equal:today`.
+- **3. Filtros → parcial.** Existen `email`/`rut`/`active`/`wc_customer_id` (exactos) y `search`
+  (first/last/email/phone — **NO matchea RUT**, discrepancia con la tabla). Se construyen
+  `location_id`, `provider_id`, `service_id`, `booking_status_id`, `has_booked`, `gender`,
+  `birth_date_from/to`, `created_from/to`, `sort/direction` (vía `whereHas`, como AND sobre el scope).
+- **5. Sort → allowlist.** Default real: `first_name asc` (no `last_name`).
+- **6. Desactivación → pendiente de decisión de seba.**
+- **2.4 `has_booked` → pendiente de seba** (propuesta `ever|upcoming`).
+- **8. `per_page` → tope 1–100** (hoy sin tope; `abc` → 500).
+- **RUT único por tenant**, `ChileanRutRule`, duplicado → `422 errors.rut`.
+- **RBAC**: GET → `clients:read`+`view`; POST → `clients:write`+`create`; PATCH/deactivate →
+  `clients:write`+`update`.
+- ⚠️ El backend está cerrando un escape del boundary en `search` (OR sin agrupar).
+
 ## Gaps contra la referencia
 
 1. **Fecha de nacimiento inexistente.** El resource documentado del backend
@@ -104,3 +125,10 @@ no re-preguntar.
   total de i18n.
 - L3 (usuario, decisiones): alcance completo; pedir todo el contrato ahora; tacho = desactivar.
 - L4 (usuario, verbatim): "comunicate con el backend cuando necesites".
+- L5 (backend, contrato, 2026-10-28): respuesta a los 10 puntos verificada contra `Bookwise-API`
+  develop `e94d2f7`; nada implementado aún. GO: listado `{data,links,meta}` con `meta.total`
+  (boundary-respetado), `birth_date` aditivo, sort allowlist (default `first_name asc`), tope
+  `per_page` 1–100. Parcial: filtros (existen `email/rut/active/wc_customer_id` + `search` sin
+  RUT; se construyen `location_id/provider_id/service_id/booking_status_id/has_booked/gender/
+  birth_date_from/to/created_from/to/sort/direction`). Pendiente de seba: (6) desactivación y
+  (2.4) `has_booked`. Hallazgo: el `search` escapaba el boundary (OR sin agrupar); backend lo cierra.
