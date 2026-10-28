@@ -197,3 +197,10 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<bw-capacity-limit-dialog
+  [visible]="capacityDialogVisible()"
+  titleKey="biz.tenant_location_limit_reached"
+  detailKey="biz.tenant_location_limit_reached.detail"
+  [quota]="activeBusinessLocationsQuota()"
+  (closed)="capacityDialogVisible.set(false)" />

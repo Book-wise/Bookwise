@@ -73,3 +73,8 @@
     </div>
   }
 </div>
+
+<bw-capacity-limit-dialog
+  [visible]="capacityDialogVisible()"
+  [quota]="tenantsQuota()"
+  (closed)="capacityDialogVisible.set(false)" />

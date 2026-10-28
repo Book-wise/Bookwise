@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -11,10 +11,13 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { AuthService } from '@services/auth.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { SubscriptionStore } from '@core/stores/subscription.store';
 import { ABILITIES } from '@shared/config/abilities.config';
 import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
-import { Location } from '@models';
+import { CapacityLimitDialogComponent } from '@shared/components/capacity-limit-dialog/capacity-limit-dialog.component';
+import { Location, Quota } from '@models';
 import { LocationDialogComponent, DialogMode } from './location-dialog/location-dialog.component';
 
 interface ConflictBooking {
@@ -36,12 +39,12 @@ interface ConflictData {
   imports: [
     CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     SkeletonModule, ToggleSwitchModule, DialogModule, LocationDialogComponent,
-    BwIfAbilityDirective,
+    BwIfAbilityDirective, CapacityLimitDialogComponent,
   ],
   templateUrl: './locations-list.component.html',
   styleUrls: ['./locations-list.component.scss'],
 })
-export class LocationsListComponent {
+export class LocationsListComponent implements OnInit {
   /** Permission keys del catálogo (S5): el template nunca usa literales. */
   protected readonly ABILITIES = ABILITIES;
 
@@ -49,6 +52,8 @@ export class LocationsListComponent {
   protected refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
   protected readonly lang = inject(LanguageService);
+  private subscriptionStore = inject(SubscriptionStore);
+  private auth = inject(AuthService);
 
   /**
    * Sucursales leídas de ReferenceStore (fuente canónica, U6): el store carga en
@@ -90,6 +95,10 @@ export class LocationsListComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.subscriptionStore.loadUsage();
+  }
+
   /** `p-paginator` entrega la página 0-based. */
   onPageChange(event: { page?: number }): void {
     this.page.set((event.page ?? 0) + 1);
@@ -98,12 +107,30 @@ export class LocationsListComponent {
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');
   selectedLocation = signal<Location | null>(null);
+  /** Bloqueo proactivo de creación (#12): diálogo de cuota llena. */
+  readonly capacityDialogVisible = signal(false);
+  /** Cuota de sucursales del negocio activo; null si no hay uso ni tenant. */
+  readonly activeBusinessLocationsQuota = computed<Quota | null>(() => {
+    const usage = this.subscriptionStore.usage();
+    const tenantId = this.auth.me()?.tenant_id;
+    if (!usage || tenantId == null) return null;
+    return usage.businesses.find((b) => b.tenant_id === tenantId)?.locations ?? null;
+  });
 
   conflictDialogVisible = signal(false);
   conflictData = signal<ConflictData | null>(null);
   pendingToggleLocation = signal<Location | null>(null);
 
-  openCreate(): void { this.dialogMode.set('create'); this.selectedLocation.set(null); this.dialogVisible.set(true); }
+  openCreate(): void {
+    const quota = this.activeBusinessLocationsQuota();
+    if (quota && quota.current >= quota.limit) {
+      this.capacityDialogVisible.set(true);
+      return;
+    }
+    this.dialogMode.set('create');
+    this.selectedLocation.set(null);
+    this.dialogVisible.set(true);
+  }
   openView(location: Location): void { this.dialogMode.set('view'); this.selectedLocation.set(location); this.dialogVisible.set(true); }
   openEdit(location: Location): void { this.dialogMode.set('edit'); this.selectedLocation.set(location); this.dialogVisible.set(true); }
   onDialogClosed(): void { this.dialogVisible.set(false); }

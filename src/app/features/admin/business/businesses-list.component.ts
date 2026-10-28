@@ -8,8 +8,9 @@ import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { TenantSwitchService } from '@services/tenant-switch.service';
 import { SubscriptionStore } from '@core/stores/subscription.store';
-import { Business } from '@models';
+import { Business, Quota } from '@models';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
+import { CapacityLimitDialogComponent } from '@shared/components/capacity-limit-dialog/capacity-limit-dialog.component';
 import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
 import { planLabel } from '@shared/utils/plan-label.util';
 
@@ -27,7 +28,7 @@ import { planLabel } from '@shared/utils/plan-label.util';
 @Component({
   selector: 'bw-businesses-list',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, UserAvatarComponent, RouterModule],
+  imports: [CommonModule, ButtonModule, CardModule, UserAvatarComponent, RouterModule, CapacityLimitDialogComponent],
   templateUrl: './businesses-list.component.html',
   styleUrl: './businesses-list.component.scss',
 })
@@ -44,9 +45,14 @@ export class BusinessesListComponent implements OnInit {
   readonly canSwitch = computed(() => this.businesses().length > 1);
 
   readonly loading = signal(false);
+  /** Bloqueo proactivo de creación (#12): diálogo de cuota llena. */
+  readonly capacityDialogVisible = signal(false);
+  /** Cuota de negocios de la cuenta (null si el uso no cargó). */
+  readonly tenantsQuota = computed<Quota | null>(() => this.store.usage()?.tenants ?? null);
 
   ngOnInit(): void {
     this.store.loadSubscription();
+    this.store.loadUsage();
   }
 
   /** Nombre legible del plan actual de la cuenta. */
@@ -64,8 +70,13 @@ export class BusinessesListComponent implements OnInit {
     this.router.navigate(['/admin/negocios', biz.id]);
   }
 
-  /** Navega a la creación de un negocio nuevo. */
+  /** Navega a la creación de un negocio nuevo (bloquea si la cuota está llena). */
   newBusiness(): void {
+    const quota = this.tenantsQuota();
+    if (quota && quota.current >= quota.limit) {
+      this.capacityDialogVisible.set(true);
+      return;
+    }
     this.router.navigate(['/admin/negocios/nuevo']);
   }
 

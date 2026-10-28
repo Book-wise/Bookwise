@@ -19,13 +19,15 @@ import { HttpErrorService, isCapacityLimitError } from '@services/http-error.ser
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
-import { Location, Provider, Role } from '@models';
+import { SubscriptionStore } from '@core/stores/subscription.store';
+import { Location, Provider, Role, Quota } from '@models';
 import { roleMeta } from '../roles/role-meta';
 import { locationColor } from '@shared/utils/location-palette.util';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
 import { ABILITIES } from '@shared/config/abilities.config';
 import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
+import { CapacityLimitDialogComponent } from '@shared/components/capacity-limit-dialog/capacity-limit-dialog.component';
 import { AuthService } from '@services/auth.service';
 
 // ── Color palette for location grouping ────────────────────────────────
@@ -56,7 +58,7 @@ interface ConflictData {
     CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, MultiSelectModule,
     ToggleSwitchModule, DialogModule,
-    ProviderDialogComponent, BwIfAbilityDirective,
+    ProviderDialogComponent, BwIfAbilityDirective, CapacityLimitDialogComponent,
   ],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss'],
@@ -68,6 +70,7 @@ export class ProvidersListComponent implements OnInit {
   private calNav = inject(CalendarNavigationService);
   private messageService = inject(MessageService);
   private auth = inject(AuthService);
+  private subscriptionStore = inject(SubscriptionStore);
   protected refStore = inject(ReferenceStore);
   protected readonly lang = inject(LanguageService);
 
@@ -245,6 +248,7 @@ export class ProvidersListComponent implements OnInit {
   // ── Lifecycle ────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadRoles();
+    this.subscriptionStore.loadUsage();
   }
 
   loadRoles(): void {
@@ -327,9 +331,23 @@ export class ProvidersListComponent implements OnInit {
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');
   selectedProvider = signal<Provider | null>(null);
+  /** Bloqueo proactivo de creación (#12): diálogo de cuota llena. */
+  readonly capacityDialogVisible = signal(false);
+  /** Cuota de profesionales del negocio activo; null si no hay uso ni tenant. */
+  readonly activeBusinessProfessionalsQuota = computed<Quota | null>(() => {
+    const usage = this.subscriptionStore.usage();
+    const tenantId = this.auth.me()?.tenant_id;
+    if (!usage || tenantId == null) return null;
+    return usage.businesses.find((b) => b.tenant_id === tenantId)?.professionals ?? null;
+  });
 
   /** Alta de profesional. Requiere `providers.manage` (gateado en el template). */
   openCreate(): void {
+    const quota = this.activeBusinessProfessionalsQuota();
+    if (quota && quota.current >= quota.limit) {
+      this.capacityDialogVisible.set(true);
+      return;
+    }
     this.dialogMode.set('create');
     this.selectedProvider.set(null);
     this.dialogVisible.set(true);

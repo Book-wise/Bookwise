@@ -374,3 +374,10 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<bw-capacity-limit-dialog
+  [visible]="capacityDialogVisible()"
+  titleKey="biz.tenant_professional_limit_reached"
+  detailKey="biz.tenant_professional_limit_reached.detail"
+  [quota]="activeBusinessProfessionalsQuota()"
+  (closed)="capacityDialogVisible.set(false)" />

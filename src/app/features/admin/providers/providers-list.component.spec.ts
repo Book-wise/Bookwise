@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,7 +13,10 @@ import { LocationsApiService } from '@services/api/locations-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { SubscriptionStore } from '@core/stores/subscription.store';
+import { AuthService } from '@services/auth.service';
 import { Provider, Role } from '@models';
+import type { AuthMeData, UsageData } from '@models';
 
 describe('ProvidersListComponent', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<ProvidersListComponent>>;
@@ -35,6 +38,24 @@ describe('ProvidersListComponent', () => {
   let mockClientsApi: { getClients: ReturnType<typeof vi.fn> };
   let mockHttpError: { handle: ReturnType<typeof vi.fn> };
   let messageAdd: ReturnType<typeof vi.fn>;
+  let authMock: { me: ReturnType<typeof signal<AuthMeData | null>>; hasPermission: ReturnType<typeof vi.fn>; hasAllPermissions: ReturnType<typeof vi.fn>; hasAnyPermission: ReturnType<typeof vi.fn> };
+  let fakeSubscriptionStore: { usage: ReturnType<typeof signal<UsageData | null>>; loadUsage: ReturnType<typeof vi.fn> };
+
+  const makeMe = (tenantId = 1): AuthMeData =>
+    ({ id: 7, name: 'Admin', email: 'a@b.c', role: 'admin', tenant_id: tenantId } as AuthMeData);
+
+  const makeUsage = (professionals: { limit: number; current: number }): UsageData =>
+    ({
+      account_id: 1,
+      plan: { slug: 'pro', billing_interval: 'monthly' },
+      tenants: { limit: 5, current: 1 },
+      users: { limit: 10, current: 1 },
+      businesses: [{ tenant_id: 1, professionals, locations: { limit: 10, current: 1 } }],
+      confirmations: {
+        email: { limit: 0, consumed: 0, remaining: 0, period_start: '', period_end: '', pack_credit: 0, by_tenant: [] },
+        whatsapp: { limit: 0, consumed: 0, remaining: 0, period_start: '', period_end: '', pack_credit: 0, by_tenant: [] },
+      },
+    } as UsageData);
 
   const baseProvider = (overrides: Partial<Provider> = {}): Provider => ({
     id: 1,
@@ -70,6 +91,8 @@ describe('ProvidersListComponent', () => {
     mockClientsApi = { getClients: vi.fn(() => of([])) };
     mockHttpError = { handle: vi.fn() };
     messageAdd = vi.fn();
+    authMock = { me: signal<AuthMeData | null>(null), hasPermission: vi.fn(() => false), hasAllPermissions: vi.fn(() => false), hasAnyPermission: vi.fn(() => false) };
+    fakeSubscriptionStore = { usage: signal<UsageData | null>(null), loadUsage: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ProvidersListComponent],
@@ -84,6 +107,8 @@ describe('ProvidersListComponent', () => {
         { provide: ClientsApiService, useValue: mockClientsApi },
         { provide: HttpErrorService, useValue: mockHttpError },
         { provide: MessageService, useValue: { add: messageAdd } },
+        { provide: AuthService, useValue: authMock },
+        { provide: SubscriptionStore, useValue: fakeSubscriptionStore },
       ],
     }).compileComponents();
 
@@ -476,6 +501,43 @@ describe('ProvidersListComponent', () => {
       component.openCreate();
       fixture.detectChanges();
       expect(nativeEl.querySelector('.bw-capacity-cta')).toBeFalsy();
+    });
+  });
+
+  // ── Bloqueo proactivo de creación (#12) ──────────────────────────
+
+  describe('proactive creation limit', () => {
+    beforeEach(() => {
+      authMock.me.set(makeMe());
+      fakeSubscriptionStore.usage.set(makeUsage({ limit: 2, current: 2 }));
+      fixture.detectChanges();
+    });
+
+    it('bloquea openCreate() cuando la cuota de profesionales del negocio está llena', () => {
+      component.openCreate();
+
+      expect(component.capacityDialogVisible()).toBe(true);
+      expect(component.dialogVisible()).toBe(false);
+    });
+
+    it('abre el diálogo de alta cuando la cuota no está llena', () => {
+      fakeSubscriptionStore.usage.set(makeUsage({ limit: 2, current: 1 }));
+      fixture.detectChanges();
+
+      component.openCreate();
+
+      expect(component.capacityDialogVisible()).toBe(false);
+      expect(component.dialogVisible()).toBe(true);
+    });
+
+    it('no bloquea (fail-open) cuando el uso no cargó', () => {
+      fakeSubscriptionStore.usage.set(null);
+      fixture.detectChanges();
+
+      component.openCreate();
+
+      expect(component.capacityDialogVisible()).toBe(false);
+      expect(component.dialogVisible()).toBe(true);
     });
   });
 });

@@ -1,0 +1,31 @@
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [closable]="false"
+  [dismissableMask]="false"
+  [style]="{ width: '420px' }">
+  <ng-template pTemplate="header">
+    <span>{{ title() }}</span>
+  </ng-template>
+
+  <div class="capacity-limit">
+    <i class="pi pi-exclamation-triangle capacity-limit__icon"></i>
+    <div class="capacity-limit__body">
+      <p class="capacity-limit__detail">{{ detail() }}</p>
+      @if (usageLabel()) {
+        <p class="capacity-limit__usage">{{ usageLabel() }}</p>
+      }
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="lang.t('common.close')"
+      severity="secondary"
+      (onClick)="close()" />
+    <p-button
+      [label]="lang.t('biz.upgrade_cta')"
+      icon="pi pi-arrow-right"
+      (onClick)="goToUpgrade()" />
+  </ng-template>
+</p-dialog>

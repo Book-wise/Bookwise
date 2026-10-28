@@ -21,13 +21,12 @@ pausó la tarea para abrir gentle-shell y pasar imágenes de referencia.
 
 ## Tasks
 
-- ⬜ T1 [S1] `CapacityLimitDialogComponent` (shared) + spec — **PENDIENTE** (diseño listo, ver abajo).
-- ⬜ T2 [S1] `locations-list`: "Nueva sucursal" bloquea al tope de `locations` del negocio activo. — PENDIENTE.
-- ⬜ T3 [S1] `businesses-list`: "Nuevo negocio" bloquea al tope de `tenants` de la cuenta. — PENDIENTE.
-- ⬜ T4 [S1] i18n es/en (keys de límite de sucursal) + build/tests verdes. — PENDIENTE.
-- ⬜ T5 [S3] Commit work-unit + push a `origin/feat/contract-catchup`. — **PENDIENTE** (el push
-  de esta tarea). La rama ya existe en `origin` con tracking desde el 2026-10-26, así que
-  alcanza con `git push` al cerrar T1-T4.
+- ✅ T1 [S1] `CapacityLimitDialogComponent` (shared) + spec — cerrado.
+- ✅ T2 [S1] `locations-list`: "Nueva sucursal" bloquea al tope de `locations` del negocio activo. — cerrado.
+- ✅ T3 [S1] `businesses-list`: "Nuevo negocio" bloquea al tope de `tenants` de la cuenta. — cerrado.
+- ✅ T6 [S1] `providers-list`: "Nuevo profesional" bloquea al tope de `professionals` del negocio activo. — cerrado.
+- ✅ T4 [S1] i18n es/en: reusadas las claves existentes (`biz.tenant_location_limit_reached` / `biz.tenant_professional_limit_reached` / `biz.account_tenant_limit_reached` + `.detail`); sin claves nuevas. — cerrado.
+- ✅ T5 [S3] Commit work-unit (push pendiente de confirmación del usuario).
 
 ## Diseño ya decidido (para no re-explorar)
 
@@ -96,6 +95,13 @@ HTML: calcar `subscription-inactive-dialog` (`p-dialog` modal, `[closable]="fals
   como follow-up para no inflar el diff (el backend igual lo frena con CTA reactivo).
 - L4 (fail-open): si `usage` no cargó o falla, el botón NO se bloquea; el backend sigue siendo
   la autoridad (402 → CTA reactivo ya existente). Nunca se inventa una cuota.
-- L5 (usuario, esta sesión): "registra en memoria y docs todas las tareas en su estado actualizado,
-  necesito abrir el gentle-shell para pasarte imágenes con mayor facilidad" → **pausa**. No se
-  implementó nada; queda este doc como fuente de verdad. Sin commit (no fue pedido).
+- L6 (reconciliación, 2026-10-28): el botón "Nuevo profesional" **ya existe** (lo agregó `8021fb9`,
+  gateado por `providersManage`), así que #12 también bloquea `professionals` (nueva T6). Las claves
+  i18n de límite **ya existen** desde el CTA reactivo (`biz.tenant_location_limit_reached`,
+  `biz.tenant_professional_limit_reached`, `biz.account_tenant_limit_reached`, cada una con `.detail`),
+  así que T4 pasa a ser "reusar", no "crear". La fuente de cuota de profesionales es la misma que
+  sucursales: `usage.businesses[].find(b => b.tenant_id === me.tenant_id).professionals`.
+- L7 (cierre, 2026-10-28): T1–T6 cerrados en un work-unit commit (`feat(creation-limits)`, ver
+  git log). `ng build` verde; specs de las 3 listas + el diálogo en verde (43 tests). La suite
+  completa mantiene fallos preexistentes/flaky ajenos a #12 (calendar-navigation, booking-detail-dialog,
+  booking-form-dialog, historial-reserva). Push pendiente de confirmación del usuario.
