@@ -122,6 +122,20 @@ describe('ClientFormDialogComponent', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  it('precarga birth_date en modo edición y la envía en el payload', () => {
+    fixture.componentRef.setInput('client', makeClient({ id: 5, birth_date: '1990-05-10' }));
+    open();
+
+    expect(component.birthDate()).toBe('1990-05-10');
+
+    component.save();
+
+    expect(mockClientsApi.updateClient).toHaveBeenCalledWith(
+      5,
+      expect.objectContaining({ birth_date: '1990-05-10' }),
+    );
+  });
+
   it('emite closed al cancelar', () => {
     const spy = vi.spyOn(component.closed, 'emit');
 

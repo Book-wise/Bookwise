@@ -817,6 +817,7 @@ export const ES: Record<string, string> = {
   'clients.form.phone': 'Teléfono',
   'clients.form.rut': 'RUT',
   'clients.form.gender': 'Género',
+  'clients.form.birth_date': 'Fecha de nacimiento',
   'clients.form.rut_invalid': 'RUT inválido',
 
   // Patient card

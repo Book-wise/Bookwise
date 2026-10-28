@@ -102,6 +102,8 @@ export interface Client {
   phone?: string | null;
   rut?: string | null;
   gender?: string | null;
+  /** Fecha de nacimiento `YYYY-MM-DD` (contrato §2, columna `date` nullable). */
+  birth_date?: string | null;
   wc_customer_id?: number | null;
   active: boolean;
   custom_attributes?: Record<string, unknown>;

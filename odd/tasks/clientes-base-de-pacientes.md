@@ -59,8 +59,12 @@ El mantenedor de `Bookwise-API` respondió los 10 puntos (verificado contra deve
   (el front confirma y reintenta); cliente desactivado **no recibe reservas nuevas** (`403`/`422`
   al intentar agendar).
 - **2.4 `has_booked` → DECIDIDO**: enum `ever|upcoming` (no booleano); el filtro expone ambos.
-- **Contrato CERRADO** (2026-10-28). Puntos mecánicos (1,2,5,8) en curso; (3) y (6) arrancan con
-  estas reglas. El backend avisará con el hash del commit.
+- **Contrato CERRADO** (2026-10-28). El backend avisará con el hash del commit.
+- **Unidad 1 implementada** en `Bookwise-API` `feat/clients-management-contract`:
+  `4ca497c` (punto 1 envelope + `meta.total` boundary-respetado, y punto 8 `per_page` 1–100 → 422)
+  y `952507b` (punto 2 `birth_date` date nullable, expuesta `YYYY-MM-DD`, aceptada en POST/PATCH no
+  futura). **Ojo**: `GET /clients` ahora devuelve `{data, links, meta}` (antes array plano);
+  `listClients` ya lo consume vía `collectPaginatedPages`.
 - **8. `per_page` → tope 1–100** (hoy sin tope; `abc` → 500).
 - **RUT único por tenant**, `ChileanRutRule`, duplicado → `422 errors.rut`.
 - **RBAC**: GET → `clients:read`+`view`; POST → `clients:write`+`create`; PATCH/deactivate →
@@ -145,3 +149,6 @@ no re-preguntar.
   reintenta); cliente desactivado no recibe reservas nuevas (`403`/`422`); (2.4) `has_booked` =
   enum `ever|upcoming` (no booleano). Contrato **COMPLETO**. Puntos mecánicos (1,2,5,8) en curso;
   (3) y (6) arrancan con estas reglas. Backend avisará con el hash.
+- L8 (backend, unidad 1, 2026-10-28): `4ca497c` (envelope+`meta.total`, `per_page` 1–100) y
+  `952507b` (`birth_date`). `/clients` cambió de array plano a `{data,links,meta}`. Unidad 2
+  (sort/direction, filtros de columna propia y `search` con RUT) en curso.

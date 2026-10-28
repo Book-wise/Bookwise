@@ -45,6 +45,11 @@
       <span class="cf__label">{{ lang.t('clients.form.gender') }}</span>
       <input pInputText [ngModel]="gender()" (ngModelChange)="gender.set($event)" />
     </label>
+
+    <label class="cf__field">
+      <span class="cf__label">{{ lang.t('clients.form.birth_date') }}</span>
+      <input pInputText type="date" [ngModel]="birthDate()" (ngModelChange)="birthDate.set($event)" />
+    </label>
   </div>
 
   <ng-template pTemplate="footer">

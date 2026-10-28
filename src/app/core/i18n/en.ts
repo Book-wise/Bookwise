@@ -762,6 +762,7 @@ export const EN: Record<string, string> = {
   'clients.form.phone': 'Phone',
   'clients.form.rut': 'RUT',
   'clients.form.gender': 'Gender',
+  'clients.form.birth_date': 'Birth date',
   'clients.form.rut_invalid': 'Invalid RUT',
 
   'patient_card.warning.contact_missing': 'Patient is missing email or phone',

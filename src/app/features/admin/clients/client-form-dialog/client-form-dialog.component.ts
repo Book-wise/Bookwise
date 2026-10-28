@@ -53,6 +53,7 @@ export class ClientFormDialogComponent {
   readonly phone = signal('');
   readonly rut = signal('');
   readonly gender = signal('');
+  readonly birthDate = signal('');
   readonly saving = signal(false);
 
   readonly rutInvalid = computed(() => this.rut().trim().length > 0 && !isValidRut(this.rut()));
@@ -77,6 +78,7 @@ export class ClientFormDialogComponent {
       this.phone.set(c?.phone ?? '');
       this.rut.set(c?.rut ?? '');
       this.gender.set(c?.gender ?? '');
+      this.birthDate.set(c?.birth_date ?? '');
       this.saving.set(false);
     });
   }
@@ -91,6 +93,7 @@ export class ClientFormDialogComponent {
       phone: this.phone().trim() || null,
       rut: this.rut().trim() || null,
       gender: this.gender().trim() || null,
+      birth_date: this.birthDate().trim() || null,
     };
 
     this.saving.set(true);
