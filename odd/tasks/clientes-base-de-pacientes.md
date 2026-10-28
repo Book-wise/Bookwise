@@ -54,8 +54,10 @@ El mantenedor de `Bookwise-API` respondió los 10 puntos (verificado contra deve
   `location_id`, `provider_id`, `service_id`, `booking_status_id`, `has_booked`, `gender`,
   `birth_date_from/to`, `created_from/to`, `sort/direction` (vía `whereHas`, como AND sobre el scope).
 - **5. Sort → allowlist.** Default real: `first_name asc` (no `last_name`).
-- **6. Desactivación → pendiente de decisión de seba.**
-- **2.4 `has_booked` → pendiente de seba** (propuesta `ever|upcoming`).
+- **6. Desactivación → DECIDIDO por seba**: **bloquear y confirmar** — impide agendar reservas
+  nuevas y, si hay reservas futuras o packs con sesiones, pide confirmación (force flow, como
+  providers/locations).
+- **2.4 `has_booked` → DECIDIDO por seba**: exponer `ever` y `upcoming` como dos valores.
 - **8. `per_page` → tope 1–100** (hoy sin tope; `abc` → 500).
 - **RUT único por tenant**, `ChileanRutRule`, duplicado → `422 errors.rut`.
 - **RBAC**: GET → `clients:read`+`view`; POST → `clients:write`+`create`; PATCH/deactivate →
@@ -132,3 +134,6 @@ no re-preguntar.
   RUT; se construyen `location_id/provider_id/service_id/booking_status_id/has_booked/gender/
   birth_date_from/to/created_from/to/sort/direction`). Pendiente de seba: (6) desactivación y
   (2.4) `has_booked`. Hallazgo: el `search` escapaba el boundary (OR sin agrupar); backend lo cierra.
+- L6 (usuario, decisiones, 2026-10-28): desactivación = **bloquear y confirmar** (impide agendar
+  nuevas; confirmación si hay reservas futuras o packs con sesiones); `has_booked` = **ambos**
+  (`ever` y `upcoming` como dos valores). Retransmitido al backend.
