@@ -51,9 +51,11 @@ export class ClientsApiService {
     page?: number;
     per_page?: number;
   }): Observable<Client[]> {
-    return this.http.get<Client[]>(`${this.baseUrl}/clients`, {
-      params: params ? buildHttpParams(params) : undefined,
-    });
+    return this.http
+      .get<Client[] | PaginatedResponse<Client>>(`${this.baseUrl}/clients`, {
+        params: params ? buildHttpParams(params) : undefined,
+      })
+      .pipe(map((res) => (Array.isArray(res) ? res : (res?.data ?? []))));
   }
 
   /**

@@ -37,6 +37,24 @@ describe('ClientsApiService', () => {
     req.flush(dummy);
   });
 
+  it('getClients() unwraps the {data, links, meta} envelope', () => {
+    const rows = [
+      { id: 1, first_name: 'A', last_name: 'B', email: 'a@b.c', active: true } as Client,
+      { id: 2, first_name: 'C', last_name: 'D', email: 'c@d.c', active: true } as Client,
+    ];
+
+    let result: Client[] | undefined;
+    service.getClients().subscribe((r) => (result = r));
+
+    httpMock.expectOne((r) => r.url === `${baseUrl}/clients`).flush({
+      data: rows,
+      links: {},
+      meta: { current_page: 1, from: 1, last_page: 1, per_page: 15, to: 2, total: 2 },
+    });
+
+    expect(result).toEqual(rows);
+  });
+
   it('GET /clients via getClients() with params', () => {
     service.getClients({ location_id: 2, search: 'Juan' }).subscribe();
 
