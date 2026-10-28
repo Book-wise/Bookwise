@@ -37,28 +37,24 @@ import { Client } from '@models';
 
 type SortField = 'name' | 'rut' | 'email' | 'phone';
 
-/** Item de `affects.bookings[]` del 409 `deactivation_conflict` (campos tolerantes). */
+/** Item de `affects.bookings[]` del 409 `deactivation_conflict` (contrato exacto). */
 interface DeactivationBooking {
   id: number;
-  start_time?: string;
-  date?: string;
-  time?: string;
-  status?: string | number;
-  status_id?: number;
-  provider_name?: string;
-  client_name?: string;
-  service?: { name?: string } | null;
-  provider?: { name?: string; first_name?: string; last_name?: string } | null;
+  /** Fecha `Y-m-d`. */
+  date: string;
+  /** Hora `H:i`. */
+  time: string;
+  provider_name: string;
+  location_name: string;
+  status: string;
 }
 
-/** Item de `affects.packs[]` del 409 (campos tolerantes). */
+/** Item de `affects.packs[]` del 409 (contrato exacto). */
 interface DeactivationPack {
   id: number;
-  name?: string;
-  service_pack?: { name?: string } | null;
-  total_sessions?: number;
-  used_sessions?: number;
-  remaining_sessions?: number;
+  /** Nombre del pack (string, NO objeto). */
+  service_pack: string;
+  remaining_sessions: number;
 }
 
 interface DeactivationAffects {
@@ -384,27 +380,18 @@ export class ClientsListComponent implements OnInit {
     this.clearDeactivateDialog();
   }
 
-  /** Etiqueta compacta de una reserva afectada. */
+  /** Etiqueta de una reserva afectada (`date`/`time`/nombres ya vienen resueltos). */
   bookingLabel(b: DeactivationBooking): string {
-    const when = b.start_time
-      ? new Date(b.start_time).toLocaleString()
-      : [b.date, b.time].filter(Boolean).join(' ');
-    const who =
-      (typeof b.service === 'object' ? b.service?.name : undefined) ?? b.provider_name ?? '';
-    return [when, who].filter(Boolean).join(' · ');
+    const when = [b.date, b.time].filter(Boolean).join(' ');
+    const who = [b.provider_name, b.location_name].filter(Boolean).join(' — ');
+    return [when, who, b.status].filter(Boolean).join(' · ');
   }
 
-  /** Etiqueta compacta de un pack afectado. */
+  /** Etiqueta de un pack afectado (`service_pack` es el nombre). */
   packLabel(p: DeactivationPack): string {
-    const name = p.service_pack?.name ?? p.name ?? '';
-    const remaining =
-      p.remaining_sessions ??
-      (p.total_sessions != null && p.used_sessions != null
-        ? p.total_sessions - p.used_sessions
-        : null);
-    return remaining != null
-      ? this.lang.t('clients.deactivate.remaining_sessions', { n: String(remaining) }) + ' · ' + name
-      : name;
+    return p.remaining_sessions != null
+      ? `${this.lang.t('clients.deactivate.remaining_sessions', { n: String(p.remaining_sessions) })} · ${p.service_pack}`
+      : p.service_pack;
   }
 
   private clearDeactivateDialog(): void {

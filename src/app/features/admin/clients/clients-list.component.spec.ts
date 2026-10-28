@@ -180,8 +180,17 @@ describe('ClientsListComponent', () => {
               message: 'x',
               requires_confirmation: true,
               affects: {
-                bookings: [{ id: 10, date: '2026-11-01', time: '10:00' }],
-                packs: [{ id: 20, remaining_sessions: 3 }],
+                bookings: [
+                  {
+                    id: 10,
+                    date: '2026-11-02',
+                    time: '10:00',
+                    provider_name: 'Pro A',
+                    location_name: 'Sucursal Uno',
+                    status: 'Confirmado',
+                  },
+                ],
+                packs: [{ id: 20, service_pack: 'Pack 4 sesiones', remaining_sessions: 3 }],
               },
             },
           }),
@@ -193,6 +202,13 @@ describe('ClientsListComponent', () => {
     expect(component.deactivateDialogVisible()).toBe(true);
     expect(component.deactivateAffects()?.bookings.length).toBe(1);
     expect(component.deactivateAffects()?.packs.length).toBe(1);
+
+    const booking = component.deactivateAffects()!.bookings[0];
+    expect(component.bookingLabel(booking)).toContain('2026-11-02 10:00');
+    expect(component.bookingLabel(booking)).toContain('Pro A');
+    const pack = component.deactivateAffects()!.packs[0];
+    expect(component.packLabel(pack)).toContain('Pack 4 sesiones');
+    expect(component.packLabel(pack)).toContain('3');
   });
 
   it('reintenta con force al confirmar y parchea la lista', () => {
