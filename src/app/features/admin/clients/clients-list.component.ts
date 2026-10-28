@@ -18,11 +18,14 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 import { Subject, debounceTime } from 'rxjs';
-import { ClientsApiService } from '@services/api/clients-api.service';
+import { ClientsApiService, ClientListFilters } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { PatientTab } from '@core/stores/client-detail.store';
+import { ReferenceStore } from '@core/stores/reference.store';
+import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ClientDetailDialogComponent } from './client-detail-dialog/client-detail-dialog.component';
 import { ClientFormDialogComponent } from './client-form-dialog/client-form-dialog.component';
 import { ABILITIES } from '@shared/config/abilities.config';
@@ -43,7 +46,7 @@ type SortField = 'name' | 'rut' | 'email' | 'phone';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
-    InputTextModule, IconFieldModule, InputIconModule, SkeletonModule, TooltipModule,
+    InputTextModule, IconFieldModule, InputIconModule, SkeletonModule, TooltipModule, SelectModule,
     ClientDetailDialogComponent, ClientFormDialogComponent, BwIfAbilityDirective,
   ],
   templateUrl: './clients-list.component.html',
@@ -52,6 +55,7 @@ type SortField = 'name' | 'rut' | 'email' | 'phone';
 export class ClientsListComponent implements OnInit {
   private readonly clientsApi = inject(ClientsApiService);
   private readonly httpError = inject(HttpErrorService);
+  private readonly refStore = inject(ReferenceStore);
   protected readonly lang = inject(LanguageService);
   private readonly searchSubject = new Subject<void>();
 
@@ -122,30 +126,122 @@ export class ClientsListComponent implements OnInit {
   readonly formVisible = signal(false);
   readonly formClient = signal<Client | null>(null);
 
+  // ── Filtros avanzados (T3) ──────────────────────────────────────────────
+  readonly filtersOpen = signal(false);
+  readonly fLocationId = signal<number | null>(null);
+  readonly fProviderId = signal<number | null>(null);
+  readonly fServiceId = signal<number | null>(null);
+  readonly fBookingStatusId = signal<number | null>(null);
+  readonly fHasBooked = signal<'ever' | 'upcoming' | null>(null);
+  readonly fGender = signal('');
+  readonly fBirthFrom = signal('');
+  readonly fBirthTo = signal('');
+  readonly fCreatedFrom = signal('');
+  readonly fCreatedTo = signal('');
+  /** Filtros aplicados (los que se envían al servicio, no los del borrador). */
+  readonly appliedFilters = signal<ClientListFilters>({});
+
+  readonly activeFilterCount = computed(() => Object.keys(this.appliedFilters()).length);
+
+  readonly locationOptions = computed(() =>
+    this.refStore
+      .locations()
+      .filter((l) => l.active)
+      .map((l) => ({ label: l.name, value: l.id })),
+  );
+  readonly providerOptions = computed(() =>
+    this.refStore
+      .providers()
+      .filter((p) => p.active)
+      .map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
+  );
+  readonly serviceOptions = computed(() =>
+    this.refStore
+      .services()
+      .filter((s) => s.active)
+      .map((s) => ({ label: s.name, value: s.id })),
+  );
+  readonly statusOptions = computed(() =>
+    BOOKING_STATUSES.map((s) => ({ label: this.lang.t(s.labelKey), value: Number(s.value) })),
+  );
+  readonly hasBookedOptions = computed(() => [
+    { label: this.lang.t('clients.filter.has_booked.ever'), value: 'ever' },
+    { label: this.lang.t('clients.filter.has_booked.upcoming'), value: 'upcoming' },
+  ]);
+
   ngOnInit(): void {
     this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.loadClients());
     this.loadClients();
   }
 
-  /** Carga la lista completa agregada (todas las páginas). */
+  /** Carga la lista completa agregada (todas las páginas) con búsqueda + filtros. */
   loadClients(): void {
     this.loading.set(true);
-    this.clientsApi.listClients({ search: this.searchTerm() || undefined }).subscribe({
-      next: (clients) => {
-        this.clients.set(clients);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.clients.set([]);
-        this.loading.set(false);
-        this.httpError.handle(err, 'cargar clientes');
-      },
-    });
+    this.clientsApi
+      .listClients({ search: this.searchTerm() || undefined, ...this.appliedFilters() })
+      .subscribe({
+        next: (clients) => {
+          this.clients.set(clients);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.clients.set([]);
+          this.loading.set(false);
+          this.httpError.handle(err, 'cargar clientes');
+        },
+      });
   }
 
   onSearch(): void {
     this.page.set(1);
     this.searchSubject.next();
+  }
+
+  // ── Filtros avanzados ───────────────────────────────────────────────────
+  toggleFilters(): void {
+    this.filtersOpen.update((v) => !v);
+  }
+
+  /** Aplica el borrador de filtros y recarga desde la página 1. */
+  applyFilters(): void {
+    const filters: ClientListFilters = {};
+    const locationId = this.fLocationId();
+    const providerId = this.fProviderId();
+    const serviceId = this.fServiceId();
+    const statusId = this.fBookingStatusId();
+    const hasBooked = this.fHasBooked();
+
+    if (locationId != null) filters.location_id = locationId;
+    if (providerId != null) filters.provider_id = providerId;
+    if (serviceId != null) filters.service_id = serviceId;
+    if (statusId != null) filters.booking_status_id = statusId;
+    if (hasBooked) filters.has_booked = hasBooked;
+    if (this.fGender().trim()) filters.gender = this.fGender().trim();
+    if (this.fBirthFrom()) filters.birth_date_from = this.fBirthFrom();
+    if (this.fBirthTo()) filters.birth_date_to = this.fBirthTo();
+    if (this.fCreatedFrom()) filters.created_from = this.fCreatedFrom();
+    if (this.fCreatedTo()) filters.created_to = this.fCreatedTo();
+
+    this.appliedFilters.set(filters);
+    this.page.set(1);
+    this.loadClients();
+  }
+
+  /** Limpia el borrador y los filtros aplicados, y recarga. */
+  resetFilters(): void {
+    this.fLocationId.set(null);
+    this.fProviderId.set(null);
+    this.fServiceId.set(null);
+    this.fBookingStatusId.set(null);
+    this.fHasBooked.set(null);
+    this.fGender.set('');
+    this.fBirthFrom.set('');
+    this.fBirthTo.set('');
+    this.fCreatedFrom.set('');
+    this.fCreatedTo.set('');
+    this.appliedFilters.set({});
+    this.page.set(1);
+    this.loadClients();
   }
 
   /** `p-paginator` entrega la página 0-based. */

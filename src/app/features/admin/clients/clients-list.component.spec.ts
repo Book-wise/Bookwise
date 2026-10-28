@@ -1,10 +1,11 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { ClientsListComponent } from './clients-list.component';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
+import { ReferenceStore } from '@core/stores/reference.store';
 import type { Client } from '@models';
 
 if (!window.matchMedia) {
@@ -40,6 +41,10 @@ describe('ClientsListComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ClientsApiService, useValue: mockClientsApi },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
+        {
+          provide: ReferenceStore,
+          useValue: { locations: signal([]), providers: signal([]), services: signal([]) },
+        },
         LanguageService,
       ],
     }).compileComponents();
@@ -107,5 +112,34 @@ describe('ClientsListComponent', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('12345678-9');
+  });
+
+  // ── Filtros avanzados (T3) ────────────────────────────────────
+
+  it('aplica los filtros del borrador al servicio (applyFilters)', () => {
+    seed([makeClient()]);
+    component.fLocationId.set(3);
+    component.fHasBooked.set('upcoming');
+    component.fGender.set('F');
+
+    component.applyFilters();
+
+    expect(component.activeFilterCount()).toBe(3);
+    expect(mockClientsApi.listClients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ location_id: 3, has_booked: 'upcoming', gender: 'F' }),
+    );
+  });
+
+  it('reestablece el borrador y los filtros aplicados (resetFilters)', () => {
+    seed([makeClient()]);
+    component.fLocationId.set(3);
+    component.applyFilters();
+    expect(component.activeFilterCount()).toBe(1);
+
+    component.resetFilters();
+
+    expect(component.appliedFilters()).toEqual({});
+    expect(component.activeFilterCount()).toBe(0);
+    expect(component.fLocationId()).toBeNull();
   });
 });

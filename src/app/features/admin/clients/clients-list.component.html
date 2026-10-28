@@ -17,6 +17,103 @@
       (onClick)="openCreateClient()" />
   </div>
 
+  <div class="cfl">
+    <button type="button" class="cfl__toggle" (click)="toggleFilters()">
+      <i class="pi pi-filter"></i>
+      <span>{{ lang.t('clients.filter.title') }}</span>
+      @if (activeFilterCount() > 0) {
+        <span class="cfl__badge">{{ activeFilterCount() }}</span>
+      }
+      <i class="pi" [class.pi-chevron-down]="!filtersOpen()" [class.pi-chevron-up]="filtersOpen()"></i>
+    </button>
+
+    @if (filtersOpen()) {
+      <div class="cfl__panel">
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.location') }}</span>
+          <p-select
+            [options]="locationOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fLocationId()"
+            (ngModelChange)="fLocationId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.provider') }}</span>
+          <p-select
+            [options]="providerOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="true"
+            [showClear]="true"
+            [ngModel]="fProviderId()"
+            (ngModelChange)="fProviderId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.service') }}</span>
+          <p-select
+            [options]="serviceOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fServiceId()"
+            (ngModelChange)="fServiceId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.booking_status') }}</span>
+          <p-select
+            [options]="statusOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fBookingStatusId()"
+            (ngModelChange)="fBookingStatusId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.has_booked') }}</span>
+          <p-select
+            [options]="hasBookedOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fHasBooked()"
+            (ngModelChange)="fHasBooked.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.gender') }}</span>
+          <input pInputText [ngModel]="fGender()" (ngModelChange)="fGender.set($event)" />
+        </label>
+
+        <div class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.birth_date') }}</span>
+          <div class="cfl__range">
+            <input pInputText type="date" [ngModel]="fBirthFrom()" (ngModelChange)="fBirthFrom.set($event)" />
+            <input pInputText type="date" [ngModel]="fBirthTo()" (ngModelChange)="fBirthTo.set($event)" />
+          </div>
+        </div>
+
+        <div class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.created') }}</span>
+          <div class="cfl__range">
+            <input pInputText type="date" [ngModel]="fCreatedFrom()" (ngModelChange)="fCreatedFrom.set($event)" />
+            <input pInputText type="date" [ngModel]="fCreatedTo()" (ngModelChange)="fCreatedTo.set($event)" />
+          </div>
+        </div>
+
+        <div class="cfl__actions">
+          <p-button [label]="lang.t('clients.filter.reset')" severity="secondary" [outlined]="true" (onClick)="resetFilters()" />
+          <p-button [label]="lang.t('clients.filter.apply')" icon="pi pi-search" (onClick)="applyFilters()" />
+        </div>
+      </div>
+    }
+  </div>
+
   @if (loading()) {
     <div class="list-skeleton">
       @for (row of [1,2,3,4,5]; track row) {

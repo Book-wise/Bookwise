@@ -6,6 +6,23 @@ import { Client, ClientPack, PaginatedResponse } from '@models';
 import { buildHttpParams } from './build-http-params';
 import { collectPaginatedPages } from './collect-paginated';
 
+/**
+ * Filtros de "Base de Pacientes" (contrato de clientes §3). Todos opcionales;
+ * el backend ignora los params que todavía no implementa.
+ */
+export interface ClientListFilters {
+  location_id?: number;
+  provider_id?: number;
+  service_id?: number;
+  booking_status_id?: number;
+  has_booked?: 'ever' | 'upcoming';
+  gender?: string;
+  birth_date_from?: string;
+  birth_date_to?: string;
+  created_from?: string;
+  created_to?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClientsApiService {
   private readonly http = inject(HttpClient);
@@ -29,8 +46,12 @@ export class ClientsApiService {
    * backend entregue el envelope `{data, links, meta}` (contrato §1),
    * `collectPaginatedPages` ya lo consume sin cambios.
    */
-  listClients(params?: { location_id?: number; search?: string }): Observable<Client[]> {
-    return collectPaginatedPages<Client>(this.http, `${this.baseUrl}/clients`, params);
+  listClients(params?: ClientListFilters & { search?: string }): Observable<Client[]> {
+    return collectPaginatedPages<Client>(
+      this.http,
+      `${this.baseUrl}/clients`,
+      params as Record<string, unknown> | undefined,
+    );
   }
 
   getClient(id: number): Observable<Client> {

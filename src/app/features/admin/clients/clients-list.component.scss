@@ -51,3 +51,69 @@
 .clients-toolbar__search input {
   width: 100%;
 }
+
+.cfl {
+  margin-bottom: 1rem;
+}
+
+.cfl__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.35rem 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.cfl__badge {
+  background: var(--p-primary-color, #6366f1);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  padding: 0 0.45rem;
+  line-height: 1.4;
+}
+
+.cfl__panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.85rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+  border-radius: 8px;
+}
+
+.cfl__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cfl__label {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.cfl__field :is(p-select, p-datepicker) {
+  width: 100%;
+}
+
+.cfl__range {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cfl__range input {
+  width: 100%;
+}
+
+.cfl__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
