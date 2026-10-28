@@ -111,6 +111,10 @@ Verificación: `npx ng build` verde + **20/20 tests** (billing, negocios, planes
   implementado, sin commitear**). Descubrimiento: **no existe botón "Nuevo profesional"** (el
   `provider-dialog` en modo create quedó sin punto de entrada) → se bloquean solo las altas
   alcanzables: "Nueva sucursal" (`max_locations`) y "Nuevo negocio" (`max_tenants`).
+  → **Corrección 2026-10-27**: el botón "Nuevo profesional" **ya existe** (lo agregó `8021fb9`) y
+  el CTA **reactivo** de cuota ya cubre profesionales y sucursales; lo que sigue faltando de #12
+  es sólo el bloqueo **proactivo** (antes de abrir el formulario). Ver
+  `odd/tasks/creation-limits.md` y `odd/tasks/pendientes.md`.
 - ~~**#17 Popover de desglose** en "Mi plan"~~ ✅ cerrada (`ebed53e`, `MyPlanComponent`).
 - **#18 Draft + barra flotante** "Tienes cambios en tu plan" con **Cancelar** y
   **Confirmar cambio** (sin prorrateo: el backend es D.8). — pendiente.

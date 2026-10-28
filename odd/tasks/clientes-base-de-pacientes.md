@@ -29,6 +29,18 @@ total real, columnas ordenables, detalle del cliente, alta/edición y desactivac
 | `shared/config/abilities.config.ts:21-23` | Ya existen `clients.view`, `clients.create`, `clients.update` |
 | i18n | **No hay claves `clients.*`** en `es.ts`/`en.ts`: la pantalla está toda hardcodeada en español |
 
+## Estado al cerrar la sesión (2026-10-27) — REGISTRADO Y A LA ESPERA
+
+- Docs **commiteados** en `e84fcc8` (este archivo + el proposal) y **pusheados** a `origin`.
+- Pedido de contrato **enviado** al mantenedor de `Bookwise-API` con 10 puntos; se le pidió
+  prioridad sobre **1** (forma del listado + totales), **2** (`birth_date`), **3** (query params
+  de filtros) y **6** (consecuencias de desactivar).
+- **T1 sigue bloqueada** por esa respuesta; T2 y T3 dependen de ella.
+- **Se puede avanzar sin contrato**: T4 (detalle), T5 (alta/edición, con `clients.create/update`
+  que ya existen en el catálogo), T7 (i18n) y la parte de T2 que no depende del servidor
+  (columna RUT, acciones reales).
+- Vista consolidada de todo lo abierto: `odd/tasks/pendientes.md`.
+
 ## Gaps contra la referencia
 
 1. **Fecha de nacimiento inexistente.** El resource documentado del backend
@@ -60,6 +72,16 @@ total real, columnas ordenables, detalle del cliente, alta/edición y desactivac
 - ⏳ T8 [S1] Specs + `ng build` + `ng test`.
 - ❌ Fuera de alcance declarado: **Importar pacientes** y **Crear una audiencia con este
   listado** (CRM/marketing, no pedido).
+
+## Dependencias del pedido de contrato
+
+| Task | Depende de | Qué se necesita |
+|---|---|---|
+| T2 | §2.1, §2.5 | forma del listado con `meta.total` + orden server-side |
+| T3 | §2.2, §2.3, §2.4 | `birth_date`, query params de filtros, semántica de `has_booked` |
+| T6 | §2.6 | qué pasa con reservas futuras y packs al desactivar |
+
+Propuesta FE→BE: `openspec/changes/2026-10-27-clients-management/proposal.md`.
 
 ## Decisión de alcance (2026-10-27)
 

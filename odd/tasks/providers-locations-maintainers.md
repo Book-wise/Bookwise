@@ -144,6 +144,25 @@ viva: la key de `PATCH /providers/{id}/roles`, que el backend todavía tiene que
   varias requests paginadas (tope duro: 40 páginas / 1000 registros). Si eso molesta, el paso
   siguiente es paginar server-side por pantalla en vez de hidratar todo el store.
 
+## Deuda informativa del review (2026-10-27)
+
+El review `review-9f1c39c6e4f1fdb5` (23 archivos / 1136 líneas, tier medium) aprobó el candidato
+y dejó **6 hallazgos `informational`**. Ninguno bloquea; dos son deuda real de paginación:
+
+| id | sev | ubicación |
+|---|---|---|
+| `R3-COLLECT-TIMEOUT` | WARNING | `collect-paginated.ts:58-70` — falta timeout/cancelación del agregador |
+| `R3-PAGE-CLAMP` | WARNING | `locations-list.component.ts:76-79` — sin clamp: si el total baja, la página queda vacía |
+| `R3-COVERAGE-GAPS` | WARNING | `locations-list.component.spec.ts:238-257` — la paginación no cubre la vista de tarjetas |
+| `R3-PAGE-NO-UPPER-BOUND` | SUGGESTION | `providers-list.component.ts:120-122` |
+| `R3-CTA-CLEAR-REMOVAL` | SUGGESTION | `providers-list.component.ts:316-319` |
+| `R3-CAPACITY-CODES` | SUGGESTION | `http-error.service.ts:51-59` |
+
+**Estado de entrega**: los 6 commits de la tanda están **pusheados** a
+`origin/feat/contract-catchup` (`ad3b7be..e84fcc8`); el árbol publicado es idéntico al revisado.
+Los dos fixes chicos (1.3 clamp de página y 1.4 timeout del agregador) están en
+`odd/tasks/pendientes.md`.
+
 ## Contrato cerrado (respuesta del mantenedor, 2026-10-27)
 
 1. **Ciclo de vida: solo `active`.** No habrá endpoints DELETE para `/providers` ni
