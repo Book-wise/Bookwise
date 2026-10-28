@@ -1,14 +1,6 @@
-<div class="clients-toolbar">
-  <p-button
-    *bwIfAbility="ABILITIES.clientsCreate"
-    icon="pi pi-plus"
-    [label]="lang.t('clients.new')"
-    (onClick)="openCreateClient()" />
-</div>
-
 <p-card [header]="lang.t('clients.title')">
-  <div class="mb-3">
-    <p-iconfield>
+  <div class="clients-toolbar">
+    <p-iconfield class="clients-toolbar__search">
       <p-inputicon class="pi pi-search" />
       <input
         type="text"
@@ -18,6 +10,11 @@
         (ngModelChange)="searchTerm.set($event); onSearch()"
       />
     </p-iconfield>
+    <p-button
+      *bwIfAbility="ABILITIES.clientsCreate"
+      icon="pi pi-plus"
+      [label]="lang.t('clients.new')"
+      (onClick)="openCreateClient()" />
   </div>
 
   @if (loading()) {
