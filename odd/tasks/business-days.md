@@ -55,3 +55,5 @@ Calendario nacional en CORE, cargado con `php artisan holidays:sync {año}`. **2
 - L1 (backend, contrato, 2026-10-28): días laborables + feriados nacionales en `feat/business-days`
   (sin mergear, stacked sobre `feat/location-hours`). Contrato arriba. Se captura para implementar
   cuando se mergee.
+- L2 (cierre 2026-10-28): **mergeado y pusheado** en backend `develop` (`131c26c`). Falta deploy
+  (`tenants:migrate` + migración `holidays`). Implementar T1–T5.

@@ -79,3 +79,7 @@ configuradas distinto se conservan.
   sucursal); `effective_*` se usa sólo para **mostrar** la config, no para la grilla. El backend sigue
   acotando los slots al horario real vía `GET /available_slots`. Rama `feat/location-hours`
   (`380bb53` + `1a12dc8` docs), aún sin mergear.
+- L3 (cierre 2026-10-28): **decisión de seba: la grilla es 00:00–24:00** (día completo, scroll a
+  08:00), NO 08:00–22:00. El horario configurado sólo acota los slots. Backend mergeó
+  `feat/location-hours` a `develop` (`131c26c`). Falta: deploy (`tenants:migrate`) + usar `effective_*`
+  para mostrar la config en el diálogo de sucursal.

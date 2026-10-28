@@ -79,3 +79,34 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
   `clientOptions` del booking-form ("map is not a function").
 - **Pendiente backend (sin mergear)**: `feat/location-hours` y `feat/business-days` (días laborables
   + feriados). Contratos capturados en `odd/tasks/location-hours.md` y `odd/tasks/business-days.md`.
+
+## Próxima sesión (cierre 2026-10-28)
+
+**Entregado y pusheado**: `feat/contract-catchup` mergeada a `develop` (fast-forward) y pusheada.
+`origin/develop` (frontend) = **`cfd984d`**. Backend `origin/develop` = **`131c26c`**.
+
+**Decisiones de seba (esta sesión)**:
+1. **Grilla del calendario = 00:00–24:00** (día completo para clínicas 24h; scroll inicial 08:00). El
+   horario por sucursal sólo acota los slots, NO redimensiona la grilla. (El backend dijo "fija
+   08:00–22:00", pero seba eligió 00:00–24:00; ya está implementado así.)
+2. **Sacar el filtro de rol del selector de la agenda**: mostrar todos los profesionales activos (un
+   `Provider` ya es profesional). Así aparece Ana (Providencia, `recepcionista`) sin cambiar su rol.
+   El guard de roles del backend se revirtió. **Pendiente**: quitar `hasAttentionRole` de
+   `providerOptions` en admin+provider calendar y actualizar los specs.
+
+**Nuevo del backend (`131c26c`), a implementar**:
+- **Horarios por sucursal**: `opening_time`/`closing_time` (null = sin configurar) + `effective_*`
+  default 08:00–22:00. El diálogo de sucursal ya tiene los campos; usar `effective_*` para mostrar.
+- **Días laborables + feriados**: `working_days` (ISO 1–7, default lun–sáb) + `works_on_holidays`
+  (default false). `GET /available_slots` agrega `meta.is_working_day` (false ⇒ "cerrado"). Reservar
+  en día no laborable ⇒ 422 `non_working_day`. Tasks T1–T5 en `odd/tasks/business-days.md`.
+- **Badges de cobro en la agenda**: `GET /bookings` trae `payment_status` (`paid`/`partial`/`unpaid`)
+  + `payment`; un turno sin venta = `unpaid`. Dev ya tiene datos (paid 209 / partial 205 / unpaid 276).
+  Pendiente: badges en los eventos.
+
+**Deploy**: falta `tenants:migrate` + migración `holidays` en el backend (hasta eso, horarios/feriados
+no responden en dev). Deploy del frontend desde `develop` (`cfd984d`) pendiente.
+
+**Otros**: review nativo por porción (no corrido); ramas no mergeadas (`feat/business-management`,
+`feature/ci-cd-deployment`, `master`) a decisión de seba; filtro de rango "Cumpleaños" (backend no lo
+implementó).
