@@ -193,6 +193,8 @@
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .fc .fc-event {
@@ -313,9 +315,11 @@
 .fc-holiday-label {
   display: block;
   margin-top: 2px;
+  max-width: 100%;
   font-size: 0.65rem;
   font-weight: 500;
   color: #b45309;
+  text-transform: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -332,9 +336,6 @@
 }
 
 /* Header de un día feriado: en mobile es tappable para ver el nombre completo. */
-.fc-holiday-header {
-  cursor: pointer;
-}
 
 .fc .fc-timegrid-slot {
   height: 1.25rem;

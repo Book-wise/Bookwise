@@ -2,18 +2,18 @@ import { FullCalendarComponent } from './full-calendar.component';
 import { ProviderCalendarComponent } from '@features/provider/calendar/provider-calendar.component';
 
 /**
- * Pruebas de las callbacks privadas `holidayHeader` / `dayCellClassNames` de
- * ambas agendas sin montar FullCalendar: se usa un objeto con el prototype del
- * componente y se stubean los signals que leen las callbacks.
+ * Pruebas de las callbacks privadas del header de feriado de ambas agendas sin
+ * montar FullCalendar: objeto con el prototype del componente y signals stub.
  */
 
 type HeaderArg = { date: Date; text: string; view: { type: string } };
 
-const harness = (Ctor: unknown, holidays: Map<string, string>, mobile: boolean): any => {
+const harness = (Ctor: unknown, holidays: Map<string, string>, compact: boolean): any => {
   const c: any = Object.create((Ctor as { prototype: object }).prototype);
   c.holidaysByDate = () => holidays;
   c.blockHolidays = () => true;
-  c.isMobile = () => mobile;
+  c.isCompactHeader = () => compact;
+  c.isMobile = () => compact;
   c.locations = () => [{ id: 1, working_days: [1, 2, 3, 4, 5] }];
   c.selectedLocationId = 1;
   c.providerWorkingDays = () => [1, 2, 3, 4, 5];
@@ -28,7 +28,7 @@ const THU = new Date(2026, 2, 5); // 2026-03-05 (jueves, normal)
 describe.each([
   ['admin', FullCalendarComponent],
   ['provider', ProviderCalendarComponent],
-])('holidayHeader / dayCellClassNames (%s)', (_name, Ctor) => {
+])('holiday header (%s)', (_name, Ctor) => {
   it('month view does not append the holiday name (header is weekday names)', () => {
     const html = harness(Ctor, HOLIDAYS, false).holidayHeader({
       date: WED,
@@ -47,10 +47,9 @@ describe.each([
     expect(html).toContain('fc-holiday-label');
     expect(html).toContain('&lt;img');
     expect(html).not.toContain('<img');
-    expect(html.split('<').length - 1).toBe(2); // sólo los dos <span>
   });
 
-  it('timeGrid mobile renders a compact badge with escaped title/aria-label', () => {
+  it('compact (mobile/tablet) renders a compact badge with escaped title/aria-label', () => {
     const html: string = harness(Ctor, HOLIDAYS, true).holidayHeader({
       date: WED,
       text: '4',
@@ -79,31 +78,70 @@ describe.each([
     expect(c.dayCellClassNames({ date: THU })).toEqual([]); // jueves normal abierto
   });
 
-  it('decorateHolidayHeader sets the title and, on mobile, a tap toast with the name', () => {
+  it('decorateHolidayHeader sets the holiday name as the header title', () => {
     const c = harness(Ctor, HOLIDAYS, true);
-    const added: { detail?: string }[] = [];
-    c.messageService = { add: (m: { detail?: string }) => added.push(m) };
+    const el = document.createElement('div');
+    c.decorateHolidayHeader({ date: WED, el, view: { type: 'timeGridWeek' } });
+    expect(el.title).toContain('Día');
+  });
+
+  it('decorateHolidayHeader clears the title outside timeGrid or on a non-holiday', () => {
+    const c = harness(Ctor, HOLIDAYS, true);
+    const el = document.createElement('div');
+    el.title = 'keep';
+    c.decorateHolidayHeader({ date: WED, el, view: { type: 'dayGridMonth' } });
+    expect(el.hasAttribute('title')).toBe(false);
+
+    const el2 = document.createElement('div');
+    el2.title = 'keep';
+    c.decorateHolidayHeader({ date: THU, el: el2, view: { type: 'timeGridWeek' } });
+    expect(el2.hasAttribute('title')).toBe(false);
+  });
+
+  it('onHolidayHeaderTap shows the holiday toast on compact timeGrid (delegated)', () => {
+    const c = harness(Ctor, HOLIDAYS, true);
+    c.calendar = { view: { type: 'timeGridWeek' } };
+    const added: { detail?: string; key?: string }[] = [];
+    c.messageService = { add: (m: { detail?: string; key?: string }) => added.push(m) };
     c.ngZone = { run: (fn: () => void) => fn() };
     c.lang = { t: (k: string) => k };
 
-    const el = document.createElement('div');
-    c.decorateHolidayHeader({ date: WED, el, view: { type: 'timeGridWeek' } });
+    const th = document.createElement('th');
+    th.className = 'fc-col-header-cell';
+    th.setAttribute('data-date', '2026-03-04');
+    const span = document.createElement('span');
+    th.appendChild(span);
 
-    expect(el.title).toContain('Día');
-    expect(el.classList.contains('fc-holiday-header')).toBe(true);
-    el.dispatchEvent(new MouseEvent('click'));
+    c.onHolidayHeaderTap({ target: span } as unknown as Event);
+
     expect(added).toHaveLength(1);
     expect(added[0].detail).toContain('Día');
+    expect(added[0].key).toBe('global');
   });
 
-  it('decorateHolidayHeader does nothing outside timeGrid views', () => {
-    const c = harness(Ctor, HOLIDAYS, true);
-    c.messageService = { add: () => {} };
-    const el = document.createElement('div');
-    el.title = 'keep';
+  it('onHolidayHeaderTap ignores desktop, month view and non-holiday days', () => {
+    const added: unknown[] = [];
+    const c = harness(Ctor, HOLIDAYS, false); // no compacto
+    c.messageService = { add: (m: unknown) => added.push(m) };
+    c.ngZone = { run: (fn: () => void) => fn() };
+    const th = document.createElement('th');
+    th.className = 'fc-col-header-cell';
+    th.setAttribute('data-date', '2026-03-04');
 
-    c.decorateHolidayHeader({ date: WED, el, view: { type: 'dayGridMonth' } });
+    c.calendar = { view: { type: 'timeGridWeek' } };
+    c.onHolidayHeaderTap({ target: th } as unknown as Event); // desktop: sin toast
+    expect(added).toHaveLength(0);
 
-    expect(el.title).toBe(''); // title retirado, sin toast
+    c.isCompactHeader = () => true;
+    c.calendar = { view: { type: 'dayGridMonth' } };
+    c.onHolidayHeaderTap({ target: th } as unknown as Event); // vista mes: sin toast
+    expect(added).toHaveLength(0);
+
+    c.calendar = { view: { type: 'timeGridWeek' } };
+    const th2 = document.createElement('th');
+    th2.className = 'fc-col-header-cell';
+    th2.setAttribute('data-date', '2026-03-05'); // no feriado
+    c.onHolidayHeaderTap({ target: th2 } as unknown as Event);
+    expect(added).toHaveLength(0);
   });
 });

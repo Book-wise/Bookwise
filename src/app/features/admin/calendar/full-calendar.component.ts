@@ -222,6 +222,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Signal para detectar viewport
   isMobile = signal(false);
 
+  /** Mobile + tablet: header del día angosto → feriado compacto + tap. */
+  isCompactHeader = signal(false);
+
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin, luxonPlugin],
     initialView: 'timeGridWeek',
@@ -385,6 +388,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initCalendar();
+    this.setupHolidayTap();
     this.watchDateQueryParam();
   }
 
@@ -420,6 +424,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private checkViewport(): void {
     this.isMobile.set(window.innerWidth < 768);
+    this.isCompactHeader.set(window.innerWidth < 1024);
   }
 
   private initCalendar(): void {
@@ -1043,7 +1048,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       (c: string) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
     );
-    if (this.isMobile()) {
+    if (this.isCompactHeader()) {
       return {
         html: `${arg.text}<span class="fc-holiday-badge" title="${safe}" aria-label="${safe}">●</span>`,
       };
@@ -1051,7 +1056,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return { html: `${arg.text}<span class="fc-holiday-label" title="${safe}">${safe}</span>` };
   }
 
-  /** Nombre del feriado como tooltip del header del día; en mobile, tap → toast con el nombre. */
+  /** Nombre del feriado como tooltip del header del día (hover en desktop). */
   private decorateHolidayHeader(arg: {
     date: Date;
     el: HTMLElement;
@@ -1062,25 +1067,38 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     const name = holidayNameFor(arg.date, this.holidaysByDate());
-    if (!name) {
-      arg.el.removeAttribute('title');
-      return;
-    }
-    arg.el.title = name;
-    if (!this.isMobile() || arg.el.dataset['holidayTap'] === '1') return;
-    arg.el.dataset['holidayTap'] = '1';
-    arg.el.classList.add('fc-holiday-header');
-    arg.el.addEventListener('click', () => {
-      this.ngZone.run(() =>
-        this.messageService.add({
-          severity: 'info',
-          summary: this.lang.t('cal.legend.holiday'),
-          detail: name,
-          life: 4000,
-          key: 'global',
-        }),
-      );
-    });
+    if (name) arg.el.title = name;
+    else arg.el.removeAttribute('title');
+  }
+
+  /**
+   * En mobile/tablet el `title` no se abre en touch: un tap en el header de un día
+   * feriado muestra el nombre en un toast. Delegado en el contenedor para sobrevivir
+   * a los re-render (los headers se montan antes de que carguen los feriados).
+   */
+  private setupHolidayTap(): void {
+    const host = this.calendarContainer.nativeElement as HTMLElement;
+    host.addEventListener('click', (e) => this.onHolidayHeaderTap(e));
+  }
+
+  private onHolidayHeaderTap(e: Event): void {
+    if (!this.isCompactHeader()) return;
+    if (!this.calendar?.view.type.startsWith('timeGrid')) return;
+    const cell = (e.target as HTMLElement | null)?.closest(
+      '.fc-col-header-cell',
+    ) as HTMLElement | null;
+    const dateStr = cell?.getAttribute('data-date');
+    const holidayName = dateStr ? this.holidaysByDate().get(dateStr) : undefined;
+    if (!holidayName) return;
+    this.ngZone.run(() =>
+      this.messageService.add({
+        severity: 'info',
+        summary: this.lang.t('cal.legend.holiday'),
+        detail: holidayName,
+        life: 4000,
+        key: 'global',
+      }),
+    );
   }
 
   /** Preview duration for the slot click/date preview — follows the slot density. */
