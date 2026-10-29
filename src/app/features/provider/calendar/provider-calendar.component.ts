@@ -26,6 +26,9 @@ import { MessageService } from 'primeng/api';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
 import { AuthService } from '@services/auth.service';
+import { ReferenceStore } from '@core/stores/reference.store';
+import { HolidaysApiService } from '@services/api/holidays-api.service';
+import { isDayClosed, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
@@ -69,6 +72,8 @@ import luxonPlugin from '@fullcalendar/luxon';
 export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private blockedSlotsApi = inject(BlockedSlotsApiService);
   private auth           = inject(AuthService);
+  private readonly referenceStore = inject(ReferenceStore);
+  private readonly holidaysApi    = inject(HolidaysApiService);
   private messageService = inject(MessageService);
   private ngZone         = inject(NgZone);
   readonly lang          = inject(LanguageService);
@@ -76,6 +81,14 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   private httpError      = inject(HttpErrorService);
   private tzService      = inject(TimezoneService);
   private route          = inject(ActivatedRoute);
+
+  /** Feriados cargados por fecha (`YYYY-MM-DD` → nombre). */
+  private readonly holidaysByDate = signal<HolidayMap>(new Map());
+  private readonly loadedHolidayYears = new Set<number>();
+  /** Bloqueo global de feriados, leído del bootstrap de sesión (/auth/me). */
+  private readonly blockHolidays = computed(
+    () => this.auth.me()?.business?.block_bookings_on_holidays ?? true,
+  );
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -188,6 +201,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     },
     slotDuration: '00:30:00',
     contentHeight: this.getContentHeight(),
+    dayCellClassNames: (arg) => this.dayCellClassNames(arg),
+    dayHeaderContent: (arg) => this.holidayHeader(arg),
   };
 
   constructor() {
@@ -251,6 +266,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnInit(): void {
     this.checkViewport();
+    this.loadHolidays();
   }
 
   ngAfterViewInit(): void {
@@ -269,6 +285,59 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   private getContentHeight(): number {
     return window.innerHeight - 250;
+  }
+
+  private loadHolidays(): void {
+    const year = new Date().getFullYear();
+    [year - 1, year, year + 1].forEach((y) => this.loadHolidayYear(y));
+  }
+
+  private loadHolidayYear(year: number): void {
+    if (this.loadedHolidayYears.has(year)) return;
+    this.loadedHolidayYears.add(year);
+    this.holidaysApi.getHolidays({ year }).subscribe({
+      next: (list) => {
+        const map = new Map(this.holidaysByDate());
+        list.forEach((h) => map.set(h.date, h.name));
+        this.holidaysByDate.set(map);
+        this.rerenderDays();
+      },
+      error: () => this.loadedHolidayYears.delete(year),
+    });
+  }
+
+  /** Re-renderiza las celdas-día para reflejar feriados/bloqueo. */
+  private rerenderDays(): void {
+    if (!this.calendar) return;
+    this.ngZone.runOutsideAngular(() => this.calendar!.render());
+  }
+
+  private providerWorkingDays(): readonly number[] | undefined {
+    return this.referenceStore
+      .locations()
+      .find((l) => l.id === this.lockedLocationId)?.working_days;
+  }
+
+  private dayCellClassNames(arg: { date: Date }): string[] {
+    return isDayClosed(
+      arg.date,
+      this.providerWorkingDays(),
+      this.holidaysByDate(),
+      this.blockHolidays(),
+    )
+      ? ['fc-day-closed']
+      : [];
+  }
+
+  private holidayHeader(arg: { date: Date; text: string }): { html: string } {
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (!name) return { html: arg.text };
+    const safe = name.replace(
+      /[&<>"']/g,
+      (c: string) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+    );
+    return { html: `${arg.text}<span class="fc-holiday-label">${safe}</span>` };
   }
 
   /** Reacciona al `?date=` del widget de navegación (incluso si ya está montado). */

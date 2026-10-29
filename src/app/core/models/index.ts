@@ -328,6 +328,8 @@ export interface Business {
   /** Texto libre cuando business_type === 'other'. */
   business_type_other?: string | null;
   logo_url?: string | null;
+  /** Bloqueo global de feriados del tenant (expuesto por BusinessResource en /auth/me). */
+  block_bookings_on_holidays?: boolean;
   created_at?: string;
   updated_at?: string;
 }
