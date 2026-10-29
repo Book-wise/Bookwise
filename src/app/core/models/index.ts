@@ -198,12 +198,39 @@ export interface Booking {
 // Sale interface is defined in responses/sales.ts and re-exported via the barrel
 
 export interface AvailableSlot {
-  location_id: number;
-  provider_id: number;
-  service_id: number;
-  start_time: string;
-  end_time: string;
+  start: string;
+  end: string;
   duration_minutes: number;
+  provider_id: number;
+}
+
+/** `meta` de `GET /available_slots` (consulta de un día puntual). */
+export interface AvailableSlotsMeta {
+  date: string;
+  location_id: number;
+  service_id: number | null;
+  duration_minutes: number | null;
+  slot_interval: number | null;
+  is_working_day: boolean;
+  is_holiday: boolean;
+  holiday_name: string | null;
+  total_slots: number;
+}
+
+export interface AvailableSlotsResponse {
+  data: AvailableSlot[];
+  meta: AvailableSlotsMeta;
+}
+
+/** Feriado nacional (`GET /holidays`). `date` en formato `YYYY-MM-DD`. */
+export interface Holiday {
+  date: string;
+  name: string;
+}
+
+/** Configuración global del tenant (`GET`/`PATCH /tenant/settings`). */
+export interface TenantSettings {
+  block_bookings_on_holidays: boolean;
 }
 
 export interface ProviderAvailability {

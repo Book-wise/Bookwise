@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { BookingsApiService } from './bookings-api.service';
 import { environment } from '@env/environment';
-import { Booking, CreateBooking, UpdateBooking, ApiResponse, PaginatedResponse, AvailableSlot } from '@models';
+import { Booking, CreateBooking, UpdateBooking, ApiResponse, PaginatedResponse, AvailableSlotsResponse } from '@models';
 
 describe('BookingsApiService', () => {
   let service: BookingsApiService;
@@ -122,10 +122,23 @@ describe('BookingsApiService', () => {
   });
 
   it('GET /available_slots via getAvailableSlots()', () => {
-    const params = { date: '2024-01-01', location_id: 1 };
-    const response: AvailableSlot[] = [
-      { location_id: 1, provider_id: 1, service_id: 1, start_time: '2024-01-01T09:00:00', end_time: '2024-01-01T10:00:00', duration_minutes: 60 },
-    ];
+    const params = { start_date: '2024-01-01', location_id: 1 };
+    const response: AvailableSlotsResponse = {
+      data: [
+        { start: '2024-01-01T09:00:00', end: '2024-01-01T10:00:00', duration_minutes: 60, provider_id: 1 },
+      ],
+      meta: {
+        date: '2024-01-01',
+        location_id: 1,
+        service_id: null,
+        duration_minutes: null,
+        slot_interval: null,
+        is_working_day: true,
+        is_holiday: false,
+        holiday_name: null,
+        total_slots: 1,
+      },
+    };
 
     service.getAvailableSlots(params).subscribe((data) => {
       expect(data).toEqual(response);
@@ -133,7 +146,7 @@ describe('BookingsApiService', () => {
 
     const req = httpMock.expectOne((r) => r.url === `${baseUrl}/available_slots`);
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('date')).toBe('2024-01-01');
+    expect(req.request.params.get('start_date')).toBe('2024-01-01');
     expect(req.request.params.get('location_id')).toBe('1');
     expect(req.request.params.get('provider_id')).toBeNull();
     expect(req.request.params.get('service_id')).toBeNull();
