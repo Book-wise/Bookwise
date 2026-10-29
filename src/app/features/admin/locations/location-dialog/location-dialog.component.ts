@@ -54,6 +54,11 @@ export class LocationDialogComponent {
 
   saving = signal(false);
 
+  /** Horas tal como se mostraron al abrir el diálogo (ms epoch), para distinguir
+   *  si el admin las editó. Sin edición no se envían, así un horario "sin
+   *  configurar" (null) no se materializa como el default 08:00/22:00. */
+  private loadedHours: { opening: number | null; closing: number | null } = { opening: null, closing: null };
+
   /** Internal mode allows override from view→edit via switchToEdit(). */
   private internalMode = signal<DialogMode>('create');
 
@@ -142,6 +147,10 @@ export class LocationDialogComponent {
             active: true,
           });
         }
+        this.loadedHours = {
+          opening: this.form.controls.openingTime.value?.getTime() ?? null,
+          closing: this.form.controls.closingTime.value?.getTime() ?? null,
+        };
         // Apply disabled state AFTER populating
         if (mode === 'view') {
           this.form.disable();
@@ -162,9 +171,9 @@ export class LocationDialogComponent {
     return d;
   }
 
-  /** Format Date to "HH:mm:ss" string for the API */
-  private formatTimeToString(date: Date | null): string | undefined {
-    if (!date) return undefined;
+  /** Format Date to "HH:mm:ss", or explicit null to clear the configured hours. */
+  private formatTimeOrNull(date: Date | null): string | null {
+    if (!date) return null;
     const hh = String(date.getHours()).padStart(2, '0');
     const mm = String(date.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}:00`;
@@ -210,12 +219,18 @@ export class LocationDialogComponent {
       region_id: raw.regionId!,
       comuna_id: raw.comunaId ?? undefined,
       codigo_postal: raw.codigoPostal?.trim() || undefined,
-      opening_time: this.formatTimeToString(raw.openingTime),
-      closing_time: this.formatTimeToString(raw.closingTime),
       working_days: raw.workingDays ?? [],
       works_on_holidays: raw.worksOnHolidays,
       active: raw.active!,
     };
+    // Solo se envían las horas que el admin editó: un horario "sin configurar"
+    // (null, prellenado con effective_*) no debe materializarse como default.
+    const openingEdited =
+      (raw.openingTime?.getTime() ?? null) !== this.loadedHours.opening;
+    const closingEdited =
+      (raw.closingTime?.getTime() ?? null) !== this.loadedHours.closing;
+    if (openingEdited) payload.opening_time = this.formatTimeOrNull(raw.openingTime);
+    if (closingEdited) payload.closing_time = this.formatTimeOrNull(raw.closingTime);
 
     this.saving.set(true);
     // Mutación vía store: createLocation (append) / updateLocation (merge

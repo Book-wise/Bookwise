@@ -275,4 +275,53 @@ describe('LocationDialogComponent', () => {
       expect(component.form.controls.workingDays.invalid).toBe(true);
     });
   });
+
+  // ── Horas: no materializar el default si no se editaron (R3-002) ──
+
+  describe('hours preservation', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    it('does not send the hours when they were not edited (null stays null)', () => {
+      open(
+        'edit',
+        baseLocation({
+          opening_time: null,
+          closing_time: null,
+          effective_opening_time: '08:00:00',
+          effective_closing_time: '22:00:00',
+        }),
+      );
+
+      component.onSave();
+
+      const payload = locationsApi.updateLocation.mock.calls[0][1];
+      expect(payload.opening_time).toBeUndefined();
+      expect(payload.closing_time).toBeUndefined();
+    });
+
+    it('sends only the hour the admin edited', () => {
+      open('edit', baseLocation({ opening_time: '09:00:00', closing_time: '18:00:00' }));
+      const edited = new Date(0);
+      edited.setHours(10, 30, 0, 0);
+      component.form.controls.openingTime.setValue(edited);
+
+      component.onSave();
+
+      const payload = locationsApi.updateLocation.mock.calls[0][1];
+      expect(payload.opening_time).toBe('10:30:00');
+      expect(payload.closing_time).toBeUndefined();
+    });
+
+    it('sends explicit null when the admin clears the hour', () => {
+      open('edit', baseLocation({ opening_time: '09:00:00', closing_time: '18:00:00' }));
+      component.form.controls.openingTime.setValue(null);
+
+      component.onSave();
+
+      const payload = locationsApi.updateLocation.mock.calls[0][1];
+      expect(payload.opening_time).toBeNull();
+    });
+  });
 });
