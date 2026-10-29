@@ -59,13 +59,13 @@ Rama frontend: `feat/contract-catchup` (10 commits locales, sin push).
 - [ ] **Feriado con bloqueo ON** → celda rayada **y** nombre del feriado en el header del día.
 - [ ] **Feriado con bloqueo OFF** → etiqueta/nombre del feriado **sin** rayado; la agenda opera normal.
 - [ ] Cambiar de sucursal A → B → el sombreado se recalcula según `working_days` de cada una.
-- [ ] **⚠️ Caveat scroll**: al entrar o navegar, ¿la vista **semana** salta el scroll a 08:00 al cargar feriados? Si sí → follow-up (capturar/restaurar scroll alrededor de `calendar.render()`).
+- [ ] **Scroll**: `rerenderDays()` ahora **guarda/restaura** el scroll de `.fc-scroller` alrededor de `calendar.render()`. Verificar que al cargar feriados o cambiar de sucursal la vista **semana** no salta a 08:00.
 
 ### 3.4 Agenda del profesional (`/provider/calendar`)
 - [ ] Sombreado de **feriados** según `auth.me().business.block_bookings_on_holidays`.
 - [ ] Sombreado de **días no laborables** según `working_days` de su sucursal (vía `ReferenceStore`).
-- [ ] **⚠️ Caveat**: si `ReferenceStore` no hidrató locations, solo se sombrean feriados (sin weekday). Si pasa → follow-up (cargar el location o degradar explícito).
-- [ ] Mismo caveat de scroll que 3.3.
+- [ ] **Hidratación**: se re-renderiza al cambiar `ReferenceStore.locations()`, así el sombreado por **weekday** aparece cuando llegan las locations (no solo feriados). Verificar que aparece.
+- [ ] Mismo chequeo de scroll que 3.3.
 
 ### 3.5 Reservas en feriado bloqueado
 - [ ] Crear/editar reserva en fecha feriado con bloqueo ON → toast **"Sucursal cerrada"** con detalle "La sucursal no atiende en la fecha indicada: día no laborable o feriado." (no un error crudo).

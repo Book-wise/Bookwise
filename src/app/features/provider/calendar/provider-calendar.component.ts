@@ -219,6 +219,13 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       }
     });
 
+    // Re-render day cells when the locations list loads/changes so the
+    // working_days shading appears once the (async) locations arrive.
+    effect(() => {
+      this.referenceStore.locations();
+      this.rerenderDays();
+    });
+
     // Watch store state to manage loading visual and refresh calendar
     // Auto-refetches FullCalendar whenever eventsForCalendar changes
     effect(() => {
@@ -306,10 +313,18 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     });
   }
 
-  /** Re-renderiza las celdas-día para reflejar feriados/bloqueo. */
+  /** Re-renderiza las celdas-día para reflejar feriados/bloqueo, preservando el scroll vertical. */
   private rerenderDays(): void {
     if (!this.calendar) return;
-    this.ngZone.runOutsideAngular(() => this.calendar!.render());
+    const host = this.calendarContainer.nativeElement as HTMLElement;
+    const scrollTop = (host.querySelector('.fc-scroller') as HTMLElement | null)?.scrollTop ?? 0;
+    this.ngZone.runOutsideAngular(() => {
+      this.calendar!.render();
+      if (scrollTop > 0) {
+        const after = host.querySelector('.fc-scroller') as HTMLElement | null;
+        if (after) after.scrollTop = scrollTop;
+      }
+    });
   }
 
   private providerWorkingDays(): readonly number[] | undefined {
