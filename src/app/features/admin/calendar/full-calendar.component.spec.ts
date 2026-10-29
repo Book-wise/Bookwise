@@ -139,7 +139,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     location: locCentro,
     roles: [{ id: 1, slug: 'staff', name: 'Staff', permissions: [] }],
   };
-  // Sólo recepcionista: activo pero SIN rol de atención → oculto (C2)
+  // Sólo recepcionista: activo → visible (C2, ya no hay filtro de rol)
   const providerRosa: Provider = {
     id: 9,
     first_name: 'Rosa',
@@ -159,7 +159,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     location: locCentro,
     roles: [{ id: 4, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] }],
   };
-  // Inactivo con staff: excluido por active (C2)
+  // Inactivo: excluido por active, sin importar el rol (C2)
   const providerSofia: Provider = {
     id: 11,
     first_name: 'Sofía',
@@ -541,13 +541,13 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     });
   });
 
-  describe('C2 — provider visibility (active + attention role)', () => {
-    it('shows active providers with role staff', () => {
+  describe('C2 — provider visibility (active only)', () => {
+    it('shows active providers regardless of role', () => {
       component.providers.set([providerAna, providerSofia]);
 
       const values = component.providerOptions().map((o) => o.value);
       expect(values).toContain(7); // activo + staff
-      expect(values).not.toContain(11); // inactivo + staff → oculto
+      expect(values).not.toContain(11); // inactivo → oculto
     });
 
     it('shows active providers with role staff_readonly', () => {
@@ -556,12 +556,12 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.providerOptions().map((o) => o.value)).toEqual([10]);
     });
 
-    it('hides active providers whose only role is recepcionista', () => {
+    it('shows active providers whose only role is recepcionista', () => {
       component.providers.set([providerRosa, providerJuan]);
 
       const values = component.providerOptions().map((o) => o.value);
       expect(values).toContain(8); // staff visible
-      expect(values).not.toContain(9); // recepcionista-only → oculto
+      expect(values).toContain(9); // recepcionista-only → ahora visible
     });
   });
 
@@ -572,7 +572,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       component.onFilterChange();
       expect(store.filters().selectedProviderId).toBe(8);
 
-      // Reload returns Juan now inactive → excluded by the C2 filter
+      // Reload returns Juan now inactive → excluded because inactive
       const juanInactive: Provider = { ...providerJuan, active: false };
       mockProvidersApi.getProviders.mockReturnValue(of([providerAna, juanInactive]));
 

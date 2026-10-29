@@ -43,7 +43,6 @@ import { TenantSwitchService } from '@services/tenant-switch.service';
 import type { TenantSwitchResult } from '@services/tenant-switch.service';
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { hasAttentionRole } from '../roles/role-meta';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -274,11 +273,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       .map((l) => ({ label: l.name, value: l.id })),
   );
 
-  /** Profesionales seleccionables: solo activos con rol de atención (C2), usando
-   *  la constante compartida ATTENTION_ROLES/hasAttentionRole (role-meta). */
+  /** Profesionales seleccionables: todos los activos, sin filtro de rol (un
+   *  Provider ya es profesional; decisión de seba 2026-10-28). */
   providerOptions = computed(() =>
     this.providers()
-      .filter((p) => p.active && hasAttentionRole(p.roles))
+      .filter((p) => p.active)
       .map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
 
