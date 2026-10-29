@@ -56,8 +56,7 @@
             size="small"
             severity="secondary"
             [text]="true"
-            (mouseenter)="statusLegendPopover.show($event)"
-            (mouseleave)="statusLegendPopover.hide()"
+            (onClick)="statusLegendPopover.toggle($event)"
           >
           </p-button>
         </div>
@@ -173,6 +172,14 @@
       <div class="status-legend__item">
         <span class="status-legend__blocked"></span>
         <span class="status-legend__label">{{ lang.t('cal.legend.blocked') }}</span>
+      </div>
+      <div class="status-legend__item">
+        <span class="status-legend__holiday"></span>
+        <span class="status-legend__label">{{ lang.t('cal.legend.holiday') }}</span>
+      </div>
+      <div class="status-legend__item">
+        <span class="status-legend__closed"></span>
+        <span class="status-legend__label">{{ lang.t('cal.legend.non_working_day') }}</span>
       </div>
     </div>
 

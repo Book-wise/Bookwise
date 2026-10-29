@@ -28,7 +28,7 @@ import { TimezoneService } from '@services/timezone.service';
 import { AuthService } from '@services/auth.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { HolidaysApiService } from '@services/api/holidays-api.service';
-import { isDayClosed, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
+import { dayClosedKind, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
@@ -334,17 +334,18 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private dayCellClassNames(arg: { date: Date }): string[] {
-    return isDayClosed(
+    const kind = dayClosedKind(
       arg.date,
       this.providerWorkingDays(),
       this.holidaysByDate(),
       this.blockHolidays(),
-    )
-      ? ['fc-day-closed']
-      : [];
+    );
+    return kind ? [`fc-day-${kind}`] : []; // 'fc-day-holiday' | 'fc-day-closed'
   }
 
-  private holidayHeader(arg: { date: Date; text: string }): { html: string } {
+  private holidayHeader(arg: { date: Date; text: string; view: { type: string } }): { html: string } {
+    // En la vista mes el header son nombres de weekday, no fechas: no aplica.
+    if (!arg.view.type.startsWith('timeGrid')) return { html: arg.text };
     const name = holidayNameFor(arg.date, this.holidaysByDate());
     if (!name) return { html: arg.text };
     const safe = name.replace(
@@ -352,7 +353,12 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       (c: string) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
     );
-    return { html: `${arg.text}<span class="fc-holiday-label">${safe}</span>` };
+    if (this.isMobile()) {
+      return {
+        html: `${arg.text}<span class="fc-holiday-badge" title="${safe}" aria-label="${safe}">●</span>`,
+      };
+    }
+    return { html: `${arg.text}<span class="fc-holiday-label" title="${safe}">${safe}</span>` };
   }
 
   /** Reacciona al `?date=` del widget de navegación (incluso si ya está montado). */

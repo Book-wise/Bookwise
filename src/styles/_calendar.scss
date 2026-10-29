@@ -288,12 +288,23 @@
   background-color: rgba(59, 130, 246, 0.1) !important;
 }
 
-/* Días cerrados: no laborable por working_days o feriado bloqueado. */
+/* Día no laborable (weekday fuera de working_days): rayas grises. */
 .fc .fc-day-closed {
   background: repeating-linear-gradient(
     -45deg,
     rgba(156, 163, 175, 0.12) 0px,
     rgba(156, 163, 175, 0.12) 6px,
+    transparent 6px,
+    transparent 14px
+  ) !important;
+}
+
+/* Feriado bloqueado: mismo patrón de rayas que el bloqueo, en ámbar. */
+.fc .fc-day-holiday {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(217, 119, 6, 0.16) 0px,
+    rgba(217, 119, 6, 0.16) 6px,
     transparent 6px,
     transparent 14px
   ) !important;
@@ -308,6 +319,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Mobile (vista semana): indicador compacto con el nombre en el tooltip nativo. */
+.fc-holiday-badge {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.6rem;
+  line-height: 1;
+  color: #b45309;
+  vertical-align: middle;
 }
 
 .fc .fc-timegrid-slot {
@@ -911,6 +932,34 @@ body.dark-theme .fc {
       -45deg,
       #9ca3af 0px,
       #9ca3af 2px,
+      #ffffff 2px,
+      #ffffff 8px
+    );
+  }
+
+  &__holiday {
+    width: 28px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      #d97706 0px,
+      #d97706 2px,
+      #ffffff 2px,
+      #ffffff 8px
+    );
+  }
+
+  &__closed {
+    width: 28px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      #cbd5e1 0px,
+      #cbd5e1 2px,
       #ffffff 2px,
       #ffffff 8px
     );

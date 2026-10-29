@@ -663,6 +663,8 @@ export const ES: Record<string, string> = {
   'cal.legend.payment.partial': 'Abono',
   'cal.legend.payment.paid': 'Pago completo',
   'cal.legend.blocked': 'Bloqueo de horario',
+  'cal.legend.holiday': 'Feriado (cerrado)',
+  'cal.legend.non_working_day': 'Día no laborable',
   'cal.legend.note': 'Los colores se aplican en el calendario y en el detalle de la cita.',
   // Etiquetas del toast de contexto del calendario (filtros activos informados al cliente).
   'cal.toast.location_label': 'Sucursal',

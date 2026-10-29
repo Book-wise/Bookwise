@@ -16,12 +16,27 @@ export function isoWeekday(date: Date): number {
 }
 
 /**
- * ¿El día está "cerrado" en la agenda?
- *
- * - Cierra si la sucursal tiene `working_days` configurado y el weekday del día
- *   no está incluido (día no laborable por semana).
- * - Cierra si es feriado nacional **y** el bloqueo global del tenant
- *   (`block_bookings_on_holidays`) está activo.
+ * Clasifica el día: `'holiday'` (feriado nacional con el bloqueo activo) o
+ * `'closed'` (weekday fuera de `working_days`). El feriado tiene prioridad
+ * porque se marca con otro color en la agenda.
+ */
+export type DayClosedKind = 'holiday' | 'closed' | null;
+
+export function dayClosedKind(
+  date: Date,
+  workingDays: readonly number[] | undefined,
+  holidays: HolidayMap,
+  blockOnHolidays: boolean,
+): DayClosedKind {
+  const holidayName = holidays.get(toYmd(date));
+  if (holidayName && blockOnHolidays) return 'holiday';
+  const iso = isoWeekday(date);
+  if (workingDays && workingDays.length > 0 && !workingDays.includes(iso)) return 'closed';
+  return null;
+}
+
+/**
+ * ¿El día está "cerrado" en la agenda? (feriado bloqueado **o** weekday no laborable).
  */
 export function isDayClosed(
   date: Date,
@@ -29,10 +44,7 @@ export function isDayClosed(
   holidays: HolidayMap,
   blockOnHolidays: boolean,
 ): boolean {
-  const iso = isoWeekday(date);
-  if (workingDays && workingDays.length > 0 && !workingDays.includes(iso)) return true;
-  const holidayName = holidays.get(toYmd(date));
-  return !!holidayName && blockOnHolidays;
+  return dayClosedKind(date, workingDays, holidays, blockOnHolidays) !== null;
 }
 
 /** Nombre del feriado para la fecha, o `null` si no es feriado. */

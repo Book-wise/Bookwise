@@ -607,6 +607,8 @@ export const EN: Record<string, string> = {
   'cal.legend.payment.partial': 'Partial payment',
   'cal.legend.payment.paid': 'Fully paid',
   'cal.legend.blocked': 'Time-blocked slot',
+  'cal.legend.holiday': 'Holiday (closed)',
+  'cal.legend.non_working_day': 'Non-working day',
   'cal.legend.note': 'Colors apply in the calendar and the appointment detail.',
   // Labels for the calendar-context toast (active filters reported to the client).
   'cal.toast.location_label': 'Location',

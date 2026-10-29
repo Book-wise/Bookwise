@@ -1,4 +1,4 @@
-import { isDayClosed, toYmd, isoWeekday, holidayNameFor } from './calendar-holidays.util';
+import { isDayClosed, dayClosedKind, toYmd, isoWeekday, holidayNameFor } from './calendar-holidays.util';
 
 describe('calendar-holidays util', () => {
   const localDate = (y: number, m: number, d: number) => new Date(y, m - 1, d);
@@ -32,5 +32,19 @@ describe('calendar-holidays util', () => {
     const holiday = new Map([['2026-01-01', 'Año Nuevo']]);
     expect(holidayNameFor(localDate(2026, 1, 1), holiday)).toBe('Año Nuevo');
     expect(holidayNameFor(localDate(2026, 1, 2), holiday)).toBeNull();
+  });
+
+  it('dayClosedKind prefers "holiday" over "closed" and returns null when open', () => {
+    const holiday = new Map([['2026-01-04', 'Feriado domingo']]); // domingo
+    const sunday = localDate(2026, 1, 4);
+    const monday = localDate(2026, 1, 5);
+    const monToSat = [1, 2, 3, 4, 5, 6];
+
+    // Feriado con bloqueo tiene prioridad sobre el weekday no laborable.
+    expect(dayClosedKind(sunday, monToSat, holiday, true)).toBe('holiday');
+    // Sin bloqueo, cae a "closed" porque el domingo no está en working_days.
+    expect(dayClosedKind(sunday, monToSat, holiday, false)).toBe('closed');
+    // Lunes normal, sin feriado → abierto.
+    expect(dayClosedKind(monday, monToSat, holiday, true)).toBeNull();
   });
 });

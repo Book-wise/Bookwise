@@ -45,7 +45,7 @@ import type { CalendarViewContext } from '@services/calendar-navigation.service'
 import { BookingStore } from '@core/stores/booking.store';
 import { HolidaysApiService } from '@services/api/holidays-api.service';
 import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
-import { isDayClosed, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
+import { dayClosedKind, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -1023,12 +1023,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private dayCellClassNames(arg: { date: Date }): string[] {
     const loc = this.locations().find((l) => l.id === this.selectedLocationId);
-    return isDayClosed(arg.date, loc?.working_days, this.holidaysByDate(), this.blockHolidays())
-      ? ['fc-day-closed']
-      : [];
+    const kind = dayClosedKind(
+      arg.date,
+      loc?.working_days,
+      this.holidaysByDate(),
+      this.blockHolidays(),
+    );
+    return kind ? [`fc-day-${kind}`] : []; // 'fc-day-holiday' | 'fc-day-closed'
   }
 
-  private holidayHeader(arg: { date: Date; text: string }): { html: string } {
+  private holidayHeader(arg: { date: Date; text: string; view: { type: string } }): { html: string } {
+    // En la vista mes el header son nombres de weekday, no fechas: no aplica.
+    if (!arg.view.type.startsWith('timeGrid')) return { html: arg.text };
     const name = holidayNameFor(arg.date, this.holidaysByDate());
     if (!name) return { html: arg.text };
     const safe = name.replace(
@@ -1036,7 +1042,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       (c: string) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
     );
-    return { html: `${arg.text}<span class="fc-holiday-label">${safe}</span>` };
+    if (this.isMobile()) {
+      return {
+        html: `${arg.text}<span class="fc-holiday-badge" title="${safe}" aria-label="${safe}">●</span>`,
+      };
+    }
+    return { html: `${arg.text}<span class="fc-holiday-label" title="${safe}">${safe}</span>` };
   }
 
   /** Preview duration for the slot click/date preview — follows the slot density. */
