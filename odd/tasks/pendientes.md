@@ -110,3 +110,33 @@ no responden en dev). Deploy del frontend desde `develop` (`cfd984d`) pendiente.
 **Otros**: review nativo por porción (no corrido); ramas no mergeadas (`feat/business-management`,
 `feature/ci-cd-deployment`, `master`) a decisión de seba; filtro de rango "Cumpleaños" (backend no lo
 implementó).
+
+## Actualización 2026-10-29 (feature de feriados completa)
+
+**Contrato nuevo mergeado en backend `develop` `ed801fb`** (review nativa aprobada):
+`GET /holidays` (`year` o `from`/`to`), `block_bookings_on_holidays` global (`/tenant/settings` +
+`auth/me → user.business`), `available_slots.meta.is_holiday`/`holiday_name`, y **retiro** de
+`locations.works_on_holidays`.
+
+**Frontend — implementado y review aprobado** (rama `feat/contract-catchup`, 10 commits locales, sin push):
+- `0ca1603` filtro de rol fuera del selector de la agenda.
+- `2a1f667` business-days T1/T2/T4/T5 (`working_days`, 422 `non_working_day`).
+- `80fd3f1` R3-002 (horas 'sin configurar' no se materializan al editar).
+- `b96d0b2` retiro de `locations.works_on_holidays` (+ `3383844` cleanups del verificador).
+- `3f591f9` `HolidaysApiService` + fix `available_slots` (`start_date`/shape/meta).
+- `66028b7` `TenantSettingsApiService` + toggle "Feriados" en `/admin/configuraciones`.
+- `e82e56e` sombreado admin (días cerrados + nombre de feriado).
+- `e6e347a` sombreado profesional (vía `auth.me().business`).
+- Badges de cobro: ya estaban implementados (`29b6c58`).
+- Verificación: `ng build` verde · suite **821 pass / 7 fail** (los 7 flaky preexistentes) · review
+  `review-984ef1f58c46b26b` aprobado y quemado (7 hallazgos informativos).
+
+**Pendiente (bloqueado)**:
+- **Deploy a dev**: ⛔ credenciales SSH del droplet (lo resuelve el encargado de DigitalOcean; no es
+  código/contrato). Cuando corra: deploy frontend (merge/push, decisión de seba) + ejecutar
+  `odd/tasks/deploy-feriados.md`.
+- **Caveats a validar en dev**: (1) `calendar.render()` al cargar feriados puede resetear el scroll de
+  la vista semana; (2) en el calendario del profesional, si `ReferenceStore` no hidrata locations, el
+  sombreado degrada a solo-feriados.
+- **Follow-ups del review** (informativos, sin corrección): R3-001/002/004 (sombreado/carga de feriados
+  + render), R3-003 (effect de settings), R3-005 (snapshot de horas), R3-006/007 (util/service).

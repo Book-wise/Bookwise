@@ -40,15 +40,16 @@ Calendario nacional en CORE, cargado con `php artisan holidays:sync {año}`. **2
 `working_days`. Es decisión de seba, pero el **diálogo de sucursal** debe mostrar los **7 días** con
 **lunes–sábado tildados**, para que sea evidente.
 
-## Tasks (pendiente; sin mergear)
+## Tasks (✅ implementado en frontend)
 
-- ⬜ T1 `Location` model: agregar `working_days?: number[]` y `works_on_holidays?: boolean`.
-- ⬜ T2 `location-dialog`: 7 checkboxes (lun–dom) con lun–sáb tildados por default + toggle
-  `works_on_holidays`; enviarlos en POST/PATCH; validar no vacío; mapear 422 `errors.working_days`.
-- ⬜ T3 Agenda: si `meta.is_working_day === false` → mostrar **"cerrado"** (día no laborable/feriado),
-  sin slots.
-- ⬜ T4 Reservas: mapear 422 `non_working_day` a un mensaje claro en el form de reserva.
-- ⬜ T5 i18n es/en + specs + `ng build` + suite.
+- ✅ T1 `Location` model: `working_days?: number[]` (+ `effective_opening_time`/`effective_closing_time`;
+  `opening_time`/`closing_time` nullable). `works_on_holidays` **retirado** por el contrato nuevo (L3).
+- ✅ T2 `location-dialog`: 7 checkboxes lun–dom (lun–sáb default) + validación no-vacío + payload
+  `working_days`; mapeo 422 `errors.working_days`. (El toggle de feriados migró al tenant, L3.)
+- ✅ T3 Agenda: sombreado de días cerrados (weekday fuera de `working_days` o feriado con
+  `block_bookings_on_holidays`) + nombre del feriado en el header. Admin y profesional.
+- ✅ T4 Reservas: 422 `non_working_day` → toast "Sucursal cerrada" (claves `biz.non_working_day`).
+- ✅ T5 i18n es/en + specs + `ng build` + suite.
 
 ## Log
 
@@ -65,3 +66,10 @@ Calendario nacional en CORE, cargado con `php artisan holidays:sync {año}`. **2
   feriado, blocked-slot style si el bloqueo está activo, chip informativo si no. **Aún NO en
   develop**: cablear contra el contrato, no verificar en dev hasta el hash. T1/T2 hechos salvo el
   toggle (migra a configuraciones); T3 pendiente; T4/T5 hechos.
+- L4 (2026-10-29, cierre frontend): feature **completa y review aprobada** (lineage
+  `review-984ef1f58c46b26b`, autoridad quemada). Contrato mergeado en backend `develop` `ed801fb`.
+  Toggle global con su sección en `/admin/configuraciones`; sombreado admin + profesional (este último
+  vía `auth.me().business.block_bookings_on_holidays`, porque `/tenant/settings` es admin-only).
+  Commits: `2a1f667` base, `80fd3f1` R3-002, `3f591f9` services, `66028b7` toggle, `e82e56e` admin
+  shading, `e6e347a` provider shading. **Deploy a dev BLOQUEADO por credenciales SSH del droplet**
+  (infra, no código). Checklist: `odd/tasks/deploy-feriados.md`.

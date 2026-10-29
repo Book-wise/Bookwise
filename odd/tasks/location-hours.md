@@ -59,16 +59,15 @@ configuradas distinto se conservan.
 
 ## Tasks
 
-- ⬜ T1 `Location` model: agregar `opening_time`, `closing_time`, `effective_opening_time`,
-  `effective_closing_time` (los dos primeros `string | null`; los `effective_*` `string`).
-- ⬜ T2 `location-dialog`: dos `<input type="time">` (apertura/cierre). Prellenar con `effective_*`
-  cuando `opening_time`/`closing_time` son `null`; enviar `opening_time`/`closing_time` en el PATCH.
-  Validar en el front "cierre > apertura" (además del 422 del backend) y mapear
-  `errors.opening_time`/`errors.closing_time`.
-- ⬜ T3 Agenda: dejar la grilla **fija 08:00–22:00** y verificar que **no** dependa de la sucursal
-  seleccionada (no redimensionar con `effective_*`).
-- ⬜ T4 i18n es/en (`locations.form.opening_time` / `closing_time` + mensaje de validación).
-- ⬜ T5 Specs + `ng build` + suite.
+- ✅ T1 `Location` model: `opening_time`/`closing_time` nullable + `effective_opening_time`/`effective_closing_time`.
+- ✅ T2 `location-dialog`: campos de hora ya existían; se agregó el **prefill con `effective_*`** cuando
+  `opening_time`/`closing_time` son `null`. La validación "cierre > apertura" en el front NO se agregó
+  (la cubre el 422 del backend `errors.closing_time`).
+- ✅ T3 Agenda: grilla **fija 00:00–24:00** (decisión de seba, no 08:00–22:00) y **no** se redimensiona
+  con `effective_*`.
+- ⬜ T4 i18n es/en de las etiquetas del diálogo: siguen hardcodeadas en ES (`Apertura`/`Cierre`), como el
+  resto del diálogo.
+- ✅ T5 Specs (preservación de horas en `location-dialog.component.spec.ts`) + `ng build`.
 
 ## Log
 
@@ -83,3 +82,6 @@ configuradas distinto se conservan.
   08:00), NO 08:00–22:00. El horario configurado sólo acota los slots. Backend mergeó
   `feat/location-hours` a `develop` (`131c26c`). Falta: deploy (`tenants:migrate`) + usar `effective_*`
   para mostrar la config en el diálogo de sucursal.
+- L4 (2026-10-29): `effective_*` en el modelo + prefill en el diálogo hechos (junto con R3-002: las horas
+  "sin configurar" no se materializan si no se editan). Contrato en backend `develop` `ed801fb`; deploy
+  a dev bloqueado por credenciales SSH del droplet.
