@@ -78,4 +78,32 @@ describe.each([
     expect(c.dayCellClassNames({ date: SAT })).toEqual(['fc-day-closed']); // sábado fuera de working_days
     expect(c.dayCellClassNames({ date: THU })).toEqual([]); // jueves normal abierto
   });
+
+  it('decorateHolidayHeader sets the title and, on mobile, a tap toast with the name', () => {
+    const c = harness(Ctor, HOLIDAYS, true);
+    const added: { detail?: string }[] = [];
+    c.messageService = { add: (m: { detail?: string }) => added.push(m) };
+    c.ngZone = { run: (fn: () => void) => fn() };
+    c.lang = { t: (k: string) => k };
+
+    const el = document.createElement('div');
+    c.decorateHolidayHeader({ date: WED, el, view: { type: 'timeGridWeek' } });
+
+    expect(el.title).toContain('Día');
+    expect(el.classList.contains('fc-holiday-header')).toBe(true);
+    el.dispatchEvent(new MouseEvent('click'));
+    expect(added).toHaveLength(1);
+    expect(added[0].detail).toContain('Día');
+  });
+
+  it('decorateHolidayHeader does nothing outside timeGrid views', () => {
+    const c = harness(Ctor, HOLIDAYS, true);
+    c.messageService = { add: () => {} };
+    const el = document.createElement('div');
+    el.title = 'keep';
+
+    c.decorateHolidayHeader({ date: WED, el, view: { type: 'dayGridMonth' } });
+
+    expect(el.title).toBe(''); // title retirado, sin toast
+  });
 });

@@ -278,6 +278,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     // del feriado en el header del día.
     dayCellClassNames: (arg) => this.dayCellClassNames(arg),
     dayHeaderContent: (arg) => this.holidayHeader(arg),
+    dayHeaderDidMount: (arg) => this.decorateHolidayHeader(arg),
   };
 
   /** Sucursales seleccionables: solo activas (C1). La intención de navegación
@@ -1048,6 +1049,38 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       };
     }
     return { html: `${arg.text}<span class="fc-holiday-label" title="${safe}">${safe}</span>` };
+  }
+
+  /** Nombre del feriado como tooltip del header del día; en mobile, tap → toast con el nombre. */
+  private decorateHolidayHeader(arg: {
+    date: Date;
+    el: HTMLElement;
+    view: { type: string };
+  }): void {
+    if (!arg.view.type.startsWith('timeGrid')) {
+      arg.el.removeAttribute('title');
+      return;
+    }
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (!name) {
+      arg.el.removeAttribute('title');
+      return;
+    }
+    arg.el.title = name;
+    if (!this.isMobile() || arg.el.dataset['holidayTap'] === '1') return;
+    arg.el.dataset['holidayTap'] = '1';
+    arg.el.classList.add('fc-holiday-header');
+    arg.el.addEventListener('click', () => {
+      this.ngZone.run(() =>
+        this.messageService.add({
+          severity: 'info',
+          summary: this.lang.t('cal.legend.holiday'),
+          detail: name,
+          life: 4000,
+          key: 'global',
+        }),
+      );
+    });
   }
 
   /** Preview duration for the slot click/date preview — follows the slot density. */

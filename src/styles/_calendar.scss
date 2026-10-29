@@ -331,6 +331,11 @@
   vertical-align: middle;
 }
 
+/* Header de un día feriado: en mobile es tappable para ver el nombre completo. */
+.fc-holiday-header {
+  cursor: pointer;
+}
+
 .fc .fc-timegrid-slot {
   height: 1.25rem;
 }
