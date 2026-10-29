@@ -211,7 +211,7 @@ describe('LocationDialogComponent', () => {
 
   // ── Días laborables + feriados (business-days) ────────────────────
 
-  describe('working days + holidays', () => {
+  describe('working days', () => {
     beforeEach(async () => {
       await setup();
     });

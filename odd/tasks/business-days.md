@@ -57,3 +57,11 @@ Calendario nacional en CORE, cargado con `php artisan holidays:sync {año}`. **2
   cuando se mergee.
 - L2 (cierre 2026-10-28): **mergeado y pusheado** en backend `develop` (`131c26c`). Falta deploy
   (`tenants:migrate` + migración `holidays`). Implementar T1–T5.
+- L3 (2026-10-29, contrato NUEVO del backend): el bloqueo de feriados deja de ser por sucursal.
+  Se **retira** `locations.works_on_holidays` (hecho en frontend, commit `b96d0b2`); la fuente pasa a
+  un **toggle global del tenant** `block_bookings_on_holidays` (`GET`/`PATCH /tenant/settings`,
+  default `true`, en `/admin/configuraciones`). Nuevo `GET /holidays?year=` → `{data:[{date,name}]}`.
+  `available_slots.meta` suma `is_holiday` + `holiday_name`. Sombreado: header con nombre del
+  feriado, blocked-slot style si el bloqueo está activo, chip informativo si no. **Aún NO en
+  develop**: cablear contra el contrato, no verificar en dev hasta el hash. T1/T2 hechos salvo el
+  toggle (migra a configuraciones); T3 pendiente; T4/T5 hechos.
