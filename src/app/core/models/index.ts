@@ -230,7 +230,11 @@ export interface Holiday {
 
 /** Configuración global del tenant (`GET`/`PATCH /tenant/settings`). */
 export interface TenantSettings {
-  block_bookings_on_holidays: boolean;
+  business_name?: string;
+  business_rut?: string;
+  business_logo_url?: string | null;
+  /** Default `true` en el backend; puede faltar hasta que se despliegue. */
+  block_bookings_on_holidays?: boolean;
 }
 
 export interface ProviderAvailability {

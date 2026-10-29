@@ -111,5 +111,22 @@
         <p class="settings-hint">{{ lang.t('settings.business.hint') }}</p>
       </p-card>
     }
+
+    <!-- ── Feriados (admin) ──────────────────────────────────── -->
+    @if (isAdmin()) {
+      <p-card [header]="lang.t('settings.holidays')" class="settings-card">
+        <div class="setting-row">
+          <div class="setting-row__label">
+            <span>{{ lang.t('settings.holidays.block') }}</span>
+            <small>{{ lang.t('settings.holidays.block.hint') }}</small>
+          </div>
+          <p-toggleswitch
+            [ngModel]="blockHolidays() ?? false"
+            (ngModelChange)="onBlockHolidaysChange($event)"
+            [disabled]="blockHolidays() === null || savingHolidays()"
+          />
+        </div>
+      </p-card>
+    }
   </div>
 </div>
