@@ -216,13 +216,12 @@ describe('LocationDialogComponent', () => {
       await setup();
     });
 
-    it('create mode defaults to Mon–Sat working days and works_on_holidays false', () => {
+    it('create mode defaults to Mon–Sat working days', () => {
       open('create', null);
       expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5, 6]);
-      expect(component.form.controls.worksOnHolidays.value).toBe(false);
     });
 
-    it('sends working_days and works_on_holidays in the create payload', () => {
+    it('sends working_days in the create payload', () => {
       open('create', null);
       component.form.controls.name.setValue(required.name);
       component.form.controls.address.setValue(required.address);
@@ -231,14 +230,13 @@ describe('LocationDialogComponent', () => {
       component.onSave();
 
       expect(locationsApi.createLocation).toHaveBeenCalledWith(
-        expect.objectContaining({ working_days: [1, 2, 3, 4, 5, 6], works_on_holidays: false }),
+        expect.objectContaining({ working_days: [1, 2, 3, 4, 5, 6] }),
       );
     });
 
-    it('edit mode prefills working_days and works_on_holidays from the location', () => {
-      open('edit', baseLocation({ working_days: [1, 2, 3, 4, 5], works_on_holidays: true }));
+    it('edit mode prefills working_days from the location', () => {
+      open('edit', baseLocation({ working_days: [1, 2, 3, 4, 5] }));
       expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5]);
-      expect(component.form.controls.worksOnHolidays.value).toBe(true);
     });
 
     it('edit mode defaults working_days to Mon–Sat when the location has none', () => {

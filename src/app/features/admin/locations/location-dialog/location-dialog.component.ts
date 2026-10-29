@@ -83,7 +83,6 @@ export class LocationDialogComponent {
     openingTime: new FormControl<Date | null>(null),
     closingTime: new FormControl<Date | null>(null),
     workingDays: new FormControl<number[]>([1, 2, 3, 4, 5, 6], { validators: [nonEmptyWorkingDays] }),
-    worksOnHolidays: new FormControl(false, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
   });
 
@@ -129,7 +128,6 @@ export class LocationDialogComponent {
             openingTime: this.parseTimeToDate(loc.opening_time ?? loc.effective_opening_time),
             closingTime: this.parseTimeToDate(loc.closing_time ?? loc.effective_closing_time),
             workingDays: loc.working_days ?? [1, 2, 3, 4, 5, 6],
-            worksOnHolidays: loc.works_on_holidays ?? false,
             active: loc.active,
           });
         } else {
@@ -143,7 +141,6 @@ export class LocationDialogComponent {
             openingTime: null,
             closingTime: null,
             workingDays: [1, 2, 3, 4, 5, 6],
-            worksOnHolidays: false,
             active: true,
           });
         }
@@ -220,7 +217,6 @@ export class LocationDialogComponent {
       comuna_id: raw.comunaId ?? undefined,
       codigo_postal: raw.codigoPostal?.trim() || undefined,
       working_days: raw.workingDays ?? [],
-      works_on_holidays: raw.worksOnHolidays,
       active: raw.active!,
     };
     // Solo se envían las horas que el admin editó: un horario "sin configurar"

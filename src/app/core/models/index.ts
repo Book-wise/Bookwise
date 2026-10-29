@@ -35,7 +35,6 @@ export interface Location {
   effective_opening_time?: string;
   effective_closing_time?: string;
   working_days?: number[];
-  works_on_holidays?: boolean;
   active: boolean;
   created_at?: string;
   updated_at?: string;
