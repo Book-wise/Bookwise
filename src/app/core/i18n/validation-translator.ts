@@ -42,6 +42,8 @@ const FIELD_LABELS_ES: Record<string, string> = {
   name: 'el nombre',
   phone: 'el teléfono',
   scope: 'el alcance',
+  'working days': 'al menos un día laborable',
+  'works on holidays': 'la opción de trabajar en feriados',
 };
 
 function labelEs(attribute: string): string {

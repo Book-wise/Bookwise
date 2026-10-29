@@ -101,10 +101,12 @@ export const ES: Record<string, string> = {
   // Business errors — summary
   'biz.sale_already_exists':          'Venta duplicada',
   'biz.amount_exceeds_remaining':     'Monto supera el saldo',
+  'biz.non_working_day':              'Sucursal cerrada',
 
   // Business errors — detail
   'biz.sale_already_exists.detail':       'Ya existe una venta para este concepto.',
   'biz.amount_exceeds_remaining.detail':  'El monto supera el saldo pendiente de la venta.',
+  'biz.non_working_day.detail':           'La sucursal no atiende en la fecha indicada: día no laborable o feriado.',
 
   'biz.invalid_input.detail':              'Verifica los campos e intenta de nuevo.',
   'biz.forbidden.detail':                  'No tienes permisos para realizar esta acción.',

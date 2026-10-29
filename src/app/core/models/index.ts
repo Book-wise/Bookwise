@@ -30,8 +30,12 @@ export interface Location {
   comuna?: LocationComuna;
   timezone: string;
   codigo_postal?: string;
-  opening_time?: string;
-  closing_time?: string;
+  opening_time?: string | null;
+  closing_time?: string | null;
+  effective_opening_time?: string;
+  effective_closing_time?: string;
+  working_days?: number[];
+  works_on_holidays?: boolean;
   active: boolean;
   created_at?: string;
   updated_at?: string;

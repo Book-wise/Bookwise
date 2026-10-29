@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -14,6 +14,10 @@ import { LanguageService } from '@services/language.service';
 import { Router } from '@angular/router';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location } from '@models';
+
+/** Requiere al menos un día laborable seleccionado (working_days no vacío). */
+const nonEmptyWorkingDays = (control: AbstractControl): ValidationErrors | null =>
+  Array.isArray(control.value) && control.value.length > 0 ? null : { required: true };
 
 export type DialogMode = 'create' | 'edit' | 'view';
 
@@ -53,6 +57,17 @@ export class LocationDialogComponent {
   /** Internal mode allows override from view→edit via switchToEdit(). */
   private internalMode = signal<DialogMode>('create');
 
+  /** Días de la semana (ISO 1=lunes … 7=domingo) para los checkboxes de atención. */
+  readonly weekDays = [
+    { value: 1, label: 'Lun' },
+    { value: 2, label: 'Mar' },
+    { value: 3, label: 'Mié' },
+    { value: 4, label: 'Jue' },
+    { value: 5, label: 'Vie' },
+    { value: 6, label: 'Sáb' },
+    { value: 7, label: 'Dom' },
+  ];
+
   form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -62,6 +77,8 @@ export class LocationDialogComponent {
     codigoPostal: new FormControl('', { nonNullable: true }),
     openingTime: new FormControl<Date | null>(null),
     closingTime: new FormControl<Date | null>(null),
+    workingDays: new FormControl<number[]>([1, 2, 3, 4, 5, 6], { validators: [nonEmptyWorkingDays] }),
+    worksOnHolidays: new FormControl(false, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
   });
 
@@ -104,8 +121,10 @@ export class LocationDialogComponent {
             regionId: loc.region_id ?? null,
             comunaId: loc.comuna_id ?? null,
             codigoPostal: loc.codigo_postal ?? '',
-            openingTime: this.parseTimeToDate(loc.opening_time),
-            closingTime: this.parseTimeToDate(loc.closing_time),
+            openingTime: this.parseTimeToDate(loc.opening_time ?? loc.effective_opening_time),
+            closingTime: this.parseTimeToDate(loc.closing_time ?? loc.effective_closing_time),
+            workingDays: loc.working_days ?? [1, 2, 3, 4, 5, 6],
+            worksOnHolidays: loc.works_on_holidays ?? false,
             active: loc.active,
           });
         } else {
@@ -118,6 +137,8 @@ export class LocationDialogComponent {
             codigoPostal: '',
             openingTime: null,
             closingTime: null,
+            workingDays: [1, 2, 3, 4, 5, 6],
+            worksOnHolidays: false,
             active: true,
           });
         }
@@ -161,6 +182,19 @@ export class LocationDialogComponent {
     }
   }
 
+  hasWorkingDay(day: number): boolean {
+    return (this.form.controls.workingDays.value ?? []).includes(day);
+  }
+
+  toggleWorkingDay(day: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const current = this.form.controls.workingDays.value ?? [];
+    const next = checked
+      ? [...current, day].sort((a, b) => a - b)
+      : current.filter((d) => d !== day);
+    this.form.controls.workingDays.setValue(next);
+  }
+
   switchToEdit(): void {
     this.editRequested.emit();
   }
@@ -178,6 +212,8 @@ export class LocationDialogComponent {
       codigo_postal: raw.codigoPostal?.trim() || undefined,
       opening_time: this.formatTimeToString(raw.openingTime),
       closing_time: this.formatTimeToString(raw.closingTime),
+      working_days: raw.workingDays ?? [],
+      works_on_holidays: raw.worksOnHolidays,
       active: raw.active!,
     };
 

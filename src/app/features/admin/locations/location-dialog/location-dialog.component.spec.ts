@@ -208,4 +208,71 @@ describe('LocationDialogComponent', () => {
       expect(component.capacityError()).toBe(false);
     });
   });
+
+  // ── Días laborables + feriados (business-days) ────────────────────
+
+  describe('working days + holidays', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    it('create mode defaults to Mon–Sat working days and works_on_holidays false', () => {
+      open('create', null);
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5, 6]);
+      expect(component.form.controls.worksOnHolidays.value).toBe(false);
+    });
+
+    it('sends working_days and works_on_holidays in the create payload', () => {
+      open('create', null);
+      component.form.controls.name.setValue(required.name);
+      component.form.controls.address.setValue(required.address);
+      component.form.controls.city.setValue(required.city);
+      component.form.controls.regionId.setValue(required.regionId);
+      component.onSave();
+
+      expect(locationsApi.createLocation).toHaveBeenCalledWith(
+        expect.objectContaining({ working_days: [1, 2, 3, 4, 5, 6], works_on_holidays: false }),
+      );
+    });
+
+    it('edit mode prefills working_days and works_on_holidays from the location', () => {
+      open('edit', baseLocation({ working_days: [1, 2, 3, 4, 5], works_on_holidays: true }));
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5]);
+      expect(component.form.controls.worksOnHolidays.value).toBe(true);
+    });
+
+    it('edit mode defaults working_days to Mon–Sat when the location has none', () => {
+      open('edit', baseLocation());
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('prefills opening/closing time from effective_* when opening/closing are null', () => {
+      open(
+        'edit',
+        baseLocation({
+          opening_time: null,
+          closing_time: null,
+          effective_opening_time: '08:00:00',
+          effective_closing_time: '22:00:00',
+        }),
+      );
+      expect(component.form.controls.openingTime.value?.getHours()).toBe(8);
+      expect(component.form.controls.closingTime.value?.getHours()).toBe(22);
+    });
+
+    it('toggling a day off removes it and toggling back re-adds it sorted', () => {
+      open('create', null);
+      const evt = (checked: boolean) => ({ target: { checked } }) as unknown as Event;
+      component.toggleWorkingDay(3, evt(false));
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 4, 5, 6]);
+      component.toggleWorkingDay(7, evt(true));
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 4, 5, 6, 7]);
+    });
+
+    it('marks the form invalid when all working days are unchecked', () => {
+      open('create', null);
+      component.form.controls.workingDays.setValue([]);
+      expect(component.form.controls.workingDays.invalid).toBe(true);
+    });
+  });
 });

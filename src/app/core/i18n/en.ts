@@ -101,10 +101,12 @@ export const EN: Record<string, string> = {
   // Business errors — summary
   'biz.sale_already_exists':          'Duplicate sale',
   'biz.amount_exceeds_remaining':     'Amount exceeds balance',
+  'biz.non_working_day':              'Location closed',
 
   // Business errors — detail
   'biz.sale_already_exists.detail':       'A sale already exists for this concept.',
   'biz.amount_exceeds_remaining.detail':  'The amount exceeds the remaining balance of the sale.',
+  'biz.non_working_day.detail':           'This location is closed on the selected date: non-working day or holiday.',
 
   'biz.invalid_input.detail':              'Check your fields and try again.',
   'biz.forbidden.detail':                  'You do not have permission to perform this action.',
