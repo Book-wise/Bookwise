@@ -43,6 +43,9 @@ import { TenantSwitchService } from '@services/tenant-switch.service';
 import type { TenantSwitchResult } from '@services/tenant-switch.service';
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
+import { HolidaysApiService } from '@services/api/holidays-api.service';
+import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
+import { isDayClosed, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -103,6 +106,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly auth = inject(AuthService);
   private readonly calendarPrefs = inject(CalendarPrefsService);
   private readonly tenantSwitch = inject(TenantSwitchService);
+  private readonly holidaysApi = inject(HolidaysApiService);
+  private readonly tenantSettingsApi = inject(TenantSettingsApiService);
+
+  /** Feriados cargados por fecha (`YYYY-MM-DD` → nombre). */
+  private readonly holidaysByDate = signal<HolidayMap>(new Map());
+  /** Bloqueo global de feriados del tenant (default `true`). */
+  private readonly blockHolidays = signal(true);
+  private readonly loadedHolidayYears = new Set<number>();
 
   /**
    * Last tenant-switch result applied by the effect below. Primed with the
@@ -263,6 +274,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     // Sin snapDuration explícito: FullCalendar usa por defecto snap = slotDuration,
     // así la selección click/drag sigue la densidad del grid.
     contentHeight: this.getContentHeight(),
+    // Sombreado de días cerrados (no laborables o feriados bloqueados) + nombre
+    // del feriado en el header del día.
+    dayCellClassNames: (arg) => this.dayCellClassNames(arg),
+    dayHeaderContent: (arg) => this.holidayHeader(arg),
   };
 
   /** Sucursales seleccionables: solo activas (C1). La intención de navegación
@@ -357,6 +372,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
+    this.loadHolidayConfig();
   }
 
   ngAfterViewInit(): void {
@@ -906,6 +922,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
     this.onFilterChange();
+    this.rerenderDays();
   }
 
   /**
@@ -954,6 +971,57 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private fmt(iso: string): string {
     return this.tzService.formatTime(iso);
+  }
+
+  /** Carga el bloqueo global de feriados + los feriados de años vecinos. */
+  private loadHolidayConfig(): void {
+    this.tenantSettingsApi.getSettings().subscribe({
+      next: (s) => {
+        this.blockHolidays.set(s.block_bookings_on_holidays ?? true);
+        this.rerenderDays();
+      },
+      error: () => {}, // fallback: los feriados bloquean por defecto
+    });
+    const year = new Date().getFullYear();
+    [year - 1, year, year + 1].forEach((y) => this.loadHolidayYear(y));
+  }
+
+  private loadHolidayYear(year: number): void {
+    if (this.loadedHolidayYears.has(year)) return;
+    this.loadedHolidayYears.add(year);
+    this.holidaysApi.getHolidays({ year }).subscribe({
+      next: (list) => {
+        const map = new Map(this.holidaysByDate());
+        list.forEach((h) => map.set(h.date, h.name));
+        this.holidaysByDate.set(map);
+        this.rerenderDays();
+      },
+      error: () => this.loadedHolidayYears.delete(year),
+    });
+  }
+
+  /** Re-renderiza las celdas-día para reflejar feriados/bloqueo. */
+  private rerenderDays(): void {
+    if (!this.calendar) return;
+    this.ngZone.runOutsideAngular(() => this.calendar!.render());
+  }
+
+  private dayCellClassNames(arg: { date: Date }): string[] {
+    const loc = this.locations().find((l) => l.id === this.selectedLocationId);
+    return isDayClosed(arg.date, loc?.working_days, this.holidaysByDate(), this.blockHolidays())
+      ? ['fc-day-closed']
+      : [];
+  }
+
+  private holidayHeader(arg: { date: Date; text: string }): { html: string } {
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (!name) return { html: arg.text };
+    const safe = name.replace(
+      /[&<>"']/g,
+      (c: string) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+    );
+    return { html: `${arg.text}<span class="fc-holiday-label">${safe}</span>` };
   }
 
   /** Preview duration for the slot click/date preview — follows the slot density. */

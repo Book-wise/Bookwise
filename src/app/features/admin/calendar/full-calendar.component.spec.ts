@@ -13,6 +13,8 @@ import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service'
 import { BookingsApiService } from '@services/api/bookings-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
+import { HolidaysApiService } from '@services/api/holidays-api.service';
+import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
 import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
@@ -215,6 +217,8 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
         { provide: BookingsApiService, useValue: mockBookingsApi },
         { provide: ServicesApiService, useValue: mockServicesApi },
         { provide: ClientsApiService, useValue: mockClientsApi },
+        { provide: HolidaysApiService, useValue: { getHolidays: vi.fn(() => of([])) } },
+        { provide: TenantSettingsApiService, useValue: { getSettings: vi.fn(() => of({ block_bookings_on_holidays: true })) } },
         { provide: MessageService, useValue: mockMessageService },
         { provide: HttpErrorService, useValue: mockHttpError },
         // REAL service — the transactional consumption is the behavior under test

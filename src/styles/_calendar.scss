@@ -288,6 +288,28 @@
   background-color: rgba(59, 130, 246, 0.1) !important;
 }
 
+/* Días cerrados: no laborable por working_days o feriado bloqueado. */
+.fc .fc-day-closed {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(156, 163, 175, 0.12) 0px,
+    rgba(156, 163, 175, 0.12) 6px,
+    transparent 6px,
+    transparent 14px
+  ) !important;
+}
+
+.fc-holiday-label {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #b45309;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .fc .fc-timegrid-slot {
   height: 1.25rem;
 }
