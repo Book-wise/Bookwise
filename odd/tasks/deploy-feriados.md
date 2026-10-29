@@ -56,7 +56,7 @@ Rama frontend: `feat/contract-catchup` (10 commits locales, sin push).
 ### 3.3 Agenda admin (`/admin/calendar`)
 - [ ] **Feriados del año**: el frontend carga el **año actual ±1** (`new Date().getFullYear()`, dinámico) en ambas agendas — el año en curso siempre está cubierto. Verificar con un feriado del año actual y, si se puede, cruzar al año siguiente (ene del año+1 ya cargado).
 - [ ] Día con weekday **fuera** de `working_days` de la sucursal elegida → celda **rayada** (`.fc-day-closed`).
-- [ ] **Feriado con bloqueo ON** → celda rayada **y** nombre del feriado en el header del día.
+- [ ] **Feriado con bloqueo ON** → celda con patrón **ámbar** (`.fc-day-holiday`) **y** nombre del feriado en el header del día (escritorio). En **mobile**, badge `●` con el nombre en tooltip.
 - [ ] **Feriado con bloqueo OFF** → etiqueta/nombre del feriado **sin** rayado; la agenda opera normal.
 - [ ] Cambiar de sucursal A → B → el sombreado se recalcula según `working_days` de cada una.
 - [ ] **Scroll**: `rerenderDays()` ahora **guarda/restaura** el scroll de `.fc-scroller` alrededor de `calendar.render()`. Verificar que al cargar feriados o cambiar de sucursal la vista **semana** no salta a 08:00.
@@ -65,6 +65,7 @@ Rama frontend: `feat/contract-catchup` (10 commits locales, sin push).
 - [ ] Sombreado de **feriados** según `auth.me().business.block_bookings_on_holidays`.
 - [ ] Sombreado de **días no laborables** según `working_days` de su sucursal (vía `ReferenceStore`).
 - [ ] **Hidratación**: se re-renderiza al cambiar `ReferenceStore.locations()`, así el sombreado por **weekday** aparece cuando llegan las locations (no solo feriados). Verificar que aparece.
+- [ ] **Mobile**: en vista semana, el nombre del feriado se ve como badge `●` con tooltip.
 - [ ] Mismo chequeo de scroll que 3.3.
 
 ### 3.5 Reservas en feriado bloqueado
@@ -75,6 +76,9 @@ Rama frontend: `feat/contract-catchup` (10 commits locales, sin push).
 - [ ] Selector de profesionales de la agenda: muestra **todos los activos** (incluida Ana, recepcionista) — sin filtro de rol.
 - [ ] Badges de cobro en eventos: `paid` → `$`, `partial` → `A`, `unpaid` → sin badge (igual que la leyenda).
 - [ ] `available_slots` con el shape nuevo (`start`/`end`/`meta`) no rompe nada (no tenía consumidores productivos; solo specs).
+
+- [ ] El botón de la guía de estados (icono `?`) **abre con click y cierra con un segundo click**.
+- [ ] La guía incluye **"Feriado (cerrado)"** (swatch ámbar) y **"Día no laborable"** (swatch gris claro).
 
 ## 4. Regresión automatizada
 - [ ] Suite completa: esperar **~7 flaky preexistentes** (`calendar-navigation`, `booking-detail-dialog`, `booking-form-dialog` ×2, `historial-reserva` ×3). Nada nuevo en locations/calendario/config.
