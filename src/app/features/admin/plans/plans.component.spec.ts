@@ -235,13 +235,16 @@ function mountPlans(
   sub: Subscription | null,
   onSetAddon: (type: string, quantity: number) => Observable<{ data: Subscription }> = () =>
     of({ data: sub as Subscription }),
+  onInvalidateSubscription: () => void = () => {},
 ): {
   component: PlansComponent;
   setAddon: ReturnType<typeof vi.fn>;
   httpError: { handle: ReturnType<typeof vi.fn> };
+  invalidateSubscription: ReturnType<typeof vi.fn>;
 } {
   const setAddon = vi.fn(onSetAddon);
   const httpError = { handle: vi.fn() };
+  const invalidateSubscription = vi.fn(onInvalidateSubscription);
 
   TestBed.configureTestingModule({
     imports: [PlansComponent],
@@ -257,6 +260,7 @@ function mountPlans(
           loadPlans: vi.fn(),
           loadSubscription: vi.fn(),
           setAddon,
+          invalidateSubscription,
         },
       },
       { provide: HttpErrorService, useValue: httpError },
@@ -266,7 +270,7 @@ function mountPlans(
 
   const component = TestBed.createComponent(PlansComponent).componentInstance;
   component.ngOnInit();
-  return { component, setAddon, httpError };
+  return { component, setAddon, httpError, invalidateSubscription };
 }
 
 describe('PlansComponent — borrador de add-ons (barra flotante)', () => {
@@ -377,3 +381,37 @@ describe('PlansComponent — borrador de add-ons (barra flotante)', () => {
   });
 });
 
+describe('PlansComponent — seguridad de cobro del borrador', () => {
+  it('shows the server canonical total while there is no draft', () => {
+    const sub = withAddonCatalog(makeSubscription('month'));
+    // El servidor manda un total que NO coincide con el cálculo local de packs
+    // (p. ej. porque cambió el precio del plan): sin borrador manda el servidor.
+    sub.total_price_clp = 61_000;
+    const { component } = mountPlans(sub);
+
+    expect(component.hasDraftChanges()).toBe(false);
+    expect(component.draftTotal()).toBe(61_000);
+
+    // Con borrador, el total es el del borrador (estimación del período).
+    component.changeQuantity('whatsapp', 1);
+    expect(component.draftTotal()).toBe(56_990);
+  });
+
+  it('re-syncs the subscription after a failed confirm so the UI never lies', () => {
+    const sub = withAddonCatalog(makeSubscription('month'));
+    const invalidateSubscription = vi.fn();
+    const { component } = mountPlans(
+      sub,
+      () => throwError(() => new Error('boom')),
+      invalidateSubscription,
+    );
+
+    component.changeQuantity('whatsapp', 1);
+    component.confirmChanges();
+
+    // La verdad la tiene el servidor: se vuelve a pedir la suscripción.
+    expect(invalidateSubscription).toHaveBeenCalledTimes(1);
+    // Y el cambio sigue pendiente para reintentar.
+    expect(component.pendingAddons().map((p) => p.type)).toEqual(['whatsapp']);
+  });
+});

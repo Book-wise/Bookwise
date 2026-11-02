@@ -129,8 +129,16 @@ export class PlansComponent implements OnInit {
     this.summaryAddons().reduce((sum, line) => sum + line.price, 0),
   );
 
-  /** Total del período (plan + add-ons) con el borrador aplicado. */
-  readonly draftTotal = computed(() => (this.currentPlan()?.price_clp ?? 0) + this.addonsSubtotal());
+  /**
+   * Total del período (plan + add-ons). Sin borrador manda el valor CANÓNICO del
+   * servidor (`total_price_clp`); con borrador se estima localmente para que el
+   * usuario vea el efecto de sus cambios antes de confirmar.
+   */
+  readonly draftTotal = computed(() => {
+    const sub = this.store.subscription();
+    if (!this.hasDraftChanges()) return sub?.total_price_clp ?? 0;
+    return (sub?.plan?.price_clp ?? 0) + this.addonsSubtotal();
+  });
 
   ngOnInit(): void {
     this.store.loadPlans();
@@ -288,6 +296,9 @@ export class PlansComponent implements OnInit {
       },
       error: (err) => {
         this.confirming.set(false);
+        // Parcial: algún canal pudo quedar aplicado. La verdad la tiene el
+        // servidor, así que se re-sincroniza en vez de confiar en el borrador.
+        this.store.invalidateSubscription();
         this.httpError.handle(err, this.lang.t('plans.addons_title'));
       },
     });
