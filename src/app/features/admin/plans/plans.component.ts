@@ -74,13 +74,63 @@ export class PlansComponent implements OnInit {
 
   /** Add-ons contratados por la cuenta (vienen en GET /v1/subscription). */
   readonly addons = computed(() => this.store.subscription()?.addons ?? []);
-  readonly addonsTotal = computed(() => this.store.subscription()?.addons_total_clp ?? 0);
-  readonly totalPrice = computed(() => this.store.subscription()?.total_price_clp ?? 0);
 
   /** Catálogo de packs disponibles (credits + precio por canal). */
   readonly addonCatalog = computed(() => this.store.subscription()?.addon_catalog ?? []);
-  /** Tipo de add-on que se está persistiendo (para el spinner del stepper). */
-  readonly savingAddon = signal<string | null>(null);
+  /**
+   * Borrador de add-ons: cantidad objetivo por canal, solo para los canales que
+   * el usuario cambió y todavía NO se persistieron. El stepper escribe acá y
+   * nada llega al backend hasta que se confirma (barra flotante).
+   */
+  readonly draftAddons = signal<Partial<Record<'email' | 'whatsapp', number>>>({});
+  /** True mientras se aplican los PUT del borrador (barra flotante en curso). */
+  readonly confirming = signal(false);
+
+  /** Canales con los que trabaja la pantalla (catálogo primero, luego persistidos). */
+  private readonly channelTypes = computed<string[]>(() => {
+    const types = new Set<string>();
+    for (const item of this.addonCatalog()) types.add(item.type);
+    for (const addon of this.addons()) types.add(addon.type);
+    return [...types];
+  });
+
+  /** Cambios del borrador respecto de lo persistido (canal por canal). */
+  readonly pendingAddons = computed(() => {
+    const draft = this.draftAddons();
+    const pending: { type: string; from: number; to: number }[] = [];
+    for (const type of this.channelTypes()) {
+      const target = draft[type as 'email' | 'whatsapp'];
+      if (target == null) continue;
+      const from = this.serverQuantity(type);
+      if (target !== from) pending.push({ type, from, to: target });
+    }
+    return pending;
+  });
+
+  readonly hasDraftChanges = computed(() => this.pendingAddons().length > 0);
+
+  /** Add-ons que muestra el resumen: canal con packs, ya en el borrador. */
+  readonly summaryAddons = computed(() =>
+    this.channelTypes()
+      .map((type) => {
+        const quantity = this.quantityFor(type);
+        return {
+          type,
+          quantity,
+          credits: quantity * this.creditsPerPack(type),
+          price: quantity * this.unitPrice(type),
+        };
+      })
+      .filter((line) => line.quantity > 0),
+  );
+
+  /** Subtotal de add-ons con el borrador aplicado. */
+  readonly addonsSubtotal = computed(() =>
+    this.summaryAddons().reduce((sum, line) => sum + line.price, 0),
+  );
+
+  /** Total del período (plan + add-ons) con el borrador aplicado. */
+  readonly draftTotal = computed(() => (this.currentPlan()?.price_clp ?? 0) + this.addonsSubtotal());
 
   ngOnInit(): void {
     this.store.loadPlans();
@@ -141,13 +191,10 @@ export class PlansComponent implements OnInit {
     return items;
   }
 
-  /** Etiqueta legible de un add-on contratado (canal + packs). */
-  addonLabel(addon: { type: string; quantity: number; credits_per_pack: number }): string {
-    const channel = addon.type === 'whatsapp'
-      ? this.lang.t('billing.usage.whatsapp')
-      : this.lang.t('billing.usage.email');
-    const credits = addon.quantity * addon.credits_per_pack;
-    return `${channel} · ${this.lang.t('plans.addon_credits', { n: String(credits) })}`;
+  /** Etiqueta legible de una línea del resumen (canal + créditos del borrador). */
+  addonLabel(line: { type: string; credits: number }): string {
+    const channel = this.lang.t(`billing.usage.${line.type}`);
+    return `${channel} · ${this.lang.t('plans.addon_credits', { n: String(line.credits) })}`;
   }
 
   price(value: number): string {
@@ -156,38 +203,100 @@ export class PlansComponent implements OnInit {
 
   // ── Add-ons (packs de confirmaciones) ───────────────────────────────────────
 
-  /** Cantidad de packs contratados de un canal. */
-  quantityFor(type: string): number {
+  /** Cantidad de packs persistida en el servidor para un canal. */
+  serverQuantity(type: string): number {
     return this.addons().find((a) => a.type === type)?.quantity ?? 0;
   }
 
-  /** Créditos totales del canal hoy (límite del plan + packs contratados). */
+  /** Cantidad visible: la del borrador si el canal tiene cambios pendientes. */
+  quantityFor(type: string): number {
+    return this.draftAddons()[type as 'email' | 'whatsapp'] ?? this.serverQuantity(type);
+  }
+
+  /** Créditos por pack del canal (catálogo; fallback al add-on persistido). */
+  creditsPerPack(type: string): number {
+    const fromCatalog = this.addonCatalog().find((i) => i.type === type)?.credits_per_pack;
+    if (fromCatalog != null) return fromCatalog;
+    return this.addons().find((a) => a.type === type)?.credits_per_pack ?? 0;
+  }
+
+  /** Precio de un pack del canal (catálogo; fallback al precio persistido). */
+  unitPrice(type: string): number {
+    const fromCatalog = this.addonCatalog().find((i) => i.type === type)?.price_clp;
+    if (fromCatalog != null) return fromCatalog;
+    const addon = this.addons().find((a) => a.type === type);
+    if (!addon || addon.quantity === 0) return 0;
+    return Math.round(addon.price_clp / addon.quantity);
+  }
+
+  /** Créditos totales del canal (límite del plan + packs del borrador). */
   creditsFor(type: string): number {
     const plan = this.currentPlan();
     if (!plan) return 0;
     const base = type === 'whatsapp'
       ? (plan.whatsapp_monthly_limit ?? 0)
       : (plan.email_monthly_limit ?? 0);
-    const extra = this.addons()
-      .filter((a) => a.type === type)
-      .reduce((sum, a) => sum + a.quantity * a.credits_per_pack, 0);
-    return base + extra;
+    return base + this.quantityFor(type) * this.creditsPerPack(type);
   }
 
-  /** Suma/resta un pack de un canal (PUT /subscription/addons). */
+  /**
+   * Suma/resta un pack de un canal en el BORRADOR (sin tocar el backend).
+   * Volver a la cantidad persistida borra el cambio pendiente del canal.
+   */
   changeQuantity(type: 'email' | 'whatsapp', delta: number): void {
-    if (this.savingAddon()) return;
-    const next = Math.max(0, Math.min(100, this.quantityFor(type) + delta));
-    if (next === this.quantityFor(type)) return;
+    if (this.confirming()) return;
+    const current = this.quantityFor(type);
+    const next = Math.max(0, Math.min(100, current + delta));
+    if (next === current) return;
 
-    this.savingAddon.set(type);
-    this.store.setAddon(type, next).subscribe({
-      next: () => this.savingAddon.set(null),
+    const draft = { ...this.draftAddons() };
+    if (next === this.serverQuantity(type)) delete draft[type];
+    else draft[type] = next;
+    this.draftAddons.set(draft);
+  }
+
+  /** Descarta el borrador y vuelve a lo persistido. */
+  cancelChanges(): void {
+    if (this.confirming()) return;
+    this.draftAddons.set({});
+  }
+
+  /**
+   * Aplica el borrador: un PUT por canal cambiado, en serie. Si uno falla, corta
+   * y deja los cambios pendientes (incluido el fallido) para reintentar.
+   */
+  confirmChanges(): void {
+    if (this.confirming()) return;
+    const pending = this.pendingAddons();
+    if (pending.length === 0) return;
+
+    this.confirming.set(true);
+    this.applyPending([...pending]);
+  }
+
+  private applyPending(queue: { type: string; from: number; to: number }[]): void {
+    const [item, ...rest] = queue;
+    if (!item) {
+      this.confirming.set(false);
+      return;
+    }
+
+    this.store.setAddon(item.type as 'email' | 'whatsapp', item.to).subscribe({
+      next: () => {
+        this.dropDraft(item.type);
+        this.applyPending(rest);
+      },
       error: (err) => {
-        this.savingAddon.set(null);
+        this.confirming.set(false);
         this.httpError.handle(err, this.lang.t('plans.addons_title'));
       },
     });
+  }
+
+  private dropDraft(type: string): void {
+    const draft = { ...this.draftAddons() };
+    delete draft[type as 'email' | 'whatsapp'];
+    this.draftAddons.set(draft);
   }
 
   /** CTA de un plan no actual: la pantalla de facturación concentra el cobro. */

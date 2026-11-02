@@ -80,20 +80,20 @@
         <div class="summary__divider"></div>
 
         <h4 class="summary__subtitle">{{ lang.t('plans.addons_title') }}</h4>
-        @if (addons().length === 0) {
+        @if (summaryAddons().length === 0) {
           <p class="summary__muted">{{ lang.t('plans.addons_empty') }}</p>
         } @else {
           <ul class="summary__addons">
-            @for (addon of addons(); track addon.type) {
+            @for (line of summaryAddons(); track line.type) {
               <li class="summary__addon">
-                <span>{{ addonLabel(addon) }}</span>
-                <span class="summary__addon-price">{{ price(addon.price_clp) }}</span>
+                <span>{{ addonLabel(line) }}</span>
+                <span class="summary__addon-price">{{ price(line.price) }}</span>
               </li>
             }
           </ul>
           <div class="summary__total">
             <span>{{ lang.t('plans.total') }}</span>
-            <span>{{ price(totalPrice()) }}</span>
+            <span>{{ price(draftTotal()) }}</span>
           </div>
         }
       </aside>
@@ -134,7 +134,7 @@
                 <button
                   type="button"
                   class="addon-card__step"
-                  [disabled]="quantityFor(item.type) === 0 || savingAddon() === item.type"
+                  [disabled]="quantityFor(item.type) === 0 || confirming()"
                   [attr.aria-label]="lang.t('plans.addon.remove')"
                   (click)="changeQuantity(item.type, -1)">
                   <i class="pi pi-minus"></i>
@@ -147,7 +147,7 @@
                 <button
                   type="button"
                   class="addon-card__step"
-                  [disabled]="savingAddon() === item.type"
+                  [disabled]="quantityFor(item.type) >= 100 || confirming()"
                   [attr.aria-label]="lang.t('plans.addon.add')"
                   (click)="changeQuantity(item.type, 1)">
                   <i class="pi pi-plus"></i>
@@ -164,6 +164,26 @@
           }
         </div>
       </section>
+    }
+
+    @if (hasDraftChanges()) {
+      <div class="draft-bar" role="region" [attr.aria-label]="lang.t('plans.draft.title')">
+        <span class="draft-bar__title">{{ lang.t('plans.draft.title') }}</span>
+        <div class="draft-bar__actions">
+          <button
+            type="button"
+            class="draft-bar__cancel"
+            [disabled]="confirming()"
+            (click)="cancelChanges()">
+            {{ lang.t('plans.draft.cancel') }}
+          </button>
+          <p-button
+            [label]="lang.t('plans.draft.confirm')"
+            [loading]="confirming()"
+            [disabled]="confirming()"
+            (onClick)="confirmChanges()" />
+        </div>
+      </div>
     }
   }
 </div>

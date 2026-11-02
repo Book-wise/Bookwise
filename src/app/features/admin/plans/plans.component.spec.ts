@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { PlansComponent } from './plans.component';
 import { SubscriptionStore } from '@core/stores/subscription.store';
 import { HttpErrorService } from '@services/http-error.service';
@@ -182,16 +182,16 @@ describe('PlansComponent — current plan detection', () => {
   });
 
   // ── Add-ons ─────────────────────────────────────────────────────────────
-  it('adds a pack through the store and respects the lower bound', () => {
+  it('respects the lower bound of the pack stepper', () => {
     setup(makeSubscription('month'));
 
     // Sin add-ons contratados, el stepper arranca en 0 y no puede bajar.
     expect(component.quantityFor('whatsapp')).toBe(0);
     component.changeQuantity('whatsapp', -1);
-    expect(setAddon).not.toHaveBeenCalled();
 
-    component.changeQuantity('whatsapp', 1);
-    expect(setAddon).toHaveBeenCalledWith('whatsapp', 1);
+    expect(component.quantityFor('whatsapp')).toBe(0);
+    expect(component.hasDraftChanges()).toBe(false);
+    expect(setAddon).not.toHaveBeenCalled();
   });
 
   it('counts contract add-on credits on top of the plan limit', () => {
@@ -217,3 +217,163 @@ describe('PlansComponent — current plan detection', () => {
     expect(component.addonCatalog().map((a) => a.type)).toEqual(['email', 'whatsapp']);
   });
 });
+
+/** Catálogo de packs del backend (precio unitario por pack de 50 créditos). */
+function withAddonCatalog(sub: Subscription): Subscription {
+  sub.addon_catalog = [
+    { type: 'email', credits_per_pack: 50, price_clp: 3000 },
+    { type: 'whatsapp', credits_per_pack: 50, price_clp: 5000 },
+  ];
+  return sub;
+}
+
+/**
+ * Monta el componente con un store mockeado. `onSetAddon` permite simular
+ * fallos de la API en el flujo de confirmación.
+ */
+function mountPlans(
+  sub: Subscription | null,
+  onSetAddon: (type: string, quantity: number) => Observable<{ data: Subscription }> = () =>
+    of({ data: sub as Subscription }),
+): {
+  component: PlansComponent;
+  setAddon: ReturnType<typeof vi.fn>;
+  httpError: { handle: ReturnType<typeof vi.fn> };
+} {
+  const setAddon = vi.fn(onSetAddon);
+  const httpError = { handle: vi.fn() };
+
+  TestBed.configureTestingModule({
+    imports: [PlansComponent],
+    providers: [
+      provideZonelessChangeDetection(),
+      {
+        provide: SubscriptionStore,
+        useValue: {
+          plans: signal(catalog),
+          loading: signal({ plans: false, subscription: false, usage: false }),
+          subscription: signal<Subscription | null>(sub),
+          error: signal({ plans: null, subscription: null, usage: null }),
+          loadPlans: vi.fn(),
+          loadSubscription: vi.fn(),
+          setAddon,
+        },
+      },
+      { provide: HttpErrorService, useValue: httpError },
+      { provide: Router, useValue: { navigate: vi.fn() } },
+    ],
+  });
+
+  const component = TestBed.createComponent(PlansComponent).componentInstance;
+  component.ngOnInit();
+  return { component, setAddon, httpError };
+}
+
+describe('PlansComponent — borrador de add-ons (barra flotante)', () => {
+  it('accumulates pack changes in a draft without writing to the API', () => {
+    const { component, setAddon } = mountPlans(withAddonCatalog(makeSubscription('month')));
+
+    expect(component.hasDraftChanges()).toBe(false);
+
+    component.changeQuantity('whatsapp', 1);
+
+    // Nada se persiste hasta confirmar.
+    expect(setAddon).not.toHaveBeenCalled();
+    expect(component.quantityFor('whatsapp')).toBe(1);
+    expect(component.pendingAddons()).toEqual([{ type: 'whatsapp', from: 0, to: 1 }]);
+    expect(component.hasDraftChanges()).toBe(true);
+    // Los créditos del canal siguen el borrador (800 del plan + 1 pack de 50).
+    expect(component.creditsFor('whatsapp')).toBe(850);
+  });
+
+  it('stacks draft steps on top of the persisted quantity', () => {
+    const sub = withAddonCatalog(makeSubscription('month'));
+    sub.addons = [{ type: 'whatsapp', quantity: 2, credits_per_pack: 50, price_clp: 10_000 }];
+    const { component } = mountPlans(sub);
+
+    component.changeQuantity('whatsapp', 1);
+
+    expect(component.quantityFor('whatsapp')).toBe(3);
+    expect(component.pendingAddons()).toEqual([{ type: 'whatsapp', from: 2, to: 3 }]);
+  });
+
+  it('drops the pending change when the quantity returns to the persisted one', () => {
+    const sub = withAddonCatalog(makeSubscription('month'));
+    sub.addons = [{ type: 'email', quantity: 1, credits_per_pack: 50, price_clp: 3000 }];
+    const { component } = mountPlans(sub);
+
+    component.changeQuantity('email', 1);
+    expect(component.hasDraftChanges()).toBe(true);
+
+    component.changeQuantity('email', -1);
+
+    expect(component.quantityFor('email')).toBe(1);
+    expect(component.pendingAddons()).toEqual([]);
+    expect(component.hasDraftChanges()).toBe(false);
+  });
+
+  it('cancel discards the draft and writes nothing', () => {
+    const { component, setAddon } = mountPlans(withAddonCatalog(makeSubscription('month')));
+
+    component.changeQuantity('whatsapp', 2);
+    component.cancelChanges();
+
+    expect(component.quantityFor('whatsapp')).toBe(0);
+    expect(component.hasDraftChanges()).toBe(false);
+    expect(setAddon).not.toHaveBeenCalled();
+  });
+
+  it('confirm applies exactly one PUT per changed channel and clears the draft', () => {
+    const sub = withAddonCatalog(makeSubscription('month'));
+    sub.addons = [{ type: 'email', quantity: 1, credits_per_pack: 50, price_clp: 3000 }];
+    const { component, setAddon } = mountPlans(sub);
+
+    component.changeQuantity('email', 1); // 1 → 2 (canal con cambios)
+    component.changeQuantity('whatsapp', 2); // 0 → 2
+    component.confirmChanges();
+
+    expect(setAddon).toHaveBeenCalledTimes(2);
+    expect(setAddon).toHaveBeenCalledWith('email', 2);
+    expect(setAddon).toHaveBeenCalledWith('whatsapp', 2);
+    expect(component.hasDraftChanges()).toBe(false);
+    expect(component.confirming()).toBe(false);
+  });
+
+  it('keeps a failed channel pending and stops before the remaining ones', () => {
+    const sub = withAddonCatalog(makeSubscription('month'));
+    let calls = 0;
+    const { component, setAddon, httpError } = mountPlans(sub, () => {
+      calls += 1;
+      return calls === 1 ? throwError(() => new Error('boom')) : of({ data: sub });
+    });
+
+    component.changeQuantity('email', 1);
+    component.changeQuantity('whatsapp', 1);
+    component.confirmChanges();
+
+    // Corta en el primer fallo: no sigue escribiendo el resto.
+    expect(setAddon).toHaveBeenCalledTimes(1);
+    expect(component.confirming()).toBe(false);
+    expect(httpError.handle).toHaveBeenCalled();
+    // Ambos cambios siguen en el borrador para reintentar.
+    expect(component.pendingAddons().map((p) => p.type)).toEqual(['email', 'whatsapp']);
+  });
+
+  it('reflects the draft in the summary total', () => {
+    const { component } = mountPlans(withAddonCatalog(makeSubscription('month')));
+
+    // Premium mensual $51.990 sin add-ons.
+    expect(component.addonsSubtotal()).toBe(0);
+    expect(component.draftTotal()).toBe(51_990);
+
+    component.changeQuantity('whatsapp', 1);
+
+    expect(component.addonsSubtotal()).toBe(5000);
+    expect(component.draftTotal()).toBe(56_990);
+
+    component.cancelChanges();
+
+    expect(component.draftTotal()).toBe(51_990);
+  });
+});
+
