@@ -21,7 +21,7 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 | 1.2 | **#12 Límites de creación** (bloqueo **proactivo** al tope del plan) | `creation-limits.md` T1–T5 | implementar (diseño cerrado). Ojo: el botón "Nuevo profesional" **ya existe** (lo agregó `8021fb9`), así que #12 lo cubre también |
 | 1.3 | **Clamp de página** en las dos listas: si el total baja, la página actual queda vacía | hallazgos `R3-PAGE-CLAMP` y `R3-PAGE-NO-UPPER-BOUND` | ✅ cerrado (clamp vía `effect` en ambas listas) |
 | 1.4 | **Timeout/cancelación** del agregador `collect-paginated.ts` | hallazgo `R3-COLLECT-TIMEOUT` | ✅ cerrado (`timeout` por página) |
-| 1.5 | **#18 Borrador + barra flotante** "Tienes cambios en tu plan" (Cancelar / Confirmar, sin prorrateo) | `billing-plans-addons.md` §3 | implementar; hay referencia visual `cambios en plan.png` |
+| 1.5 | **#18 Borrador + barra flotante** "Tienes cambios en tu plan" (Cancelar / Confirmar, sin prorrateo) | `billing-plans-addons.md` §3 | ✅ implementado (solo add-ons diferidos; el plan sigue como estaba) |
 | 1.6 | **#20 Reacción post pre-check** | `billing-plans-addons.md` §3 | **DESBLOQUEADA**: la imagen `confirmacion de cambio luego del pre-checkeo.png` ya está en `D:\documentos\trabajo\bookwise\` |
 
 ## 2. Bloqueadas por el backend
@@ -30,7 +30,7 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 |---|---|---|
 | 2.1 | **Contrato de clientes** (10 puntos: forma del listado + totales, `birth_date`, query params de filtros, semántica de desactivar) | Pedido **enviado**; prioridad pedida sobre 1, 2, 3 y 6. Doc: `openspec/changes/2026-10-27-clients-management/proposal.md` |
 | 2.2 | **Envelope `{data, links, meta}`** en `providers`/`locations` | Elevado al mantenedor del backend (no lo mergea por pedido de otro agente). El cliente ya lo consume sin cambios |
-| 2.3 | **#16 Impuestos** (neto + IVA en `PlanResource` / `SubscriptionResource`) | Pedido enviado |
+| 2.3 | **#16 Impuestos** (neto + IVA en `PlanResource` / `SubscriptionResource`) | **DESBLOQUEADA**: el backend ya expone `net_clp`/`tax_clp` por ítem y `addons_total_net_clp`/`total_net_clp`/`total_tax_clp` (BE `fc7f2e0`). Falta cablear el desglose en el front |
 | 2.4 | **#23 Serie histórica de consumo mensual** + seed de `confirmation_usage` | Pedido escrito: `openspec/changes/2026-10-21-confirmation-usage-series/proposal.md`. El gráfico sigue mock |
 | 2.5 | **#21 Datos de facturación** (`billing_profiles`) | **Reconciliar**: `billing-plans-addons.md` dice "requiere backend" pero `billing-datos-facturacion.md` dice backend listo y frontend en curso |
 | 2.6 | **T6 RBAC**: exponer `business_roles[]` en `/auth/me` para fidelidad total del rol | `rbac-frontend.md` T6 |

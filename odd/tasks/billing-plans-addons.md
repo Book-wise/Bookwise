@@ -116,8 +116,22 @@ Verificación: `npx ng build` verde + **20/20 tests** (billing, negocios, planes
   es sólo el bloqueo **proactivo** (antes de abrir el formulario). Ver
   `odd/tasks/creation-limits.md` y `odd/tasks/pendientes.md`.
 - ~~**#17 Popover de desglose** en "Mi plan"~~ ✅ cerrada (`ebed53e`, `MyPlanComponent`).
-- **#18 Draft + barra flotante** "Tienes cambios en tu plan" con **Cancelar** y
-  **Confirmar cambio** (sin prorrateo: el backend es D.8). — pendiente.
+- ~~**#18 Draft + barra flotante** "Tienes cambios en tu plan" con **Cancelar** y
+  **Confirmar cambio**~~ ✅ cerrada (`0a14a59` + `2f34e60`, 2026-11-02). Solo los **add-ons** se
+  difieren: el stepper escribe en un borrador local (`draftAddons`) y la barra flotante confirma
+  con **un PUT por canal cambiado**, en serie, con cantidades **absolutas** (el PUT es upsert
+  idempotente ⇒ reintentar no duplica cobros). Si un canal falla: corta la serie, re-sincroniza la
+  suscripción desde el servidor (la UI nunca miente sobre lo persistido) y deja lo no aplicado
+  pendiente para reintentar. El resumen y el total siguen el borrador en vivo; **sin borrador el
+  total es el canónico del servidor** (`total_price_clp`). El **plan** queda igual (selección →
+  "Continuar" a facturación): el backend **sí** expone `POST /v1/subscription/plan`
+  (`{slug, billing_interval}`, decide upgrade inmediato vs downgrade programado), así que cablearlo
+  es una tarea aparte.
+  → Nota de contrato: `PUT /v1/subscription/addons` es **por canal** (`{type, quantity}`), no hay
+  batch; `quantity: 0` quita el add-on; rango 0..100.
+  → Follow-ups informativos del review: doble confirm (cubierto por guard síncrono + botón
+  deshabilitado), `unitPrice` derivado cuando falta `addon_catalog`, borrador se pierde al salir de
+  la ruta sin aviso, fila de total ausente si no hay add-ons.
 - ~~**#19 Caja azul informativa**: total + `next_billing_at` + aviso de cobro~~ ✅ cerrada (`ebed53e`, `MyPlanComponent`).
 - ~~**#22 Reestructurar pantallas (separar Pago de Plan)**~~ ✅ cerrada (`ebed53e`):
   `/admin/facturacion` (+ `/historial`) · `/admin/planes` = Mi plan (lectura) ·
