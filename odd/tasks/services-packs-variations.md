@@ -132,13 +132,17 @@ Estructura (ver `design/productos-packs/03-dialogo-servicio.html`):
    puede cambiar o borrar antes de calcular.
 5. El **precio por sesión** se muestra siempre por término: es la métrica con la que se decide, y
    delata "descuentos" que en realidad suben el unitario.
-6. La vista previa tiene un **selector de término** (para Kinesilk, Sesiones: 1 / 3 / 6): el badge
+6. **El badge del selector de variación se mide contra la variación de 1 sesión**: en el diálogo de
+   reserva, cada término muestra `−X%` calculado como
+   `1 − (precio_término / sesiones) / (precio_1_sesión / 1)`. Ej.: 3 sesiones a $67.500 → $22.500 por
+   sesión vs. $25.000 de 1 sesión ⇒ `−10%`. Sin término de 1 sesión no hay badge (no hay referencia).
+7. La vista previa tiene un **selector de término** (para Kinesilk, Sesiones: 1 / 3 / 6): el badge
    `−X%`, el precio, el precio de lista tachado y el precio por sesión siguen al **término elegido**.
    La imagen es la misma para todos (una por servicio). Un término sin precio de lista se previsualiza
    **sin badge**.
-7. Avisos (no bloqueantes): término sin precio; precio por sesión mayor que el del término de menos
+8. Avisos (no bloqueantes): término sin precio; precio por sesión mayor que el del término de menos
    sesiones; falta el término de 1 sesión si se quiere vender individual.
-8. Al guardar se envían **valores absolutos**; el backend revalida (`compare_at_price > price`, 422
+9. Al guardar se envían **valores absolutos**; el backend revalida (`compare_at_price > price`, 422
    si no) y calcula `discount_percent`.
 
 ### Coordinación con el catálogo de WordPress (pendiente, no bloquea el diseño)
@@ -151,6 +155,15 @@ modela como dato de entrada, no como regla de promoción.
 ---
 
 ## 4. Agenda: cómo se ve "sesión 3 de 6"
+
+> **Regla de secuencia (seba, 2026-11-03):** las sesiones de un pack se consumen **siempre en orden**.
+> No hay agendamiento alterno: se puede *ver* el pack completo, pero **solo se habilita la siguiente**
+> sesión libre; las posteriores quedan **bloqueadas** hasta consumir la anterior. Si se cancela una
+> reserva, esa sesión vuelve a `pending` y sigue siendo la siguiente.
+> **Consecuencia para el backend**: `POST /bookings` con `client_pack_id` debe asignar (o aceptar)
+> únicamente la primera sesión `pending` por `session_number` y rechazar cualquier salto con un error
+> estable (propuesto: `422 pack_session_out_of_order`). Si no se puede garantizar el orden, es
+> preferible que el backend ignore `pack_session_number` y asigne siempre la siguiente.
 
 En el diálogo de reserva (cuando el cliente tiene packs activos para ese servicio):
 

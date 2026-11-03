@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "mx6ofaan",
+      "file": "01-reserva-variacion.html",
+      "selector": "body > main > div > section > div > div:nth-of-type(4) > div:nth-of-type(2) > button:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "· usada 12/10",
+      "comment": "mejora esto para que sea evidente en que fecha se uso",
+      "createdAt": "2026-11-03T15:49:32.485Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T15:49:32.502Z",
+      "resolvedAt": "2026-11-03T15:49:49.966Z"
+    },
+    {
+      "id": "daofwrro",
+      "file": "01-reserva-variacion.html",
+      "selector": "body > main > div > section > div > div:nth-of-type(4) > div:nth-of-type(2) > button:nth-of-type(3)",
+      "excerpt": "3 programada el 19 oct 2026",
+      "comment": "la programacion de agendas no debe ser alterna, siempre va en secuencia, entonces le puedes mostrar pero siempre le permites activar o usar la siguiente para forzar el orden de agendamiento",
+      "createdAt": "2026-11-03T15:50:43.051Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T15:50:43.073Z",
+      "resolvedAt": "2026-11-03T15:51:03.821Z"
+    },
+    {
+      "id": "w3wzr3ss",
+      "file": "01-reserva-variacion.html",
+      "selector": "body > main > div > section > div > div:nth-of-type(4) > p:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "Las sesiones se consumen siempre en secuencia: se ve el pack completo, pero solo se habilita la siguiente. Si cancelás una reserva, esa sesión vuelve a «libre» y sigue siendo la siguiente.",
+      "comment": "que se pueda cerrar este dialogo-alerta.",
+      "createdAt": "2026-11-03T15:51:37.550Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T15:51:37.665Z",
+      "resolvedAt": "2026-11-03T15:51:48.744Z"
+    },
+    {
+      "id": "gor2zxdg",
+      "file": "01-reserva-variacion.html",
+      "selector": "body > main > div > section > div > div:nth-of-type(4) > div:nth-of-type(3) > span:nth-of-type(2)",
+      "excerpt": "azul = la siguiente, la que estás agendando",
+      "comment": "punto azul",
+      "createdAt": "2026-11-03T15:52:15.757Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T15:52:15.796Z",
+      "resolvedAt": "2026-11-03T15:52:23.958Z"
+    },
+    {
+      "id": "i7wf20dv",
+      "file": "01-reserva-variacion.html",
+      "selector": "body > main > div > section > div > div:nth-of-type(4) > div:nth-of-type(3) > span:nth-of-type(3)",
+      "excerpt": "dashed = bloqueada hasta consumir la anterior",
+      "comment": "punto gris",
+      "createdAt": "2026-11-03T15:52:21.559Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T15:52:21.635Z",
+      "resolvedAt": "2026-11-03T15:52:33.147Z"
+    },
+    {
+      "id": "niy1lprb",
+      "file": "01-reserva-variacion.html",
+      "selector": "body > main > div > section > div > div:nth-of-type(4)",
+      "excerpt": "Sesiones pagadas de este servicio Pack «Kinesiología general - 3 sesiones» · 1 de 3 usadas 1 usada el 12 oct 2026 2 siguiente · se agenda ahora 3 bloqueada usada (con la fecha en que se atendió) la siguiente, la que estás agendando bloqueada hasta consumir la anterior 🔒 Las sesiones se consumen sie",
+      "comment": "implementa este dialogo, y revisa lo que habia en la pestaña sesiones, porque es relativamente lo mismo, quiza podemos dejar la info en ambos lugares? o como lo consideras mejor, me gustaria ver que pasa con este dialogo cuando no hay sesiones, sino que fue una reserva unica o sesion nueva como la nombraste\n.",
+      "createdAt": "2026-11-03T15:53:53.560Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T15:53:53.583Z",
+      "resolvedAt": "2026-11-03T15:54:14.501Z"
+    },
+    {
+      "id": "7oaeacd4",
+      "file": "01-reserva-variacion.html",
+      "selector": "#rv-variacion",
+      "excerpt": "3 sesiones $67.500 · $22.500 /sesión ▾",
+      "comment": "añade la info en badge del % de dscto respecto al precio cuando es solo 1 sesion",
+      "createdAt": "2026-11-03T15:59:52.988Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T16:01:32.345Z",
+      "resolvedAt": "2026-11-03T16:01:45.062Z"
+    },
+    {
+      "id": "942zwb7w",
+      "file": "01-reserva-variacion.html",
+      "selector": "#rv-sin-variaciones > button",
+      "excerpt": "Crear variaciones",
+      "comment": "que hara cuando clickeemos aqui? muestrame porque ya estamos dentro de un dialog",
+      "createdAt": "2026-11-03T16:02:57.237Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T16:03:16.777Z",
+      "resolvedAt": "2026-11-03T16:03:36.190Z"
+    }
+  ]
+}
