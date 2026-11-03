@@ -1,54 +1,297 @@
-<p-card header="Packs de Servicios">
-  @if (loading()) {
-    <div class="list-skeleton">
-      @for (row of [1,2,3,4,5]; track row) {
-        <div class="list-sk-row bw-sk-card">
-          <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
-          <p-skeleton width="18%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="18%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="10%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="12%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
-          <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+<div class="sp">
+  <header class="sp-head">
+    <div class="sp-head__text">
+      <h2 class="sp-title">{{ t('packs.title') }}</h2>
+      @if (!loading()) {
+        <p class="sp-subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+  </header>
+
+  <p class="sp-note" role="note">{{ t('packs.readonly') }}</p>
+
+  @if (showSuggestion()) {
+    <div class="sp-suggest" data-testid="suggestion">
+      <span class="sp-suggest__icon" aria-hidden="true">✦</span>
+      <span class="sp-suggest__text">
+        {{
+          t(
+            missingServices().length === 1 ? 'packs.suggestion_one' : 'packs.suggestion_other',
+            { count: str(missingServices().length) }
+          )
+        }}
+      </span>
+      @if (onlyMissing()) {
+        <button type="button" class="sp-link" (click)="clearMissingFilter()">
+          {{ t('packs.suggestion.show_all') }}
+        </button>
+      } @else {
+        <button type="button" class="sp-link" (click)="reviewMissing()">
+          {{ t('packs.suggestion.review') }}
+        </button>
+      }
+      <button
+        type="button"
+        class="sp-icon-btn"
+        data-testid="suggestion-dismiss"
+        [attr.aria-label]="t('packs.suggestion.dismiss')"
+        (click)="dismissSuggestion()"
+      >
+        ✕
+      </button>
+    </div>
+  }
+
+  <div class="sp-toolbar">
+    <label class="sp-search">
+      <span class="sp-search__icon" aria-hidden="true">⌕</span>
+      <input
+        type="search"
+        data-testid="search-input"
+        [attr.placeholder]="t('packs.search_placeholder')"
+        [attr.aria-label]="t('packs.search_placeholder')"
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </label>
+
+    <label class="sp-select">
+      <span class="sp-select__label">{{ t('packs.filter.label') }}</span>
+      <select
+        data-testid="status-filter"
+        [attr.aria-label]="t('packs.filter.aria')"
+        (change)="setStatus($any($event.target).value)"
+      >
+        <option value="all" [selected]="status() === 'all'">{{ t('packs.filter.all') }}</option>
+        <option value="active" [selected]="status() === 'active'">
+          {{ t('packs.filter.active') }}
+        </option>
+        <option value="inactive" [selected]="status() === 'inactive'">
+          {{ t('packs.filter.inactive') }}
+        </option>
+      </select>
+    </label>
+
+    <div class="sp-view" role="group" [attr.aria-label]="t('packs.view.aria')">
+      <button
+        type="button"
+        data-testid="view-cards"
+        class="sp-view__btn"
+        [class.is-active]="view() === 'cards'"
+        [attr.aria-pressed]="view() === 'cards'"
+        (click)="setView('cards')"
+      >
+        {{ t('packs.view.cards') }}
+      </button>
+      <button
+        type="button"
+        data-testid="view-list"
+        class="sp-view__btn"
+        [class.is-active]="view() === 'list'"
+        [attr.aria-pressed]="view() === 'list'"
+        (click)="setView('list')"
+      >
+        {{ t('packs.view.list') }}
+      </button>
+    </div>
+  </div>
+
+  @if (loadError() && !loading()) {
+    <div class="sp-error" role="alert">{{ t('packs.error') }}</div>
+  } @else if (loading()) {
+    <div class="sp-grid" aria-hidden="true">
+      @for (row of [1, 2, 3]; track row) {
+        <div class="sp-card sp-card--skeleton">
+          <p-skeleton height="132px" borderRadius="0" />
+          <div class="sp-card__body">
+            <p-skeleton width="70%" height="1rem" />
+            <p-skeleton width="100%" height="0.75rem" />
+            <p-skeleton width="100%" height="0.75rem" />
+          </div>
         </div>
       }
     </div>
+  } @else if (isEmpty()) {
+    <div class="sp-empty">
+      <span aria-hidden="true">◫</span>
+      <p>{{ t('packs.empty.none') }}</p>
+    </div>
+  } @else if (isFilteredEmpty()) {
+    <div class="sp-empty">
+      <span aria-hidden="true">⌕</span>
+      <p>{{ t('packs.empty.filtered') }}</p>
+    </div>
+  } @else if (view() === 'cards') {
+    <div class="sp-grid">
+      @for (row of visibleRows(); track row.service.id) {
+        <article class="sp-card" data-testid="service-card">
+          <div class="sp-media" aria-hidden="true">
+            <span class="sp-media__initials">{{ initials(row.service.name) }}</span>
+            <span class="sp-media__duration">
+              {{ row.service.duration_minutes }} {{ t('packs.unit.min') }}
+            </span>
+          </div>
+
+          <div class="sp-card__body">
+            <div class="sp-card__title">
+              <h3>{{ row.service.name }}</h3>
+              <span
+                class="bw-chip"
+                [class]="row.service.active ? 'bw-chip--success' : 'bw-chip--danger'"
+              >
+                {{ row.service.active ? t('packs.status.active') : t('packs.status.inactive') }}
+              </span>
+            </div>
+
+            @if (row.terms.length === 0) {
+              <p class="sp-no-terms">{{ t('packs.no_terms') }}</p>
+            } @else {
+              <ul class="sp-terms">
+                @for (term of row.terms; track term.id) {
+                  <li
+                    class="sp-term"
+                    data-testid="term"
+                    [class.sp-term--inactive]="!term.active"
+                  >
+                    <span class="sp-term__sessions">{{ sessionsLabel(term.total_sessions) }}</span>
+                    <span class="sp-term__per">{{ perSessionLabel(term) }}</span>
+                    <span class="sp-term__price">{{ term.price | bwCurrency }}</span>
+                    @if (!term.active) {
+                      <span class="bw-chip bw-chip--danger sp-term__state">
+                        {{ t('packs.status.inactive') }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </article>
+      }
+    </div>
   } @else {
-  <p-table [value]="packs()" [tableStyle]="{'min-width': '50rem'}">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Servicio</th>
-        <th>Sesiones</th>
-        <th>Precio</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-pack>
-      <tr>
-        <td>{{ pack.id }}</td>
-        <td>{{ pack.name }}</td>
-        <td>{{ pack.service?.name || 'N/A' }}</td>
-        <td>{{ pack.total_sessions }}</td>
-        <td>{{ pack.price | bwCurrency }}</td>
-        <td>
-          <span class="bw-chip" [class]="pack.active ? 'bw-chip--success' : 'bw-chip--danger'">
-            {{ pack.active ? 'Activo' : 'Inactivo' }}
-          </span>
-        </td>
-        <td>
-          <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar"></p-button>
-          <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver"></p-button>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="7" class="text-center">No se encontraron packs</td>
-      </tr>
-    </ng-template>
-  </p-table>
+    <div class="sp-card sp-table-card">
+      <table class="sp-table" data-testid="services-table">
+        <thead>
+          <tr>
+            <th class="sp-col-toggle"><span class="sp-visually-hidden">{{ t('packs.col.expand') }}</span></th>
+            <th>{{ t('packs.col.service') }}</th>
+            <th>{{ t('packs.col.terms') }}</th>
+            <th class="sp-num">{{ t('packs.col.base_price') }}</th>
+            <th>{{ t('packs.col.status') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of visibleRows(); track row.service.id) {
+            <tr [class.is-open]="expandedId() === row.service.id">
+              <td class="sp-col-toggle">
+                <button
+                  type="button"
+                  class="sp-icon-btn"
+                  data-testid="row-toggle"
+                  [attr.aria-expanded]="expandedId() === row.service.id"
+                  [attr.aria-label]="
+                    expandedId() === row.service.id
+                      ? t('packs.row.collapse')
+                      : t('packs.row.expand')
+                  "
+                  (click)="toggleRow(row.service.id)"
+                >
+                  <span class="sp-chevron" [class.is-open]="expandedId() === row.service.id">▸</span>
+                </button>
+              </td>
+              <td>
+                <div class="sp-svc">
+                  <span class="sp-thumb" aria-hidden="true">{{ initials(row.service.name) }}</span>
+                  <span class="sp-svc__text">
+                    <span class="sp-svc__name">{{ row.service.name }}</span>
+                    <span class="sp-svc__meta">
+                      {{ row.service.duration_minutes }} {{ t('packs.unit.min') }} ·
+                      {{
+                        t(
+                          row.terms.length === 1 ? 'packs.meta.terms_one' : 'packs.meta.terms_other',
+                          { count: str(row.terms.length) }
+                        )
+                      }}
+                    </span>
+                  </span>
+                </div>
+              </td>
+              <td>
+                @if (row.terms.length === 0) {
+                  <span class="sp-no-terms">{{ t('packs.no_terms') }}</span>
+                } @else {
+                  <span class="sp-terms-inline">
+                    @for (term of row.terms; track term.id) {
+                      <span class="sp-term-chip">
+                        {{ sessionsLabel(term.total_sessions) }}
+                        <b>{{ term.price | bwCurrency }}</b>
+                      </span>
+                    }
+                  </span>
+                }
+              </td>
+              <td class="sp-num sp-amount">{{ row.service.price | bwCurrency }}</td>
+              <td>
+                <span
+                  class="bw-chip"
+                  [class]="row.service.active ? 'bw-chip--success' : 'bw-chip--danger'"
+                >
+                  {{ row.service.active ? t('packs.status.active') : t('packs.status.inactive') }}
+                </span>
+              </td>
+            </tr>
+
+            @if (expandedId() === row.service.id) {
+              <tr class="sp-subrow">
+                <td colspan="5">
+                  <div class="sp-sub" data-testid="terms-subrow">
+                    <div class="sp-sub__head">
+                      <span class="sp-overline">
+                        {{ t('packs.attribute.label') }}:
+                        {{ t('packs.attribute.sessions') }}
+                      </span>
+                      <span class="sp-sub__note">{{ t('packs.sub.note') }}</span>
+                    </div>
+                    <p class="sp-sub__service">{{ row.service.name }}</p>
+                    <table class="sp-subtable">
+                      <thead>
+                        <tr>
+                          <th>{{ t('packs.col.term') }}</th>
+                          <th class="sp-num">{{ t('packs.col.sessions') }}</th>
+                          <th class="sp-num">{{ t('packs.col.price') }}</th>
+                          <th class="sp-num">{{ t('packs.col.per_session') }}</th>
+                          <th>{{ t('packs.col.status') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (term of row.terms; track term.id) {
+                          <tr>
+                            <td>{{ term.name }}</td>
+                            <td class="sp-num">{{ term.total_sessions }}</td>
+                            <td class="sp-num"><b>{{ term.price | bwCurrency }}</b></td>
+                            <td class="sp-num sp-muted">{{ perSessionLabel(term) }}</td>
+                            <td>
+                              <span
+                                class="bw-chip"
+                                [class]="term.active ? 'bw-chip--success' : 'bw-chip--danger'"
+                              >
+                                {{
+                                  term.active ? t('packs.status.active') : t('packs.status.inactive')
+                                }}
+                              </span>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   }
-</p-card>
+</div>
