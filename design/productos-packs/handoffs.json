@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "chosen": "02-lista-tarjetas.html",
+  "handoffs": {
+    "01-lista-tabla.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-03T15:04:49.826Z",
+      "startedAt": "2026-11-03T15:05:07.909Z",
+      "implementedAt": null,
+      "feature": "odd/tasks/services-packs-variations.md",
+      "note": "Implementando la lista densa de servicios con sub-fila de términos en /admin/packs (Angular). Read-only contra el backend actual: services + packs, sin POST/PATCH todavía."
+    },
+    "02-lista-tarjetas.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-03T15:06:12.778Z",
+      "startedAt": "2026-11-03T15:06:38.226Z",
+      "implementedAt": "2026-11-03T15:19:49.625Z",
+      "feature": "odd/tasks/services-packs-variations.md",
+      "note": "Implementado en /admin/packs (Angular): grilla de tarjetas con imagen-fallback de iniciales, toggle a vista lista con sub-fila de términos, filtro de estado (Todos/Activos/Inactivos), buscador sin acentos y banner de sugerencia. Read-only: sin POST/PATCH no hay alta ni edición; sin compare_at_price no hay badge de descuento.",
+      "previewUrl": "http://localhost:4200/admin/packs"
+    }
+  }
+}

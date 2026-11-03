@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "32dihfgj",
+      "file": "02-lista-tarjetas.html",
+      "selector": "body > main > div:nth-of-type(2) > div:nth-of-type(3) > button:nth-of-type(1)",
+      "excerpt": "☰ Lista",
+      "comment": "me gustaria que aqui se acceda a la vista que se acceda a la vista como esta diseñado en 01-lista-tabla.html asi tenemos lo mejor de dos mundos, y el cliente elige la forma que le acomode mas.",
+      "createdAt": "2026-11-03T14:35:57.404Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T14:35:57.426Z",
+      "resolvedAt": "2026-11-03T14:37:07.605Z"
+    },
+    {
+      "id": "zjdrcz9z",
+      "file": "02-lista-tarjetas.html",
+      "selector": "body > aside",
+      "excerpt": "BW Kinesilk Panel admin ◧ Dashboard ▤ Sucursales ☺ Profesionales ▦ Agenda ☰ Pacientes ◫ Servicios y packs ◈ Planes ⚙ Configuración Rosa Kinesilk · Admin general",
+      "comment": "me preocupa que esto este implementando una side-bar nueva? es consciente el diseño de lo que ya esta implementado? puedes solo enfocarte en responder en el chat y no generar cambio en este diseño?",
+      "createdAt": "2026-11-03T14:39:46.856Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T14:39:46.873Z",
+      "resolvedAt": "2026-11-03T14:48:29.429Z"
+    },
+    {
+      "id": "6ovngiyn",
+      "file": "02-lista-tarjetas.html",
+      "selector": "body > main > div:nth-of-type(2) > div:nth-of-type(1)",
+      "excerpt": "Estado: Todos ▾",
+      "comment": "estados serian activo, inactivo, borrador?",
+      "createdAt": "2026-11-03T14:44:20.784Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T14:44:20.807Z",
+      "resolvedAt": "2026-11-03T15:19:49.625Z"
+    }
+  ]
+}

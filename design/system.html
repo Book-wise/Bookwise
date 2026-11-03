@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Bookwise — Design system</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-800:#042661; --bw-700:#0a2862; --bw-600:#083d96;
+    --bw-500:#0b3d95; --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --color-primary: var(--bw-500);
+    --color-primary-dark: var(--bw-900);
+    --color-primary-cta: var(--bw-300);
+    --color-accent: var(--bw-200);
+    --primary-color: var(--bw-300);
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --surface-100:#f5f5f5; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem; --bw-text-2xl:1.5rem; --bw-text-3xl:1.875rem;
+    --bw-text-4xl:2.25rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm); --bw-font-body:var(--bw-text-base);
+    --bw-font-title:var(--bw-text-lg); --bw-font-amount:var(--bw-text-xl);
+    --bw-font-subtotal:var(--bw-text-2xl); --bw-font-kpi:var(--bw-text-3xl);
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-xs:0.25rem; --bw-space-sm:0.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-transition-fast:0.15s; --bw-transition-base:0.2s; --bw-transition-slow:0.3s;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,0.15);
+    --bw-dialog-header-shadow:0 6px 10px -6px rgba(0,0,0,0.08);
+    --bw-dialog-content-shadow:inset 0 -18px 14px -14px rgba(0,0,0,0.07);
+    --sidebar-bg-from:var(--bw-900); --sidebar-bg-to:var(--bw-600);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    width:1440px; min-height:1200px;
+    font-family: var(--font-family); font-size:16px; line-height:1.5;
+    color: var(--text-color); background: var(--surface-ground);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3,h4 { margin:0; font-weight:500; color: var(--text-color); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+
+  .board { padding: var(--bw-space-xl); display:grid; gap: var(--bw-space-xl); }
+  .page-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; }
+  .page-head h1 { font-size: var(--bw-text-2xl); }
+  .page-head p { margin:0; color: var(--text-color-secondary); font-size: var(--bw-font-table); }
+
+  .section {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--bw-radius-lg);
+    padding: var(--bw-space-lg);
+    box-shadow: var(--bw-shadow-card);
+  }
+  .section > header { display:flex; align-items:baseline; gap:.75rem; margin-bottom: var(--bw-space-md); }
+  .section > header h2 { font-size: var(--bw-text-lg); }
+  .section > header .src { margin-left:auto; }
+
+  .overline {
+    font-size: var(--bw-font-overline); font-weight: var(--bw-weight-bold);
+    text-transform: uppercase; letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+  }
+
+  /* swatches */
+  .swatches { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: var(--bw-space-md); }
+  .sw { display:grid; gap:.375rem; }
+  .sw__chip { height:64px; border-radius: var(--bw-radius-md); border:1px solid var(--surface-border); }
+  .sw__name { font-size: var(--bw-font-table); font-weight: var(--bw-weight-medium); }
+  .sw__val { font-family: ui-monospace, Menlo, monospace; font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+
+  /* chips */
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; }
+  .bw-chip {
+    display:inline-flex; align-items:center; gap:.25rem;
+    font-size: var(--bw-font-table); font-weight: var(--bw-weight-medium);
+    color: var(--chip-text-color, var(--chip-color));
+    background: color-mix(in srgb, var(--chip-color) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+    border-radius: var(--bw-radius-sm); padding:.1rem .5rem; line-height:1.4; white-space:nowrap;
+  }
+  .bw-chip__dot { width:8px; height:8px; border-radius:50%; background: var(--chip-color); flex-shrink:0; }
+  .bw-chip--online { --chip-color:#2563eb; --chip-text-color: var(--bw-chip-text-online); }
+  .bw-chip--remaining { --chip-color:#f97316; --chip-text-color: var(--bw-chip-text-remaining); }
+  .bw-chip--success { --chip-color: var(--bw-success); --chip-text-color: var(--bw-chip-text-success); }
+  .bw-chip--warning { --chip-color: var(--bw-warning); --chip-text-color: var(--bw-chip-text-warning); }
+  .bw-chip--danger { --chip-color:#ef4444; --chip-text-color: var(--bw-chip-text-danger); }
+  .bw-chip--primary { --chip-color: var(--bw-500); --chip-text-color: var(--bw-chip-text-primary); }
+  .bw-chip--secondary { --chip-color: var(--text-color-secondary); --chip-text-color: var(--bw-chip-text-secondary); }
+
+  /* cards */
+  .cards-row { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--bw-space-md); }
+  .bw-card { background: var(--surface-card); border:1px solid var(--surface-border); border-radius:8px; overflow:hidden; padding:.875rem; }
+  .bw-card--signature { border-left:3px solid var(--bw-300); }
+  .bw-card--header { background: var(--bw-50); border-color: var(--bw-100); border-left:3px solid var(--bw-300); box-shadow:none; }
+  .bw-card--active { box-shadow: 0 0 0 2px var(--bw-300); }
+  .bw-card--elevated { box-shadow: var(--bw-shadow-card); }
+  .bw-card b { display:block; font-size: var(--bw-font-table); font-weight: var(--bw-weight-medium); }
+
+  /* buttons */
+  .bw-icon-btn {
+    display:inline-flex; align-items:center; justify-content:center; background:none; border:none;
+    padding:.375rem; cursor:pointer; color: var(--text-color-secondary); border-radius: var(--bw-radius-pill);
+    transition: background var(--bw-transition-fast); flex-shrink:0; font-size:.95rem;
+  }
+  .bw-icon-btn:hover { background: var(--surface-100); color: var(--text-color); }
+  .bw-day-btn {
+    width:2.25rem; height:2.25rem; border-radius: var(--bw-radius-pill); border:1px solid var(--surface-border);
+    background: var(--surface-card); color: var(--text-color); font-size:.75rem; font-weight:500;
+    cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center;
+    transition: background var(--bw-transition-fast), color var(--bw-transition-fast), border-color var(--bw-transition-fast);
+  }
+  .bw-day-btn.active { background: var(--bw-300); border-color: var(--bw-300); color:#fff; }
+  .btn {
+    height: var(--bw-control-height); padding:0 1rem; border-radius: var(--bw-radius-md);
+    border:1px solid transparent; font-family:inherit; font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-medium); cursor:pointer; display:inline-flex; align-items:center; gap:.5rem;
+  }
+  .btn--cta { background: var(--bw-300); color:#fff; }
+  .btn--primary { background: var(--bw-500); color:#fff; }
+  .btn--outlined { background: transparent; border-color: var(--bw-300); color: var(--bw-300); }
+  .btn--ghost { background: transparent; color: var(--text-color-secondary); }
+  .input { height: var(--bw-control-height); border:1px solid var(--surface-border); border-radius: var(--bw-radius-md);
+    padding:0 .75rem; font-family:inherit; font-size: var(--bw-font-table); color: var(--text-color); background: var(--surface-card); width:100%; }
+
+  /* type scale */
+  .scale { display:grid; gap:.5rem; }
+  .scale__row { display:grid; grid-template-columns: 150px 1fr; align-items:baseline; gap:1rem; border-bottom:1px dashed var(--surface-border); padding-bottom:.5rem; }
+  .scale__row:last-child { border-bottom:none; }
+
+  /* spacing / radius / shadow */
+  .trio { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--bw-space-lg); }
+  .bars { display:grid; gap:.5rem; }
+  .bar { display:flex; align-items:center; gap:.75rem; font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+  .bar > i { display:block; height:14px; background: var(--bw-200); border-radius:2px; }
+  .radii { display:flex; gap:.75rem; flex-wrap:wrap; }
+  .radii > div { width:96px; height:64px; background: var(--bw-50); border:1px solid var(--bw-100); display:flex; align-items:center; justify-content:center; font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+  .shadows { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--bw-space-md); }
+  .shadows > div { background: var(--surface-card); border-radius: var(--bw-radius-md); padding:.875rem; font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+  .shadows .card-shadow { box-shadow: var(--bw-shadow-card); }
+  .shadows .popover-shadow { box-shadow: var(--bw-shadow-popover); }
+  .shadows .header-shadow { box-shadow: var(--bw-dialog-header-shadow); }
+  .shadows .inner-shadow { box-shadow: var(--bw-dialog-content-shadow); }
+
+  /* table */
+  table { width:100%; border-collapse:collapse; }
+  th {
+    font-size: var(--bw-font-overline); font-weight: var(--bw-weight-bold); text-transform:uppercase;
+    letter-spacing: var(--bw-tracking-overline); color: var(--text-color-secondary);
+    text-align:left; padding:.5rem .75rem; border:none;
+  }
+  td { font-size: var(--bw-font-table); padding:.625rem .75rem; border:none; border-top:1px solid var(--surface-border); }
+  tbody tr:hover { background: var(--bw-surface-muted); }
+  .amount { font-size: var(--bw-font-amount); font-weight: var(--bw-weight-medium); letter-spacing: var(--bw-tracking-tight); }
+
+  /* dialog + capacity banner */
+  .dialog-demo { border:1px solid var(--surface-border); border-radius: var(--bw-radius-lg); overflow:hidden; background: var(--surface-card); box-shadow: var(--bw-shadow-popover); }
+  .dialog-demo header { padding:1.25rem 1.5rem 1rem; border-bottom:1px solid var(--surface-border); box-shadow: var(--bw-dialog-header-shadow); font-size: var(--bw-font-title); font-weight: var(--bw-weight-medium); }
+  .dialog-demo .content { padding:1.25rem 1.5rem; background: var(--surface-ground); font-size: var(--bw-font-table); }
+  .dialog-demo footer { padding:1.25rem; display:flex; justify-content:flex-end; gap:.5rem; border-top:1px solid var(--surface-border); }
+  .bw-capacity-cta { display:flex; align-items:center; gap:.5rem; padding:.75rem 1rem; border-radius:.5rem; background: rgba(245,158,11,.12); color:#b45309; font-size:var(--bw-font-table); }
+
+  /* theme strip */
+  .themes { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--bw-space-md); }
+  .theme { border-radius: var(--bw-radius-md); padding:.875rem; border:1px solid var(--surface-border); display:grid; gap:.5rem; }
+  .theme small { font-size: var(--bw-font-caption); }
+  .theme--light { background:#f0f5ff; color:#1a2744; }
+  .theme--dark { background:#0f172a; color:#e4e4e7; border-color:#334155; }
+  .theme--dark small { color:#94a3b8; }
+  .theme--kinesilk { background:#fcf9ea; color:#3f3f33; border-color:#ece4cb; }
+  .theme--kinesilk small { color:#6f6f5c; }
+  .theme__card { background: var(--surface-card); border-radius:6px; padding:.5rem .625rem; font-size: var(--bw-font-caption); }
+  .theme--dark .theme__card { background:#1e293b; }
+  .theme--kinesilk .theme__card { background:#fffdf7; }
+</style>
+</head>
+<body>
+<main class="board">
+
+  <div class="page-head">
+    <div>
+      <h1>Bookwise — Design system</h1>
+      <p>Capturado de <code>src/styles/_tokens.scss</code>, <code>src/styles.scss</code> y <code>src/styles/_*.scss</code>. Solo valores existentes.</p>
+    </div>
+    <span class="overline">1.440 px · tema claro</span>
+  </div>
+
+  <section class="section">
+    <header><h2>Marca</h2><span class="src overline">_tokens.scss · :root</span></header>
+    <div class="swatches">
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-900)"></div><span class="sw__name">--bw-900</span><span class="sw__val">#012663</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-800)"></div><span class="sw__name">--bw-800</span><span class="sw__val">#042661</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-700)"></div><span class="sw__name">--bw-700</span><span class="sw__val">#0a2862</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-600)"></div><span class="sw__name">--bw-600</span><span class="sw__val">#083d96</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-500)"></div><span class="sw__name">--bw-500</span><span class="sw__val">#0b3d95</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-400)"></div><span class="sw__name">--bw-400</span><span class="sw__val">#0e3b8b</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-300)"></div><span class="sw__name">--bw-300 · CTA</span><span class="sw__val">#046af4</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-200)"></div><span class="sw__name">--bw-200 · accent</span><span class="sw__val">#60a7f0</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-100)"></div><span class="sw__name">--bw-100</span><span class="sw__val">#dbeafe</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-50)"></div><span class="sw__name">--bw-50</span><span class="sw__val">#f0f6ff</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Estado y pagos</h2><span class="src overline">_tokens.scss</span></header>
+    <div class="swatches" style="grid-template-columns:repeat(7,minmax(0,1fr))">
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-status-reservado)"></div><span class="sw__name">Reservado</span><span class="sw__val">#77D0FA</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-status-confirmado)"></div><span class="sw__name">Confirmado</span><span class="sw__val">#ECBE51</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-status-asiste)"></div><span class="sw__name">Asiste</span><span class="sw__val">#1FB27C</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-status-no-asistio)"></div><span class="sw__name">No asistió</span><span class="sw__val">#FCCAC2</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-status-pendiente)"></div><span class="sw__name">Pendiente</span><span class="sw__val">#FD8991</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-status-cancelado)"></div><span class="sw__name">Cancelado</span><span class="sw__val">#E3E7ED</span></div>
+      <div class="sw"><div class="sw__chip" style="background:var(--bw-warning)"></div><span class="sw__name">Warning</span><span class="sw__val">#f59e0b</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Superficies y temas</h2><span class="src overline">styles.scss</span></header>
+    <div class="themes">
+      <div class="theme theme--light">
+        <strong style="font-size:var(--bw-font-table)">Claro (default)</strong>
+        <small>ground #f0f5ff · card #ffffff · border #e5e7eb · text #1a2744</small>
+        <div class="theme__card" style="border:1px solid #e5e7eb">--surface-card</div>
+      </div>
+      <div class="theme theme--dark">
+        <strong style="font-size:var(--bw-font-table)">body.dark-theme</strong>
+        <small>ground #0f172a · card #1e293b · border #334155 · text #e4e4e7</small>
+        <div class="theme__card">--surface-card</div>
+      </div>
+      <div class="theme theme--kinesilk">
+        <strong style="font-size:var(--bw-font-table)">body.theme-kinesilk</strong>
+        <small>ground #fcf9ea · card #fffdf7 · border #ece4cb · CTA #fea4a4</small>
+        <div class="theme__card" style="border:1px solid #ece4cb">--surface-card</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Tipografía</h2><span class="src overline">_tokens.scss · escala y roles</span></header>
+    <div class="scale">
+      <div class="scale__row"><code>--bw-text-4xl · 36</code><span style="font-size:var(--bw-text-4xl);letter-spacing:var(--bw-tracking-tight)">1.875.000</span></div>
+      <div class="scale__row"><code>--bw-text-3xl · 30</code><span style="font-size:var(--bw-text-3xl);letter-spacing:var(--bw-tracking-tight)">Consumo del mes</span></div>
+      <div class="scale__row"><code>--bw-text-2xl · 24</code><span style="font-size:var(--bw-text-2xl)">Servicios y packs</span></div>
+      <div class="scale__row"><code>--bw-text-xl · 20</code><span class="amount">$67.500</span></div>
+      <div class="scale__row"><code>--bw-text-lg · 18</code><span style="font-size:var(--bw-text-lg)">Kinesiología general</span></div>
+      <div class="scale__row"><code>--bw-text-base · 16</code><span style="font-size:var(--bw-text-base)">Texto de lectura estándar en el panel.</span></div>
+      <div class="scale__row"><code>--bw-text-sm · 14</code><span style="font-size:var(--bw-text-sm)">Celdas de tabla y texto denso de diálogos.</span></div>
+      <div class="scale__row"><code>--bw-text-xs · 12</code><span style="font-size:var(--bw-text-xs);color:var(--text-color-secondary)">Helper text y descripciones.</span></div>
+      <div class="scale__row"><code>--bw-text-2xs · 11</code><span class="overline">Section label en caps</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Chips de estado</h2><span class="src overline">_badges.scss · .bw-chip</span></header>
+    <div class="row">
+      <span class="bw-chip bw-chip--online"><span class="bw-chip__dot"></span>Publicado</span>
+      <span class="bw-chip bw-chip--success">Activo</span>
+      <span class="bw-chip bw-chip--warning">Borrador</span>
+      <span class="bw-chip bw-chip--danger">Inactivo</span>
+      <span class="bw-chip bw-chip--remaining">Quedan 4</span>
+      <span class="bw-chip bw-chip--primary">Pack</span>
+      <span class="bw-chip bw-chip--secondary">Sin imagen</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Cards y botones</h2><span class="src overline">_cards.scss · _buttons.scss</span></header>
+    <div class="cards-row">
+      <div class="bw-card bw-card--elevated"><b>.bw-card</b><small style="font-size:var(--bw-font-caption);color:var(--text-color-secondary)">base + --elevated</small></div>
+      <div class="bw-card bw-card--signature"><b>--signature</b><small style="font-size:var(--bw-font-caption);color:var(--text-color-secondary)">borde 3px --bw-300</small></div>
+      <div class="bw-card bw-card--header"><b>--header</b><small style="font-size:var(--bw-font-caption);color:var(--text-color-secondary)">fondo --bw-50</small></div>
+      <div class="bw-card bw-card--active"><b>--active</b><small style="font-size:var(--bw-font-caption);color:var(--text-color-secondary)">ring 2px --bw-300</small></div>
+    </div>
+    <div class="row" style="margin-top:var(--bw-space-md)">
+      <button class="btn btn--cta">Guardar</button>
+      <button class="btn btn--primary">Nuevo servicio</button>
+      <button class="btn btn--outlined">Cancelar</button>
+      <button class="btn btn--ghost">Ver más</button>
+      <input class="input" style="width:220px" value="Kinesiología" />
+      <button class="bw-icon-btn" title="Editar">✎</button>
+      <button class="bw-icon-btn" title="Ver">◉</button>
+      <button class="bw-day-btn">L</button>
+      <button class="bw-day-btn active">M</button>
+      <button class="bw-day-btn">M</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Tabla densa</h2><span class="src overline">_tables.scss · styles.scss (.p-datatable)</span></header>
+    <table>
+      <thead><tr><th>Servicio</th><th>Sesiones</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Kinesiología general</td>
+          <td>1 · 3 · 6</td>
+          <td class="amount">$25.000</td>
+          <td><span class="bw-chip bw-chip--success">Activo</span></td>
+          <td style="text-align:right"><button class="bw-icon-btn" title="Editar">✎</button></td>
+        </tr>
+        <tr>
+          <td>Rehabilitación deportiva</td>
+          <td>1 · 5 · 10</td>
+          <td class="amount">$32.000</td>
+          <td><span class="bw-chip bw-chip--warning">Borrador</span></td>
+          <td style="text-align:right"><button class="bw-icon-btn" title="Editar">✎</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <header><h2>Diálogo y banner de cupo</h2><span class="src overline">styles.scss</span></header>
+    <div class="dialog-demo">
+      <header>Nuevo servicio</header>
+      <div class="content">
+        <p style="margin:0 0 .75rem">Content con <code>padding-top: 1.25rem</code> y fondo <code>--surface-ground</code>.</p>
+        <div class="bw-capacity-cta"><span>Alcanzaste el límite de servicios de tu plan.</span><a href="#" style="color:#b45309;font-weight:500">Mejorar plan</a></div>
+      </div>
+      <footer><button class="btn btn--outlined">Cancelar</button><button class="btn btn--cta">Guardar</button></footer>
+    </div>
+  </section>
+
+  <section class="section">
+    <header><h2>Espaciado, radios y sombras</h2><span class="src overline">_tokens.scss</span></header>
+    <div class="trio">
+      <div>
+        <span class="overline">Espaciado</span>
+        <div class="bars" style="margin-top:.5rem">
+          <div class="bar"><i style="width:var(--bw-space-xs)"></i>.25rem</div>
+          <div class="bar"><i style="width:var(--bw-space-sm)"></i>.5rem</div>
+          <div class="bar"><i style="width:var(--bw-space-md)"></i>1rem</div>
+          <div class="bar"><i style="width:var(--bw-space-lg)"></i>1.5rem</div>
+          <div class="bar"><i style="width:var(--bw-space-xl)"></i>2rem</div>
+        </div>
+      </div>
+      <div>
+        <span class="overline">Radios</span>
+        <div class="radii" style="margin-top:.5rem">
+          <div style="border-radius:var(--bw-radius-sm)">4px</div>
+          <div style="border-radius:var(--bw-radius-md)">6px</div>
+          <div style="border-radius:var(--bw-radius-lg)">8px</div>
+          <div style="border-radius:var(--bw-radius-pill)">999px</div>
+        </div>
+      </div>
+      <div>
+        <span class="overline">Sombras</span>
+        <div class="shadows" style="margin-top:.5rem">
+          <div class="card-shadow">--bw-shadow-card</div>
+          <div class="popover-shadow">--bw-shadow-popover</div>
+          <div class="header-shadow">--bw-dialog-header-shadow</div>
+          <div class="inner-shadow">--bw-dialog-content-shadow</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
