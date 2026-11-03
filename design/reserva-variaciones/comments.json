@@ -88,6 +88,17 @@
       "status": "resolved",
       "sentAt": "2026-11-03T16:03:16.777Z",
       "resolvedAt": "2026-11-03T16:03:36.190Z"
+    },
+    {
+      "id": "ndo8erhv",
+      "file": "01-reserva-variacion.html",
+      "selector": "#rv-main > div > div:nth-of-type(5) > label > span",
+      "excerpt": "Cobrar una sesión nueva (sin pack): agenda como venta suelta con la variación elegida.",
+      "comment": "no con la variacion elegida, aqui, esta opcion manda unicamente con una variacion de una sola sesion o con el producto original que puede que no tenga variaciones",
+      "createdAt": "2026-11-03T16:05:48.885Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T16:06:14.749Z",
+      "resolvedAt": "2026-11-03T16:06:27.826Z"
     }
   ]
 }
