@@ -487,3 +487,41 @@
   display: flex;
   align-items: flex-end;
 }
+
+// ── Variación + resumen de pack del paciente ─────────────────────────────────
+
+.variation-option {
+  display: flex;
+  align-items: center;
+  gap: var(--bw-space-sm);
+  min-width: 0;
+}
+
+.variation-name {
+  font-weight: var(--bw-weight-medium);
+  font-size: var(--bw-font-table);
+  white-space: nowrap;
+}
+
+.variation-per-session {
+  margin-left: auto;
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+.variation-discount {
+  flex-shrink: 0;
+}
+
+.paid-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--bw-space-sm);
+  padding: var(--bw-space-sm) var(--bw-space-md);
+  border-radius: var(--bw-radius-md);
+  background: var(--bw-surface-muted);
+  border: 1px solid var(--surface-border);
+  font-size: var(--bw-font-table);
+  color: var(--text-color);
+}

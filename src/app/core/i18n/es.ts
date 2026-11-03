@@ -791,7 +791,7 @@ export const ES: Record<string, string> = {
   'booking_form.provider': 'Profesional',
   'booking_form.provider_placeholder': 'Seleccionar profesional',
   'booking_form.service': 'Servicio',
-  'booking_form.service_placeholder': 'Seleccionar servicio o pack',
+  'booking_form.service_placeholder': 'Seleccionar servicio',
   'booking_form.create_service_btn': 'Crear un nuevo servicio',
   'booking_form.status': 'Estado',
   'booking_form.location': 'Sede / Ubicación',
@@ -803,6 +803,15 @@ export const ES: Record<string, string> = {
   'booking_form.notes_internal_placeholder': 'Solo visible para el equipo',
   'booking_form.btn.save': 'Guardar reserva',
   'booking_form.btn.save_repeat': 'Guardar repetición',
+
+  // Booking form dialog — variation step
+  'booking_form.variation': 'Variación',
+  'booking_form.variation.placeholder': 'Seleccionar variación',
+  'booking_form.variation.none': 'Sin variaciones',
+  'booking_form.variation.per_session': '/sesión',
+  'booking_form.variation.discount_title': 'Descuento respecto al precio de 1 sesión',
+  'booking_form.variation.paid_summary': 'Tiene {{used}} de {{total}} sesiones usadas',
+  'booking_form.variation.paid_chip': 'Activo',
 
   // Booking form dialog — service creation panel
   'booking_form.new_service.title': 'Crear un nuevo servicio',

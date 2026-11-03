@@ -31,8 +31,8 @@ import { DateTime } from 'luxon';
 import {
   Booking,
   Client,
+  ClientPack,
   Service,
-  ServicePack,
   Provider,
   CreateBooking,
   BookingRepeat,
@@ -50,6 +50,7 @@ import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
 import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import { RutDirective } from '@shared/validators/rut.directive';
+import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { CURRENCY_CONFIG } from '@shared/config/currency.config';
 import { Subject, of } from 'rxjs';
 import { debounceTime, switchMap, catchError, takeUntil, map } from 'rxjs/operators';
@@ -58,8 +59,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { matchSimilarClients, dedupeById, stripDigits } from '@shared/utils/client-similarity.util';
 import { PatientCardComponent } from '@shared/components/patient-card';
 
-/** Service or ServicePack tagged with _isPack by loadFormData() â€” never sent to the API. */
-type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
+
 
 @Component({
   selector: 'bw-booking-form-dialog',
@@ -82,6 +82,7 @@ type TaggedService = (Service | ServicePack) & { _isPack?: boolean };
     RutDirective,
     SkeletonModule,
     PatientCardComponent,
+    BwCurrencyPipe,
   ],
   templateUrl: './booking-form-dialog.component.html',
   styleUrls: ['./booking-form-dialog.component.scss'],
@@ -150,23 +151,24 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
    * no romper la edición de una reserva vieja (el selector quedaría vacío).
    */
   private readonly keepServiceId = signal<number | null>(null);
+  /** Pack de la reserva que se edita aunque esté inactivo (paso Variación). */
+  private readonly keepPackId = signal<number | null>(null);
+  /** Servicio elegido en el paso 1; deriva las opciones de variación. */
+  readonly selectedServiceId = signal<number | null>(null);
+  /** Packs del cliente para el resumen read-only (cacheado por cliente). */
+  readonly clientPacks = signal<ClientPack[]>([]);
+  private readonly clientPacksClientId = signal<number | null>(null);
 
   /**
-   * Servicios + packs unificados (packs llevan flag _isPack).
-   * Solo se ofrecen los ACTIVOS: un servicio inactivo no debe poder elegirse en
-   * ningún diálogo. La excepción es el que ya está en la reserva que se edita.
+   * Servicios ACTIVOS ofrecidos en el selector. Un servicio inactivo no debe
+   * poder elegirse; la excepción es el que ya está en la reserva que se edita.
+   * Los packs se ofrecen aparte, en el paso "Variación".
    */
-  readonly services = computed<(Service | ServicePack)[]>(() => {
+  readonly services = computed<Service[]>(() => {
     const keepId = this.keepServiceId();
-    const isSelectable = (item: Service | ServicePack) =>
-      item.active || (keepId !== null && item.id === keepId);
-
-    return [
-      ...this.refStore.services().filter(isSelectable),
-      ...this.refStore.packs()
-        .filter(isSelectable)
-        .map((p) => ({ ...p, _isPack: true })),
-    ];
+    return this.refStore.services().filter(
+      (s) => s.active || (keepId !== null && s.id === keepId),
+    );
   });
 
   // â”€â”€ Selected-client reactive mirror (signal + computed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -177,6 +179,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   onSuccessCallback?: () => void;
   selectedServiceKey = '';
+  selectedVariationKey = '';
   private _pendingServiceId = 0;
 
   readonly hours = Array.from({ length: 24 }, (_, i) => ({
@@ -250,15 +253,93 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   });
 
   serviceOptions = computed(() =>
-    this.services().map((s: TaggedService) => ({
+    this.services().map((s: Service) => ({
       label: `${s.name} (${s.duration_minutes || 60} min)`,
-      value: s._isPack ? `pack_${s.id}` : `svc_${s.id}`,
+      value: `svc_${s.id}`,
       name: s.name,
       duration_minutes: s.duration_minutes || 60,
       price: s.price || 0,
-      _id: s.id as number,
+      _id: s.id,
     })),
   );
+
+  /**
+   * Variaciones (términos) del servicio elegido: los service_packs ACTIVOS de
+   * ese servicio (más el pack de la reserva que se edita), ordenados por
+   * total_sessions ascendente. El badge se mide contra el precio de 1 sesión.
+   */
+  readonly variationOptions = computed(() => {
+    const serviceId = this.selectedServiceId();
+    if (!serviceId) return [];
+
+    const keepPackId = this.keepPackId();
+    const reference = this.referencePerSession(serviceId);
+
+    return this.refStore
+      .packs()
+      .filter((p) => p.service_id === serviceId)
+      .filter((p) => p.active || (keepPackId !== null && p.id === keepPackId))
+      .slice()
+      .sort((a, b) => a.total_sessions - b.total_sessions)
+      .map((p) => {
+        const sessions = p.total_sessions || 1;
+        const price = Number(p.price) || 0;
+        return {
+          value: `term_${p.id}`,
+          label: p.name || `${sessions}`,
+          sessions,
+          price,
+          perSession: sessions > 0 ? price / sessions : price,
+          discountPercent: this.computeDiscountPercent(price, sessions, reference),
+          duration_minutes: p.duration_minutes ?? this.serviceDuration(serviceId) ?? 60,
+          _id: p.id,
+        };
+      });
+  });
+
+  /** Resumen read-only del pack ACTIVO del paciente para el servicio elegido. */
+  readonly activeClientPack = computed<ClientPack | null>(() => {
+    const serviceId = this.selectedServiceId();
+    if (!serviceId) return null;
+
+    return (
+      this.clientPacks().find((p) => {
+        if (p.status !== 'active') return false;
+        const viaNested = p.service_pack?.service_id === serviceId;
+        const viaCatalog = this.refStore
+          .packs()
+          .some((sp) => sp.id === p.service_pack_id && sp.service_id === serviceId);
+        return viaNested || viaCatalog;
+      }) ?? null
+    );
+  });
+
+  /** Precio de referencia por sesión: el pack de 1 sesión, o el precio base. */
+  private referencePerSession(serviceId: number): number {
+    const oneSession = this.refStore
+      .packs()
+      .find((p) => p.service_id === serviceId && p.total_sessions === 1);
+    if (oneSession) return Number(oneSession.price) || 0;
+    const service = this.services().find((s) => s.id === serviceId);
+    return Number(service?.price ?? 0) || 0;
+  }
+
+  private serviceDuration(serviceId: number): number {
+    return this.services().find((s) => s.id === serviceId)?.duration_minutes || 60;
+  }
+
+  private computeDiscountPercent(termPrice: number, sessions: number, reference: number): number {
+    if (reference <= 0 || sessions <= 0 || termPrice <= 0) return 0;
+    const percent = Math.round((1 - termPrice / sessions / reference) * 100);
+    return percent > 0 ? percent : 0;
+  }
+
+  paidPackSummary(pack: ClientPack): string {
+    return this.lang.t('booking_form.variation.paid_summary', {
+      used: String(pack.used_sessions),
+      total: String(pack.total_sessions),
+    });
+  }
 
   locationOptions = computed(() => this.locations().map((l) => ({ label: l.name, value: l.id })));
 
@@ -370,7 +451,8 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       this.isEdit.set(true);
       const startDate = new Date(booking.start_time);
       const packId = booking.pack_session?.service_pack_id ?? null;
-      const serviceId = packId ? 0 : (booking.service_id ?? booking.service?.id ?? 0);
+      const pack = packId ? this.refStore.packs().find((p) => p.id === packId) : undefined;
+      const serviceId = booking.service_id ?? booking.service?.id ?? pack?.service_id ?? 0;
       this.formData = {
         ...this.getEmptyForm(),
         id: booking.id,
@@ -385,8 +467,11 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
         price: Number(booking.price) || 0,
         notes: booking.notes || '',
       };
-      this._pendingServiceId = packId ?? serviceId;
-      this.keepServiceId.set(this._pendingServiceId || null);
+      this._pendingServiceId = serviceId;
+      this.keepServiceId.set(serviceId || null);
+      this.keepPackId.set(packId);
+      this.selectedServiceId.set(serviceId || null);
+      this.selectedVariationKey = packId ? `term_${packId}` : '';
       this.selectedClientId.set(this.formData.client_id || null);
     } else {
       if (initialDate) this.formData.start_time = initialDate;
@@ -394,6 +479,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       if (this.lockedProviderId) this.formData.provider_id = this.lockedProviderId;
     }
 
+    this.loadClientPacksIfNeeded();
     this.loadFormData();
     this.visible = true;
     this.cdr.detectChanges();
@@ -403,8 +489,13 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.formData = this.getEmptyForm();
     this.selectedClientId.set(null);
     this.selectedServiceKey = '';
+    this.selectedVariationKey = '';
+    this.selectedServiceId.set(null);
     this._pendingServiceId = 0;
     this.keepServiceId.set(null);
+    this.keepPackId.set(null);
+    this.clientPacks.set([]);
+    this.clientPacksClientId.set(null);
     this.isEdit.set(false);
     this.showRepeatDialog = false;
     this.showServicePanel = false;
@@ -463,21 +554,30 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   // â”€â”€ Service change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private resolveServiceKey(serviceId: number): string {
-    if (!serviceId) return '';
-    const opts = this.serviceOptions();
-    if (opts.find((o) => o.value === `pack_${serviceId}`)) return `pack_${serviceId}`;
-    return `svc_${serviceId}`;
+    return serviceId ? `svc_${serviceId}` : '';
   }
 
   onServiceChange() {
     const option = this.serviceOptions().find((o) => o.value === this.selectedServiceKey);
     if (option) {
-      const isPack = this.selectedServiceKey.startsWith('pack_');
-      this.formData.service_id = isPack ? 0 : option._id;
-      this.formData.service_pack_id = isPack ? option._id : null;
+      this.formData.service_id = option._id;
+      this.selectedServiceId.set(option._id);
       this.formData.duration_minutes = option.duration_minutes;
       this.formData.price = Number(option.price) || 0;
+    } else {
+      this.selectedServiceId.set(null);
     }
+    this.formData.service_pack_id = null;
+    this.selectedVariationKey = '';
+    this.loadClientPacksIfNeeded();
+  }
+
+  onVariationChange() {
+    const option = this.variationOptions().find((o) => o.value === this.selectedVariationKey);
+    if (!option) return;
+    this.formData.service_pack_id = option._id;
+    this.formData.duration_minutes = option.duration_minutes;
+    this.formData.price = option.price;
   }
 
   onLocationChange(): void {
@@ -489,6 +589,32 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   onClientChange(): void {
     this.selectedClientId.set(this.formData.client_id || null);
+    this.loadClientPacksIfNeeded();
+  }
+
+  /**
+   * Resumen del pack del paciente: cacheado por cliente (no se re-consulta si
+   * el cliente no cambió) y tolerante a error (sin resumen, sin toast).
+   */
+  private loadClientPacksIfNeeded(): void {
+    const clientId = this.formData.client_id;
+    const serviceId = this.selectedServiceId();
+
+    if (!clientId || !serviceId) {
+      this.clientPacks.set([]);
+      this.clientPacksClientId.set(null);
+      return;
+    }
+
+    if (this.clientPacksClientId() === clientId) return;
+
+    this.clientPacksClientId.set(clientId);
+    this.clientPacks.set([]);
+
+    this.clientsApi
+      .getClientPacks(clientId)
+      .pipe(takeUntil(this.destroy$), catchError(() => of([] as ClientPack[])))
+      .subscribe((packs) => this.clientPacks.set(packs));
   }
 
   // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
