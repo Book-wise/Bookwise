@@ -196,7 +196,7 @@ Sesión:  ( ) 1 · programada 12/10   ( ) 2 · programada 19/10   (•) 3   ( ) 
 | T3 | `/admin/packs` convertida en "Servicios y packs" — ✅ **IMPLEMENTADO** (2026-11-03, sin commit): grilla de tarjetas + vista lista con términos derivados de `service_packs`, filtro de estado, buscador y banner de sugerencia. **Read-only**: sin `POST/PATCH` no hay alta/edición, y no se ponen botones muertos | T2 (parcial) | `packs-list.component.{ts,html,scss}` + `services-terms.util.ts` + 21 specs |
 | T4 | Diálogo de servicio con términos + escalera de descuento por volumen opcional (vacía por defecto) + validaciones | T2, T3 | diálogo + specs (precio por sesión y escalera son lógica pura → testeable) |
 | T5 | Quick-create del form de reserva adaptada al `POST /services` real (sin romper el flujo) | T2 | fix + manejo de 405 mientras no exista |
-| T6 | Agenda: `client_pack_id` + selector de sesión "N de M" — **PASO 1 HECHO** (`1f22326`): **servicio → variación** con badge `−%` vs 1 sesión + **resumen read-only** del pack del paciente. **Falta** el selector de sesión N de M y el linkeo, bloqueados por el contrato 2.6 | contrato 2.6 (solo para la parte de sesiones) | form de reserva + specs |
+| T6 | Agenda: `client_pack_id` + selector de sesión "N de M" — **PASO 1 HECHO** (`1f22326`): **servicio → variación** con badge `−%` vs 1 sesión + **resumen read-only** del pack del paciente. **Contrato CONFIRMADO por el backend** (`5f23ae3`, rama sin mergear): `client_pack_id` (+ `pack_session_number` opcional), `sessions[]` con `scheduled_at`, 6 códigos de error. **Falta cablear** → esperando merge/deploy | contrato 2.6 ✅ (falta deploy) | form de reserva + specs |
 | T7 | Retirar la tabla plana de packs del catálogo (los packs pasan a ser términos) | seeds + contrato 2.3 | `/admin/packs` sin la columna huérfana |
 
 T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la orden pagada.
@@ -219,7 +219,17 @@ T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la 
 2. **Storage de la imagen** (CDN propio / S3 / reutilizar la de Woo): se necesitan las dos URLs.
 3. Confirmación del backend del shape de variaciones dentro del servicio (opción A) y del
    `variation_id` en `service_packs`.
-4. **Permisos `services.*` / `service_packs.*` y el orden del gating — PENDIENTE (2026-11-03).**
+4. **Permisos `services.*` / `service_packs.*` — KEYS LISTAS, GATING BLOQUEADO (2026-11-03).**
+   El backend ya las creó (`8434003` + `cb934eb`): `services.view/manage`, `service_packs.view/manage`;
+   admin con `manage` por defecto y **recepcionista en solo lectura**. **Pero cada tenant necesita
+   `php artisan permissions:apply-baseline`** para que `/auth/me` las emita: mientras no corra, gatear
+   esconde la pantalla para todos (fail-closed). Coordinar con el backend y cablear en el mismo
+   release que el baseline.
+5. **Estados del servicio — CONFIRMADO (2026-11-03).** `services.status: draft|active|inactive`
+   (`active` queda como espejo) y `GET /services?status=…`. Ojo: **`?active=0` ahora devuelve draft +
+   inactive**, no solo inactivos. `POST /bookings` rechaza no publicados con `422 service_not_available`.
+   La UI puede ya ofrecer el cuarto estado «Borrador» en el filtro cuando se despliegue.
+6. **Permisos `services.*` / `service_packs.*` — (texto histórico, reemplazado por el ítem 4).**
    Hallazgo: `src/app/shared/config/abilities.config.ts` **no tiene** `services.view/manage` ni
    `service_packs.view/manage` (sí tiene `pack_sessions.manage`, `client_packs.*`), y `/admin/packs`
    es la **única** ruta del admin **sin `canActivate`** y el **único** ítem del menú **sin `ability`**.
@@ -339,6 +349,16 @@ T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la 
   `ng build` verde, 0 literales de color nuevos. Corregido de paso el placeholder
   `booking_form.service_placeholder` («servicio o pack» → «servicio») que el cambio dejaba obsoleto.
   Sigue bloqueado: selección/linkeo de la sesión N de M, orden secuencial y «Crear variaciones».
+
+  **Contrato recibido del backend (2026-11-03, mensaje `539769daf2c5d92e`)**: confirmados los bloques
+  **1** (`POST /bookings` con `client_pack_id`, `pack_session_number` opcional, transaccional, no
+  consume al linkear, 6 códigos de error incl. **`pack_client_mismatch`**), **2** (`sessions[]` con
+  `scheduled_at` + `remaining_sessions`, aditivo) y **4** (`status: draft|active|inactive`,
+  `?status=`, `422 service_not_available`, keys de permisos con baseline por tenant). **Nada
+  desplegado**: los commits viven en ramas locales (`5f23ae3`, `988c6d9`, `8434003`, `cb934eb`).
+  **Regla**: no cablear hasta el merge/deploy, y el guard de permisos solo después de
+  `permissions:apply-baseline`. Bloque **3 (CRUD + variaciones) sigue pendiente** de la autorización
+  de su mantenedor. Detalle completo en el proposal, §4ter.
 
   **Seguimiento al backend (2026-11-03, mensaje `c56eaee7`)**: se reenvió el pedido de lo que
   **bloquea** la implementación, con el contrato explícito:

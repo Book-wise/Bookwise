@@ -259,6 +259,72 @@ Sigue abierto del lado del backend: **backfill histórico** (pregunta 6) y **sto
 
 ---
 
+## 4ter. Contrato CONFIRMADO por el backend (2026-11-03)
+
+Respuesta del agente de `Bookwise-API`. **Nada está desplegado todavía**: todo vive en ramas locales
+a la espera del merge de su mantenedor.
+
+### Bloque 1 — `POST /v1/bookings` con pack del cliente (rama `feat/booking-pack-sessions`, `5f23ae3`)
+
+```json
+{ "client_pack_id": 12, "pack_session_number": 2, "client_id": 34, "location_id": 5,
+  "start_time": "2026-11-10T10:00:00-03:00" }
+```
+
+- `pack_session_number` es **opcional**: el backend asigna la próxima (siempre en orden). El front lo
+  **omite**.
+- **Excluyente** con `service_id` y `service_pack_id` → 422 `validation` si se manda más de uno.
+- Reserva + linkeo (`pending → scheduled` con `booking_id`) en **la misma transacción**: si la sesión
+  no se puede tomar, la reserva no se crea.
+- Linkear **no consume**: `used_sessions` se mueve recién al atender la sesión.
+- Errores (todos 422): `pack_not_active`, `pack_not_paid`, `no_sessions_remaining`,
+  `pack_session_unavailable`, `pack_session_out_of_order` y **`pack_client_mismatch`** (nuevo: el pack
+  es de otro cliente).
+
+### Bloque 2 — `GET /v1/clients/{id}/packs` con sesiones
+
+Envelope sin cambios (`{"data": [...]}`). Cada pack agrega `remaining_sessions` y `sessions[]`
+ordenadas por `session_number`:
+
+```json
+{ "id": 51, "session_number": 1, "status": "scheduled", "booking_id": 900,
+  "attended_at": null, "scheduled_at": "2026-11-10T10:00:00-03:00" }
+```
+
+- `scheduled_at` = `booking.start_time` ya resuelto: el front no tiene que pedir cada booking (es lo
+  que faltaba para mostrar «programada el …»).
+- **Aditivo**: se conservan todas las claves previas del pack y de cada sesión.
+- `PATCH /client-packs/{id}/use` sigue igual; `Idempotency-Key` es **opcional** (recomendado mandarlo).
+
+### Bloque 4 — estados y permisos (ramas `feat/services-status` `988c6d9`, `feat/permissions-services-packs` `8434003` + `cb934eb`)
+
+- `services.status: draft|active|inactive` como fuente de verdad (`active` queda como espejo).
+- `GET /services?status=active|draft|inactive` (422 `service_status_invalid`) y `?active=` legacy.
+  ⚠️ **`?active=0` ahora devuelve NO publicados (draft + inactive)**, no solo inactivos.
+- `POST /bookings` rechaza servicio no publicado con 422 **`service_not_available`** (cubre también
+  el pack de catálogo).
+- Keys nuevas: `services.view`, `services.manage`, `service_packs.view`, `service_packs.manage`.
+  Admin con `manage` por defecto; **recepcionista** con `services.view` + `service_packs.view` +
+  `locations.view` (solo lectura).
+- ⚠️ **No cablear el guard todavía**: cada tenant necesita
+  `php artisan permissions:apply-baseline` (aditivo, `--dry-run` disponible) para que `/auth/me` las
+  emita. Con `hasPermission` fail-closed, gatear antes **esconde la pantalla para todos**.
+
+### Bloque 3 — CRUD de servicios + variaciones: **PENDIENTE**
+
+Diseño confirmado por ellos (variaciones dentro del servicio, `GET /packs` sigue devolviendo los
+packs materializados, `compare_at_price: null → discount_percent: null`, `compare_at_price > price` o
+422). **Falta la autorización de su mantenedor para arrancarlo.**
+
+### Plan del front (regla de ejecución)
+
+1. **Nada se cablea hasta el merge + deploy** del backend: los commits están en ramas locales.
+2. **El guard de permisos va después de `permissions:apply-baseline`**, en el mismo release; nunca antes.
+3. Cuando avise el merge: cablear `client_pack_id`/`sessions[]` (selector de sesión N de M con orden
+   secuencial), mapear los 6 códigos de error y el filtro `?status=`.
+
+---
+
 ## 5. Lo que este pedido NO cambia (para no romper nada)
 
 - `GET /services` y `GET /packs` mantienen sus campos actuales (solo se agregan los nuevos y, si se
