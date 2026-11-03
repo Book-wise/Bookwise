@@ -21,6 +21,9 @@ import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { PaymentTabComponent } from './tabs/payment/payment-tab.component';
 import { ReservaTabComponent } from './tabs/reserva/reserva-tab.component';
 import { HistorialTabComponent } from './tabs/historial/historial-tab.component';
+import { FichaTabComponent } from './tabs/ficha/ficha-tab.component';
+import type { ClinicalRecord, ClinicalRecordType } from './tabs/ficha/clinical-record.model';
+import { Router } from '@angular/router';
 
 export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';
 
@@ -38,6 +41,7 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     PaymentTabComponent,
     ReservaTabComponent,
     HistorialTabComponent,
+    FichaTabComponent,
     PatientDetailContentComponent,
   ],
   providers: [ClientDetailStore, BookingDialogStore],
@@ -103,6 +107,29 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   );
 
   readonly booking = this.dialogStore.booking;
+
+  // ── Ficha médica ────────────────────────────────────────────────────────
+  // El backend todavía no expone dominio clínico (no hay `clinical_records` ni
+  // `clinical_record_types`), así que la pestaña Ficha se alimenta con
+  // colecciones vacías: la UI muestra sus estados vacíos en vez de datos falsos.
+  // Cuando exista el endpoint, estos tres signals se llenan con la respuesta.
+  readonly fichaRecords = signal<ClinicalRecord[]>([]);
+  readonly fichaHistory = signal<ClinicalRecord[]>([]);
+  readonly fichaRecordTypes = signal<ClinicalRecordType[]>([]);
+  private readonly router = inject(Router);
+
+  /** Sin tipos de ficha configurados, la pestaña Ficha ofrece configurarlos. */
+  goToRecordTypesSettings(): void {
+    this.router.navigate(['/admin/configuraciones']);
+  }
+
+  readonly fichaServiceLabel = computed(() => {
+    const booking = this.booking();
+    if (!booking) return '';
+    const label = booking.service?.name ?? '';
+    const sessions = booking.pack_session?.session_number;
+    return sessions ? `${label} · sesión ${sessions}` : label;
+  });
 
   /** Narrowed patient tab currently filling the content area (safe when `activeView() !== 'reserva'`). */
   readonly activeDetailTab = computed<PatientTab>(() => {

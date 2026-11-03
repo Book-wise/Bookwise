@@ -1,0 +1,141 @@
+// ============================================
+// Pestaña Ficha — tokens de design/system.md
+// ============================================
+
+.ficha {
+  display: grid;
+  gap: var(--bw-space-md);
+  padding: var(--bw-space-md);
+}
+
+.ficha__service {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--bw-radius-sm);
+  background: var(--bw-50);
+  border: 1px solid var(--bw-100);
+  color: var(--bw-500);
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-medium);
+}
+
+.ficha__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bw-space-md);
+}
+
+.ficha__section {
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
+  color: var(--text-color);
+}
+
+.ficha__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--bw-radius-md);
+  background: var(--bw-300);
+  color: var(--surface-card);
+  font-family: inherit;
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-medium);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    background: color-mix(in srgb, var(--bw-300) 88%, var(--bw-900));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 2px;
+  }
+
+  &--disabled {
+    background: var(--bw-50);
+    border-color: var(--bw-100);
+    color: var(--bw-500);
+  }
+}
+
+.ficha__empty {
+  margin: 0;
+  font-size: var(--bw-font-table);
+  color: var(--text-color-secondary);
+}
+
+.ficha__list {
+  display: grid;
+  gap: var(--bw-space-sm);
+}
+
+.ficha__record {
+  display: flex;
+  align-items: center;
+  gap: var(--bw-space-md);
+  padding: 0.875rem 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-lg);
+}
+
+.ficha__record-body {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.ficha__record-title {
+  margin: 0;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--bw-tracking-overline);
+  color: var(--text-color);
+}
+
+.ficha__record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bw-space-md);
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+  }
+}
+
+.ficha__link {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--bw-font-table);
+  color: var(--bw-500);
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--bw-300);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 2px;
+  }
+}
