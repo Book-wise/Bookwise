@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "02-ficha-subpestanas.html",
+  "handoffs": {
+    "02-ficha-subpestanas.html": {
+      "status": "in_progress",
+      "queued": true,
+      "sentAt": "2026-11-03T17:18:39.573Z",
+      "startedAt": "2026-11-03T17:19:13.095Z",
+      "implementedAt": null,
+      "note": "Implementando la pestaña Ficha como componente presentacional (lista de fichas de la reserva + historial + desplegable de tipos). Sin endpoint clínico todavía: el padre pasa colecciones vacías y la UI muestra estados vacíos honestos."
+    }
+  }
+}
