@@ -311,9 +311,15 @@ T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la 
   3 tests nuevos cubren: no recargar si ya está cargado, pedir cuando no lo está, y mostrar el error
   del store (24/24 en la unidad).
 
+  **Diseño nuevo (2026-11-03)**: `design/reserva-variaciones/` — artboard
+  `01-reserva-variacion.html` (servicio → **variación** → **sesión pagada**, con «sesión 2 de 3» y el
+  estado de cada sesión) y `02-sesiones-paciente.html` (la pestaña **Sesiones** que ya existe en
+  `patient-detail-content`, más el detalle por sesión). Depende del contrato 2.6 (`client_pack_id` +
+  `sessions[]`); hoy el alta de reserva **no** puede linkear la sesión.
+
   **Commits (rama `feat/services-packs-variations`, sin push)**: `71b6622` helpers de términos ·
   `44e27a2` pantalla Servicios y packs (tarjetas + lista, i18n, `nav.packs`) · `14e97fc` booking-form
-  solo servicios activos · docs/diseño en el commit siguiente. Límite de slice: 3 commits,
+  solo servicios activos · `67e1be7` docs + artboards de productos-packs. Límite de slice: 3 commits,
   ~1.790 líneas autoradas (el SCSS de la pantalla pesa ~580).
 
   **Decisiones de fidelidad**: los términos se derivan de `service_packs` (no se inventa un término
