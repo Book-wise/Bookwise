@@ -156,6 +156,11 @@ modela como dato de entrada, no como regla de promoción.
 
 ## 4. Agenda: cómo se ve "sesión 3 de 6"
 
+> **Venta suelta (seba, 2026-11-03):** «cobrar una sesión nueva, sin pack» agenda **una sola
+> sesión**: la **variación de 1 sesión** si existe, o el **servicio original** cuando el servicio no
+> tiene variaciones. Nunca agenda con la variación de 3+ sesiones elegida en el selector — es otro
+> producto.
+>
 > **Regla de secuencia (seba, 2026-11-03):** las sesiones de un pack se consumen **siempre en orden**.
 > No hay agendamiento alterno: se puede *ver* el pack completo, pero **solo se habilita la siguiente**
 > sesión libre; las posteriores quedan **bloqueadas** hasta consumir la anterior. Si se cancela una
@@ -191,7 +196,7 @@ Sesión:  ( ) 1 · programada 12/10   ( ) 2 · programada 19/10   (•) 3   ( ) 
 | T3 | `/admin/packs` convertida en "Servicios y packs" — ✅ **IMPLEMENTADO** (2026-11-03, sin commit): grilla de tarjetas + vista lista con términos derivados de `service_packs`, filtro de estado, buscador y banner de sugerencia. **Read-only**: sin `POST/PATCH` no hay alta/edición, y no se ponen botones muertos | T2 (parcial) | `packs-list.component.{ts,html,scss}` + `services-terms.util.ts` + 21 specs |
 | T4 | Diálogo de servicio con términos + escalera de descuento por volumen opcional (vacía por defecto) + validaciones | T2, T3 | diálogo + specs (precio por sesión y escalera son lógica pura → testeable) |
 | T5 | Quick-create del form de reserva adaptada al `POST /services` real (sin romper el flujo) | T2 | fix + manejo de 405 mientras no exista |
-| T6 | Agenda: `client_pack_id` + selector de sesión "N de M" | contrato 2.6 | form de reserva + badge en el evento |
+| T6 | Agenda: `client_pack_id` + selector de sesión "N de M" — **PASO 1 HECHO** (`1f22326`): **servicio → variación** con badge `−%` vs 1 sesión + **resumen read-only** del pack del paciente. **Falta** el selector de sesión N de M y el linkeo, bloqueados por el contrato 2.6 | contrato 2.6 (solo para la parte de sesiones) | form de reserva + specs |
 | T7 | Retirar la tabla plana de packs del catálogo (los packs pasan a ser términos) | seeds + contrato 2.3 | `/admin/packs` sin la columna huérfana |
 
 T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la orden pagada.
@@ -323,6 +328,35 @@ T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la 
   requests**. Tras una escritura futura se refresca con `invalidateServices()`/`invalidatePacks()`.
   3 tests nuevos cubren: no recargar si ya está cargado, pedir cuando no lo está, y mostrar el error
   del store (24/24 en la unidad).
+
+  **T6 paso 1 implementado (2026-11-03, commit `1f22326`)**: en `booking-form-dialog` el servicio y la
+  variación son dos selects. Servicio = solo activos; variación = `service_packs` del servicio
+  (activos, ordenados por sesiones) con **precio por sesión** y **badge `−%`** contra el precio de 1
+  sesión (pack de 1 sesión o precio base). Elegir variación setea `service_pack_id`/duración/precio;
+  el **payload de `onSave()` no cambió**. Además, **resumen read-only** del pack activo del paciente
+  («1 de 3 usadas», una llamada a `getClientPacks` por cliente, tolerante a error).
+  Evidencia: `booking-form-dialog` **61 passed / 2 failed** (los 2 preexistentes de `matchMedia`),
+  `ng build` verde, 0 literales de color nuevos. Corregido de paso el placeholder
+  `booking_form.service_placeholder` («servicio o pack» → «servicio») que el cambio dejaba obsoleto.
+  Sigue bloqueado: selección/linkeo de la sesión N de M, orden secuencial y «Crear variaciones».
+
+  **Seguimiento al backend (2026-11-03, mensaje `c56eaee7`)**: se reenvió el pedido de lo que
+  **bloquea** la implementación, con el contrato explícito:
+  1. `POST /bookings` con **`client_pack_id`** + `pack_session_number`, linkeo atómico
+     (`pending → scheduled`) y **regla de secuencia** (`422 pack_session_out_of_order`);
+  2. **`sessions[]`** en `GET /clients/{id}/packs`, con `attended_at` para la fecha de uso y
+     **`scheduled_at`** (nuevo pedido) para la fecha de la sesión programada;
+  3. CRUD de servicios + `variations[]` dentro del servicio + `service_packs.variation_id`, con la
+     aclaración de **mantener `GET /packs` devolviendo la materialización** para no romper el paso
+     "servicio → variación" que el front ya implementa.
+  Sin respuesta todavía (el primer mensaje `d4810fc6` tampoco fue respondido).
+
+  **Handoff de implementación (2026-11-03)**: artboard
+  `design/reserva-variaciones/01-reserva-variacion.html` → `in_progress`. Alcance real: **servicio →
+  variación** (términos = `service_packs` del servicio, activos, ordenados por sesiones) con precio por
+  sesión y badge `−%` medido contra el precio de 1 sesión, más un **resumen read-only** del pack del
+  paciente («1 de 3 usadas»). **Fuera de alcance por contrato**: elegir/linkear la sesión N de M
+  (`client_pack_id`), el orden secuencial forzado y «Crear variaciones» (`POST/PATCH /services` = 405).
 
   **Diseño nuevo (2026-11-03)**: `design/reserva-variaciones/` — artboard
   `01-reserva-variacion.html` (servicio → **variación** → **sesión pagada**, con «sesión 2 de 3» y el
