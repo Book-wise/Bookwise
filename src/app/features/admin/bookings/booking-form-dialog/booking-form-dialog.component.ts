@@ -145,11 +145,29 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   readonly providers = signal<Provider[]>([]); // location-filtered, se llena manualmente
   readonly locations = this.refStore.locations;
 
-  /** Servicios + packs unificados (packs llevan flag _isPack) */
-  readonly services = computed<(Service | ServicePack)[]>(() => [
-    ...this.refStore.services(),
-    ...this.refStore.packs().map((p) => ({ ...p, _isPack: true })),
-  ]);
+  /**
+   * Servicio que se está editando aunque esté inactivo: se mantiene visible para
+   * no romper la edición de una reserva vieja (el selector quedaría vacío).
+   */
+  private readonly keepServiceId = signal<number | null>(null);
+
+  /**
+   * Servicios + packs unificados (packs llevan flag _isPack).
+   * Solo se ofrecen los ACTIVOS: un servicio inactivo no debe poder elegirse en
+   * ningún diálogo. La excepción es el que ya está en la reserva que se edita.
+   */
+  readonly services = computed<(Service | ServicePack)[]>(() => {
+    const keepId = this.keepServiceId();
+    const isSelectable = (item: Service | ServicePack) =>
+      item.active || (keepId !== null && item.id === keepId);
+
+    return [
+      ...this.refStore.services().filter(isSelectable),
+      ...this.refStore.packs()
+        .filter(isSelectable)
+        .map((p) => ({ ...p, _isPack: true })),
+    ];
+  });
 
   // â”€â”€ Selected-client reactive mirror (signal + computed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly selectedClientId = signal<number | null>(null);
@@ -368,6 +386,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
         notes: booking.notes || '',
       };
       this._pendingServiceId = packId ?? serviceId;
+      this.keepServiceId.set(this._pendingServiceId || null);
       this.selectedClientId.set(this.formData.client_id || null);
     } else {
       if (initialDate) this.formData.start_time = initialDate;
@@ -385,6 +404,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     this.selectedClientId.set(null);
     this.selectedServiceKey = '';
     this._pendingServiceId = 0;
+    this.keepServiceId.set(null);
     this.isEdit.set(false);
     this.showRepeatDialog = false;
     this.showServicePanel = false;

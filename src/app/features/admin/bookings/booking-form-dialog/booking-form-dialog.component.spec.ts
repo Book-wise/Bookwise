@@ -27,13 +27,15 @@ describe('BookingFormDialogComponent', () => {
     (signal as unknown as import('@angular/core').WritableSignal<T>).set(value);
   }
 
+  let refStoreMock: any;
+
   beforeEach(async () => {
     const clientsApi = { getClients: vi.fn().mockReturnValue(of([])), createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })) } as any;
     const providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
     const bookingsApi = { updateBooking: vi.fn(), createBooking: vi.fn(), getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
     const servicesApi = { createService: vi.fn() } as any;
 
-    const refStoreMock = {
+    refStoreMock = {
       clients: signal([] as Client[]),
       locations: signal([]),
       services: signal([]),
@@ -61,6 +63,41 @@ describe('BookingFormDialogComponent', () => {
 
     fixture = TestBed.createComponent(BookingFormDialogComponent);
     component = fixture.componentInstance;
+  });
+
+  describe('visibilidad de servicios en el selector', () => {
+    const activeService = { id: 1, name: 'Kinesiología', duration_minutes: 60, price: '25000', active: true };
+    const inactiveService = { id: 2, name: 'Servicio retirado', duration_minutes: 45, price: '30000', active: false };
+    const activePack = { id: 10, service_id: 1, name: 'Pack 3', total_sessions: 3, price: '67500', active: true };
+    const inactivePack = { id: 11, service_id: 1, name: 'Pack viejo', total_sessions: 6, price: '120000', active: false };
+
+    it('no ofrece servicios inactivos', () => {
+      refStoreMock.services.set([activeService, inactiveService] as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+
+      expect(values).toContain('svc_1');
+      expect(values).not.toContain('svc_2');
+    });
+
+    it('no ofrece packs inactivos', () => {
+      refStoreMock.packs.set([activePack, inactivePack] as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+
+      expect(values).toContain('pack_10');
+      expect(values).not.toContain('pack_11');
+    });
+
+    it('mantiene visible el servicio inactivo de la reserva que se edita', () => {
+      refStoreMock.services.set([activeService, inactiveService] as never);
+
+      component.openNew({ id: 99, service_id: 2, service_pack_id: null, price: 30000 } as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+      expect(values).toContain('svc_2');
+      expect(component.selectedServiceKey).toBe('svc_2');
+    });
   });
 
   describe('panel toggling (mutual exclusion)', () => {
