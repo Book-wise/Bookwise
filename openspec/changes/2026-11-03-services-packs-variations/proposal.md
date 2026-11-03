@@ -310,6 +310,21 @@ ordenadas por `session_number`:
   `php artisan permissions:apply-baseline` (aditivo, `--dry-run` disponible) para que `/auth/me` las
   emita. Con `hasPermission` fail-closed, gatear antes **esconde la pantalla para todos**.
 
+### Precisiones verificadas por el backend (2026-11-03, mensaje `688f46c1`)
+
+- **`draft` → `POST /bookings` responde `422 service_not_available`**, igual que `inactive` (guard
+  `!isBookable()`, con un test por caso y otro para el pack de catálogo de un servicio inactivo).
+- **`GET /services` sin filtro devuelve los tres estados** (test explícito). Para los **diálogos**
+  corresponde `?status=active` (o `?active=1`).
+- **`?active=0` = no publicados** (`draft` + `inactive`), pero sigue siendo el filtro sobre la columna
+  espejo `active`: no hay ningún consumidor actual en el repo, y sin datos `draft` el resultado es
+  idéntico al de antes del deploy.
+- **`GET /packs` no se toca** (verificado por diff: `ServicePackController`, `ServicePackResource` y
+  `routes/api.php` sin cambios en ninguna de las dos ramas).
+- **`pack_session_number`**, si algún día se manda, tiene que ser **exactamente la próxima pendiente**:
+  si no, `422 pack_session_out_of_order` explícito (no se corrige en silencio). El front lo omite.
+- `scheduled_at` viene en **hora de la sucursal con offset**; `attended_at` marca el uso.
+
 ### Bloque 3 — CRUD de servicios + variaciones: **PENDIENTE**
 
 Diseño confirmado por ellos (variaciones dentro del servicio, `GET /packs` sigue devolviendo los
