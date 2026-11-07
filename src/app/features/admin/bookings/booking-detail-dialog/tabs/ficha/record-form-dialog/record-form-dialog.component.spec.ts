@@ -1,0 +1,140 @@
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
+import { RecordFormDialogComponent } from './record-form-dialog.component';
+import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
+import { LanguageService } from '@services/language.service';
+import type { ClinicalRecordField, ClinicalRecordType } from '@models';
+
+function makeField(overrides: Partial<ClinicalRecordField> = {}): ClinicalRecordField {
+  return { key: 'f1', label: 'Campo', type: 'text', required: false, ...overrides };
+}
+
+function makeType(fields: ClinicalRecordField[], overrides: Partial<ClinicalRecordType> = {}): ClinicalRecordType {
+  return { id: 10, name: 'Ficha clínica', active: true, fields, ...overrides };
+}
+
+describe('RecordFormDialogComponent', () => {
+  let fixture: ComponentFixture<RecordFormDialogComponent>;
+  let component: RecordFormDialogComponent;
+  let recordsStore: InstanceType<typeof ClinicalRecordsStore>;
+
+  async function setup(type: ClinicalRecordType): Promise<void> {
+    await TestBed.configureTestingModule({
+      imports: [RecordFormDialogComponent],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: LanguageService, useValue: { t: (k: string) => k } },
+      ],
+    }).compileComponents();
+
+    recordsStore = TestBed.inject(ClinicalRecordsStore);
+    patchState(unprotected(recordsStore), { records: [] });
+
+    fixture = TestBed.createComponent(RecordFormDialogComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('type', type);
+    fixture.componentRef.setInput('visible', true);
+    fixture.componentRef.setInput('bookingId', 900);
+    fixture.componentRef.setInput('clientId', 7);
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  function render(): void {
+    fixture.detectChanges();
+  }
+
+  function buttonByText(text: string): HTMLButtonElement | null {
+    const buttons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button'),
+    );
+    return buttons.find((b) => (b.textContent ?? '').includes(text)) ?? null;
+  }
+
+  it('renderiza el control correcto para cada tipo de campo', async () => {
+    await setup(
+      makeType([
+        makeField({ key: 'f_text', label: 'Texto', type: 'text' }),
+        makeField({ key: 'f_long', label: 'Largo', type: 'longtext' }),
+        makeField({ key: 'f_num', label: 'Número', type: 'number' }),
+        makeField({ key: 'f_sel', label: 'Selección', type: 'select', options: ['A', 'B'] }),
+        makeField({ key: 'f_date', label: 'Fecha', type: 'date' }),
+      ]),
+    );
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect((el.querySelector('#rfd-f_text') as HTMLInputElement)?.type).toBe('text');
+    expect(el.querySelector('#rfd-f_long')?.tagName).toBe('TEXTAREA');
+    expect((el.querySelector('#rfd-f_num') as HTMLInputElement)?.type).toBe('number');
+    expect(el.querySelector('#rfd-f_date')?.tagName).toBe('INPUT');
+    expect((el.querySelector('#rfd-f_date') as HTMLInputElement)?.type).toBe('date');
+    expect(el.querySelector('p-select')).toBeTruthy();
+  });
+
+  it('muestra las options de un campo select', async () => {
+    await setup(makeType([makeField({ key: 'f_sel', label: 'Color', type: 'select', options: ['Rojo', 'Azul'] })]));
+
+    expect(component.selectOptions(makeField({ key: 'f_sel', type: 'select', options: ['Rojo', 'Azul'] }))).toEqual([
+      { label: 'Rojo', value: 'Rojo' },
+      { label: 'Azul', value: 'Azul' },
+    ]);
+    expect((fixture.nativeElement as HTMLElement).querySelector('p-select')).toBeTruthy();
+  });
+
+  it('un campo requerido vacío bloquea el submit y muestra el mensaje por campo', async () => {
+    await setup(makeType([makeField({ key: 'f_name', label: 'Nombre', type: 'text', required: true })]));
+
+    buttonByText('ficha.form.save')!.click();
+    render();
+
+    expect(recordsStore.records().length).toBe(0);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.rfd-error')?.textContent).toContain('ficha.form.required');
+  });
+
+  it('un select solo acepta valores de sus options', async () => {
+    await setup(makeType([makeField({ key: 'f_sel', label: 'Color', type: 'select', options: ['Rojo', 'Azul'] })]));
+
+    component.form().controls['f_sel'].setValue('Verde');
+    buttonByText('ficha.form.save')!.click();
+    render();
+
+    expect(recordsStore.records().length).toBe(0);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.rfd-error')?.textContent).toContain('ficha.form.invalid_option');
+  });
+
+  it('al guardar crea el registro con los values correctos y pendingSync', async () => {
+    await setup(
+      makeType([
+        makeField({ key: 'f_name', label: 'Nombre', type: 'text', required: true }),
+        makeField({ key: 'f_age', label: 'Edad', type: 'number' }),
+        makeField({ key: 'f_color', label: 'Color', type: 'select', options: ['Rojo', 'Azul'] }),
+        makeField({ key: 'f_date', label: 'Fecha', type: 'date' }),
+      ]),
+    );
+
+    component.form().controls['f_name'].setValue('Ana');
+    component.form().controls['f_age'].setValue('30');
+    component.form().controls['f_color'].setValue('Rojo');
+    component.form().controls['f_date'].setValue('2026-11-12');
+    render();
+
+    buttonByText('ficha.form.save')!.click();
+    render();
+
+    expect(recordsStore.records().length).toBe(1);
+    const record = recordsStore.records()[0];
+    expect(record.record_type_id).toBe(10);
+    expect(record.title).toBe('Ficha clínica');
+    expect(record.booking_id).toBe(900);
+    expect(record.client_id).toBe(7);
+    expect(record.pendingSync).toBe(true);
+    expect(record.values).toEqual({
+      f_name: 'Ana',
+      f_age: '30',
+      f_color: 'Rojo',
+      f_date: '2026-11-12',
+    });
+  });
+});

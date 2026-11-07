@@ -1,0 +1,34 @@
+{
+  "title": "Ficha médica en el diálogo de reserva",
+  "brief": "Ficha clínica de kinesiología dentro de la pestaña «Ficha» que ya existe en el diálogo de detalle de la reserva: antecedentes y evaluación del paciente (persistentes) más la evolución de la sesión actual, con EVA pre/post, adjuntos y consentimiento.",
+  "artboards": [
+    {
+      "file": "01-ficha-dos-columnas.html",
+      "title": "Dos columnas: ficha + evolución de la sesión",
+      "tradeoff": "Todo el contexto clínico y la captura de la sesión en un vistazo; en pantallas medianas queda apretado y obliga a scrollear las dos columnas por separado.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-ficha-subpestanas.html",
+      "title": "Lista simple: fichas de la reserva + historial",
+      "tradeoff": "Reusa el patrón de lista que ya existe en el producto (tarjeta + fecha + quién + «Ver más detalles») y deja un solo CTA para agregar registros; la ficha completa vive detrás de «Ver más detalles», así que no se ve el detalle clínico en la pestaña.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-ficha-vacia.html",
+      "title": "Sin ficha todavía (primer uso)",
+      "tradeoff": "Deja claro que la ficha no bloquea la reserva y ofrece una acción única; no muestra cómo se ve la ficha completa.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "04-config-tipos-ficha.html",
+      "title": "Tipos de ficha (pantalla dentro de Configuraciones)",
+      "tradeoff": "El catálogo vive donde ya están las demás configuraciones y se reusa el patrón de tabla del producto (chips de estado, acciones por fila, orden arrastrable); agrega una pantalla más que hay que navegar y campos por tipo quedan para un segundo nivel («Editar campos»).",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

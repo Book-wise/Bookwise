@@ -8,6 +8,9 @@ export * from './requests/sales';
 export * from './responses/bookings';
 export * from './responses/sales';
 
+// Dominio clínico (ficha médica)
+export * from './clinical-record';
+
 export interface Locality {
   id: number;
   name: string;

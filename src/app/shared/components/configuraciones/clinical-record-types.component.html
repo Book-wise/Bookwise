@@ -1,0 +1,209 @@
+<div class="ct">
+  <div class="ct-cols">
+    <!-- ── Lista de tipos del negocio ─────────────────────────────── -->
+    <section class="bw-card ct-list" aria-labelledby="ct-list-title">
+      <header class="ct-panel__head">
+        <h2 id="ct-list-title">{{ t('settings.clinical_types.list.title') }}</h2>
+        @if (store.types().length) {
+          <span class="ct-panel__count">
+            {{ store.types().length }} · {{ activeCount() }} {{ t('settings.clinical_types.list.active') }}
+          </span>
+        }
+      </header>
+
+      <div class="ct-search">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input
+          pInputText
+          type="search"
+          [placeholder]="t('settings.clinical_types.search')"
+          [attr.aria-label]="t('settings.clinical_types.search')"
+          [value]="store.search()"
+          (input)="onSearch($event)"
+        />
+      </div>
+
+      <ul class="ct-list__items">
+        @for (type of store.filteredTypes(); track type.id) {
+          <li>
+            <button
+              type="button"
+              class="ct-item"
+              [class.is-selected]="type.id === store.selectedId()"
+              [attr.aria-current]="type.id === store.selectedId() ? 'true' : null"
+              (click)="store.select(type.id)"
+            >
+              <span
+                class="ct-item__dot"
+                [class.is-off]="!type.active"
+                aria-hidden="true"
+              ></span>
+              <span class="ct-item__body">
+                <span class="ct-item__name">{{ type.name || t('settings.clinical_types.untitled') }}</span>
+                <span class="ct-item__meta">{{ fieldMetaLabel(type.fields.length) }}</span>
+              </span>
+              <span class="ct-item__status">
+                {{ type.active ? t('settings.clinical_types.status.active') : t('settings.clinical_types.status.inactive') }}
+              </span>
+            </button>
+          </li>
+        } @empty {
+          <li class="ct-list__empty">{{ t('settings.clinical_types.list.empty') }}</li>
+        }
+      </ul>
+
+      <div class="ct-list__new">
+        <button type="button" class="ct-new" (click)="store.createType()">
+          <i class="pi pi-plus" aria-hidden="true"></i>
+          {{ t('settings.clinical_types.new') }}
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Editor del tipo seleccionado ───────────────────────────── -->
+    <section class="bw-card ct-editor" aria-labelledby="ct-editor-title">
+      @if (store.draft(); as draft) {
+        <header class="ct-editor__head">
+          <input
+            pInputText
+            type="text"
+            class="ct-editor__name"
+            [value]="draft.name"
+            (input)="onName($event)"
+            [placeholder]="t('settings.clinical_types.name.placeholder')"
+            [attr.aria-label]="t('settings.clinical_types.name.label')"
+          />
+          <span
+            class="bw-chip"
+            [class.bw-chip--success]="draft.active"
+            [class.bw-chip--secondary]="!draft.active"
+          >
+            <span class="bw-chip__dot" aria-hidden="true"></span>
+            {{ draft.active ? t('settings.clinical_types.status.active') : t('settings.clinical_types.status.inactive') }}
+          </span>
+        </header>
+
+        <div class="ct-editor__bar">
+          @if (store.dirty()) {
+            <span class="ct-dirty">{{ t('settings.clinical_types.unsaved') }}</span>
+          } @else {
+            <span class="ct-clean">{{ t('settings.clinical_types.saved') }}</span>
+          }
+          <span class="ct-bar__actions">
+            <p-button
+              [label]="t('settings.clinical_types.discard')"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              [disabled]="!store.dirty()"
+              (onClick)="store.discardDraft()"
+            />
+            <p-button
+              [label]="t('settings.clinical_types.save')"
+              size="small"
+              [disabled]="!store.dirty()"
+              (onClick)="store.saveDraft()"
+            />
+          </span>
+        </div>
+
+        <div class="ct-editor__body">
+          <div class="ct-field">
+            <label for="ct-desc">{{ t('settings.clinical_types.description.label') }}</label>
+            <input
+              id="ct-desc"
+              pInputText
+              type="text"
+              [value]="draft.description ?? ''"
+              (input)="onDescription($event)"
+            />
+            <small>{{ t('settings.clinical_types.description.hint') }}</small>
+          </div>
+
+          <div class="ct-inline">
+            <p-toggleswitch
+              [ngModel]="draft.active"
+              (ngModelChange)="store.setDraftActive($event)"
+              [attr.aria-label]="t('settings.clinical_types.available')"
+            />
+            <span>
+              {{ t('settings.clinical_types.available') }}
+              <small>{{ t('settings.clinical_types.available.hint') }}</small>
+            </span>
+          </div>
+
+          <div class="ct-subhead">
+            <span>{{ t('settings.clinical_types.fields.title') }}</span>
+            <small>{{ fieldMetaLabel(draft.fields.length) }}</small>
+            <button type="button" class="ct-add" (click)="store.addField()">
+              <i class="pi pi-plus" aria-hidden="true"></i>
+              {{ t('settings.clinical_types.fields.add') }}
+            </button>
+          </div>
+
+          @if (draft.fields.length) {
+            <div class="ct-fields">
+              <div class="ct-fields__head">
+                <span aria-hidden="true"></span>
+                <span>{{ t('settings.clinical_types.fields.name') }}</span>
+                <span>{{ t('settings.clinical_types.fields.type') }}</span>
+                <span>{{ t('settings.clinical_types.fields.required') }}</span>
+                <span class="sr-only">{{ t('settings.clinical_types.fields.actions') }}</span>
+              </div>
+
+              @for (field of draft.fields; track field.key) {
+                <div class="ct-frow">
+                  <span class="ct-frow__handle" aria-hidden="true"><i class="pi pi-bars"></i></span>
+                  <input
+                    pInputText
+                    type="text"
+                    [value]="field.label"
+                    (input)="onFieldLabel(field, $event)"
+                    [attr.aria-label]="t('settings.clinical_types.fields.name')"
+                  />
+                  <p-select
+                    [options]="fieldTypeOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [ngModel]="field.type"
+                    (ngModelChange)="onFieldType(field, $event)"
+                    [appendTo]="'body'"
+                  />
+                  <span class="ct-frow__req">
+                    <p-toggleswitch
+                      [ngModel]="field.required"
+                      (ngModelChange)="onFieldRequired(field, $event)"
+                      [attr.aria-label]="t('settings.clinical_types.fields.required')"
+                    />
+                    <span>
+                      {{ field.required ? t('settings.clinical_types.required.yes') : t('settings.clinical_types.required.no') }}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    class="ct-remove"
+                    [attr.aria-label]="t('settings.clinical_types.fields.remove')"
+                    (click)="store.removeField(field.key)"
+                  >
+                    <i class="pi pi-trash" aria-hidden="true"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          <p class="ct-note">{{ t('settings.clinical_types.note') }}</p>
+        </div>
+      } @else {
+        <div class="ct-editor__empty">
+          <p>{{ t('settings.clinical_types.editor.empty') }}</p>
+          <p-button
+            [label]="t('settings.clinical_types.new')"
+            icon="pi pi-plus"
+            (onClick)="store.createType()"
+          />
+        </div>
+      }
+    </section>
+  </div>
+</div>

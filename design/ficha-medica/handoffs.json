@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "02-ficha-subpestanas.html",
+  "handoffs": {
+    "02-ficha-subpestanas.html": {
+      "status": "implemented",
+      "queued": true,
+      "sentAt": "2026-11-03T17:18:39.573Z",
+      "startedAt": "2026-11-03T17:19:13.095Z",
+      "implementedAt": "2026-11-03T17:23:16.117Z",
+      "note": "Pestaña Ficha implementada en el diálogo de detalle: lista de fichas asociadas + historial + CTA de tipos (o «Configurar tipos de ficha» si no hay ninguno). Sin endpoint clínico todavía: estados vacíos honestos, sin datos inventados.",
+      "previewUrl": "http://localhost:4200/admin/calendar"
+    }
+  }
+}

@@ -23,6 +23,20 @@
       "tradeoff": "Un solo lugar para datos, imagen y variaciones, con precio por sesión y vista previa en vivo; el diálogo es alto y pide scroll en pantallas chicas.",
       "width": 1440,
       "height": 900
+    },
+    {
+      "file": "04-mantenedor-exportador.html",
+      "title": "Mantenedor: dónde vive el botón de exportar a Woo",
+      "tradeoff": "El exportador entra como acción secundaria del título, con menú de alcance (todo / solo cambios / seleccionados), una barra de estado de la última exportación y el estado por servicio al pie de cada tarjeta; no suma pantalla, pero el mantenedor gana un eje más de información (sincronización) que hay que mantener coherente con la de variaciones.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "05-dialogo-exportacion.html",
+      "title": "Diálogo de exportación: validación previa + vista previa del CSV",
+      "tradeoff": "Antes de descargar se muestran los bloqueantes y las advertencias del formato de Woo y las filas reales del CSV (padre `variable` + variaciones), así que el usuario ve el archivo antes de importarlo; el diálogo es alto y depende de que la validación previa sea rápida y explicable.",
+      "width": 1440,
+      "height": 900
     }
   ]
 }

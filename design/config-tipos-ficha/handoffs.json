@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "02-maestro-detalle-builder.html",
+  "handoffs": {
+    "02-maestro-detalle-builder.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-07T16:14:23.375Z",
+      "startedAt": "2026-11-07T16:14:30.649Z",
+      "implementedAt": "2026-11-07T16:39:29.871Z",
+      "feature": "odd/tasks/ficha-medica.md",
+      "note": "Configuraciones reorganizada en pestañas; pestaña «Fichas médicas» con lista de tipos + editor de campos. Store in-memory (backend de dominio clínico pendiente, F4).",
+      "previewUrl": "http://localhost:4200/admin/configuraciones"
+    }
+  }
+}

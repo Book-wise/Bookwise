@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "chosen": "02-lista-tarjetas.html",
+  "chosen": "04-mantenedor-exportador.html",
   "handoffs": {
     "01-lista-tabla.html": {
       "status": "in_progress",
@@ -19,6 +19,16 @@
       "implementedAt": "2026-11-03T15:19:49.625Z",
       "feature": "odd/tasks/services-packs-variations.md",
       "note": "Implementado en /admin/packs (Angular): grilla de tarjetas con imagen-fallback de iniciales, toggle a vista lista con sub-fila de términos, filtro de estado (Todos/Activos/Inactivos), buscador sin acentos y banner de sugerencia. Read-only: sin POST/PATCH no hay alta ni edición; sin compare_at_price no hay badge de descuento.",
+      "previewUrl": "http://localhost:4200/admin/packs"
+    },
+    "04-mantenedor-exportador.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-07T19:54:42.017Z",
+      "startedAt": "2026-11-07T19:55:02.152Z",
+      "implementedAt": "2026-11-07T20:13:46.590Z",
+      "feature": "odd/tasks/services-packs-variations.md",
+      "note": "Exportador de catálogo implementado: CSV del importador core de Woo generado en el cliente, historial en localStorage, menú de alcance, barra de sincronización, filtro Woo, selección en tarjetas y lista. Diálogo de validación previa (artboard 05) queda como T9.",
       "previewUrl": "http://localhost:4200/admin/packs"
     }
   }

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "bea3dfp7",
+      "file": "02-ficha-subpestanas.html",
+      "selector": "body",
+      "excerpt": "bookwise Colapsar menú Dashboard Ubicaciones Profesionales Agenda Clientes Servicios y packs 2026 Noviembre Hoy DO LU MA MI JU VI SA 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 Salir K Kinesilk RUT: 76.123.456-7 Claro R Rosa Kinesilk 76.543.210-8 Reserva de Rosa",
+      "comment": "ok para lo del dialogo en ficha queremos algo simple como esto",
+      "createdAt": "2026-11-03T16:30:25.466Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T16:30:29.155Z",
+      "resolvedAt": "2026-11-03T16:31:11.380Z",
+      "screenshot": ".screenshots/bea3dfp7.png"
+    },
+    {
+      "id": "adhccfm4",
+      "file": "02-ficha-subpestanas.html",
+      "selector": "body > main > div > section > div:nth-of-type(2) > div:nth-of-type(2) > button",
+      "excerpt": "Agregar tipo de registro/ficha ▾",
+      "comment": "este es un desplegable que muestras las fichas medicas que tendremos en lista en la pagina de configuracion, eso esalgo para despues pero te muestro un ejemplo",
+      "createdAt": "2026-11-03T16:48:41.046Z",
+      "status": "resolved",
+      "sentAt": "2026-11-03T16:48:42.700Z",
+      "resolvedAt": "2026-11-03T16:48:54.652Z",
+      "screenshot": ".screenshots/adhccfm4.png"
+    }
+  ]
+}

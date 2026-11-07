@@ -1,0 +1,105 @@
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [style]="{ width: '520px', maxWidth: '97vw' }"
+  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '70vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+>
+  <ng-template pTemplate="header">
+    <div class="rfd-header">
+      <span class="rfd-title">{{ t('ficha.form.title') }}</span>
+    </div>
+  </ng-template>
+
+  <form [formGroup]="form()" class="rfd-form" novalidate>
+    @for (field of type().fields; track field.key) {
+      <div class="rfd-field">
+        <label [for]="'rfd-' + field.key">
+          {{ field.label }}
+          @if (field.required) {
+            <span class="rfd-required" aria-hidden="true">*</span>
+          }
+        </label>
+
+        @switch (field.type) {
+          @case ('text') {
+            <input
+              pInputText
+              type="text"
+              [id]="'rfd-' + field.key"
+              [formControlName]="field.key"
+              [attr.aria-required]="field.required ? 'true' : null"
+              class="rfd-control"
+            />
+          }
+          @case ('longtext') {
+            <textarea
+              pInputTextarea
+              [id]="'rfd-' + field.key"
+              [formControlName]="field.key"
+              [attr.aria-required]="field.required ? 'true' : null"
+              class="rfd-control"
+              rows="4"
+            ></textarea>
+          }
+          @case ('number') {
+            <input
+              pInputText
+              type="number"
+              [id]="'rfd-' + field.key"
+              [formControlName]="field.key"
+              [attr.aria-required]="field.required ? 'true' : null"
+              class="rfd-control"
+            />
+          }
+          @case ('select') {
+            <p-select
+              [inputId]="'rfd-' + field.key"
+              [formControlName]="field.key"
+              [options]="selectOptions(field)"
+              optionLabel="label"
+              optionValue="value"
+              [appendTo]="'body'"
+              [attr.aria-required]="field.required ? 'true' : null"
+              class="rfd-control"
+            />
+          }
+          @case ('date') {
+            <input
+              pInputText
+              type="date"
+              [id]="'rfd-' + field.key"
+              [formControlName]="field.key"
+              [attr.aria-required]="field.required ? 'true' : null"
+              class="rfd-control"
+            />
+          }
+        }
+
+        @if (errorMessage(field); as error) {
+          <small class="rfd-error" role="alert">{{ error }}</small>
+        }
+      </div>
+    }
+
+    <p class="rfd-note">{{ t('ficha.form.session_note') }}</p>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="rfd-footer">
+      <p-button
+        [label]="t('ficha.form.cancel')"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onClose()"
+      />
+      <p-button
+        [label]="t('ficha.form.save')"
+        icon="pi pi-check"
+        (onClick)="onSave()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
