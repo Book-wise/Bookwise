@@ -1,0 +1,27 @@
+{
+  "title": "Cards del calendario",
+  "brief": "Mejorar las cards de evento de /admin/calendar para que entren más datos útiles sin que la card crezca: hoy muestran hora implícita en el título, un punto de estado de 8 px y un badge de pago de una letra. Restricción dura: la card la renderiza la librería FullCalendar vía eventContent ({html}) y se estiliza desde src/styles/_calendar.scss, sin componentes Angular ni PrimeNG adentro.",
+  "artboards": [
+    {
+      "file": "01-densidad-dos-lineas.html",
+      "title": "La card real, con hora y contexto",
+      "tradeoff": "Mantiene el bloque de color por estado y el avatar que ya existen, y convierte la línea única «Nombre · Servicio» en dos líneas: entra la hora, el servicio deja de cortarse y aparecen la sesión del pack y el pago. Cuesta tipografía de 12–14 px en 48 px de alto, que en un proyector sigue siendo chico.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-micro-iconos.html",
+      "title": "Micro-iconos y nombre abreviado",
+      "tradeoff": "Una sola línea con glifos de 10 px y píldora de sesión (3/6) deja entrar un 40 % más de texto y se escanea rápido; a cambio el nombre abreviado pierde identificación inequívoca y en la vista de semana se desaprovecha el alto disponible.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-banda-de-estado.html",
+      "title": "Banda de estado y avatar",
+      "tradeoff": "La banda vertical de 3 px y el avatar comunican estado y paciente antes de leer, y resisten cards de 18 px; pero el avatar come ancho de texto en el mes, un estado pastel deja la banda casi invisible y es la dirección que más se aleja del look actual.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "title": "Tipos de ficha en Configuraciones",
+  "brief": "Catálogo de tipos de ficha médica administrable desde /admin/configuraciones: nombre, estado, orden y campos propios (label, tipo de dato, requerido, opciones). Los tipos activos son los que después aparecen en el desplegable «Agregar tipo de registro/ficha» de la pestaña Ficha del diálogo de reserva de la agenda.",
+  "feature": "odd/tasks/ficha-medica.md",
+  "artboards": [
+    {
+      "file": "01-config-seccion-dialogo.html",
+      "title": "Sección en Configuraciones + diálogo de edición",
+      "tradeoff": "Vive donde ya están las demás configuraciones y no agrega navegación: la tabla entra apretada en los 960 px del stack actual y editar los campos obliga a pasar por un diálogo modal.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-maestro-detalle-builder.html",
+      "title": "Configuraciones con pestañas: lista de tipos + editor de campos",
+      "tradeoff": "Reorganiza Configuraciones en pestañas (Perfil, Apariencia, Negocio principal, Feriados, Fichas médicas) para que el catálogo viva donde están las demás configuraciones sin sumar una pantalla; la lista y el editor ganan ancho completo, pero reemplaza el patrón actual de cards por pestañas.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-config-acordeon-tarjetas.html",
+      "title": "Configuraciones con tipos en tarjetas expandibles",
+      "tradeoff": "Todo se administra sin salir de Configuraciones y el estado de cada tipo se ve de un vistazo; con muchos tipos la página se hace larga y el editor de campos queda en un ancho chico.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "04-selector-en-agenda.html",
+      "title": "Consumo: desplegable en la pestaña Ficha (no es una dirección)",
+      "tradeoff": "No propone una dirección nueva: documenta de dónde sale la lista del desplegable y qué pasa con los tipos inactivos, para que el catálogo y la agenda no se diseñen como dos mundos separados.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

@@ -36,6 +36,8 @@ está acá, no está pendiente. Cada ítem apunta al doc donde vive el detalle.
 | 2.6 | **T6 RBAC**: exponer `business_roles[]` en `/auth/me` para fidelidad total del rol | `rbac-frontend.md` T6 |
 | 2.7 | **Atomicidad del guardado de edición** de profesional (datos + roles son dos PATCH) | `providers-locations-maintainers.md`; hoy se avisa la escritura parcial |
 | 2.8 | **Reasignación masiva de profesionales** (no existe endpoint) | `providers-locations-maintainers.md` |
+| 2.9 | **Servicios, packs y variaciones por atributo** (CRUD + `attribute_name`/términos + imagen + badge de descuento) | `openspec/changes/2026-11-03-services-packs-variations/proposal.md` · diseño en `odd/tasks/services-packs-variations.md` | Pedido FE→BE **escrito**. Bloquea la pantalla completa: el backend sólo expone `GET /services` y `GET /packs`. Nota: el **alta rápida de servicio** del formulario de reserva llama a `POST /services` (ruta inexistente ⇒ 405) y **se mantiene**, no se borra |
+| 2.10 | **Sesiones de pack en la agenda** (`client_pack_id` en `POST /bookings` + `sessions[]` en el GET de packs del cliente) | mismo proposal §2.6 | El modelo (`pack_sessions` con `session_number`/estados) y el consumo (`PackSessionConsumptionService`) **ya existen**; falta que el alta de reserva linkee la sesión y que el diálogo muestre “sesión N de M”. Hoy el form manda el pack del **catálogo** en vez del pack del **cliente** |
 
 ## 3. Requiere decisión del usuario (no es código)
 

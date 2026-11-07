@@ -78,17 +78,27 @@ Todo lo que sigue son valores que **existen** en esas fuentes. Nada inventado.
 | `--surface-ground` | `#f0f5ff` | `#0f172a` | `#fcf9ea` |
 | `--surface-card` | `#ffffff` | `#1e293b` | `#fffdf7` |
 | `--surface-border` | `#e5e7eb` | `#334155` | `#ece4cb` |
-| `--bw-surface-muted` | `#f3f4f6` | — | `#f5f1de` |
+| `--bw-surface-muted` | `#f3f4f6` | `#263449` | `#f5f1de` |
 | `--text-color` | `#1a2744` | `#e4e4e7` | `#3f3f33` |
 | `--text-color-secondary` | `#6b7280` | `#94a3b8` | `#6f6f5c` |
 | `--text-heading` | `#111827` | `= --text-color` | `#2f2f26` |
 | `--text-label` | `#374151` | `#cbd5e1` | `#4a4a3c` |
 | `--bw-tab-color` | `#0b3d95` | `#60a5fa` | — |
+| `--bw-text-on-brand` | `#ffffff` | `#ffffff` | `#2f2f26` |
+
+`--bw-text-on-brand` es el texto (e íconos) que va **sobre un relleno de marca**
+(`--bw-300`). En claro y oscuro es blanco; en Kinesilk es oscuro porque ahí `--bw-300`
+es un salmón pastel. **No usar `--surface-card` como si fuera "blanco"**: en oscuro
+es `#1e293b` y el contraste sobre el CTA es pésimo.
+
+`--bw-surface-muted` es la superficie de hover/selección. En oscuro vale `#263449`,
+**más claro** que la card (`#1e293b`) para que el hover se note.
 
 Kinesilk además redefine marca: `--bw-50 #eaf5f4`, `--bw-100 #badede`, `--bw-200 #ffbdbe`,
 `--bw-300 #fea4a4`, `--color-primary #e08f8f`, `--color-primary-cta #fea4a4`, `--color-accent #87e9ce`,
 `--bw-success #87e9ce`; el sidebar pasa a powder blue con **texto oscuro**
-(`--sidebar-text rgba(47,47,38,0.72)`) y el CTA lleva texto `#2f2f26`.
+(`--sidebar-text rgba(47,47,38,0.72)`) y el CTA lleva texto oscuro: usar `--bw-text-on-brand`,
+que vale `#2f2f26` en este tema.
 
 ### 1.6 Sidebar (chrome siempre oscuro por default) (`_tokens.scss`)
 

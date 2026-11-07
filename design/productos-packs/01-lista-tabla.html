@@ -386,6 +386,91 @@
     color:var(--text-color-secondary); background:var(--surface-card); border:1px dashed var(--surface-border);
     border-radius:var(--bw-radius-md);
   }
+
+  /* Precio de lista en la fila colapsada: la referencia «sin descuento».
+     Es el valor original (antes del −%), siempre visible junto al precio de venta. */
+  .term__list {
+    color:var(--text-color-secondary); font-weight:var(--bw-weight-regular);
+    text-decoration:line-through; font-size:var(--bw-font-caption);
+  }
+
+  /* ── Spec mobile (≤767px) ──────────────────────────────────────
+     La tabla no entra en 390px: pasa a bloques apilados, una tarjeta
+     por servicio, y la sub-fila de términos pasa a filas legibles.
+     El precio de lista tachado se conserva en los dos niveles. */
+  .mobile-block { margin-top:1.25rem; display:grid; gap:.75rem; }
+  .mobile-block__head { display:flex; align-items:baseline; gap:.5rem; }
+  .mobile-block__head h2 { font-size:var(--bw-font-title); font-weight:var(--bw-weight-semibold); color:var(--text-color); }
+  .mobile-block__head span { font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+
+  .device {
+    width:390px; background:var(--surface-ground); border:1px solid var(--surface-border);
+    border-radius:24px; padding:.75rem; box-shadow:var(--bw-shadow-card);
+  }
+  .device__screen { background:var(--surface-ground); border-radius:16px; overflow:hidden; }
+
+  .m-toolbar { display:grid; gap:.5rem; padding:.625rem .75rem; background:var(--surface-card);
+    border-bottom:1px solid var(--surface-border); }
+  .m-search {
+    display:flex; align-items:center; gap:.375rem; height:2.25rem; padding:0 .625rem;
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-md);
+    background:var(--surface-card); color:var(--text-color-secondary); font-size:var(--bw-font-table);
+  }
+  .m-filters { display:flex; gap:.375rem; }
+  .m-filter {
+    flex:1; height:2rem; display:inline-flex; align-items:center; justify-content:center; gap:.25rem;
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-md);
+    background:var(--surface-card); color:var(--text-color); font-size:var(--bw-font-caption);
+  }
+
+  .m-list { display:grid; gap:.625rem; padding:.625rem .75rem 1rem; }
+  .m-card {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden;
+  }
+  .m-card__top { display:flex; align-items:center; gap:.5rem; padding:.625rem .75rem; }
+  .m-thumb {
+    position:relative; width:40px; height:40px; border-radius:var(--bw-radius-md); flex-shrink:0;
+    background:linear-gradient(135deg,var(--bw-100),var(--bw-50)); border:1px solid var(--bw-100);
+    display:flex; align-items:center; justify-content:center; color:var(--bw-500);
+    font-weight:var(--bw-weight-bold); font-size:var(--bw-font-table);
+  }
+  .m-thumb .discount-badge { position:absolute; top:-.375rem; left:-.375rem; font-size:var(--bw-text-2xs); padding:0 .25rem; }
+  .m-name { font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium); color:var(--text-color); }
+  .m-meta { display:block; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .m-card__top .bw-chip { margin-left:auto; flex-shrink:0; }
+  .m-pick {
+    width:22px; height:22px; border-radius:var(--bw-radius-sm); border:1.5px solid var(--surface-border);
+    background:var(--surface-card); color:transparent; flex-shrink:0; display:inline-flex;
+    align-items:center; justify-content:center; font-size:var(--bw-text-xs);
+  }
+  .m-pick[aria-checked="true"] { background:var(--bw-300); border-color:var(--bw-300); color:#fff; }
+
+  /* términos apilados: nombre · lista tachada · precio · −% · por sesión */
+  .m-terms { display:grid; }
+  .m-term {
+    display:grid; grid-template-columns:1fr auto; gap:.125rem .5rem;
+    padding:.5rem .75rem; border-top:1px solid var(--surface-border); font-size:var(--bw-font-table);
+  }
+  .m-term__name { color:var(--text-color); }
+  .m-term__price { font-variant-numeric:tabular-nums; font-weight:var(--bw-weight-medium); color:var(--text-color); white-space:nowrap; }
+  .m-term__list { font-size:var(--bw-font-caption); color:var(--text-color-secondary); text-decoration:line-through; }
+  .m-term__per { grid-column:1 / -1; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .m-term__off { color:var(--bw-chip-text-success); font-weight:var(--bw-weight-medium); }
+  .m-card__foot {
+    display:flex; gap:.5rem; padding:.5rem .75rem; border-top:1px solid var(--surface-border);
+    background:var(--surface-card);
+  }
+  .m-card__foot button {
+    flex:1; height:2rem; border:1px solid var(--bw-300); border-radius:var(--bw-radius-md);
+    background:transparent; color:var(--bw-300); font-size:var(--bw-font-caption); font-weight:var(--bw-weight-medium);
+  }
+  .m-card__foot button.m-ghost { border-color:var(--surface-border); color:var(--text-color-secondary); }
+  .m-note {
+    display:flex; gap:.375rem; padding:.5rem .75rem; font-size:var(--bw-font-caption);
+    color:var(--text-color-secondary); background:var(--bw-50);
+    border-top:1px solid var(--surface-border);
+  }
 </style>
 </head>
 <body>
@@ -629,8 +714,8 @@
           <td>
             <div class="terms">
               <span class="term">1 sesión <b>$25.000</b></span>
-              <span class="term">3 sesiones <b>$67.500</b> <span class="term__off">−10%</span></span>
-              <span class="term">6 sesiones <b>$120.000</b> <span class="term__off">−20%</span></span>
+              <span class="term">3 sesiones <s class="term__list">$75.000</s> <b>$67.500</b> <span class="term__off">−10%</span></span>
+              <span class="term">6 sesiones <s class="term__list">$150.000</s> <b>$120.000</b> <span class="term__off">−20%</span></span>
             </div>
           </td>
           <td class="num amount">$25.000</td>
@@ -817,9 +902,96 @@
 
   <div class="foot-note">
     <span aria-hidden="true">ⓘ</span>
-    El badge sobre la imagen muestra el <strong style="margin:0 .25rem;color:var(--text-color);font-weight:500">mayor −% entre los términos activos</strong> (en la lista no hay término elegido); en la reserva, el badge sigue al término que elige el paciente. Sin precio de lista no hay badge ni precio tachado; la escalera de volumen no viene precargada. «Borrador» es un estado nuevo a definir: hoy services.active es un booleano, así que el listado necesitaría un campo de estado (activo / borrador / inactivo).
+    El <strong style="margin:0 .25rem;color:var(--text-color);font-weight:500">precio de lista</strong> (el valor original sin descuento) se muestra tachado junto al precio de venta, en la fila y en la sub-fila: es la referencia del ahorro. El badge sobre la imagen muestra el <strong style="margin:0 .25rem;color:var(--text-color);font-weight:500">mayor −% entre los términos activos</strong> (en la lista no hay término elegido); en la reserva, el badge sigue al término que elige el paciente. Sin precio de lista no hay badge ni precio tachado; la escalera de volumen no viene precargada. «Borrador» es un estado nuevo a definir: hoy services.active es un booleano, así que el listado necesitaría un campo de estado (activo / borrador / inactivo).
   </div>
 
+
+  <section class="mobile-block" aria-labelledby="mobile-title">
+    <div class="mobile-block__head">
+      <h2 id="mobile-title">Vista mobile (≤767px)</h2>
+      <span>La tabla no entra en 390 px: una tarjeta apilada por servicio, con los mismos datos y el precio de lista tachado.</span>
+    </div>
+
+    <div class="device">
+      <div class="device__screen">
+
+        <div class="m-toolbar">
+          <label class="m-search"><span aria-hidden="true">⌕</span> Buscar servicio…</label>
+          <div class="m-filters">
+            <span class="m-filter">Estado: Todos <span aria-hidden="true">▾</span></span>
+            <span class="m-filter">Woo: Todos <span aria-hidden="true">▾</span></span>
+          </div>
+        </div>
+
+        <div class="m-list">
+
+          <article class="m-card">
+            <div class="m-card__top">
+              <button type="button" class="m-pick" role="checkbox" aria-checked="true" aria-label="Seleccionar Kinesiología general para exportar">✓</button>
+              <span class="m-thumb" aria-hidden="true">K<span class="discount-badge">−20%</span></span>
+              <span>
+                <span class="m-name">Kinesiología general</span>
+                <span class="m-meta">60 min · 3 variaciones</span>
+              </span>
+              <span class="bw-chip bw-chip--success">Activo</span>
+            </div>
+
+            <div class="m-terms">
+              <div class="m-term">
+                <span class="m-term__name">1 sesión</span>
+                <span class="m-term__price">$25.000</span>
+                <span class="m-term__per">$25.000 /sesión</span>
+              </div>
+              <div class="m-term">
+                <span class="m-term__name">3 sesiones <s class="m-term__list">$75.000</s></span>
+                <span class="m-term__price">$67.500 <span class="m-term__off">−10%</span></span>
+                <span class="m-term__per">$22.500 /sesión</span>
+              </div>
+              <div class="m-term">
+                <span class="m-term__name">6 sesiones <s class="m-term__list">$150.000</s></span>
+                <span class="m-term__price">$120.000 <span class="m-term__off">−20%</span></span>
+                <span class="m-term__per">$20.000 /sesión</span>
+              </div>
+            </div>
+
+            <div class="m-card__foot">
+              <button type="button">Editar</button>
+              <button type="button" class="m-ghost">Variaciones (3)</button>
+            </div>
+          </article>
+
+          <article class="m-card">
+            <div class="m-card__top">
+              <button type="button" class="m-pick" role="checkbox" aria-checked="false" aria-label="Seleccionar Masoterapia descontracturante para exportar"></button>
+              <span class="m-thumb" aria-hidden="true">M</span>
+              <span>
+                <span class="m-name">Masoterapia descontracturante</span>
+                <span class="m-meta">50 min · sin variaciones</span>
+              </span>
+              <span class="bw-chip bw-chip--warning">Borrador</span>
+            </div>
+            <div class="m-terms">
+              <div class="m-term">
+                <span class="m-term__name">1 sesión</span>
+                <span class="m-term__price">$28.000</span>
+                <span class="m-term__per">Producto simple · se exporta sin términos</span>
+              </div>
+            </div>
+            <div class="m-card__foot">
+              <button type="button">Editar</button>
+              <button type="button" class="m-ghost">Agregar variaciones</button>
+            </div>
+          </article>
+
+          <div class="m-note">
+            <span aria-hidden="true">ⓘ</span>
+            <span>El precio de lista tachado se mantiene: es la referencia del ahorro, no un adorno.</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 </div>
 </body>

@@ -194,10 +194,12 @@ Sesión:  ( ) 1 · programada 12/10   ( ) 2 · programada 19/10   (•) 3   ( ) 
 | T1b | Diseño de pantalla + design system | — | `design/system.md` + `design/productos-packs/` (✅ escrito) |
 | T2 | Modelos + `ServicesApiService` (CRUD, variaciones, imagen) | contrato 2.1–2.4 + seeds nuevos | servicios tipados + specs |
 | T3 | `/admin/packs` convertida en "Servicios y packs" — ✅ **IMPLEMENTADO** (2026-11-03, sin commit): grilla de tarjetas + vista lista con términos derivados de `service_packs`, filtro de estado, buscador y banner de sugerencia. **Read-only**: sin `POST/PATCH` no hay alta/edición, y no se ponen botones muertos | T2 (parcial) | `packs-list.component.{ts,html,scss}` + `services-terms.util.ts` + 21 specs |
-| T4 | Diálogo de servicio con términos + escalera de descuento por volumen opcional (vacía por defecto) + validaciones | T2, T3 | diálogo + specs (precio por sesión y escalera son lógica pura → testeable) |
+| T4 | Diálogo de servicio con términos — ✅ **IMPLEMENTADO** (sin commit): `service-form-dialog` con Reactive Forms, variaciones (`variations[]` con `id` en edición = sync por id), validación espejo del contrato (`compare_at_price > price`), transiciones de estado válidas, subida de imagen post-save y refresh de `services`+`packs`. **Escalera de volumen**: NO incluida (fuera del alcance de esta unidad) | T2, T3 | `service-form-dialog/**` + specs |
 | T5 | Quick-create del form de reserva adaptada al `POST /services` real (sin romper el flujo) | T2 | fix + manejo de 405 mientras no exista |
 | T6 | Agenda: `client_pack_id` + selector de sesión "N de M" — **PASO 1 HECHO** (`1f22326`): **servicio → variación** con badge `−%` vs 1 sesión + **resumen read-only** del pack del paciente. **Contrato CONFIRMADO por el backend** (`5f23ae3`, rama sin mergear): `client_pack_id` (+ `pack_session_number` opcional), `sessions[]` con `scheduled_at`, 6 códigos de error. **Falta cablear** → esperando merge/deploy | contrato 2.6 ✅ (falta deploy) | form de reserva + specs |
 | T7 | Retirar la tabla plana de packs del catálogo (los packs pasan a ser términos) | seeds + contrato 2.3 | `/admin/packs` sin la columna huérfana |
+| T8 | **Exportador Bookwise → WooCommerce** — generador CSV del importador core + historial en `localStorage` + UI en el mantenedor (botón, menú de alcance, barra de sincronización, filtro `Woo:`, selección múltiple, estado por servicio) | independiente del backend (lee `ReferenceStore`) | `services-export.{util,store}.ts` + `packs-list` — ✅ **implementado**, sin commit |
+| T9 | Diálogo de **validación previa + vista previa del CSV** (artboard `05-dialogo-exportacion.html`) | T8 | diálogo + specs — ⏳ pendiente |
 
 T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la orden pagada.
 
@@ -254,8 +256,117 @@ T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la 
 
 ---
 
-## Log
+## 7. Exportador Bookwise → WooCommerce (CSV de carga masiva) — INVESTIGADO, NO IMPLEMENTADO
 
+Pregunta de seba (2026-11-04): la ausencia del término «1 sesión» es el comportamiento de
+**WordPress**; en **Bookwise** el precio de una sesión debe ser válido por sí mismo. Pero cuando
+hagamos un **exportador a Woo** en el formato que Woo puede leer para carga masiva, **ahí sí** hay
+que emitir el término.
+
+### 7.1 La regla de tres capas (no confundirlas)
+
+| Capa | Quién manda | Regla |
+|---|---|---|
+| **Presentación Woo** (tienda) | WordPress | Si no hay término «1 sesión», no se muestra precio unitario ni badge. No es nuestro problema. |
+| **Modelo Bookwise** | Nosotros | El precio de **una sesión** siempre es un valor propio y autoconsistente: `singleSessionPrice = (variación activa de 1 sesión) ?? services.price`. **Nunca** el mínimo de las variaciones. El selector solo muestra términos reales. |
+| **Exportador a Woo** | Nosotros (T8) | **Emitir siempre el término «1 sesión»** para que el producto exportado tenga precio unitario vendible. |
+
+Corolario: si el cliente ya creó un producto en Bookwise «sin pensar en variaciones», Bookwise lo
+trata como producto simple (`variations: []`) y `services.price` **es** el precio de una sesión. Al
+exportar, ese servicio se convierte en padre `variable` con el término «1 sesión» materializado (o
+se exporta `simple` si se prefiere espejo exacto; ver 7.4).
+
+### 7.2 Formato oficial verificado (fuente: WooCommerce «Product CSV Importer and Exporter»,
+schema oficial + `plugins/woocommerce/sample-data/sample_products.csv`)
+
+Un **solo CSV** lleva el padre y sus variaciones, en ese orden:
+
+| Fila | `Type` | `Parent` | `Attribute 1 name` | `Attribute 1 value(s)` | `Attribute 1 visible` | `Attribute 1 global` | Precio |
+|---|---|---|---|---|---|---|---|
+| padre | `variable` | *(vacío)* | `Sesiones` | `1 sesion, 3 sesiones, 6 sesiones` | `1` | `1` (global `pa_sesiones`) | **vacío** |
+| variación | `variation` | SKU del padre o `id:123` | `Sesiones` | `1 sesion` | `1` | `1` | `Regular price` = compare_at / `Sale price` = price |
+
+Reglas duras del importador (todas verificadas en la doc oficial):
+
+1. **El padre va antes que sus variaciones.** Obligatorio desde WC 11.1 para convertir
+   `simple → variable` en una sola importación; si no se garantiza el orden, hay que hacer **dos**
+   importaciones (primero el padre, después las variaciones con «Update existing products
+desmarcado).
+2. **`Parent`** = SKU del padre, o `id:123` (con prefijo). El export usa SKU cuando puede.
+3. **Los valores del padre son la lista completa** separada por comas; **cada variación lleva un
+   solo valor**. Si una variación trae más de uno, Woo usa el primero. Un valor vacío en la fila de
+   variación significa **«cualquier valor»** (catch-all) — hay que evitarlo.
+4. **`Attribute N global = 1`** exige que el atributo global (`pa_*`) **ya exista** en la tienda
+destino. `0` = atributo local del producto.
+5. **El nombre y el valor del atributo deben coincidir exactamente** entre padre y variación
+   (misma capitalización, sin espacios de más).
+6. **`Regular price` = precio de lista, `Sale price` = precio de venta** → mapea directo a nuestro
+   `compare_at_price` / `price`. Si `compare_at_price` es `null`, **dejar `Sale price` vacío** y poner
+   el precio en `Regular price` (un `Sale price` igual al `Regular` crea una «oferta» falsa).
+7. **`meta:` solo acepta texto plano — no JSON ni serializado** ⇒ **jamás** escribir
+   `_product_attributes` a mano; se usan las columnas `Attribute N …`.
+8. **`Published`**: `1` publicado, `0` privado, `-1` borrador, `2` pendiente de revisión.
+9. **`Stock`**: número habilita gestión de stock; `parent` = la variación hereda del padre; vacío =
+   sin gestión de stock.
+10. **`Images`**: solo URLs (la primera es la destacada). El importador core **no** puede cargar
+    alt text.
+11. **No se puede asignar `ID`** a un producto nuevo; para actualizar se matchea por `ID` o `SKU`
+    (con «Update existing products»).
+12. Booleans con `1`/`0`. Jerarquía de categorías con `>`.
+
+### 7.3 Trampas confirmadas para nuestro caso
+
+- **Los IDs de término no son portables**: `pa_sesiones` tiene `3-sesiones` = 65 y `6-sesiones` = 66
+  en producción, pero 64 y 65 en el local. **Exportar por nombre/slug, nunca por ID.**
+- **`pa_sesiones` debe existir en destino.** Su tienda ya lo tiene en producción, pero el local
+  **no tiene el término `1-sesion`** (solo 3 y 6): hay que crear el término antes del import, o usar
+  `global = 0` (atributo local) y aceptar que no sea reutilizable.
+- **Nombres de término inconsistentes en la tienda real**: `1 sesion` (sin tilde, singular) vs
+  `3 sesiones` / `6 sesiones`. El exportador tiene que decidir una grafía canónica y **crear los
+  términos que falten**; si no, se duplican términos. Propuesta: `1 sesion`, `3 sesiones`,
+  `6 sesiones` (respetar lo que ya existe en producción).
+- **Bug conocido del importador core**: marcar `global = 1` cuando existe un atributo local del
+  mismo nombre hace que la fila se descarte y quede una variación catch-all + un atributo global
+  huérfano (PR #67991). Verificar en staging.
+- **`virtual`**: los servicios no llevan envío. El schema acepta tipos múltiples separados por
+  coma, así que `variation, virtual` / `simple, virtual` es lo esperable, pero **hay que validarlo
+  en staging** (no está documentado para filas de variación).
+- **Conversión `simple → variable`** requiere «Update existing products» + padre antes que hijos; si
+  el mismo SKU ya existe como simple, esta es la única vía de una pasada.
+
+### 7.4 Decisiones abiertas de T8 (para cuando se implemente)
+
+1. **¿Espejo exacto o normalizado?** Un servicio con `variations: []` se puede exportar como `simple`
+   (espejo fiel de Woo) o como `variable` con un único término «1 sesión» (lo que pidió seba para la
+   carga masiva). Recomendación: **`variable` + término «1 sesión»**, porque el objetivo del
+   exportador es el catálogo de la tienda.
+2. **¿Quién crea el atributo global y los términos?** Opciones: (a) pre-requisito manual en wp-admin;
+   (b) el exportador emite un CSV previo / llama la REST de `products/attributes` y
+   `products/attributes/{id}/terms`. Recomendación: (b) vía REST antes del CSV.
+3. **SKU**: Woo exige SKU único por variación. Propuesta: `svc-{serviceId}` para el padre y
+   `svc-{serviceId}-{totalSessions}` para cada término (estable y re-importable).
+4. **¿Imágenes?** El CSV solo acepta URLs; si Bookwise sirve las imágenes por URL pública, se
+   pueden usar; si no, quedan sin imagen (el importador no sube archivos locales).
+
+### 7.5 Diseño (2026-11-04): `design/productos-packs/` artboards 04 y 05
+
+Se **extendió** el design existente en vez de crear uno nuevo, porque el mantenedor ya vive ahí
+(`02-lista-tarjetas.html` es el elegido e implementado). Dos artboards nuevos:
+
+| Artboard | Qué responde | Tradeoff |
+|---|---|---|
+| `04-mantenedor-exportador.html` | Dónde queda el exportador: **acción secundaria del título** (`Exportar a Woo`, junto a «Ver packs vendidos»), con menú de **alcance** (catálogo completo / solo los que cambiaron / seleccionados), **barra de estado** de la última exportación («8 servicios · 21 variaciones · atributo global pa_sesiones») y **estado por servicio** al pie de cada tarjeta (al día · con cambios · sin exportar · no se exporta por borrador · se exporta oculto). | El mantenedor gana un eje de información (sincronización) que hay que mantener coherente con el de variaciones. |
+| `05-dialogo-exportacion.html` | El diálogo: **validación previa** (bloqueantes vs advertencias: borrador, sin término «1 sesión», sin variaciones, inactivo) + **vista previa de las filas reales del CSV** (padre `variable` antes que las `variation`, columnas del importador core) + destino y términos a crear. | Es un diálogo alto y depende de que la validación previa sea rápida y explicable. |
+
+Decisiones de diseño tomadas: el exportador **no** es una pantalla nueva; el botón es `outlined`
+(secundario) porque exportar no es la acción frecuente; la barra de sincronización es **informativa**
+(borde azul, no ámbar) para no competir con el banner de sugerencia de variaciones; el aviso «sin
+término 1 sesión» aparece **en la tarjeta** (ámbar) además de en el preflight, porque es el dato que
+el formato de Woo necesita y que el modelo de Bookwise tolera.
+
+---
+
+## Log
 - **L1 (2026-11-03, verbatim, mensaje de seba con las respuestas):** «ok entonces te doy el texto
   sobre algo que trabajamos en una sesion que cerre para actualizarte, revisa gentle-design
   nuevamente porque ya lo use alguna vez, quiza no lo tienes instalado, te respondo ahora las
@@ -393,3 +504,202 @@ T2–T5 no necesitan nada de la agenda; T6 es el que cierra la fidelidad con la 
   «1 sesión» desde el precio base); no hay badge de descuento (sin `compare_at_price`); el filtro
   ofrece **tres** estados (Borrador sigue en stand-by, §6 ítem 4); no hay acciones ni diálogos de
   escritura; el backend devuelve lista plana o envelope `{data}` y el componente normaliza ambos.
+- **L9 (2026-11-04, mensaje del backend, bloque 3):** el backend (Bookwise-API) arrancó el bloque 3
+  (U3/U4) y pidió (a) el texto verbatim del «punto 3» y (b) validación de sus decisiones. Decisiones
+  suyas: `service_variations` tabla propia (id, service_id, name, duration_minutes, price, active,
+  deleted_at); `service_packs` + `variation_id` (nullable FK) + `discount_percent` decimal(5,2)
+  nullable 0..100; `discount_percent` **informativo** (no calcula el precio) con validación de
+  coherencia `expected = variation.price × total_sessions × (1 − discount_percent/100)` → 422
+  `pack_discount_mismatch`; soft delete de servicio; una imagen por servicio (mismo pipeline del
+  logo, path público-relativo); `POST/PATCH /services` acepta `variations[]` anidado (sin endpoints
+  de variación propios); transiciones `draft→active`, `active↔inactive`, `draft→inactive` prohibido
+  (422 `service_status_transition_invalid`). **Respuesta del front (mensaje `474b3b34`):** todo OK;
+  `variations[]` anidado es la opción A; imagen en paso aparte (`POST /services/{id}/image`); **sí
+  necesitamos `description`** (falta la columna); con `status` alcanza para el chip; los 3 códigos
+  alcanzan si vienen como `{ error: "<code>" }` a 422. **Aclaración clave:** su `discount_percent`
+  reemplaza al `compare_at_price` del pedido (misma cuenta al revés: lista =
+  `variation.price × total_sessions`); el front calcula el precio de lista tachado desde
+  `variation.price × total_sessions`. Quedó pedida la confirmación de que ese es el único precio de
+  lista y el detalle de `pack_variation_mismatch`.
+- **L10 (2026-11-04, mensaje del backend, correcciones del bloque 3):** el backend cerró el bloque 3
+  con el mantenedor y corrigió el contrato: (1) **no hay `service_variations`**: `service_packs` ES la
+  tabla de variaciones y el API las expone como `variations[]` anidado (cada variación:
+  `id, term, total_sessions, price, compare_at_price, discount_percent, sku, active`); (2)
+  **`pack_variation_mismatch` no existe**; (3) **no hay escritura de packs** (`POST/PATCH/DELETE
+  /packs` fuera; la escritura va por `/services` con `variations[]`, `GET /packs` queda read-only);
+  (4) **`compare_at_price` explícito por término** (NO `variation.price × total_sessions`): puede ser
+  cualquier valor `> price`, `discount_percent = round((1 − price/compare_at_price)*100)` calculado
+  en backend, `compare_at_price <= price` → 422 `pack_discount_invalid`; el front usa
+  `compare_at_price` directo para el tachado (vuelve al pedido 2.2 original); (5) `DELETE /services`
+  → 409 `service_in_use` con `force`, luego soft delete; (6) acepta `description`, `attribute_name`,
+  `image_url`/`image_thumb_url`, `GET /services?search=&active=&status=&page=&per_page=`,
+  validaciones y shape `{ error }`; (7) **`variations: []` es válido = producto simple** (sin término
+  «1 sesión» obligatorio): la suelta sale del término activo de 1 sesión o de `services.price`,
+  nunca del mínimo. **Respuesta del front (mensaje `35ed257e`):** todo OK, nada rompe;
+  `variations: []` ya cubierto (`referencePerSession` en booking-form-dialog ya hace esa regla); matiz
+  UI: hoy el selector se muestra deshabilitado con «Sin variaciones» en vez de ocultarse (se oculta al
+  cablear T2); los 5 códigos alcanzan (se agregarán `biz.*` en T2). Códigos finales:
+  `service_status_transition_invalid` 422, `pack_discount_invalid` 422, `service_in_use` 409,
+  `service_status_invalid` 422, `service_not_available` 422.
+- **L11 (2026-11-04, verificación read-only del Woo real):** el backend pidió verificar 4 supuestos
+  antes de escribir el esquema. **LocalWP no está disponible** en este entorno
+  (`kinesilk-tema.develop` resuelve a `::1` pero nada escucha; sin Docker) y la key WC REST v3 del
+  disco da 401. Fuente usada: **WooCommerce Store API pública** de `kinesilk.cl`
+  (`/wp-json/wc/store/v1/products`), read-only. **El dump `respaldo wordpress 05-10-2026/…sql`
+  está desactualizado** (0 `product_variation`, `sesiones` con `is_variation=0`): no modelar con él.
+
+  **Resultados:** 24 productos → **9 variable + 15 simple**. Los 9 variables usan `pa_sesiones`
+  (`1-sesion`, `3-sesiones`, `6-sesiones`); el padre tiene `prices.price` = mínimo (no vacío) y
+  `price_range`. **"1 sesión" no es universal**: 8/9 lo tienen, `2917` (producto de prueba) no; y
+  `2797`/`2982` solo tienen 2 de los 3 términos. **`variations: []` es caso vivo** (15 simples), con
+  duplicación real: «Tatuaje de hasta 3cm» existe como `2793` (25.000, 1 sesión) y `2794` (139.990,
+  pack 6) ambos simples; «Hollywood peel» como simple `2796` y variable `2797`; y 2 simples con
+  precio 0 (`2783`, `2784`). **Mapeo clave confirmado: `regular_price > sale_price` ==
+  `compare_at_price > price`** (5/12 variaciones con descuento real; 7/12 con `regular == sale` →
+  `compare_at_price: null`); `price = sale_price ?? regular_price`. **Imágenes**: WP genera
+  100/150/300/600/768/1024/1536/2048; la grilla usa `woocommerce_thumbnail` **300×300**; **no existe
+  400px** → se recomendó **600×600** para `image_thumb_url`. `duracion` es atributo custom
+  inconsistente («30 minutos»/«30 min»/«30 mins») → usar `services.duration_minutes`. El `name` de
+  una variación en Woo es el del padre, no `padre - término`. No verificado: `manage_stock` por
+  variación ni productos en draft (la Store API no los expone).
+- **L12 (2026-11-04, aclaración del mantenedor):** «sin duda cuando no hay el término 1 sesión, no
+  aparece como oferta eso es porque estaba en aprendizaje, pero ya tenia claro que si no tiene
+  termino al menos en la presentacion del producto, este no muestra o no mostrar el valor de una
+  sola sesion».
+  → **Regla cerrada, con dos superficies separadas:** (1) **presentación / selector de variaciones**:
+  **nunca** fabricar un término «1 sesión»; si no existe, se muestran solo los términos reales y **no
+  se muestra precio de sesión suelta** (y sin término unitario **no hay badge `−%`**, porque falta la
+  referencia). (2) **reserva de una sesión suelta**: ahí sí aplica la regla del backend (`services.price`
+  cuando no hay término de 1 sesión) — es precio de venta, no algo que la ficha exhiba. El front ya
+  arma el selector solo con términos reales; falta **ocultar** el select cuando `variations: []`
+  (hoy queda deshabilitado con «Sin variaciones») — solo presentación, al cablear T2.
+
+  **Dato nuevo del sitio local** (`kinesilk-tema.develop`, alcanzable vía interop de Windows porque
+  WSL→Windows está bloqueado por firewall): el local está **desactualizado** vs producción —
+  **31 productos: 28 simple, 1 variable, 1 external, 1 grouped**, contra **24 (15 simple, 9 variable)**
+  en producción. El único variable local es `2793 "Tatuaje de hasta 3cm"` con términos **3 y 6
+  sesiones (sin 1 sesión)** y un atributo custom `sesiones: "1"` huérfano. **La migración debe salir
+  de producción, no del local.**
+- **L13 (2026-11-04, verbatim del mantenedor):** «atencion, lo que te confirme es el comportamiento
+  en wordpress, puede que de nuestro lado como bookwise el cliente ya haya creado un producto sin
+  pensar en las variaciones, nosotros si deberiamos asegurarnos de que en el caso que es una sesion
+  el valor corresponde a si mismo, con o sin variacion de 1 sesion, cuando hagamos un exportador
+  para wordpress en el formato que este puede leer para hacer carga masiva de productos ahi si
+  seria importante que introduzcas el termino, te diria que busques en internet como es esa posible
+  carga y tenerla considerada para carga masiva de catalogo mas adelante con estas caracteristicas
+  de variacion y todo mas».
+  → Se separó **§7** en el documento con la regla de tres capas (presentación Woo / modelo Bookwise /
+  exportador) y la investigación del formato oficial de carga masiva. **T8 (exportador CSV a Woo)
+  agregada como tarea futura, no implementada.** Hallazgos: un solo CSV con padre `variable` antes
+  que sus variaciones `variation` + `Parent` por SKU/`id:`; `Regular price` = `compare_at_price` y
+  `Sale price` = `price`; `meta:` no acepta serializado (no se puede escribir `_product_attributes`);
+  `Attribute N global = 1` exige que `pa_sesiones` ya exista; **los IDs de término no son portables**
+  (65/66 en prod vs 64/65 en local) y el local **no tiene** el término `1-sesion`.
+- **L14 (2026-11-04, diseño del exportador):** a pedido del mantenedor («podrias tomar lo que hay y
+  ver donde queda el exportador de catalogo como un boton?») se **extendió** `design/productos-packs/`
+  con `04-mantenedor-exportador.html` y `05-dialogo-exportacion.html`, en vez de crear un design
+  nuevo: el mantenedor ya existe y `02-lista-tarjetas.html` es el artboard elegido. El exportador
+  quedó como **acción secundaria del título** con menú de alcance, más una barra de estado de
+  sincronización y el estado por servicio al pie de cada tarjeta; el diálogo muestra **validación
+  previa + vista previa de las filas del CSV**. Canvas:
+  `http://127.0.0.1:45401/…/d/productos-packs/`. **Sin implementar** (sigue siendo T8).
+- **L15 (2026-11-04, cierre del backend):** el backend confirmó que **el punto de variaciones cierra sin
+  cambios de su lado**: (1) la separación presentación vs reserva **ya está implementada así** —
+  `services.price` se materializa desde el término «1 sesión» ACTIVO si existe y si no conserva su
+  valor almacenado (**S15**), y es precio de venta en la reserva, no algo que la ficha exhiba;
+  `variations: []` es válido (**S18**, producto simple). (2) El badge `discount_percent` sale de
+  `compare_at_price` **explícito** (**S10**), nunca del precio del término unitario, así que la regla
+  «sin término 1 sesión no hay badge contra referencia unitaria» **se cumple por construcción**.
+  (3) Fuente de verdad para la migración = **producción** (`kinesilk.cl`, Store API), no el local
+  (1 variable vs 9) ni el dump; `wc_variation_id` y `sku` **ya existen como columnas nullable** listas
+  para ese sync. **No hay nada más que verificar.** Con esto el bloque 3 queda cerrado del lado del
+  contrato: T2 (modelos + CRUD + imagen + variaciones) se desbloquea cuando ellos desplieguen, y T8
+  (exportador CSV) queda como tarea futura ya especificada en §7.
+- **L16 (2026-11-04, handoff del artboard 04):** implementado el **exportador de catálogo** en el
+  mantenedor real (`/admin/packs`), como **una unidad sin backend**: el CSV se genera en el cliente
+  desde `ReferenceStore`, así que no depende del deploy del bloque 3.
+
+  **Nuevo**: `services-export.util.ts` (`buildWooRows`, `buildWooCsv`, `wooTermLabel`,
+  `serviceFingerprint`, `WOO_CSV_COLUMNS`), `services-export.store.ts` (historial en
+  `localStorage` `bw:services:export:{userId}:{tenantId}`: `lastExportAt` + huellas por servicio;
+  `stateFor` → `new|changed|synced`; `counts`). **Extendido**: `packs-list.component.{ts,html,scss}`
+  con botón `Exportar a Woo` (menú de alcance: todo / solo los que cambiaron / los seleccionados),
+  barra de sincronización, filtro `Woo:`, selección múltiple en tarjetas y en la vista de lista,
+  barra de selección y estado por servicio. i18n `packs.export.*`, `packs.sync.*`, `packs.select.*`,
+  `packs.woo.*` en es/en **sin voseo**.
+
+  **Decisiones registradas**: SKU `svc-{id}` y `svc-{id}-{totalSessions}`; etiqueta canónica
+  `1 sesion` / `{n} sesiones`; `Sale price` **siempre vacío** (no hay `compare_at_price`, §7.2.6);
+  precio en `Regular price`; un servicio sin términos activos se exporta `simple`; `recordExport`
+  **mezcla** huellas para no perder el estado en lotes parciales; «cambiaron» = `changed + never`;
+  el aviso «sin término 1 sesión» solo aparece si hay términos activos y ninguno de 1 sesión.
+  **Corregido en revisión**: la fila `variation` llevaba el `Name` del padre; ahora es
+  `{servicio} - {término}` (nombre único por fila, como pide el paso 5 del importador).
+
+  **Evidencia**: tests enfocados **42 passed** (13+1 util, 5 store, 23 componente + 1 ajeno);
+  `npm run build` verde; **0 literales de color nuevos** en el SCSS. Warning nuevo (no error):
+  `packs-list.component.scss` 14,43 kB vs budget 12 kB — el repo ya tiene otro componente por encima.
+  **Fuera de alcance declarado**: el diálogo del artboard 05 (queda como **T9**), las columnas
+  `Images`/`Stock` del schema, y «Ver historial» (no hay backend de historial).
+- **L17 (2026-11-04, comentarios de canvas `phkx8gpu` / `1s55hzmb` / `6hh3vhq5`):** se aplicaron los
+  tres comentarios al diseño y se implementaron **dos unidades chicas** en el mantenedor.
+
+  **Diseño.** `04-mantenedor-exportador.html`: afordancia de imagen `.img-btn` (icono de cámara +
+  «Cambiar imagen») en la **esquina inferior izquierda** del media — las otras tres están ocupadas
+  (badge `−%`, casillero, duración) — **siempre visible** porque en touch no hay hover; el servicio
+  sin imagen muestra «Agregar imagen». Se eligió icono explícito y no «click en toda la imagen»
+  porque ese click debe abrir el servicio. `01-lista-tabla.html`: el **precio de lista tachado**
+  ahora aparece también en el chip de la fila colapsada (`~~$75.000~~ $67.500 −10%`), no solo en la
+  columna de la sub-fila, y se agregó un **frame de dispositivo de 390 px** con la spec mobile de la
+  lista (tarjetas apiladas, términos en filas, acciones al pie).
+
+  **Implementado (sin commit).**
+  1. **Afordancia de imagen** en las tarjetas: `.sp-media__image-btn`, **deshabilitada** con
+     `title`/`aria-label` (`packs.image.*` en es/en) porque el backend **no expone**
+     `POST /services/{id}/image` ni `image_url` en el servicio. No se simula una acción que fallaría.
+     Spec nueva que lo verifica (presente, `disabled`, con razón accesible).
+  2. **Vista de lista en mobile (≤767px)**: `thead` oculto, cada `tr` es un bloque apilado con
+     `padding-left` para anclar los controles (casillero + desplegable) a la izquierda, `data-label`
+     en las celdas de precio base y estado, y la sub-fila de términos pasa a una línea legible por
+     término. También `flex-wrap` en `.sp-sync` y `.sp-selbar`.
+
+  **Refactor obligado por el budget**: `packs-list.component.scss` había llegado a **16,47 kB** y
+  rompía el build (`anyComponentStyle` error a 15 kB). Se partió en cuatro archivos declarados en
+  `styleUrls`: `packs-list.component.scss` (10,34 kB) · `packs-list-table.scss` (4,24 kB) ·
+  `packs-list-export.scss` (7,62 kB) · `packs-list-mobile.scss` (2,74 kB). Build **verde y sin el
+  warning** de ese componente.
+
+  **Evidencia**: **43 tests** enfocados verdes (24 de `packs-list.component.spec` + 14 util + 5
+  store); `npm run build` verde; 0 literales de color nuevos.
+- **L18 (2026-11-04, contrato U3/U4 cerrado + bug del envelope):** el backend confirmó el contrato
+  final de services/packs commiteado en `feat/services-crud-variations` (**aún sin merge a dev**):
+  `GET /services` con envelope `{data, links, meta}`, **`per_page` por defecto 15**, filtros
+  `search`/`status`/`active`; `POST`/`PATCH` con `variations[]` (`{id?, term, total_sessions, price,
+  compare_at_price?, sku?, active?}`, sync por `id`, ausentes soft-delete); `DELETE ?force=true`;
+  `POST /services/{id}/image` → `{image_url, image_thumb_url}` público-relativos. `name` de la
+  variación se sirve ya formado. Códigos: 422 `service_status_invalid`,
+  `service_status_transition_invalid`, `pack_discount_invalid`, `variation_not_found` (nuevo),
+  `image_processing_failed` (nuevo), `service_not_available`; 409 `service_in_use`;
+  501 `image_processing_unavailable`.
+
+  **Bug encontrado y corregido en el front** (rompía la agenda): `ServicesApiService.getServices()`
+  hacía `http.get<Service[]>` y devolvía el body tal cual. Al pasar el backend a devolver el
+  **envelope**, `ReferenceStore.services` quedó con un objeto en vez de un array y la agenda explotaba
+  con `this.refStore.services(...).filter is not a function` en `booking-form-dialog:169`. Ahora usa
+  `collectPaginatedPages<Service>` (el helper que ya consumen clients/providers/locations), que
+  **desenvuelve el envelope, agrega todas las páginas y sigue tolerando el array plano** mientras
+  dev no tenga el deploy. Specs: 2 casos (envelope multi-página + array plano legacy) → 6/6 verdes.
+  **Lección**: cualquier endpoint que migre a envelope `{data, links, meta}` sin paginar en el front
+  deja el `ReferenceStore` con la forma equivocada y rompe todos sus consumidores a la vez.
+- **L19 (2026-11-04, T4 implementado):** el diálogo de servicio quedó cableado al contrato real
+  (L18) y reemplaza el aviso de solo lectura: `+ Nuevo servicio` y `Editar` (tarjeta y fila) abren
+  `bw-service-form-dialog`. Decisiones: `active` es **espejo derivado de `status`** (badge read-only)
+  para no poder mandar `draft` + `active:true`; transiciones ofrecidas según estado actual
+  (`draft→[draft,active]`, `active→[active,inactive]`, `inactive→[active,inactive]`); término
+  sugerido (`1 sesion` / `{n} sesiones`) **nunca auto-aplicado**; imagen se sube **después** de
+  guardar (el endpoint necesita el `id`) y en alta el selector queda deshabilitado; al guardar se
+  invalidan **`services` y `packs`** (las tarjetas derivan términos de `service_packs`).
+  **Evidencia:** 37 tests verdes (packs-list 26 + diálogo 11) y build verde; SCSS del diálogo 8 kB,
+  sin partir. **Fuera de alcance declarado:** escalera de volumen, vista previa con selector de
+  término, `wc_product_id` y borrado de servicio.
+

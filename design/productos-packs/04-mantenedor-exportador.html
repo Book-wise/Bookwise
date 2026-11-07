@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Servicios y packs — dónde vive el exportador de catálogo a Woo</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b;
+    --bw-chip-text-secondary:#374151; --bw-chip-text-primary:#0b3d95;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --surface-100:#f5f5f5; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --sidebar-bg-from:var(--bw-900); --sidebar-bg-to:var(--bw-600);
+    --sidebar-text:rgba(255,255,255,0.68); --sidebar-text-active:#ffffff;
+    --sidebar-hover-bg:rgba(255,255,255,0.08); --sidebar-active-bg:rgba(255,255,255,0.14);
+    --sidebar-active-border:var(--bw-300); --sidebar-divider:rgba(255,255,255,0.1);
+    --sidebar-text-hover:#ffffff;
+    --bw-700:#0a2862;
+    --bw-shadow-sidebar-tab:0 2px 8px rgba(1,38,99,0.45);
+    --bw-shadow-sidebar-tab-hover:0 3px 12px rgba(4,106,244,0.5);
+    --bw-transition-base:0.2s;
+    --bw-weight-semibold:600;
+    --color-primary:var(--bw-500); --color-primary-cta:var(--bw-300);
+    --surface-50:#fafafa; --surface-hover:#f3f4f6;
+    --z-drawer:400; --z-topbar:500;
+    --bw-space-xs:0.25rem;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem; --bw-text-2xl:1.5rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm); --bw-font-title:var(--bw-text-lg); --bw-font-amount:var(--bw-text-xl);
+    --bw-weight-medium:500; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-sm:0.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-transition-fast:0.15s;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    width:1440px; min-height:900px; display:flex;
+    font-family:var(--font-family); font-size:16px; line-height:1.5;
+    color:var(--text-color); background:var(--surface-ground); -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3 { margin:0; font-weight:var(--bw-weight-medium); }
+  button { font-family:inherit; cursor:pointer; }
+  .overline {
+    font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold); text-transform:uppercase;
+    letter-spacing:var(--bw-tracking-overline); color:var(--text-color-secondary);
+  }
+
+  /* ── App shell (copia fiel de admin-layout / app-header) ─────────
+     Es contexto visual: NO es parte del diseño a implementar porque
+     ya existe en la app. PrimeIcons no es embebible: los íconos se
+     aproximan con SVG inline (stroke, currentColor). ─────────────── */
+  .layout { display:flex; height:100%; min-height:900px; overflow:hidden; background:var(--surface-ground); }
+
+  .sidebar {
+    width:220px; flex-shrink:0; display:flex; flex-direction:column;
+    background:linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+    position:relative; z-index:var(--z-drawer); overflow:hidden;
+  }
+  .sidebar::before {
+    content:''; position:absolute; top:-60px; right:-60px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle, rgba(96,167,240,0.18) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .sidebar::after {
+    content:''; position:absolute; bottom:-60px; left:-40px; width:160px; height:160px;
+    border-radius:50%; background:radial-gradient(circle, rgba(4,106,244,0.12) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  .sidebar-header {
+    height:4.1875rem; min-height:4.1875rem; padding:0.375rem 0.625rem;
+    border-bottom:1px solid var(--sidebar-divider); background:rgba(255,255,255,0.22);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    position:relative; z-index:1;
+  }
+  .logo-wrapper {
+    background:rgba(255,255,255,0.7); border-radius:10px; padding:0.25rem 0.625rem;
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+  }
+  .sidebar-icon { width:32px; height:30px; flex-shrink:0; display:block; }
+  .sidebar-wordmark { color:var(--bw-900); font-size:1.125rem; font-weight:var(--bw-weight-semibold); letter-spacing:-0.01em; line-height:1; white-space:nowrap; }
+
+  .sidebar-collapse-btn {
+    display:flex; align-items:center; justify-content:space-between; gap:0.625rem;
+    padding:0.625rem 0.75rem; margin:0; border-radius:0; color:var(--sidebar-text);
+    background:none; border:none; border-bottom:1px solid var(--sidebar-divider);
+    width:100%; font-size:0.875rem; font-family:var(--font-family); cursor:pointer;
+    text-align:left; transition:all 0.18s ease;
+  }
+  .sidebar-collapse-btn:hover { background:var(--sidebar-hover-bg); color:var(--sidebar-text-hover); }
+  .sidebar-collapse-btn__label { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sidebar-collapse-btn__icon {
+    width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,0.25);
+    background:var(--bw-700); box-shadow:var(--bw-shadow-sidebar-tab); color:rgba(255,255,255,0.85);
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .sidebar-collapse-btn__icon svg { width:14px; height:14px; }
+
+  .sidebar-nav { flex:1; padding:0.625rem 0.5rem; display:flex; flex-direction:column; gap:0.125rem; overflow-y:auto; position:relative; z-index:1; }
+  .nav-item {
+    display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.75rem;
+    border-radius:var(--bw-radius-lg); color:var(--sidebar-text); text-decoration:none;
+    transition:all 0.18s ease; cursor:pointer; border:none; background:none; width:100%;
+    font-size:0.875rem; font-family:var(--font-family); text-align:left;
+  }
+  .nav-item svg { width:20px; height:20px; flex-shrink:0; }
+  .nav-item:hover { background:var(--sidebar-hover-bg); color:var(--sidebar-text-hover); }
+  .nav-item.active {
+    background:var(--sidebar-active-bg); color:var(--sidebar-text-active); font-weight:500;
+    border-left:3px solid var(--bw-300); padding-left:calc(0.75rem - 3px);
+  }
+
+  .sidebar-widget { padding:0.625rem 0.5rem 0.75rem; position:relative; z-index:1; }
+  .navigator {
+    display:flex; flex-direction:column; gap:0.625rem; padding:0.75rem;
+    border-radius:10px; background:rgba(255,255,255,0.94); border:1px solid rgba(255,255,255,0.25);
+    color:#1a2744;
+  }
+  .navigator__nav { display:flex; align-items:center; gap:0.125rem; height:38px; }
+  .navigator__arrow {
+    width:22px; height:22px; border:none; border-radius:6px; background:transparent; color:#6b7280;
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .navigator__arrow:hover { background:rgba(4,106,244,0.08); color:#046af4; }
+  .navigator__arrow svg { width:14px; height:14px; }
+  .navigator__label { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1px; line-height:1.1; text-transform:capitalize; color:#1a2744; overflow:hidden; }
+  .navigator__year { font-size:0.625rem; font-weight:500; color:#6b7280; text-transform:none; white-space:nowrap; }
+  .navigator__month { font-size:0.8125rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .navigator__today {
+    border:none; background:transparent; color:#046af4; font-family:var(--font-family);
+    font-size:0.6875rem; font-weight:600; padding:0.1875rem 0.3125rem; border-radius:6px;
+    cursor:pointer; flex-shrink:0;
+  }
+  .navigator__today:hover { background:rgba(4,106,244,0.08); }
+  .navigator__grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .navigator__header { text-align:center; font-size:0.625rem; font-weight:600; color:#9ca3af; text-transform:uppercase; padding:2px 0; }
+  .navigator__day {
+    height:26px; border:none; border-radius:6px; background:transparent; color:#1a2744;
+    font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .navigator__day:hover { background:rgba(4,106,244,0.1); color:#046af4; }
+  .navigator__day--today { background:#046af4; color:#fff; font-weight:600; }
+  .navigator__day--selected { background:rgba(4,106,244,0.28); color:#046af4; font-weight:700; box-shadow:inset 0 0 0 2px #046af4; }
+  .navigator__day--empty { background:transparent; cursor:default; }
+
+  .sidebar-footer {
+    padding:0.5rem; border-top:1px solid var(--sidebar-divider); flex-shrink:0;
+    display:flex; flex-direction:column; gap:0.375rem; position:relative; z-index:1;
+  }
+  .sidebar-logout {
+    display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.75rem;
+    border-radius:var(--bw-radius-lg); color:rgba(252,165,165,0.85); background:none; border:none;
+    width:100%; font-size:0.875rem; font-family:var(--font-family); cursor:pointer; text-align:left;
+    transition:all 0.18s ease;
+  }
+  .sidebar-logout:hover { background:rgba(239,68,68,0.12); color:#fca5a5; }
+  .sidebar-logout svg { width:20px; height:20px; flex-shrink:0; }
+  .sidebar-logout span { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .main-content {
+    flex:1; min-width:0; overflow-y:auto; padding:0 1.25rem 1.25rem;
+    background:var(--surface-ground); display:grid; gap:var(--bw-space-md); align-content:start;
+  }
+
+  .app-header {
+    display:flex; align-items:center; justify-content:space-between; gap:var(--bw-space-md);
+    height:4.1875rem; min-height:4.1875rem; padding:0.5rem 1rem;
+    border-bottom:1px solid var(--surface-border); background:var(--surface-card);
+    position:sticky; top:0; z-index:var(--z-topbar); margin:0 -1.25rem;
+  }
+  .app-header__left { display:flex; align-items:center; gap:var(--bw-space-lg); min-width:0; }
+  .app-header__right { display:flex; align-items:center; gap:var(--bw-space-sm); }
+  .app-header__menu-btn {
+    width:36px; height:36px; border:1px solid var(--surface-border); background:var(--surface-card);
+    color:var(--text-color); border-radius:8px; cursor:pointer; display:none;
+    align-items:center; justify-content:center; flex-shrink:0;
+    transition:background var(--bw-transition-base), color var(--bw-transition-base);
+  }
+  .app-header__menu-btn:hover { background:var(--surface-hover); color:var(--color-primary); }
+  .app-header__menu-btn svg { width:18px; height:18px; }
+  @media (max-width:991px) { .app-header__menu-btn { display:inline-flex; } }
+
+  .app-header__business {
+    display:inline-flex; align-items:center; gap:0.5rem; padding:0.25rem 0.625rem;
+    border:1px solid var(--surface-border); border-radius:8px; background:var(--surface-50);
+    font-family:var(--font-family); color:var(--text-color); cursor:default; text-align:left;
+  }
+  .app-header__monogram {
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:36px; height:36px; border-radius:0.625rem; background:var(--bw-200); color:#fff;
+    font-weight:var(--bw-weight-semibold); font-size:var(--bw-font-table); user-select:none;
+  }
+  .app-header__business-info { display:flex; flex-direction:column; min-width:0; line-height:1.1; }
+  .app-header__business-name { font-weight:var(--bw-weight-semibold); font-size:0.875rem; color:var(--text-color); white-space:nowrap; }
+  .app-header__business-rut { font-size:0.6875rem; color:var(--text-color-secondary); }
+  .app-header__chevron { display:inline-flex; color:var(--text-color-secondary); }
+  .app-header__chevron svg { width:12px; height:12px; }
+
+  .app-header__actions { display:flex; align-items:center; gap:var(--bw-space-xs); }
+  .app-header__theme {
+    display:inline-flex; align-items:center; gap:0.5rem; height:36px; min-width:7.25rem;
+    padding:0 0.625rem; border:1px solid var(--surface-border); border-radius:8px;
+    background:var(--surface-card); color:var(--text-color); font-family:var(--font-family);
+    font-size:0.8125rem; cursor:pointer; text-align:left;
+  }
+  .app-header__theme svg { width:12px; height:12px; color:var(--text-color-secondary); margin-left:auto; }
+
+  .account-chip {
+    display:flex; align-items:center; gap:0.625rem; padding:0.375rem 0.625rem;
+    border:1px solid var(--surface-border); border-radius:8px; background:var(--surface-50);
+    cursor:pointer; transition:background var(--bw-transition-base); text-align:left;
+  }
+  .account-chip:hover { background:var(--surface-hover); }
+  .account-chip__avatar {
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:36px; height:36px; border-radius:50%; background:var(--bw-200); color:#fff;
+    font-weight:var(--bw-weight-semibold); font-size:var(--bw-font-table); user-select:none;
+  }
+  .account-chip__name { font-size:0.875rem; font-weight:var(--bw-weight-semibold); color:var(--text-color); white-space:nowrap; }
+  .account-chip__chevron { display:inline-flex; color:var(--text-color-secondary); flex-shrink:0; }
+  .account-chip__chevron svg { width:12px; height:12px; }
+
+  .page-head { display:flex; align-items:flex-start; gap:1rem; }
+  .page-head h1 { font-size:var(--bw-text-2xl); color:var(--text-heading); }
+  .page-head p { margin:.125rem 0 0; font-size:var(--bw-font-table); color:var(--text-color-secondary); }
+  .page-head__actions { margin-left:auto; display:flex; gap:.5rem; }
+  .btn { height:var(--bw-control-height); padding:0 1rem; border-radius:var(--bw-radius-md); border:1px solid transparent;
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium); display:inline-flex; align-items:center; gap:.5rem; }
+  .btn--cta { background:var(--bw-300); color:#fff; }
+  .btn--outlined { background:transparent; border-color:var(--bw-300); color:var(--bw-300); }
+  .btn--ghost { background:transparent; color:var(--text-color-secondary); }
+  .btn--sm { height:2rem; padding:0 .75rem; font-size:var(--bw-font-caption); }
+
+  .toolbar { display:flex; gap:.5rem; align-items:center; }
+  .search { position:relative; flex:1; max-width:360px; }
+  .search input { width:100%; height:var(--bw-control-height); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-md); padding:0 .75rem 0 2.25rem; font-family:inherit;
+    font-size:var(--bw-font-table); color:var(--text-color); background:var(--surface-card); }
+  .search span { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--text-color-secondary); }
+  .select { height:var(--bw-control-height); border:1px solid var(--surface-border); border-radius:var(--bw-radius-md);
+    padding:0 .75rem; background:var(--surface-card); font-size:var(--bw-font-table); color:var(--text-color);
+    display:inline-flex; align-items:center; gap:.5rem; }
+  .select--native .select__label { font-size:var(--bw-font-table); color:var(--text-color); white-space:nowrap; }
+  .select--native select {
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    border:none; outline:none; background:transparent; height:100%; min-width:0;
+    font-family:inherit; font-size:var(--bw-font-table); color:var(--text-color);
+    padding:0 1.25rem 0 .25rem; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right center; background-size:10px 6px;
+  }
+  .select--native select:focus-visible { outline:2px solid var(--bw-300); outline-offset:-2px; }
+  .view-toggle { margin-left:auto; display:flex; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; }
+  .view-toggle button { border:none; background:var(--surface-card); padding:.55rem .75rem; color:var(--text-color-secondary); font-size:var(--bw-font-table); cursor:pointer; }
+  .view-toggle button.is-active { background:var(--bw-50); color:var(--bw-500); font-weight:var(--bw-weight-medium); }
+  .view-toggle button:focus-visible { outline:2px solid var(--bw-300); outline-offset:-2px; }
+
+  /* ambas vistas son la misma página: cada negocio elige la que le acomode */
+  .view[hidden] { display:none; }
+
+  /* ── Vista lista: la diseñada en 01-lista-tabla.html ─────────── */
+  .card {
+    background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg);
+    box-shadow:var(--bw-shadow-card); overflow:hidden;
+  }
+  .card table { width:100%; border-collapse:collapse; }
+  .card th {
+    font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold); text-transform:uppercase;
+    letter-spacing:var(--bw-tracking-overline); color:var(--text-color-secondary); text-align:left;
+    padding:.75rem 1rem; background:var(--surface-card); border-bottom:1px solid var(--surface-border);
+  }
+  .card td { padding:.75rem 1rem; font-size:var(--bw-font-table); border-bottom:1px solid var(--surface-border); vertical-align:middle; }
+  .card tbody tr:hover { background:var(--bw-surface-muted); }
+  .card tbody tr.is-open, .card tbody tr.is-open:hover { background:var(--bw-50); }
+  .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .amount { font-size:var(--bw-font-amount); font-weight:var(--bw-weight-medium); letter-spacing:var(--bw-tracking-tight); }
+  .muted { color:var(--text-color-secondary); }
+  .strike { text-decoration:line-through; }
+  .svc { display:flex; align-items:center; gap:.75rem; }
+  .thumb {
+    position:relative; width:48px; height:48px; border-radius:var(--bw-radius-md); flex-shrink:0;
+    background:linear-gradient(135deg,var(--bw-100),var(--bw-50)); border:1px solid var(--bw-100);
+    display:flex; align-items:center; justify-content:center; color:var(--bw-500);
+    font-weight:var(--bw-weight-bold); font-size:var(--bw-font-table);
+  }
+  .thumb--empty { background:var(--surface-100); border-color:var(--surface-border); color:var(--text-color-secondary); font-weight:400; }
+  .thumb .discount-badge {
+    position:absolute; top:2px; left:2px; font-size:var(--bw-font-overline); padding:0 .25rem;
+    line-height:1.2; border-radius:var(--bw-radius-sm);
+  }
+  .svc__name { font-weight:var(--bw-weight-medium); display:block; }
+  .svc__meta { font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .terms { display:flex; align-items:center; gap:.375rem; flex-wrap:wrap; }
+  .term {
+    display:inline-flex; align-items:baseline; gap:.3125rem; padding:.1875rem .5rem;
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-sm); background:var(--surface-card);
+    font-size:var(--bw-font-caption); white-space:nowrap;
+  }
+  .term b { font-weight:var(--bw-weight-medium); font-variant-numeric:tabular-nums; }
+  .term__off { color:var(--bw-chip-text-success); font-weight:var(--bw-weight-medium); }
+  .row-actions { display:flex; align-items:center; justify-content:flex-end; gap:.25rem; }
+  .subrow > td { padding:0; background:var(--bw-50); }
+  .sub { padding:.5rem 1rem 1rem 4.5rem; }
+  .sub__head { display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  .sub__head .overline { color:var(--bw-500); }
+  .sub__note { font-size:var(--bw-font-caption); color:var(--text-color-secondary); margin-left:auto; }
+  .subtable { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; }
+  .subtable th { padding:.5rem .75rem; }
+  .subtable td { padding:.5rem .75rem; border-bottom:1px solid var(--surface-border); }
+  .subtable tr:last-child td { border-bottom:none; }
+  .perf { font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .perf b { color:var(--text-color); font-weight:var(--bw-weight-medium); }
+
+  /* suggestion card */
+  .suggestion {
+    display:flex; align-items:center; gap:.875rem; padding:.875rem 1rem; border-radius:var(--bw-radius-md);
+    background:var(--bw-50); border:1px solid var(--bw-100); border-left:3px solid var(--bw-300);
+    font-size:var(--bw-font-table); color:var(--text-label);
+  }
+  .suggestion__icon { width:32px; height:32px; border-radius:var(--bw-radius-pill); background:rgba(4,106,244,.12);
+    color:var(--bw-500); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .suggestion strong { color:var(--text-color); font-weight:var(--bw-weight-medium); }
+  .suggestion__cta { margin-left:auto; display:flex; gap:.5rem; }
+
+  /* grid of service cards */
+  .grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--bw-space-md); }
+  .svc-card {
+    background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg);
+    box-shadow:var(--bw-shadow-card); overflow:hidden; display:flex; flex-direction:column;
+  }
+  .svc-card__media {
+    position:relative; height:132px; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(120% 120% at 20% 0%, var(--bw-50) 0%, var(--bw-100) 60%, color-mix(in srgb, var(--bw-100) 70%, var(--bw-200)) 100%);
+    color:var(--bw-500);
+  }
+  .svc-card__media .initial { font-size:2.25rem; font-weight:700; letter-spacing:var(--bw-tracking-tight); opacity:.5; }
+  .svc-card__media--alt {
+    background:radial-gradient(120% 120% at 80% 0%, var(--bw-50) 0%, color-mix(in srgb, var(--bw-100) 80%, var(--bw-200)) 100%); color:var(--bw-500);
+  }
+  .svc-card__media--muted {
+    background:repeating-linear-gradient(45deg, var(--bw-surface-muted) 0 12px, var(--surface-100) 12px 24px); color:var(--text-color-secondary);
+  }
+  .svc-card__media--muted .initial { opacity:.55; font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium); }
+  .svc-card__media .badge {
+    position:absolute; top:.625rem; left:.625rem; display:inline-flex; align-items:center; gap:.25rem;
+    background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-sm);
+    padding:.1rem .5rem; font-size:var(--bw-font-caption); color:var(--text-color-secondary);
+  }
+  .discount-badge {
+    position:absolute; top:.625rem; left:.625rem; display:inline-flex; align-items:center;
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-bold); letter-spacing:var(--bw-tracking-tight);
+    color:var(--bw-chip-text-success); background:var(--surface-card);
+    border:1px solid color-mix(in srgb, var(--bw-success) 45%, transparent);
+    border-radius:var(--bw-radius-sm); padding:.1rem .5rem; box-shadow:var(--bw-shadow-card);
+  }
+  .svc-card__media .duration {
+    position:absolute; bottom:.625rem; right:.625rem; background:rgba(1,38,99,.72); color:#fff;
+    border-radius:var(--bw-radius-sm); padding:.1rem .5rem; font-size:var(--bw-font-caption);
+  }
+  .svc-card__body { padding:.875rem 1rem 1rem; display:grid; gap:.625rem; flex:1; }
+  .svc-card__title { display:flex; align-items:flex-start; gap:.5rem; }
+  .svc-card__title h3 { font-size:var(--bw-text-base); font-weight:var(--bw-weight-medium); line-height:1.3; }
+  .svc-card__title .chip { margin-left:auto; flex-shrink:0; }
+
+  /* terms list */
+  .term-list { display:grid; gap:.375rem; }
+  .term-row {
+    display:flex; align-items:center; gap:.5rem; padding:.4375rem .625rem;
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card);
+    font-size:var(--bw-font-table);
+  }
+  .term-row--best { border-color:var(--bw-200); background:var(--bw-50); }
+  .term-row__name { font-weight:var(--bw-weight-medium); }
+  .term-row__price { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:var(--bw-weight-medium); }
+  .term-row__list { font-size:var(--bw-font-caption); color:var(--text-color-secondary); text-decoration:line-through; }
+  .tick { color:var(--bw-chip-text-success); font-weight:var(--bw-weight-bold); font-size:var(--bw-font-caption); }
+  .per-session { font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .per-session b { color:var(--text-color); font-weight:var(--bw-weight-medium); }
+
+  .svc-card__foot {
+    display:flex; align-items:center; gap:.5rem; padding:.625rem 1rem; border-top:1px solid var(--surface-border);
+    background:var(--surface-card);
+  }
+  .svc-card__foot .link { font-size:var(--bw-font-table); color:var(--bw-300); background:none; border:none; padding:0; font-weight:var(--bw-weight-medium); }
+  .svc-card__foot .menu { margin-left:auto; }
+  .icon-btn {
+    display:inline-flex; align-items:center; justify-content:center; background:none; border:none;
+    padding:.375rem; border-radius:var(--bw-radius-pill); color:var(--text-color-secondary);
+    font-size:var(--bw-font-table); transition:background var(--bw-transition-fast);
+  }
+  .icon-btn:hover { background:var(--surface-100); color:var(--text-color); }
+
+  /* chips */
+  .bw-chip {
+    display:inline-flex; align-items:center; gap:.25rem; font-size:var(--bw-font-table);
+    font-weight:var(--bw-weight-medium); color:var(--chip-text-color, var(--chip-color));
+    background:color-mix(in srgb, var(--chip-color) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+    border-radius:var(--bw-radius-sm); padding:.1rem .5rem; line-height:1.4; white-space:nowrap;
+  }
+  .bw-chip--success { --chip-color:var(--bw-success); --chip-text-color:var(--bw-chip-text-success); }
+  .bw-chip--warning { --chip-color:var(--bw-warning); --chip-text-color:var(--bw-chip-text-warning); }
+  .bw-chip--danger { --chip-color:#ef4444; --chip-text-color:var(--bw-chip-text-danger); }
+  .bw-chip--primary { --chip-color:var(--bw-500); --chip-text-color:var(--bw-chip-text-primary); }
+  .bw-chip--secondary { --chip-color:var(--text-color-secondary); --chip-text-color:var(--bw-chip-text-secondary); }
+
+  /* empty state card */
+  .empty-card {
+    border:1px dashed var(--surface-border); border-radius:var(--bw-radius-lg); background:transparent;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; padding:1.5rem;
+    color:var(--text-color-secondary); font-size:var(--bw-font-table); text-align:center; min-height:260px;
+  }
+  .empty-card .plus { width:40px; height:40px; border-radius:var(--bw-radius-pill); background:var(--bw-50);
+    color:var(--bw-500); display:flex; align-items:center; justify-content:center; font-size:var(--bw-text-xl); }
+
+  .foot-note { display:flex; align-items:center; gap:.5rem; padding:.75rem 1rem; font-size:var(--bw-font-caption);
+    color:var(--text-color-secondary); background:var(--surface-card); border:1px dashed var(--surface-border);
+    border-radius:var(--bw-radius-md); }
+
+  /* ── Artboard 04: exportador de catálogo a WooCommerce ────────── */
+  .export { position:relative; display:inline-flex; }
+  .export__menu {
+    position:absolute; right:0; top:calc(100% + .375rem); width:20rem; z-index:var(--z-float);
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-popover); padding:.375rem;
+  }
+  .export__item {
+    display:flex; align-items:flex-start; gap:.625rem; width:100%; padding:.5rem .625rem;
+    border:none; background:none; border-radius:var(--bw-radius-md); text-align:left;
+    font-family:inherit; font-size:var(--bw-font-table); color:var(--text-color); cursor:pointer;
+  }
+  .export__item:hover { background:var(--bw-surface-muted); }
+  .export__item strong { display:block; font-weight:var(--bw-weight-medium); }
+  .export__item small { display:block; color:var(--text-color-secondary); font-size:var(--bw-font-caption); }
+  .export__item svg { width:16px; height:16px; flex-shrink:0; margin-top:.125rem; color:var(--bw-500); }
+  .export__sep { height:1px; background:var(--surface-border); margin:.25rem .375rem; }
+  .export__foot {
+    padding:.375rem .625rem .25rem; font-size:var(--bw-font-caption); color:var(--text-color-secondary);
+    border-top:1px solid var(--surface-border); margin-top:.25rem;
+  }
+  .sync {
+    display:flex; align-items:center; gap:.75rem; padding:.625rem .875rem;
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-md);
+    font-size:var(--bw-font-table);
+  }
+  .sync__dot { width:8px; height:8px; border-radius:50%; background:var(--bw-success); flex-shrink:0; }
+  .sync__text { min-width:0; }
+  .sync__text strong { font-weight:var(--bw-weight-semibold); }
+  .sync__text small { display:block; color:var(--text-color-secondary); font-size:var(--bw-font-caption); }
+  .sync__actions { margin-left:auto; display:flex; gap:.5rem; flex-shrink:0; }
+  .woo-state {
+    display:inline-flex; align-items:center; gap:.3125rem; font-size:var(--bw-font-caption);
+    color:var(--text-color-secondary); white-space:nowrap;
+  }
+  .woo-state::before {
+    content:''; width:7px; height:7px; border-radius:50%; background:var(--bw-success); flex-shrink:0;
+  }
+  .woo-state--pending::before { background:var(--bw-warning); }
+  .woo-state--skip::before { background:var(--text-color-secondary); opacity:.4; }
+  .term-row--warn {
+    border-style:dashed; background:transparent; color:var(--bw-chip-text-warning);
+    font-size:var(--bw-font-caption);
+  }
+
+  /* Selección para exportar: casillero evidente en tarjetas y en lista. */
+  .pick {
+    position:absolute; top:.625rem; right:.625rem; width:22px; height:22px; padding:0;
+    border-radius:var(--bw-radius-sm); border:1.5px solid var(--surface-border);
+    background:var(--surface-card); box-shadow:var(--bw-shadow-card);
+    display:inline-flex; align-items:center; justify-content:center;
+    color:transparent; cursor:pointer;
+  }
+  .pick svg { width:13px; height:13px; }
+  .pick:hover { border-color:var(--bw-300); }
+  .pick[aria-checked="true"] { background:var(--bw-300); border-color:var(--bw-300); color:#fff; }
+  .pick--inline { position:static; width:20px; height:20px; box-shadow:none; flex-shrink:0; }
+  .svc-card.is-selected { border-color:var(--bw-300); box-shadow:0 0 0 2px var(--bw-300); }
+  .pick-cell { display:flex; align-items:center; justify-content:center; gap:.25rem; }
+  tr.is-selected > td { background:var(--bw-50); }
+
+  /* Barra de selección: confirma qué se va a exportar, visible en las dos vistas. */
+  .selbar {
+    display:flex; align-items:center; gap:.75rem; padding:.5rem .875rem;
+    background:var(--bw-50); border:1px solid var(--bw-200); border-radius:var(--bw-radius-md);
+    font-size:var(--bw-font-table); color:var(--text-color);
+  }
+  .selbar strong { font-weight:var(--bw-weight-semibold); }
+  .selbar small { color:var(--text-color-secondary); font-size:var(--bw-font-caption); }
+  .selbar__actions { margin-left:auto; display:flex; gap:.5rem; flex-shrink:0; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+
+  /* Afordancia de imagen: botón explícito en la esquina libre del media
+     (arriba-izquierda lleva el −%; arriba-derecha el casillero; abajo-derecha la
+     duración). Siempre visible: en touch no existe hover. */
+  .img-btn {
+    position:absolute; bottom:.625rem; left:.625rem; height:1.75rem; padding:0 .5rem;
+    display:inline-flex; align-items:center; gap:.3125rem;
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-md);
+    background:var(--surface-card); box-shadow:var(--bw-shadow-card);
+    color:var(--text-color-secondary); font-family:inherit; font-size:var(--bw-font-caption);
+    font-weight:var(--bw-weight-medium); cursor:pointer;
+  }
+  .img-btn:hover { border-color:var(--bw-300); color:var(--bw-500); }
+  .img-btn svg { width:13px; height:13px; }
+</style>
+</head>
+<body>
+
+<!-- Shell (sidebar + app header) copiado de admin-layout / app-header: es contexto visual, NO es parte del diseño a implementar porque ya existe en la app. -->
+<!-- PrimeIcons no es embebible: los íconos se aproximan con SVG inline (stroke, currentColor). -->
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <!-- El logo expandido real es assets/images/logo_side_transparente.png (146 KB):
+           en la app el lockup es solo esa imagen; acá el ícono va inline para que el
+           artboard sea autocontenido. -->
+      <div class="logo-wrapper">
+        <svg class="sidebar-icon" viewBox="0 0 375 352" width="32" height="30" fill-rule="evenodd" clip-rule="evenodd" aria-hidden="true" focusable="false">
+          <path fill="#0b3d95" d="M 180.5,21.5 C 202.322,22.752 221.322,30.5853 237.5,45C 240.5,45.6667 243.5,45.6667 246.5,45C 253.044,43.319 259.377,41.1524 265.5,38.5C 264.877,48.7455 261.21,57.7455 254.5,65.5C 259.985,75.4256 263.319,86.0922 264.5,97.5C 264.762,98.9778 264.429,100.311 263.5,101.5C 256.852,106.98 250.352,112.647 244,118.5C 249.921,100.743 245.754,85.9095 231.5,74C 213.381,64.7568 197.881,67.9235 185,83.5C 183.211,86.741 181.711,90.0743 180.5,93.5C 179.182,69.6275 179.182,45.6275 180.5,21.5 Z"/>
+          <path fill="#f6f8f8" d="M 180.5,93.5 C 181.711,90.0743 183.211,86.741 185,83.5C 197.881,67.9235 213.381,64.7568 231.5,74C 245.754,85.9095 249.921,100.743 244,118.5C 250.352,112.647 256.852,106.98 263.5,101.5C 264.429,100.311 264.762,98.9778 264.5,97.5C 265.434,98.5676 265.768,99.901 265.5,101.5C 268.495,101.294 271.162,101.96 273.5,103.5C 274.626,104.858 274.626,106.192 273.5,107.5C 249.148,127.018 227.315,149.018 208,173.5C 198.242,186.68 188.242,199.68 178,212.5C 168.349,201.682 158.182,191.349 147.5,181.5C 140.985,186.259 134.652,191.259 128.5,196.5C 146.451,215.124 163.451,234.457 179.5,254.5C 202.985,220.179 227.819,186.845 254,154.5C 258.731,149.938 263.231,145.271 267.5,140.5C 267.833,143.167 268.167,145.833 268.5,148.5C 267.866,152.373 266.866,156.039 265.5,159.5C 254.832,170.345 244.999,182.012 236,194.5C 217.245,220.353 198.745,246.353 180.5,272.5C 178.983,272.489 177.816,271.823 177,270.5C 157.741,243.895 136.241,219.062 112.5,196C 124.056,186.107 135.889,176.607 148,167.5C 157.973,176.638 167.806,185.971 177.5,195.5C 178.425,194.643 179.092,193.643 179.5,192.5C 190.067,178.588 201.067,164.921 212.5,151.5C 212.167,151.167 211.833,150.833 211.5,150.5C 201.347,155.131 190.681,157.464 179.5,157.5C 149.739,157.215 128.239,143.882 115,117.5C 109.164,99.9971 113.33,85.4971 127.5,74C 145.593,64.8743 161.093,68.041 174,83.5C 176.455,87.531 178.121,91.8644 179,96.5C 180.039,95.7562 180.539,94.7562 180.5,93.5 Z"/>
+          <path fill="#042661" d="M 141.5,85.5 C 156.826,84.9914 163.66,92.3247 162,107.5C 156.069,119.194 147.236,122.027 135.5,116C 128.978,110.096 127.478,103.263 131,95.5C 137.018,102.506 141.851,101.673 145.5,93C 144.327,90.3505 142.994,87.8505 141.5,85.5 Z"/>
+          <path fill="#0a2862" d="M 210.5,91.5 C 218.624,91.3104 224.79,94.6437 229,101.5C 230.526,108.459 228.692,109.292 223.5,104C 214.449,99.9834 206.116,101.15 198.5,107.5C 197.551,103.824 198.385,100.491 201,97.5C 203.843,94.8373 207.009,92.8373 210.5,91.5 Z"/>
+          <path fill="#0e3b8b" d="M 178.5,113.5 C 180.716,114.203 182.549,115.536 184,117.5C 185.848,120.011 187.681,122.511 189.5,125C 186.383,130.952 183.05,136.785 179.5,142.5C 175.78,136.895 172.447,131.062 169.5,125C 171.937,120.729 174.937,116.896 178.5,113.5 Z"/>
+          <path fill="#012663" d="M 180.5,21.5 C 179.182,45.6275 179.182,69.6275 180.5,93.5C 180.539,94.7562 180.039,95.7562 179,96.5C 178.121,91.8644 176.455,87.531 174,83.5C 161.093,68.041 145.593,64.8743 127.5,74C 113.33,85.4971 109.164,99.9971 115,117.5C 128.239,143.882 149.739,157.215 179.5,157.5C 179.5,169.167 179.5,180.833 179.5,192.5C 179.092,193.643 178.425,194.643 177.5,195.5C 167.806,185.971 157.973,176.638 148,167.5C 135.889,176.607 124.056,186.107 112.5,196C 136.241,219.062 157.741,243.895 177,270.5C 177.816,271.823 178.983,272.489 180.5,272.5C 180.5,273.167 180.5,273.833 180.5,274.5C 157.717,289.733 135.051,305.233 112.5,321C 103.442,323.533 97.2757,320.366 94,311.5C 93.3333,240.5 93.3333,169.5 94,98.5C 95.491,86.8723 98.991,75.8723 104.5,65.5C 97.8082,57.7765 94.1415,48.7765 93.5,38.5C 99.6227,41.1524 105.956,43.319 112.5,45C 115.5,45.6667 118.5,45.6667 121.5,45C 138.212,30.0344 157.879,22.2011 180.5,21.5 Z"/>
+          <path fill="#60a7f0" d="M 271.5,137.5 C 270.036,141.019 269.036,144.686 268.5,148.5C 268.167,145.833 267.833,143.167 267.5,140.5C 268.048,138.468 269.381,137.468 271.5,137.5 Z"/>
+          <path fill="#0d3e94" d="M 179.5,192.5 C 179.5,180.833 179.5,169.167 179.5,157.5C 190.681,157.464 201.347,155.131 211.5,150.5C 211.833,150.833 212.167,151.167 212.5,151.5C 201.067,164.921 190.067,178.588 179.5,192.5 Z"/>
+          <path fill="#046af4" d="M 271.5,137.5 C 269.381,137.468 268.048,138.468 267.5,140.5C 263.231,145.271 258.731,149.938 254,154.5C 227.819,186.845 202.985,220.179 179.5,254.5C 163.451,234.457 146.451,215.124 128.5,196.5C 134.652,191.259 140.985,186.259 147.5,181.5C 158.182,191.349 168.349,201.682 178,212.5C 188.242,199.68 198.242,186.68 208,173.5C 227.315,149.018 249.148,127.018 273.5,107.5C 274.626,106.192 274.626,104.858 273.5,103.5C 274.583,103.539 275.583,103.873 276.5,104.5C 287.587,96.4794 299.92,92.9794 313.5,94C 316,94.8854 318.333,96.0521 320.5,97.5C 301.825,107.829 285.492,121.163 271.5,137.5 Z"/>
+          <path fill="#083d96" d="M 265.5,159.5 C 265.987,211.226 265.487,262.893 264,314.5C 259.697,321.043 253.864,323.21 246.5,321C 224.258,305.724 202.258,290.224 180.5,274.5C 180.5,273.833 180.5,273.167 180.5,272.5C 198.745,246.353 217.245,220.353 236,194.5C 244.999,182.012 254.832,170.345 265.5,159.5 Z"/>
+        </svg>
+        <span class="sidebar-wordmark">bookwise</span>
+      </div>
+    </div>
+
+    <button type="button" class="sidebar-collapse-btn" aria-label="Colapsar menú">
+      <span class="sidebar-collapse-btn__label">Colapsar menú</span>
+      <span class="sidebar-collapse-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+      </span>
+    </button>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.2 12 3.5l9 7.7"/><path d="M5.5 10v9.5h13V10"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" title="Ubicaciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M4 21V10h16v11"/><path d="M2 10h20"/><path d="M6 7V4h12v3"/><path d="M6 7 4 10M18 7l2 3"/><path d="M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
+        <span class="nav-label">Ubicaciones</span>
+      </a>
+      <a href="#" class="nav-item" title="Profesionales">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M15.5 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 14.8c1.6.7 2.9 2.3 3 4.7"/></svg>
+        <span class="nav-label">Profesionales</span>
+      </a>
+      <a href="#" class="nav-item" title="Agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>
+        <span class="nav-label">Agenda</span>
+      </a>
+      <a href="#" class="nav-item" title="Clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>
+        <span class="nav-label">Clientes</span>
+      </a>
+      <!-- Única desviación intencional del shell actual: nav.packs dice "Packs" y acá
+           dice "Servicios y packs" (acordado 2026-11-03). El resto del shell es copia exacta. -->
+      <a href="#" class="nav-item active" aria-current="page" title="Servicios y packs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8.5 12 3.5 3 8.5v7L12 20.5l9-5v-7z"/><path d="M3 8.5l9 5 9-5"/><path d="M12 13.5v7"/></svg>
+        <span class="nav-label">Servicios y packs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-widget">
+      <div class="navigator">
+        <div class="navigator__nav">
+          <button type="button" class="navigator__arrow" aria-label="Mes anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+          </button>
+          <span class="navigator__label">
+            <span class="navigator__year">2026</span>
+            <span class="navigator__month">noviembre</span>
+          </span>
+          <button type="button" class="navigator__arrow" aria-label="Mes siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>
+          </button>
+          <button type="button" class="navigator__today">Hoy</button>
+        </div>
+        <div class="navigator__grid">
+          <div class="navigator__header">Do</div>
+          <div class="navigator__header">Lu</div>
+          <div class="navigator__header">Ma</div>
+          <div class="navigator__header">Mi</div>
+          <div class="navigator__header">Ju</div>
+          <div class="navigator__header">Vi</div>
+          <div class="navigator__header">Sa</div>
+          <button type="button" class="navigator__day">1</button>
+          <button type="button" class="navigator__day">2</button>
+          <button type="button" class="navigator__day navigator__day--today navigator__day--selected">3</button>
+          <button type="button" class="navigator__day">4</button>
+          <button type="button" class="navigator__day">5</button>
+          <button type="button" class="navigator__day">6</button>
+          <button type="button" class="navigator__day">7</button>
+          <button type="button" class="navigator__day">8</button>
+          <button type="button" class="navigator__day">9</button>
+          <button type="button" class="navigator__day">10</button>
+          <button type="button" class="navigator__day">11</button>
+          <button type="button" class="navigator__day">12</button>
+          <button type="button" class="navigator__day">13</button>
+          <button type="button" class="navigator__day">14</button>
+          <button type="button" class="navigator__day">15</button>
+          <button type="button" class="navigator__day">16</button>
+          <button type="button" class="navigator__day">17</button>
+          <button type="button" class="navigator__day">18</button>
+          <button type="button" class="navigator__day">19</button>
+          <button type="button" class="navigator__day">20</button>
+          <button type="button" class="navigator__day">21</button>
+          <button type="button" class="navigator__day">22</button>
+          <button type="button" class="navigator__day">23</button>
+          <button type="button" class="navigator__day">24</button>
+          <button type="button" class="navigator__day">25</button>
+          <button type="button" class="navigator__day">26</button>
+          <button type="button" class="navigator__day">27</button>
+          <button type="button" class="navigator__day">28</button>
+          <button type="button" class="navigator__day">29</button>
+          <button type="button" class="navigator__day">30</button>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button type="button" class="sidebar-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></svg>
+        <span>Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="app-header">
+      <div class="app-header__left">
+        <button type="button" class="app-header__menu-btn" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="app-header__business">
+          <span class="app-header__monogram" aria-hidden="true">K</span>
+          <div class="app-header__business-info">
+            <span class="app-header__business-name">Kinesilk</span>
+            <span class="app-header__business-rut">RUT: 76.123.456-7</span>
+          </div>
+          <span class="app-header__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="app-header__right">
+        <div class="app-header__actions">
+          <button type="button" class="app-header__theme" aria-label="Modo de apariencia">
+            <span>Claro</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="account-chip" role="button" tabindex="0" aria-label="Menú de cuenta">
+          <span class="account-chip__avatar" aria-hidden="true">R</span>
+          <span class="account-chip__name">Rosa Kinesilk</span>
+          <span class="account-chip__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+
+  <div class="page-head">
+    <div>
+      <h1>Servicios y packs</h1>
+      <p>8 servicios · 21 variaciones · una imagen por servicio</p>
+    </div>
+    <div class="page-head__actions">
+      <button class="btn btn--outlined">Ver packs vendidos</button>
+
+      <!-- ⬇ ACÁ QUEDA EL EXPORTADOR: acción secundaria del título, con menú de alcance -->
+      <div class="export">
+        <button class="btn btn--outlined" aria-haspopup="menu" aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px" aria-hidden="true"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          Exportar a Woo
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+
+        <div class="export__menu" role="menu" aria-label="Alcance de la exportación">
+          <button type="button" class="export__item" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+            <span>
+              <strong>Catálogo completo</strong>
+              <small>8 servicios y 21 variaciones en un CSV.</small>
+            </span>
+          </button>
+          <button type="button" class="export__item" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="8"/></svg>
+            <span>
+              <strong>Solo los que cambiaron</strong>
+              <small>3 servicios desde la última exportación (hace 3 días).</small>
+            </span>
+          </button>
+          <button type="button" class="export__item" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="m8 11 2.5 2.5L16 9"/></svg>
+            <span>
+              <strong>Los seleccionados</strong>
+              <small>Abre la vista de lista con los casilleros a la vista. También puedes marcar en las tarjetas.</small>
+            </span>
+          </button>
+          <div class="export__sep" role="separator"></div>
+          <div class="export__foot">
+            Antes de descargar se validan los requisitos del formato de Woo.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn--cta">+ Nuevo servicio</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <label class="search">
+      <span aria-hidden="true">⌕</span>
+      <input type="search" placeholder="Buscar servicio…" aria-label="Buscar servicio" />
+    </label>
+    <label class="select select--native">
+      <span class="select__label">Estado:</span>
+      <select aria-label="Filtrar por estado">
+        <option value="" selected>Todos</option>
+        <option>Activos</option>
+        <option>Borradores</option>
+        <option>Inactivos</option>
+      </select>
+    </label>
+    <div class="select">Sesiones: Cualquiera <span aria-hidden="true">▾</span></div>
+    <label class="select select--native">
+      <span class="select__label">Woo:</span>
+      <select aria-label="Filtrar por estado de exportación">
+        <option value="" selected>Todos</option>
+        <option>Con cambios</option>
+        <option>Sin exportar</option>
+        <option>Al día</option>
+      </select>
+    </label>
+    <div class="view-toggle" role="group" aria-label="Elegir vista del listado">
+      <button type="button" data-view-btn="lista" aria-pressed="false" title="Vista de lista, con los términos en una sub-fila">☰ Lista</button>
+      <button type="button" class="is-active" data-view-btn="tarjetas" aria-pressed="true" title="Vista de tarjetas con imagen">▦ Tarjetas</button>
+    </div>
+  </div>
+
+  <div class="suggestion">
+    <div class="suggestion__icon" aria-hidden="true">✦</div>
+    <div>
+      <strong>Agrega variaciones a 3 servicios.</strong> Se venden con una sola imagen: el término cambia las sesiones y el precio, no la foto.
+    </div>
+    <div class="suggestion__cta">
+      <button class="btn btn--ghost btn--sm">Descartar</button>
+      <button class="btn btn--outlined btn--sm">Revisar los 3</button>
+    </div>
+  </div>
+
+  <div class="sync">
+    <span class="sync__dot" aria-hidden="true"></span>
+    <span class="sync__text">
+      <strong>Última exportación: 4 de noviembre, 18:40.</strong>
+      <small>8 servicios · 21 variaciones · atributo global pa_sesiones · sin errores del importador.</small>
+    </span>
+    <span class="sync__actions">
+      <button class="btn btn--ghost btn--sm">Ver historial</button>
+      <button class="btn btn--outlined btn--sm">Exportar cambios (3)</button>
+    </span>
+  </div>
+
+  <div class="selbar" role="status">
+    <span aria-hidden="true">☑</span>
+    <span>
+      <strong>2 servicios seleccionados</strong> · 4 variaciones
+      <small>Se exportan solo estos, con sus términos. El casillero está en las tarjetas y en la vista de lista.</small>
+    </span>
+    <span class="selbar__actions">
+      <button class="btn btn--ghost btn--sm">Limpiar selección</button>
+      <button class="btn btn--cta btn--sm">Exportar seleccionados</button>
+    </span>
+  </div>
+
+  <section class="view" id="view-tarjetas" data-view="tarjetas">
+  <div class="grid">
+
+    <!-- Kinesiología general -->
+    <article class="svc-card is-selected">
+      <div class="svc-card__media">
+        <button type="button" class="pick" role="checkbox" aria-checked="true" aria-label="Seleccionar Kinesiología general para exportar" title="Seleccionar para exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></button>
+        <span class="discount-badge" title="Mayor descuento por volumen: 6 sesiones">−20%</span>
+        <span class="initial" aria-hidden="true">KG</span>
+        <span class="duration">60 min</span>
+      
+        <button type="button" class="img-btn" title="Cambiar imagen del servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg> Cambiar imagen</button>
+      </div>
+      <div class="svc-card__body">
+        <div class="svc-card__title">
+          <h3>Kinesiología general</h3>
+          <span class="bw-chip bw-chip--success chip">Activo</span>
+        </div>
+        <div class="term-list">
+          <div class="term-row">
+            <span class="term-row__name">1 sesión</span>
+            <span class="per-session"><b>$25.000</b> /sesión</span>
+            <span class="term-row__price">$25.000</span>
+          </div>
+          <div class="term-row term-row--best">
+            <span class="term-row__name">3 sesiones</span>
+            <span class="per-session"><b>$22.500</b> /sesión</span>
+            <span class="term-row__list">$75.000</span>
+            <span class="term-row__price">$67.500</span>
+            <span class="tick">−10%</span>
+          </div>
+          <div class="term-row">
+            <span class="term-row__name">6 sesiones</span>
+            <span class="per-session"><b>$20.000</b> /sesión</span>
+            <span class="term-row__list">$150.000</span>
+            <span class="term-row__price">$120.000</span>
+            <span class="tick">−20%</span>
+          </div>
+        </div>
+      </div>
+      <div class="svc-card__foot"><span class="woo-state">Woo al día · producto 2719</span>
+        <button class="link">Editar</button>
+        <button class="link" style="color:var(--text-color-secondary)">Duplicar</button>
+        <button class="icon-btn menu" title="Más acciones" aria-label="Más acciones">⋯</button>
+      </div>
+    </article>
+
+    <!-- Rehabilitación deportiva -->
+    <article class="svc-card">
+      <div class="svc-card__media svc-card__media--alt">
+        <button type="button" class="pick" role="checkbox" aria-checked="false" aria-label="Seleccionar Rehabilitación deportiva para exportar" title="Seleccionar para exportar"></button>
+        <span class="initial" aria-hidden="true">RD</span>
+        <span class="duration">45 min</span>
+      
+        <button type="button" class="img-btn" title="Cambiar imagen del servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg> Cambiar imagen</button>
+      </div>      <div class="svc-card__body">
+        <div class="svc-card__title">
+          <h3>Rehabilitación deportiva</h3>
+          <span class="bw-chip bw-chip--warning chip">Borrador</span>
+        </div>
+        <div class="term-list">
+          <div class="term-row">
+            <span class="term-row__name">1 sesión</span>
+            <span class="per-session"><b>$32.000</b> /sesión</span>
+            <span class="term-row__price">$32.000</span>
+          </div>
+          <div class="term-row">
+            <span class="term-row__name">5 sesiones</span>
+            <span class="per-session"><b>$29.000</b> /sesión</span>
+            <span class="term-row__price">$145.000</span>
+          </div>
+          <div class="term-row" style="border-style:dashed;background:transparent">
+            <span style="color:var(--bw-300);font-weight:var(--bw-weight-medium)">+ Agregar término</span>
+          </div>
+        </div>
+      </div>
+      <div class="svc-card__foot"><span class="woo-state woo-state--skip">No se exporta · borrador</span>
+        <button class="link">Editar</button>
+        <button class="link" style="color:var(--text-color-secondary)">Publicar</button>
+        <button class="icon-btn menu" title="Más acciones" aria-label="Más acciones">⋯</button>
+      </div>
+    </article>
+
+    <!-- Masoterapia -->
+    <article class="svc-card">
+      <div class="svc-card__media svc-card__media--muted">
+        <button type="button" class="pick" role="checkbox" aria-checked="false" aria-label="Seleccionar Masoterapia descontracturante para exportar" title="Seleccionar para exportar"></button>
+        <span class="initial" aria-hidden="true">Sin imagen · se usa la inicial</span>
+        <span class="duration">50 min</span>
+      
+        <button type="button" class="img-btn" title="Cambiar imagen del servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg> Cambiar imagen</button>
+      </div>
+      <div class="svc-card__body">
+        <div class="svc-card__title">
+          <h3>Masoterapia descontracturante</h3>
+          <span class="bw-chip bw-chip--success chip">Activo</span>
+        </div>
+        <div class="term-list">
+          <div class="term-row">
+            <span class="term-row__name">1 sesión</span>
+            <span class="per-session"><b>$28.000</b> /sesión</span>
+            <span class="term-row__price">$28.000</span>
+          </div>
+          <div class="term-row" style="border-style:dashed;background:transparent;color:#b45309;border-color:rgba(245,158,11,.4)">
+            <span>⚠ Solo se vende suelta: no tiene términos en pack</span>
+          </div>
+        </div>
+        <p style="margin:0;font-size:var(--bw-font-caption);color:var(--text-color-secondary)">
+          Sugerencia: agrega 3 y 6 sesiones para venderla como pack.
+        </p>
+      </div>
+      <div class="svc-card__foot"><span class="woo-state woo-state--pending">Producto simple · sin variaciones</span>
+        <button class="link">Editar</button>
+        <button class="link" style="color:var(--bw-300)">Agregar variaciones</button>
+        <button class="icon-btn menu" title="Más acciones" aria-label="Más acciones">⋯</button>
+      </div>
+    </article>
+
+    <!-- Terapia respiratoria -->
+    <article class="svc-card is-selected">
+      <div class="svc-card__media">
+        <button type="button" class="pick" role="checkbox" aria-checked="true" aria-label="Seleccionar Terapia respiratoria para exportar" title="Seleccionar para exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></button>
+        <span class="initial" aria-hidden="true">TR</span>
+        <span class="duration">40 min</span>
+      
+        <button type="button" class="img-btn" title="Cambiar imagen del servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg> Cambiar imagen</button>
+      </div>
+      <div class="svc-card__body">
+        <div class="svc-card__title">
+          <h3>Terapia respiratoria</h3>
+          <span class="bw-chip bw-chip--success chip">Activo</span>
+        </div>
+        <div class="term-list">
+          <div class="term-row term-row--warn">
+            <span>⚠ Sin término «1 sesión»: se exporta sin precio unitario</span>
+          </div>
+          <div class="term-row">
+            <span class="term-row__name">4 sesiones</span>
+            <span class="per-session"><b>$20.900</b> /sesión</span>
+            <span class="term-row__price">$83.600</span>
+          </div>
+          <div class="term-row">
+            <span class="term-row__name">8 sesiones</span>
+            <span class="per-session"><b>$19.800</b> /sesión</span>
+            <span class="term-row__price">$158.400</span>
+          </div>
+        </div>
+      </div>
+      <div class="svc-card__foot"><span class="woo-state woo-state--pending">3 cambios sin exportar</span>
+        <button class="link">Editar</button>
+        <button class="link" style="color:var(--text-color-secondary)">Duplicar</button>
+        <button class="icon-btn menu" title="Más acciones" aria-label="Más acciones">⋯</button>
+      </div>
+    </article>
+
+    <!-- Evaluación inicial (inactivo) -->
+    <article class="svc-card" style="opacity:.85">
+      <div class="svc-card__media svc-card__media--muted">
+        <button type="button" class="pick" role="checkbox" aria-checked="false" aria-label="Seleccionar Evaluación inicial para exportar" title="Seleccionar para exportar"></button>
+        <span class="initial" aria-hidden="true">Sin imagen</span>
+        <span class="duration">30 min</span>
+      
+        <button type="button" class="img-btn" title="Agregar imagen del servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg> Agregar imagen</button>
+      </div>
+      <div class="svc-card__body">
+        <div class="svc-card__title">
+          <h3>Evaluación kinésica inicial</h3>
+          <span class="bw-chip bw-chip--danger chip">Inactivo</span>
+        </div>
+        <div class="term-list">
+          <div class="term-row">
+            <span class="term-row__name">1 sesión</span>
+            <span class="per-session"><b>$18.000</b> /sesión</span>
+            <span class="term-row__price">$18.000</span>
+          </div>
+        </div>
+        <p style="margin:0;font-size:var(--bw-font-caption);color:var(--text-color-secondary)">
+          No aparece en la reserva mientras esté inactivo.
+        </p>
+      </div>
+      <div class="svc-card__foot"><span class="woo-state woo-state--skip">Se exporta oculto · Published=0</span>
+        <button class="link">Editar</button>
+        <button class="link" style="color:var(--text-color-secondary)">Activar</button>
+        <button class="icon-btn menu" title="Más acciones" aria-label="Más acciones">⋯</button>
+      </div>
+    </article>
+
+    <div class="empty-card">
+      <span class="plus" aria-hidden="true">+</span>
+      <strong style="color:var(--text-color);font-weight:var(--bw-weight-medium)">Nuevo servicio</strong>
+      <span>Nombre, duración, precio base e imagen. Las variaciones se agregan después.</span>
+    </div>
+
+  </div>
+  </section>
+
+  <!-- ── Vista lista: la misma que design/productos-packs/01-lista-tabla.html ── -->
+  <section class="view" id="view-lista" data-view="lista" hidden>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:76px"><span class="sr-only">Seleccionar y expandir</span></th>
+            <th>Servicio</th>
+            <th>Sesiones y precios</th>
+            <th class="num">Desde</th>
+            <th>Estado</th>
+            <th style="width:150px;text-align:right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="is-open">
+            <td><span class="pick-cell"><button type="button" class="pick pick--inline" role="checkbox" aria-checked="true" aria-label="Seleccionar Kinesiología general para exportar" title="Seleccionar para exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></button><button class="icon-btn" aria-expanded="true" aria-label="Contraer variaciones">▾</button></span></td>
+            <td>
+              <div class="svc">
+                <div class="thumb" aria-hidden="true">K<span class="discount-badge" title="Mayor descuento por volumen: 6 sesiones">−20%</span></div>
+                <div>
+                  <span class="svc__name">Kinesiología general</span>
+                  <span class="svc__meta">60 min · 3 variaciones · 1 imagen</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="terms">
+                <span class="term">1 sesión <b>$25.000</b></span>
+                <span class="term">3 sesiones <b>$67.500</b> <span class="term__off">−10%</span></span>
+                <span class="term">6 sesiones <b>$120.000</b> <span class="term__off">−20%</span></span>
+              </div>
+            </td>
+            <td class="num amount">$25.000</td>
+            <td><span class="bw-chip bw-chip--success">Activo</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn--outlined btn--sm">Editar</button>
+                <button class="icon-btn" title="Más acciones" aria-label="Más acciones">⋯</button>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="subrow">
+            <td colspan="6">
+              <div class="sub">
+                <div class="sub__head">
+                  <span class="overline">Atributo: Sesiones</span>
+                  <span class="sub__note">El −% sale del precio de lista; sin lista no hay badge.</span>
+                </div>
+                <table class="subtable">
+                  <thead>
+                    <tr>
+                      <th>Término</th>
+                      <th class="num">Sesiones</th>
+                      <th class="num">Precio</th>
+                      <th class="num">Precio de lista</th>
+                      <th class="num">Por sesión</th>
+                      <th>Estado</th>
+                      <th style="width:90px;text-align:right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>1 sesión</strong> <span class="muted">· Kinesiología general - 1 sesión</span></td>
+                      <td class="num">1</td>
+                      <td class="num"><strong>$25.000</strong></td>
+                      <td class="num muted">—</td>
+                      <td class="num perf"><b>$25.000</b> /sesión</td>
+                      <td><span class="bw-chip bw-chip--success">Activo</span></td>
+                      <td><div class="row-actions"><button class="icon-btn" aria-label="Editar término">✎</button></div></td>
+                    </tr>
+                    <tr>
+                      <td><strong>3 sesiones</strong> <span class="muted">· Kinesiología general - 3 sesiones</span></td>
+                      <td class="num">3</td>
+                      <td class="num"><strong>$67.500</strong></td>
+                      <td class="num"><span class="strike">$75.000</span></td>
+                      <td class="num perf"><b>$22.500</b> /sesión</td>
+                      <td><span class="bw-chip bw-chip--success">Activo</span></td>
+                      <td><div class="row-actions"><button class="icon-btn" aria-label="Editar término">✎</button></div></td>
+                    </tr>
+                    <tr>
+                      <td><strong>6 sesiones</strong> <span class="muted">· Kinesiología general - 6 sesiones</span></td>
+                      <td class="num">6</td>
+                      <td class="num"><strong>$120.000</strong></td>
+                      <td class="num"><span class="strike">$150.000</span></td>
+                      <td class="num perf"><b>$20.000</b> /sesión</td>
+                      <td><span class="bw-chip bw-chip--success">Activo</span></td>
+                      <td><div class="row-actions"><button class="icon-btn" aria-label="Editar término">✎</button></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td><span class="pick-cell"><button type="button" class="pick pick--inline" role="checkbox" aria-checked="false" aria-label="Seleccionar Rehabilitación deportiva para exportar" title="Seleccionar para exportar"></button><button class="icon-btn" aria-expanded="false" aria-label="Expandir variaciones">▸</button></span></td>
+            <td>
+              <div class="svc">
+                <div class="thumb" aria-hidden="true">R</div>
+                <div>
+                  <span class="svc__name">Rehabilitación deportiva</span>
+                  <span class="svc__meta">45 min · 2 variaciones · 1 imagen</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="terms">
+                <span class="term">1 sesión <b>$32.000</b></span>
+                <span class="term">5 sesiones <b>$145.000</b></span>
+              </div>
+            </td>
+            <td class="num amount">$32.000</td>
+            <td><span class="bw-chip bw-chip--warning">Borrador</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn--outlined btn--sm">Editar</button>
+                <button class="icon-btn" title="Más acciones" aria-label="Más acciones">⋯</button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td><span class="pick-cell"><button type="button" class="pick pick--inline" role="checkbox" aria-checked="false" aria-label="Seleccionar Masoterapia descontracturante para exportar" title="Seleccionar para exportar"></button><button class="icon-btn" aria-expanded="false" aria-label="Expandir variaciones">▸</button></span></td>
+            <td>
+              <div class="svc">
+                <div class="thumb thumb--empty" aria-hidden="true">□</div>
+                <div>
+                  <span class="svc__name">Masoterapia descontracturante</span>
+                  <span class="svc__meta">50 min · sin imagen · 1 variación</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="terms">
+                <span class="term">1 sesión <b>$28.000</b></span>
+              </div>
+            </td>
+            <td class="num amount">$28.000</td>
+            <td><span class="bw-chip bw-chip--success">Activo</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn--outlined btn--sm">Editar</button>
+                <button class="icon-btn" title="Más acciones" aria-label="Más acciones">⋯</button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td><span class="pick-cell"><button type="button" class="pick pick--inline" role="checkbox" aria-checked="true" aria-label="Seleccionar Terapia respiratoria para exportar" title="Seleccionar para exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></button><button class="icon-btn" aria-expanded="false" aria-label="Expandir variaciones">▸</button></span></td>
+            <td>
+              <div class="svc">
+                <div class="thumb" aria-hidden="true">T</div>
+                <div>
+                  <span class="svc__name">Terapia respiratoria</span>
+                  <span class="svc__meta">40 min · 3 variaciones · 1 imagen</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="terms">
+                <span class="term">1 sesión <b>$22.000</b></span>
+                <span class="term">4 sesiones <b>$83.600</b></span>
+                <span class="term">8 sesiones <b>$158.400</b></span>
+              </div>
+            </td>
+            <td class="num amount">$22.000</td>
+            <td><span class="bw-chip bw-chip--success">Activo</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn--outlined btn--sm">Editar</button>
+                <button class="icon-btn" title="Más acciones" aria-label="Más acciones">⋯</button>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td><span class="pick-cell"><button type="button" class="pick pick--inline" role="checkbox" aria-checked="false" aria-label="Seleccionar Evaluación kinésica inicial para exportar" title="Seleccionar para exportar"></button><button class="icon-btn" aria-expanded="false" aria-label="Expandir variaciones">▸</button></span></td>
+            <td>
+              <div class="svc">
+                <div class="thumb thumb--empty" aria-hidden="true">E</div>
+                <div>
+                  <span class="svc__name">Evaluación kinésica inicial</span>
+                  <span class="svc__meta">30 min · 1 variación · sin imagen</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="terms">
+                <span class="term">1 sesión <b>$18.000</b></span>
+              </div>
+            </td>
+            <td class="num amount">$18.000</td>
+            <td><span class="bw-chip bw-chip--danger">Inactivo</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn--outlined btn--sm">Editar</button>
+                <button class="icon-btn" title="Más acciones" aria-label="Más acciones">⋯</button>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot-note">
+    <span aria-hidden="true">ⓘ</span>
+    <span>Lista y Tarjetas muestran exactamente los mismos datos: el toggle deja que cada negocio elija la forma que le acomode y la elección se recuerda. «Borrador» es un estado nuevo a definir: hoy services.active es un booleano, así que el listado necesitaría un campo de estado (activo / borrador / inactivo).</span>
+    <span style="margin-left:auto;white-space:nowrap">Badge sobre la imagen = mayor −% entre los términos activos; en la reserva sigue al término elegido.</span>
+  </div>
+
+  <script>
+    (function () {
+      var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-view-btn]'));
+      var views = {
+        lista: document.getElementById('view-lista'),
+        tarjetas: document.getElementById('view-tarjetas')
+      };
+      var STORAGE_KEY = 'bw:servicios:vista';
+
+      function show(name) {
+        if (!views[name]) return;
+        Object.keys(views).forEach(function (key) { views[key].hidden = key !== name; });
+        buttons.forEach(function (btn) {
+          var active = btn.getAttribute('data-view-btn') === name;
+          btn.classList.toggle('is-active', active);
+          btn.setAttribute('aria-pressed', String(active));
+        });
+      }
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var name = btn.getAttribute('data-view-btn');
+          show(name);
+          try { localStorage.setItem(STORAGE_KEY, name); } catch (e) { /* el canvas puede bloquear storage */ }
+        });
+      });
+
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved && views[saved]) show(saved);
+      } catch (e) { /* sin persistencia disponible: arranca en tarjetas */ }
+    })();
+  </script>
+
+</main>
+</div>
+</body>
+</html>

@@ -33,6 +33,50 @@
       "status": "resolved",
       "sentAt": "2026-11-03T14:44:20.807Z",
       "resolvedAt": "2026-11-03T15:19:49.625Z"
+    },
+    {
+      "id": "zhghusg2",
+      "file": "04-mantenedor-exportador.html",
+      "selector": "body > div > main > div:nth-of-type(1) > div:nth-of-type(2) > div > div > button:nth-of-type(3)",
+      "excerpt": "Los seleccionados Elegí servicios con el casillero de la vista de lista.",
+      "comment": "este por defecto llevara a la vista de lista y le añadimos una cajita o checkbox que sea evidente para tickear cada producto en esta vista de tarjeta, creo que las dos seran buena idea, para que en cualquier caso el clienta sepa visualmente que esta exportando",
+      "createdAt": "2026-11-07T19:49:52.339Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T19:49:58.243Z",
+      "resolvedAt": "2026-11-07T19:51:43.800Z"
+    },
+    {
+      "id": "phkx8gpu",
+      "file": "04-mantenedor-exportador.html",
+      "selector": "#view-tarjetas > div > article:nth-of-type(1) > div:nth-of-type(1)",
+      "excerpt": "−20% KG 60 min",
+      "comment": "le damos un icono en algun lugar para modificar/añadir la imagen del producto? o al darle click a toda la imagen?",
+      "createdAt": "2026-11-07T19:56:48.664Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T20:02:16.966Z",
+      "resolvedAt": "2026-11-07T20:15:03.769Z"
+    },
+    {
+      "id": "1s55hzmb",
+      "file": "01-lista-tabla.html",
+      "selector": "body > div > main > div:nth-of-type(4) > table > tbody > tr:nth-of-type(2) > td > div",
+      "excerpt": "ATRIBUTO: SESIONES El precio de lista es opcional: sin él no hay badge y no se muestra nada tachado. TÉRMINO SESIONES PRECIO PRECIO DE LISTA POR SESIÓN ESTADO ACCIONES 1 sesión · Kinesiología general - 1 sesión 1 $25.000 — $25.000 /sesión Activo ✎ 3 sesiones · Kinesiología general - 3 sesiones 3 $67",
+      "comment": "en el diseño implementado la version mobile necesita mejoras, ademas de lo de precio  y precio de lista que ejemplifica el valor original sin descuento debe estar visible",
+      "createdAt": "2026-11-07T20:01:52.056Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T20:02:16.966Z",
+      "resolvedAt": "2026-11-07T20:15:03.769Z"
+    },
+    {
+      "id": "6hh3vhq5",
+      "file": "01-lista-tabla.html",
+      "selector": "body > div > main > div:nth-of-type(4) > table > tbody > tr:nth-of-type(2) > td > div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > span",
+      "excerpt": "$75.000",
+      "comment": "a este precio me refiero, es util como referencia visual entonces si lo queremos en la implementacion",
+      "createdAt": "2026-11-07T20:02:15.486Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T20:02:16.966Z",
+      "resolvedAt": "2026-11-07T20:15:03.769Z"
     }
   ]
 }

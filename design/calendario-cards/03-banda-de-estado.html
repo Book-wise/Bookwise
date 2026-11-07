@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Cards del calendario — 03 · Banda de estado</title>
+<style>
+  /* Tokens reales del proyecto (src/styles/_tokens.scss y styles.scss). */
+  :root {
+    --bw-900:#012663; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b;
+    --bw-chip-text-secondary:#374151; --bw-chip-text-primary:#0b3d95;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --bw-surface-muted:#f3f4f6; --text-color:#1a2744; --text-color-secondary:#6b7280;
+    --text-heading:#111827; --text-label:#374151; --bw-tab-color:#0b3d95;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem; --bw-text-2xl:1.5rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm); --bw-font-title:var(--bw-text-lg);
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-xs:0.25rem; --bw-space-sm:0.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    width:1440px; min-height:900px; padding:1.5rem 2rem 2.5rem;
+    font-family:var(--font-family); font-size:16px; line-height:1.5; color:var(--text-color);
+    background:var(--surface-ground); -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4 { margin:0; font-weight:var(--bw-weight-medium); }
+  code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.92em; }
+  .overline {
+    font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold); text-transform:uppercase;
+    letter-spacing:var(--bw-tracking-overline); color:var(--text-color-secondary);
+  }
+
+  /* ── Cabecera del artboard ─────────────────────────────────────────── */
+  .board { display:grid; gap:1.25rem; }
+  .board__head { display:flex; align-items:flex-start; gap:1rem; }
+  .board__head h1 { font-size:var(--bw-text-2xl); font-weight:var(--bw-weight-semibold); color:var(--text-heading); }
+  .board__head p { margin:.25rem 0 0; font-size:var(--bw-font-table); color:var(--text-color-secondary); max-width:62rem; }
+  .board__tag {
+    margin-left:auto; flex-shrink:0; padding:.25rem .625rem; border-radius:var(--bw-radius-sm);
+    border:1px solid color-mix(in srgb, var(--bw-300) 35%, transparent);
+    background:color-mix(in srgb, var(--bw-300) 10%, transparent);
+    color:var(--bw-tab-color); font-size:var(--bw-font-caption); font-weight:var(--bw-weight-medium);
+  }
+
+  .constraint {
+    display:flex; gap:.625rem; padding:.75rem 1rem; font-size:var(--bw-font-caption);
+    color:var(--text-color-secondary); background:var(--surface-card);
+    border:1px solid var(--surface-border); border-left:3px solid var(--bw-200);
+    border-radius:var(--bw-radius-md);
+  }
+  .constraint strong { color:var(--text-color); font-weight:var(--bw-weight-semibold); }
+
+  /* ── Paneles de vista (mes / semana) ──────────────────────────────── */
+  .views { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:1.25rem; align-items:start; }
+  .panel {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden;
+  }
+  .panel__head {
+    display:flex; align-items:center; gap:.5rem; padding:.625rem .875rem;
+    border-bottom:1px solid var(--surface-border);
+  }
+  .panel__head h2 { font-size:var(--bw-font-table); font-weight:var(--bw-weight-semibold); }
+  .panel__head small { margin-left:auto; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+
+  /* Grilla del mes: 7 columnas, líneas finas como FullCalendar */
+  .month { display:grid; grid-template-columns:repeat(7,1fr); }
+  .month__dow {
+    padding:.375rem .5rem; font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold);
+    text-transform:uppercase; letter-spacing:var(--bw-tracking-overline);
+    color:var(--text-color-secondary); border-bottom:1px solid var(--surface-border);
+  }
+  .day {
+    min-height:104px; padding:.25rem .3125rem .375rem; border-bottom:1px solid var(--surface-border);
+    border-right:1px solid var(--surface-border); display:grid; gap:2px; align-content:start;
+  }
+  .day:nth-child(7n) { border-right:none; }
+  .day--out { background:var(--bw-surface-muted); }
+  .day__n {
+    font-size:var(--bw-font-caption); font-weight:var(--bw-weight-medium);
+    color:var(--text-color-secondary); padding:0 .125rem;
+  }
+  .day--today .day__n {
+    display:inline-flex; align-items:center; justify-content:center; min-width:1.25rem; height:1.25rem;
+    border-radius:50%; background:var(--bw-300); color:#fff; font-weight:var(--bw-weight-semibold);
+  }
+
+  /* ══ LA CARD: dirección 01 — densidad en dos líneas ══
+     Altura impuesta por la librería: en mes cada evento es UNA línea.
+     Estrategia: no agregar líneas, sí reordenar y comprimir.
+     Se implementa en `buildEventContent()` (string HTML) + `_calendar.scss`. */
+  .fc-ev {
+    display:flex; align-items:center; gap:.3125rem; width:100%; height:100%;
+    padding:.0625rem .25rem .0625rem .3125rem; overflow:hidden;
+    border-left:3px solid var(--ev-c); border-radius:var(--bw-radius-sm);
+    background:color-mix(in srgb, var(--ev-c) 16%, transparent);
+    font-size:var(--bw-font-caption); line-height:1.25; cursor:pointer;
+  }
+  .fc-ev:hover { background:color-mix(in srgb, var(--ev-c) 26%, transparent); }
+  .fc-ev__time {
+    font-variant-numeric:tabular-nums; font-weight:var(--bw-weight-semibold);
+    font-size:var(--bw-text-2xs); color:var(--text-color); flex-shrink:0;
+  }
+  .fc-ev__name {
+    min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-weight:var(--bw-weight-medium); color:var(--text-color);
+  }
+  .fc-ev__pay {
+    flex-shrink:0; width:.75rem; height:.75rem; border-radius:var(--bw-radius-sm);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.5rem; font-weight:var(--bw-weight-bold); color:#fff;
+  }
+  .fc-ev__pay--paid { background:var(--bw-payment-paid); }
+  .fc-ev__pay--partial { background:var(--bw-payment-partial); }
+  .fc-ev--reservado { --ev-c:var(--bw-status-reservado); }
+  .fc-ev--confirmado { --ev-c:var(--bw-status-confirmado); }
+  .fc-ev--asiste { --ev-c:var(--bw-status-asiste); }
+  .fc-ev--pendiente { --ev-c:var(--bw-status-pendiente); }
+  .fc-ev--blocked {
+    --ev-c:var(--text-color-secondary);
+    background:repeating-linear-gradient(45deg, var(--bw-surface-muted) 0 6px, var(--surface-card) 6px 12px);
+    border-left-color:var(--text-color-secondary);
+    color:var(--text-color-secondary); font-size:var(--bw-text-2xs);
+  }
+  .fc-ev--blocked .fc-ev__name { color:var(--text-color-secondary); font-weight:var(--bw-weight-regular); }
+
+  /* Columna de semana (timeGrid): slot de 30 min ≈ 44px */
+  .week { display:grid; grid-template-columns:3.25rem minmax(0,1fr); }
+  .week__hours { border-right:1px solid var(--surface-border); }
+  .week__hour {
+    height:44px; padding:.125rem .375rem 0 0; text-align:right;
+    font-size:var(--bw-text-2xs); font-variant-numeric:tabular-nums; color:var(--text-color-secondary);
+  }
+  .week__col { position:relative; }
+  .week__slot { height:44px; border-bottom:1px solid var(--surface-border); }
+  .week__slot:nth-child(odd) { border-bottom-style:dashed; border-bottom-color:color-mix(in srgb, var(--surface-border) 60%, transparent); }
+
+  /* En semana SÍ hay alto: dos líneas útiles + una tercera de contexto. */
+  .fc-ev--tall {
+    flex-direction:column; align-items:stretch; justify-content:flex-start; gap:.0625rem;
+    padding:.1875rem .3125rem; font-size:var(--bw-text-2xs);
+  }
+  .fc-ev__row1 { display:flex; align-items:center; gap:.25rem; }
+  .fc-ev__row1 .fc-ev__time { font-size:var(--bw-text-2xs); }
+  .fc-ev--tall .fc-ev__name { font-size:var(--bw-font-caption); font-weight:var(--bw-weight-semibold); }
+  .fc-ev__ctx {
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    color:var(--text-color-secondary); font-size:var(--bw-text-2xs);
+  }
+  .fc-ev__ctx b { font-weight:var(--bw-weight-medium); color:var(--text-color); }
+
+  /* ── Anatomía + notas ─────────────────────────────────────────────── */
+  .anatomy { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.25rem; }
+  .card-note {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); padding:1rem 1.125rem;
+  }
+  .card-note h3 { font-size:var(--bw-font-table); font-weight:var(--bw-weight-semibold); margin-bottom:.5rem; }
+  .card-note ul { margin:0; padding-left:1.125rem; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .card-note li { margin-bottom:.375rem; }
+  .card-note li b { color:var(--text-color); font-weight:var(--bw-weight-medium); }
+  .tradeoff {
+    border-left:3px solid var(--bw-warning); background:color-mix(in srgb, var(--bw-warning) 8%, transparent);
+    border-radius:var(--bw-radius-md); padding:.75rem 1rem; font-size:var(--bw-font-caption);
+  }
+  .tradeoff strong { color:var(--bw-chip-text-warning); }
+
+  /* ── Dirección 03: banda de estado + avatar ─────────────────────── */
+  .fc-ev--banded {
+    padding:0; gap:0; border-left:none; background:var(--surface-card);
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-md);
+    align-items:stretch;
+  }
+  .fc-ev--banded:hover { border-color:color-mix(in srgb, var(--ev-c) 55%, var(--surface-border)); }
+  .fc-ev__band { width:3px; flex-shrink:0; background:var(--ev-c); }
+  .fc-ev__body {
+    display:flex; align-items:center; gap:.3125rem; min-width:0; flex:1;
+    padding:.0625rem .3125rem .0625rem .375rem; overflow:hidden;
+  }
+  .fc-ev__avatar {
+    flex-shrink:0; width:1rem; height:1rem; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb, var(--ev-c) 30%, var(--surface-card));
+    color:var(--text-color); font-size:.5rem; font-weight:var(--bw-weight-bold);
+  }
+  .fc-ev--banded .fc-ev__time { font-size:var(--bw-text-2xs); }
+  .fc-ev--banded .fc-ev__name { font-size:var(--bw-font-caption); }
+  .fc-ev--banded .fc-ev__ctx { font-size:var(--bw-text-2xs); }
+  .fc-ev--banded.fc-ev--tall { flex-direction:row; }
+  .fc-ev--banded.fc-ev--tall .fc-ev__body { flex-direction:column; align-items:stretch; justify-content:center; gap:.0625rem; }
+  .fc-ev--banded .fc-ev__row1 { gap:.25rem; }
+
+  .samples { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.75rem; }
+  .sample { width:15rem; height:1.375rem; }
+  .sample--tall { width:12rem; height:3.25rem; }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <div class="board__head">
+    <div>
+      <h1>Cards del calendario · 03 — banda de estado y avatar</h1>
+      <p>La card pasa a tener dos zonas: una banda vertical de estado, legible de lejos, y el bloque de
+        datos con avatar. Se reconoce al paciente por la inicial, no por leer el nombre.</p>
+    </div>
+    <span class="board__tag">Dirección 3 de 3</span>
+  </div>
+
+  <div class="constraint">
+    <span aria-hidden="true">ⓘ</span>
+    <span>
+      <strong>Esto no es un componente Angular.</strong> La card la dibuja <strong>FullCalendar</strong>
+      (librería) vía <code>eventContent</code> → <code>{ html }</code>, con estilos globales en
+      <code>src/styles/_calendar.scss</code> y eventos por los hooks <code>eventClick</code> /
+      <code>eventMouseEnter</code>. No hay bindings ni PrimeNG adentro: cualquier dato tiene que venir
+      ya interpolado en el string y el texto se escapa a mano.
+    </span>
+  </div>
+
+  <div class="views">
+
+    <!-- ── Vista MES ───────────────────────────────────────────────── -->
+    <section class="panel" aria-labelledby="mes-h">
+      <div class="panel__head">
+        <h2 id="mes-h">Vista mes (dayGrid)</h2>
+        <small>alto por evento ≈ 1 línea · ~18 px</small>
+      </div>
+      <div class="month" role="table" aria-label="Grilla de mes con eventos">
+        <div class="month__dow">Lun</div><div class="month__dow">Mar</div><div class="month__dow">Mié</div>
+        <div class="month__dow">Jue</div><div class="month__dow">Vie</div><div class="month__dow">Sáb</div>
+        <div class="month__dow">Dom</div>
+
+        <div class="day day--out"><span class="day__n">27</span></div>
+        <div class="day day--out"><span class="day__n">28</span></div>
+        <div class="day day--out"><span class="day__n">29</span></div>
+        <div class="day day--out"><span class="day__n">30</span></div>
+        <div class="day day--out"><span class="day__n">31</span></div>
+        <div class="day"><span class="day__n">1</span></div>
+        <div class="day"><span class="day__n">2</span></div>
+
+        <div class="day"><span class="day__n">3</span></div>
+        <div class="day day--today"><span class="day__n">4</span>
+          <div class="fc-ev fc-ev--banded fc-ev--confirmado" title="Rosa Kinesilk · 09:00–09:30">
+            <span class="fc-ev__band" aria-hidden="true"></span>
+            <span class="fc-ev__body">
+              <span class="fc-ev__avatar" aria-hidden="true">R</span>
+              <span class="fc-ev__time">09:00</span>
+              <span class="fc-ev__name">Rosa Kinesilk</span>
+              <span class="fc-ev__pay fc-ev__pay--paid" aria-label="pagado">$</span>
+            </span>
+          </div>
+          <div class="fc-ev fc-ev--banded fc-ev--reservado" title="María Soto · 10:00–10:30">
+            <span class="fc-ev__band" aria-hidden="true"></span>
+            <span class="fc-ev__body">
+              <span class="fc-ev__avatar" aria-hidden="true">M</span>
+              <span class="fc-ev__time">10:00</span>
+              <span class="fc-ev__name">María Soto</span>
+            </span>
+          </div>
+          <div class="fc-ev fc-ev--banded fc-ev--pendiente" title="Pedro Díaz · 11:30–12:00">
+            <span class="fc-ev__band" aria-hidden="true"></span>
+            <span class="fc-ev__body">
+              <span class="fc-ev__avatar" aria-hidden="true">P</span>
+              <span class="fc-ev__time">11:30</span>
+              <span class="fc-ev__name">Pedro Díaz</span>
+              <span class="fc-ev__pay fc-ev__pay--partial" aria-label="pago parcial">A</span>
+            </span>
+          </div>
+          <div class="fc-ev fc-ev--blocked" title="Bloqueado · 13:00–14:00">
+            <span class="fc-ev__name">Bloqueado 13:00–14:00</span>
+          </div>
+        </div>
+        <div class="day"><span class="day__n">5</span>
+          <div class="fc-ev fc-ev--asiste" title="Ana Vera · 09:30–10:00">
+            <span class="fc-ev__time">09:30</span><span class="fc-ev__name">Ana Vera</span>
+          </div>
+        </div>
+        <div class="day"><span class="day__n">6</span></div>
+        <div class="day"><span class="day__n">7</span></div>
+        <div class="day"><span class="day__n">8</span></div>
+
+        <div class="day"><span class="day__n">9</span></div>
+        <div class="day"><span class="day__n">10</span></div>
+        <div class="day"><span class="day__n">11</span></div>
+        <div class="day"><span class="day__n">12</span></div>
+        <div class="day"><span class="day__n">13</span></div>
+        <div class="day"><span class="day__n">14</span></div>
+        <div class="day"><span class="day__n">15</span></div>
+      </div>
+    </section>
+
+    <!-- ── Vista SEMANA ────────────────────────────────────────────── -->
+    <section class="panel" aria-labelledby="sem-h">
+      <div class="panel__head">
+        <h2 id="sem-h">Vista semana (timeGrid)</h2>
+        <small>slot de 30 min · 44 px</small>
+      </div>
+      <div class="week" role="table" aria-label="Columna de semana con eventos">
+        <div class="week__hours" aria-hidden="true">
+          <div class="week__hour">08:00</div>
+          <div class="week__hour">08:30</div>
+          <div class="week__hour">09:00</div>
+          <div class="week__hour">09:30</div>
+          <div class="week__hour">10:00</div>
+          <div class="week__hour">10:30</div>
+        </div>
+        <div class="week__col">
+          <div class="week__slot"></div>
+          <div class="week__slot"></div>
+          <div class="week__slot"></div>
+          <div class="week__slot"></div>
+          <div class="week__slot"></div>
+          <div class="week__slot"></div>
+
+          <!-- Evento de 30 min: entran 3 líneas -->
+          <div class="fc-ev fc-ev--banded fc-ev--confirmado fc-ev--tall" style="position:absolute;left:0;right:0;top:88px;height:88px">
+            <span class="fc-ev__band" aria-hidden="true"></span>
+            <span class="fc-ev__body">
+              <span class="fc-ev__row1">
+                <span class="fc-ev__avatar" aria-hidden="true">R</span>
+                <span class="fc-ev__name">Rosa Kinesilk</span>
+                <span class="fc-ev__pay fc-ev__pay--paid" aria-label="pagado">$</span>
+              </span>
+              <span class="fc-ev__ctx"><b>09:00–09:30</b> · Kinesiología general</span>
+            </span>
+          </div>
+
+          <!-- Pack: la sesión es el dato que hoy se pierde -->
+          <div class="fc-ev fc-ev--reservado fc-ev--tall" style="position:absolute;left:0;right:0;top:132px;height:56px">
+            <span class="fc-ev__row1"><span class="fc-ev__time">09:30–10:00</span></span>
+            <span class="fc-ev__name">María Soto</span>
+            <span class="fc-ev__ctx">Pack · sesión <b>3/6</b></span>
+          </div>
+
+          <!-- 15 min (eventShortHeight): una sola línea, la hora manda -->
+          <div class="fc-ev fc-ev--pendiente" style="position:absolute;left:0;right:7rem;top:190px;height:22px">
+            <span class="fc-ev__time">10:15</span><span class="fc-ev__name">Pedro Díaz</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Anatomía ───────────────────────────────────────────────────── -->
+  <div class="anatomy">
+    <section class="card-note">
+      <h3>Qué entra y de dónde sale el dato</h3>
+      <ul>
+        <li><b>Hora</b> — <code>event.start</code> ya formateada; en la card es lo primero que se busca al escanear el día.</li>
+        <li><b>Paciente</b> — <code>booking.client.first_name + last_name</code>, el mismo texto que hoy arma el título.</li>
+        <li><b>Servicio</b> (solo semana) — <code>booking.service.name</code>; si hay pack, se reemplaza por
+          <b>«Pack · sesión 3/6»</b> usando <code>booking.pack_session</code>.</li>
+        <li><b>Banda de estado</b> — 3 px verticales con <code>booking.status.color</code>. A diferencia del
+          tinte de hoy, el color se lee aun con la card en 18 px de alto y no compite con el texto.</li>
+        <li><b>Avatar</b> — inicial de <code>booking.client.first_name</code> sobre el color de estado al 30 %:
+          identifica al paciente antes de leer.</li>
+        <li><b>Pago</b> — chip de 12 px con <code>$</code> (pagado) o <code>A</code> (parcial) desde
+          <code>booking.payment_status</code>; desaparece si está impago.</li>
+      </ul>
+      <div class="samples">
+        <div class="fc-ev fc-ev--confirmado sample"><span class="fc-ev__time">09:00</span><span class="fc-ev__name">Rosa Kinesilk</span><span class="fc-ev__pay fc-ev__pay--paid">$</span></div>
+        <div class="fc-ev fc-ev--asiste sample"><span class="fc-ev__time">09:30</span><span class="fc-ev__name">Ana Vera</span></div>
+      </div>
+    </section>
+
+    <section class="card-note">
+      <h3>Qué cuesta implementarlo</h3>
+      <ul>
+        <li><code>buildEventContent()</code> en <code>full-calendar.component.ts</code>: cambia el HTML y
+          la rama de mes (hoy usa <code>.ev-dot</code>).</li>
+        <li><code>src/styles/_calendar.scss</code>: se reemplazan las reglas <code>.ev-inner</code>,
+          <code>.ev-title</code>, <code>.ev-dot</code> por las nuevas <code>.fc-ev__*</code>.</li>
+        <li>Los colores entran por <code>style="--ev-c:…"</code> inline, igual que hoy con
+          <code>--ev-status-color</code> — la librería genera el nodo fuera de Angular.</li>
+        <li>Las vistas de día y semana comparten card; los cortos (&lt; 30 min) caen a la variante de una línea.</li>
+      </ul>
+      <div class="tradeoff">
+        <strong>Tradeoff:</strong> el avatar come ~16 px de ancho, que en el mes es texto que se pierde; y
+        un estado pastel (reservado, cancelado) deja la banda casi invisible contra la card, así que el
+        borde del contenedor tiene que sostener la forma. Es la dirección que más se aleja del look actual.
+      </div>
+    </section>
+  </div>
+
+</div>
+</body>
+</html>
