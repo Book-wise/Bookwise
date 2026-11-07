@@ -45,6 +45,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { TimezoneService } from '@services/timezone.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import { BookingFormData } from '../interfaces/booking-form-data.interface';
 import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { DAYS_OF_WEEK, REPEAT_TYPE_OPTIONS } from '../constants/repeat-options';
@@ -102,6 +103,8 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   /** ReferenceStore: fuente Ãºnica de datos maestros */
   private refStore = inject(ReferenceStore);
+  /** ServicesStore: dueño de services/packs (separado del ReferenceStore). */
+  private servicesStore = inject(ServicesStore);
   private similarService = inject(SimilarPatientsService);
 
   @Input() initialDate?: Date;
@@ -119,7 +122,13 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
   savingService = signal(false);
 
   /** Skeleton visible hasta que el store tenga datos Y los providers estÃ©n cargados */
-  readonly loadingData = computed(() => !this.refStore.allLoaded() || this.providersLoading());
+  readonly loadingData = computed(
+    () =>
+      !this.refStore.allLoaded() ||
+      !this.servicesStore.loaded().services ||
+      !this.servicesStore.loaded().packs ||
+      this.providersLoading(),
+  );
 
   // â”€â”€ Similar-patients pre-check (duplicate detection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   similarClients = signal<Client[]>([]);
@@ -166,7 +175,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
    */
   readonly services = computed<Service[]>(() => {
     const keepId = this.keepServiceId();
-    return this.refStore.services().filter(
+    return this.servicesStore.services().filter(
       (s) => s.active || (keepId !== null && s.id === keepId),
     );
   });
@@ -275,7 +284,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
     const keepPackId = this.keepPackId();
     const reference = this.referencePerSession(serviceId);
 
-    return this.refStore
+    return this.servicesStore
       .packs()
       .filter((p) => p.service_id === serviceId)
       .filter((p) => p.active || (keepPackId !== null && p.id === keepPackId))
@@ -306,7 +315,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       this.clientPacks().find((p) => {
         if (p.status !== 'active') return false;
         const viaNested = p.service_pack?.service_id === serviceId;
-        const viaCatalog = this.refStore
+        const viaCatalog = this.servicesStore
           .packs()
           .some((sp) => sp.id === p.service_pack_id && sp.service_id === serviceId);
         return viaNested || viaCatalog;
@@ -316,7 +325,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
 
   /** Precio de referencia por sesión: el pack de 1 sesión, o el precio base. */
   private referencePerSession(serviceId: number): number {
-    const oneSession = this.refStore
+    const oneSession = this.servicesStore
       .packs()
       .find((p) => p.service_id === serviceId && p.total_sessions === 1);
     if (oneSession) return Number(oneSession.price) || 0;
@@ -451,7 +460,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
       this.isEdit.set(true);
       const startDate = new Date(booking.start_time);
       const packId = booking.pack_session?.service_pack_id ?? null;
-      const pack = packId ? this.refStore.packs().find((p) => p.id === packId) : undefined;
+      const pack = packId ? this.servicesStore.packs().find((p) => p.id === packId) : undefined;
       const serviceId = booking.service_id ?? booking.service?.id ?? pack?.service_id ?? 0;
       this.formData = {
         ...this.getEmptyForm(),
@@ -870,7 +879,7 @@ export class BookingFormDialogComponent implements OnInit, OnDestroy {
           key: 'global',
           life: 3000,
         });
-        this.refStore.invalidateServices();
+        this.servicesStore.invalidateServices();
         this.savingService.set(false);
         this.showServicePanel = false;
         this.loadFormData();

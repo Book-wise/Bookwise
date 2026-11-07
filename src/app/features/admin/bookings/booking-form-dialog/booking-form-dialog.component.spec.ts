@@ -9,6 +9,7 @@ import { BookingsApiService } from '@services/api/bookings-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { signal } from '@angular/core';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -28,6 +29,7 @@ describe('BookingFormDialogComponent', () => {
   }
 
   let refStoreMock: any;
+  let servicesStoreMock: any;
 
   beforeEach(async () => {
     const clientsApi = { getClients: vi.fn().mockReturnValue(of([])), createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })), getClientPacks: vi.fn().mockReturnValue(of([])) } as any;
@@ -42,6 +44,12 @@ describe('BookingFormDialogComponent', () => {
       packs: signal([]),
       allLoaded: () => true,
       invalidateClients: vi.fn(),
+    };
+
+    servicesStoreMock = {
+      services: refStoreMock.services,
+      packs: refStoreMock.packs,
+      loaded: () => ({ services: true, packs: true }),
       invalidateServices: vi.fn(),
     };
 
@@ -54,6 +62,7 @@ describe('BookingFormDialogComponent', () => {
         { provide: BookingsApiService, useValue: bookingsApi },
         { provide: ServicesApiService, useValue: servicesApi },
         { provide: ReferenceStore, useValue: refStoreMock },
+        { provide: ServicesStore, useValue: servicesStoreMock },
         ClientDetailStore,
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         { provide: MessageService, useValue: { add: vi.fn() } },
