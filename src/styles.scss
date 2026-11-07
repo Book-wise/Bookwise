@@ -91,6 +91,15 @@ body.dark-theme {
   --surface-border: #334155;
   --bw-50:          rgba(4, 106, 244, 0.1);
   --bw-100:         rgba(4, 106, 244, 0.22);
+  // Superficie de hover/selección: en oscuro tiene que ser MÁS clara que la card
+  // (#1e293b) para que el hover se note. Sin esto el token queda claro (#f3f4f6)
+  // y produce fondos blancos dentro del tema oscuro.
+  --bw-surface-muted: #263449;
+  // Esqueletos de carga: los tokens de PrimeNG no cambian solos porque el preset
+  // está fijado en claro (`darkModeSelector: false`). Sin esto el loader del
+  // calendario queda gris claro sobre el fondo oscuro.
+  --p-skeleton-background: #334155;
+  --p-skeleton-animation-background: #3f4d63;
   --text-color:           #e4e4e7;
   --text-color-secondary: #94a3b8;
   --text-heading:         var(--text-color);
@@ -211,6 +220,10 @@ body.theme-kinesilk {
   --bw-100: #badede;              // powder blue
   --bw-200: #ffbdbe;              // pink (accent)
   --bw-300: #fea4a4;              // salmon (CTA)
+  --bw-text-on-brand: #2f2f26;    // texto oscuro sobre el salmon pastel
+  // Esqueletos de carga en la paleta crema (el preset de PrimeNG es claro).
+  --p-skeleton-background: #ece4cb;
+  --p-skeleton-animation-background: #f5f1de;
 
   --color-primary:     #e08f8f;
   --color-primary-cta: #fea4a4;

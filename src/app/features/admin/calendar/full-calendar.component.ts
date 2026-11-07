@@ -34,6 +34,7 @@ import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/book
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
 import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/booking-statuses';
+import { blockedCardHtml, eventCardHtml } from './calendar-event-content';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { AuthService } from '@services/auth.service';
@@ -190,12 +191,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Leyenda de estados de pago — badge/token por estado. */
   /** Leyenda de estados de pago — colores alineados con los badges del evento en
-   *  la agenda (ev-pay-badge--paid/partial en _calendar.scss), no con los tokens
+   *  la agenda (ev__pay--paid/partial en _calendar.scss), no con los tokens
    *  de chips, para que la guía coincida con lo que se ve en el calendario. */
   readonly paymentLegend = computed(() => [
     { label: this.lang.t('cal.legend.payment.unpaid'),   cssVar: 'var(--bw-payment-unpaid)', badge: '' },
     { label: this.lang.t('cal.legend.payment.partial'),  cssVar: '#65a30d',                   badge: 'A' },
-    { label: this.lang.t('cal.legend.payment.paid'),     cssVar: '#16a34a',                   badge: '$' },
+    { label: this.lang.t('cal.legend.payment.paid'),     cssVar: 'var(--bw-payment-paid)',    badge: '$' },
   ]);
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
@@ -433,7 +434,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         ...this.calendarOptions,
         eventClick: (info) => this.ngZone.run(() => this.handleEventClick(info)),
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
-        eventContent: (info) => this.buildEventContent(info),
+        // La hora va dentro de la card: sin esto FullCalendar pinta además su propio
+    // texto de hora y se superpone con el contenido.
+    displayEventTime: false,
+    eventContent: (info) => this.buildEventContent(info),
         eventMouseEnter: (info) => {
           if (info.event.extendedProps['isBlocked']) return;
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
@@ -1245,44 +1249,62 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private buildEventContent(info: EventContentArg): { html: string } {
     if (info.event.extendedProps['isBlocked']) {
-      const reason = info.event.title || 'Bloqueado';
-      const start = this.fmt(info.event.startStr);
-      const end = this.fmt(info.event.endStr);
       return {
-        html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason} · ${start}–${end}</span></div>`,
+        html: blockedCardHtml({
+          reason: info.event.title || 'Bloqueado',
+          startLabel: this.fmt(info.event.startStr),
+          endLabel: this.fmt(info.event.endStr),
+        }),
       };
     }
-    const booking: Booking | undefined = info.event.extendedProps['booking'];
-    const payment = booking?.payment_status;
-    const title = info.event.title.replace(
-      /[&<>"']/g,
-      (c: string) =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
-    );
 
-    // Status color — used in the month view where the pastel fill is hard to
-    // perceive: a leading status dot plus a soft tinted pill makes the state
-    // readable at a glance.
+    const booking: Booking | undefined = info.event.extendedProps['booking'];
+    // El bloque de selección (`selectMirror`) llega por este mismo hook sin
+    // reserva: no es un evento real, y dibujar la card acá pintaba su hora en
+    // tinta oscura encima de la etiqueta azul del slot
+    // (`.fc-highlight::after` → la misma hora dos veces).
+    if (!booking) return { html: '' };
+    // Sin placeholders: si el dato no vino, el span no se emite (antes se
+    // renderizaba «Cliente»/«Servicio» como si fueran contenido real).
+    const clientName = `${booking?.client?.first_name ?? ''} ${booking?.client?.last_name ?? ''}`.trim();
+    const serviceLabel = booking?.pack_session
+      ? `Pack · sesión ${booking.pack_session.session_number}/${booking.pack_session.total_sessions}`
+      : (booking?.service?.name ?? '');
+    const sessionPill = booking?.pack_session
+      ? `${booking.pack_session.session_number}/${booking.pack_session.total_sessions}`
+      : null;
+    const payment =
+      booking?.payment_status === 'paid'
+        ? 'paid'
+        : booking?.payment_status === 'partial'
+          ? 'partial'
+          : null;
+
     const statusColor =
       booking?.status?.color ??
       BOOKING_STATUSES.find((s) => s.value === booking?.status_id)?.color ??
       '';
 
-    const badge =
-      payment === 'paid'
-        ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>'
-        : payment === 'partial'
-          ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>'
-          : '';
+    // La card es la misma en mes y semana. No se asume un alto fijo: si la card
+    // es baja, el CSS recorta el eje Y y la primera línea (nombre + hora) queda
+    // anclada arriba. `isShort` solo decide si tiene sentido emitir la segunda.
+    const isDayGrid = info.view.type.startsWith('dayGrid');
+    const start = info.event.start;
+    const end = info.event.end;
+    const isShort =
+      isDayGrid || !start || !end || end.getTime() - start.getTime() < 30 * 60 * 1000;
 
-    const isMonthView = info.view.type.startsWith('dayGrid');
-    if (isMonthView && statusColor) {
-      return {
-        html: `<div class="ev-inner ev-inner--month" style="--ev-status-color:${statusColor}">${badge}<span class="ev-dot"></span><span class="ev-title">${title}</span></div>`,
-      };
-    }
-
-    return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
+    return {
+      html: eventCardHtml({
+        statusColor,
+        clientName,
+        serviceLabel,
+        sessionPill,
+        payment,
+        startLabel: this.fmt(info.event.startStr),
+        isShort,
+      }),
+    };
   }
 
   private handleEventMove(

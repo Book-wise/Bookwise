@@ -19,7 +19,8 @@ import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { Location, Provider, User } from '@models';
+import { Booking, Location, Provider, User } from '@models';
+import type { EventContentArg } from '@fullcalendar/core';
 import { DateTime } from 'luxon';
 
 /**
@@ -829,6 +830,102 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
 
       expect(localStorage.getItem(providerKeyFor(5))).toBeNull();
       expect(store.filters().selectedProviderId).toBeNull();
+    });
+  });
+
+  describe('buildEventContent (input de la card de evento)', () => {
+    function bookingInput(overrides: Partial<Booking> = {}): Booking {
+      return {
+        id: 1,
+        status_id: 2,
+        start_time: '2025-01-01T09:00:00-03:00',
+        end_time: '2025-01-01T10:00:00-03:00',
+        price: 0,
+        client: { id: 1, first_name: 'Matias', last_name: 'Díaz', email: 'm@t.com', active: true },
+        service: { id: 5, name: 'Kinesiología general', duration_minutes: 30, price: 0, active: true },
+        status: { id: 2, name: 'confirmado', color: '#ECBE51', is_cancellation: false },
+        payment_status: null,
+        pack_session: null,
+        ...overrides,
+      } as Booking;
+    }
+
+    function infoFor(
+      booking: Booking,
+      opts: { start?: Date; end?: Date; viewType?: string } = {},
+    ): EventContentArg {
+      return {
+        event: {
+          title: `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim(),
+          startStr: booking.start_time,
+          endStr: booking.end_time,
+          start: opts.start ?? new Date('2025-01-01T12:00:00Z'),
+          end: opts.end ?? new Date('2025-01-01T13:00:00Z'),
+          extendedProps: { booking },
+        },
+        view: { type: opts.viewType ?? 'timeGridWeek' },
+      } as unknown as EventContentArg;
+    }
+
+    const build = (info: EventContentArg) =>
+      (
+        component as unknown as {
+          buildEventContent(i: EventContentArg): { html: string };
+        }
+      ).buildEventContent(info).html;
+
+    it('mapea pago pagado y color de estado', () => {
+      const html = build(infoFor(bookingInput({ payment_status: 'paid' })));
+      expect(html).toContain('ev__pay--paid');
+      expect(html).toContain('>$</span>');
+      expect(html).toContain('--ev-c:#ECBE51');
+    });
+
+    it('mapea pack session a servicio y píldora', () => {
+      const html = build(
+        infoFor(
+          bookingInput({
+            pack_session: {
+              session_number: 3,
+              total_sessions: 6,
+              client_pack_id: 1,
+              service_pack_id: 1,
+              status: 'active',
+            },
+          }),
+        ),
+      );
+      expect(html).toContain('Pack · sesión 3/6');
+      expect(html).toContain('ev__sessions">3/6');
+    });
+
+    it('evento corto (< 30 min) no emite la fila de contexto', () => {
+      const html = build(
+        infoFor(bookingInput(), {
+          start: new Date('2025-01-01T12:00:00Z'),
+          end: new Date('2025-01-01T12:15:00Z'),
+        }),
+      );
+      expect(html).not.toContain('ev__row2');
+    });
+
+    it('el bloque de selección (sin reserva ni bloqueo) no dibuja la hora oscura', () => {
+      // `selectMirror` re-renderiza la selección por este mismo hook: sin reserva
+      // el generador emitía la card vacía y la hora quedaba en tinta oscura
+      // encima de la etiqueta azul del slot (`.fc-highlight::after`).
+      const mirror = {
+        event: {
+          title: '',
+          startStr: '2025-01-01T10:00:00-03:00',
+          endStr: '2025-01-01T11:00:00-03:00',
+          start: new Date('2025-01-01T13:00:00Z'),
+          end: new Date('2025-01-01T14:00:00Z'),
+          extendedProps: {},
+        },
+        view: { type: 'timeGridWeek' },
+      } as unknown as EventContentArg;
+
+      expect(build(mirror)).toBe('');
     });
   });
 });

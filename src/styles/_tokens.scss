@@ -22,6 +22,10 @@
   --color-primary-cta:   var(--bw-300);
   --color-accent:        var(--bw-200);
 
+  // Texto e íconos sobre un relleno de marca (`--bw-300`). Blanco en claro y
+  // oscuro; oscuro en el tema Kinesilk, donde `--bw-300` es un salmón pastel.
+  --bw-text-on-brand: #ffffff;
+
   // ── Status colors (solid, for filled indicators/icons) ─────
   --bw-success: #22c55e;
   --bw-warning: #f59e0b;

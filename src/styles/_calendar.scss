@@ -123,7 +123,10 @@
     display: flex;
     align-items: flex-start;
     justify-content: stretch;
-    background: var(--p-surface-0);
+    // `--p-surface-0` es un token de PrimeNG y el preset está fijado en claro
+    // (`darkModeSelector: false`), así que en oscuro y en Kinesilk quedaba blanco.
+    // `--surface-card` sí lo redefinen los tres temas.
+    background: var(--surface-card);
     z-index: var(--z-overlay);
   }
 
@@ -211,7 +214,9 @@
 // Month/week split: dayGrid (month) events carry their state in the inner pill,
 // so the outer 3px accent bar is timeGrid-only. Without this exclusion the
 // dayGrid `<a>` events fall back to currentColor (#000) → a black left bar.
-.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview):not(.fc-event-mirror):not(.fc-daygrid-event) {
+// The admin card (`.ev`) now fills that left edge with the full-height payment
+// band, so events containing `.ev` are excluded too (provider keeps its own).
+.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview):not(.fc-event-mirror):not(.fc-daygrid-event):not(:has(.ev)) {
   border-left-width: 3px !important;
   border-left-style: solid !important;
 }
@@ -280,6 +285,147 @@
   background: var(--ev-status-color);
   flex-shrink: 0;
   align-self: center;
+}
+
+// ── Admin event card — nombre + hora + contexto (dos líneas) ─────────────────
+// La card real la genera buildEventContent() como string HTML (clases .ev__*).
+// El relleno por estado viene de booking.status.color vía `--ev-c` (el mismo
+// color que FullCalendar pinta en .fc-event). La banda de pago ocupa el borde
+// izquierdo donde antes iba la barra de acento de 3px.
+.fc .ev {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 0.4375rem 0 0;
+  overflow: hidden; // eje Y incluido: el contenido que no entra se recorta acá
+  background: var(--ev-c, transparent);
+  // La tinta NO sigue el tema: el relleno es un pastel fijo por estado, así que
+  // en oscuro --text-color (claro) quedaría ilegible sobre el pastel.
+  --ev-ink: var(--bw-900);
+  color: var(--ev-ink);
+}
+
+.fc .ev__pay {
+  align-self: stretch;
+  width: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  font-size: var(--bw-text-sm);
+  font-weight: var(--bw-weight-bold);
+  color: var(--bw-text-on-brand);
+
+  &--paid {
+    background: var(--bw-payment-paid);
+  }
+  &--partial {
+    background: #65a30d; // valor ya existente en _calendar.scss (no el token --bw-payment-partial)
+  }
+  &--none {
+    // Sin pago no se reserva la banda: la info arranca en el borde de la card.
+    display: none;
+  }
+}
+
+.fc .ev__main {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  // La fila 1 se ancla arriba y no se comprime: es la que siempre debe verse.
+  justify-content: flex-start;
+  gap: 0;
+  // Sin padding superior y con line-height compacto el bloque sube un poco y la
+  // fila 1 entra entera incluso en slots de 60 min (cards más bajas).
+  padding: 0 0 0 0.4375rem;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+.fc .ev__row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.fc .ev__row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.fc .ev__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
+  // Tinta oscura fija: el relleno es un pastel de estado, igual en los tres temas.
+  // El color explícito también evita que gane `.fc .fc-event { color:#000 !important }`.
+  color: var(--ev-ink, var(--bw-900));
+}
+
+.fc .ev__time {
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+  font-size: var(--bw-text-2xs);
+  font-weight: var(--bw-weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--ev-ink, var(--bw-900));
+}
+
+.fc .ev__ctx {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--bw-text-2xs);
+  color: color-mix(in srgb, var(--ev-ink, var(--bw-900)) 72%, transparent);
+}
+
+.fc .ev__marks {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.1875rem;
+  flex-shrink: 0;
+}
+
+.fc .ev__sessions {
+  padding: 0 0.1875rem;
+  border-radius: 3px;
+  font-size: var(--bw-text-2xs);
+  font-weight: var(--bw-weight-bold);
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--ev-ink, var(--bw-900)) 16%, transparent);
+  color: var(--ev-ink, var(--bw-900));
+}
+
+// Bloqueado: el rayado lo pinta `.fc-blocked-slot` (clase que FullCalendar
+// recibe en el evento); acá solo se apaga el relleno por estado y se baja el
+// contraste del texto a secundario.
+.fc .ev--blocked {
+  background: transparent;
+  color: var(--text-color-secondary);
+}
+
+.fc .ev--blocked .ev__name {
+  font-weight: var(--bw-weight-regular);
+  color: var(--text-color-secondary);
+}
+
+.fc .ev--blocked .ev__time {
+  color: var(--text-color-secondary);
 }
 
 .fc .fc-event-title {
