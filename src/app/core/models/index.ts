@@ -54,6 +54,8 @@ export interface Provider {
   updated_at?: string;
 }
 
+export type ServiceStatus = 'draft' | 'active' | 'inactive';
+
 export interface Service {
   id: number;
   name: string;
@@ -64,6 +66,12 @@ export interface Service {
   max_duration_minutes?: number;
   price: string | number;
   active: boolean;
+  status?: ServiceStatus;
+  attribute_name?: string | null;
+  image_url?: string | null;
+  image_thumb_url?: string | null;
+  variations?: ServiceVariation[];
+  wc_product_id?: number | null;
   slot_config?: {
     interval_minutes: number;
     buffer_minutes: number;
@@ -71,6 +79,42 @@ export interface Service {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface ServiceVariation {
+  id?: number;
+  term: string;
+  total_sessions: number;
+  price: string | number;
+  compare_at_price?: string | number | null;
+  discount_percent?: number | null;
+  sku?: string | null;
+  active?: boolean;
+  name?: string;
+}
+
+export interface ServiceVariationInput {
+  id?: number;
+  term: string;
+  total_sessions: number;
+  price: string | number;
+  compare_at_price?: string | number | null;
+  sku?: string | null;
+  active?: boolean;
+}
+
+export interface CreateServicePayload {
+  name: string;
+  description?: string;
+  attribute_name?: string | null;
+  duration_minutes: number;
+  price: string | number;
+  slot_interval_minutes?: number;
+  active?: boolean;
+  status?: ServiceStatus;
+  variations?: ServiceVariationInput[];
+}
+
+export type UpdateServicePayload = Partial<CreateServicePayload>;
 
 export interface ServicePack {
   id: number;

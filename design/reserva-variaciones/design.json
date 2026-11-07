@@ -1,0 +1,21 @@
+{
+  "title": "Reserva con variación y sesiones pagadas",
+  "brief": "Cómo se elige una variación (Sesiones: 1/3/6) al crear una reserva y cómo se elige cuál de las sesiones ya pagadas del paciente se agenda (sesión N de M), reusando el diálogo de reserva y la pestaña Sesiones que ya existen en Bookwise.",
+  "feature": "odd/tasks/services-packs-variations.md",
+  "artboards": [
+    {
+      "file": "01-reserva-variacion.html",
+      "title": "Nueva reserva: servicio → variación → sesión pagada",
+      "tradeoff": "El flujo queda en un solo diálogo y muestra el estado real de la sesión («2 de 3 · libre»); suma dos pasos al alta rápida y obliga a decidir entre cobrar suelto o consumir pack.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-sesiones-paciente.html",
+      "title": "Sesiones del paciente (dónde vive hoy) + detalle por sesión",
+      "tradeoff": "Reusa la pestaña que ya existe y evita duplicar contadores; el panel es angosto y el detalle por sesión necesita tooltip o scroll si el pack es grande.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

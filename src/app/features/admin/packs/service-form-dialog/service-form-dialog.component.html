@@ -1,0 +1,318 @@
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [style]="{ width: '800px' }"
+  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '72vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+  [pt]="{ footer: { style: { paddingTop: '1.25rem' } } }"
+>
+  <ng-template pTemplate="header">
+    <div class="sfd-header">
+      <span class="sfd-title">{{ title() }}</span>
+      <span class="sfd-subtitle">{{ lang.t('packs.form.subtitle') }}</span>
+    </div>
+  </ng-template>
+
+  <div class="sfd-form" [formGroup]="form">
+    <!-- ── Datos del servicio ─────────────────────────────────────────── -->
+    <section class="sfd-panel">
+      <h3 class="sfd-overline">{{ lang.t('packs.form.section.data') }}</h3>
+
+      <div class="sfd-grid sfd-grid--2">
+        <div class="sfd-field">
+          <label for="svc-name">{{ lang.t('packs.form.name') }} *</label>
+          <input
+            pInputText
+            id="svc-name"
+            formControlName="name"
+            class="w-full"
+            [placeholder]="lang.t('packs.form.name_placeholder')"
+            [attr.aria-invalid]="fieldError(form.controls.name) ? 'true' : null"
+          />
+          @if (fieldError(form.controls.name); as err) {
+            <small class="sfd-error">{{ err }}</small>
+          }
+        </div>
+
+        <div class="sfd-field">
+          <label for="svc-duration">{{ lang.t('packs.form.duration') }} *</label>
+          <div class="sfd-suffix">
+            <input
+              pInputText
+              type="number"
+              id="svc-duration"
+              formControlName="durationMinutes"
+              class="w-full"
+              [attr.aria-invalid]="fieldError(form.controls.durationMinutes) ? 'true' : null"
+            />
+            <span class="sfd-suffix__unit">{{ lang.t('packs.unit.min') }}</span>
+          </div>
+          @if (fieldError(form.controls.durationMinutes); as err) {
+            <small class="sfd-error">{{ err }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="sfd-field">
+        <label for="svc-description">
+          {{ lang.t('packs.form.description') }}
+          <span class="sfd-hint">{{ lang.t('packs.form.description_optional') }}</span>
+        </label>
+        <input
+          pInputText
+          id="svc-description"
+          formControlName="description"
+          class="w-full"
+          [placeholder]="lang.t('packs.form.description_placeholder')"
+        />
+      </div>
+
+      <div class="sfd-grid sfd-grid--3">
+        <div class="sfd-field">
+          <label for="svc-price">{{ lang.t('packs.form.price') }} *</label>
+          <div class="sfd-prefix">
+            <span class="sfd-prefix__unit">$</span>
+            <input
+              pInputText
+              type="number"
+              id="svc-price"
+              formControlName="price"
+              class="w-full"
+              [attr.aria-invalid]="fieldError(form.controls.price) ? 'true' : null"
+            />
+          </div>
+          @if (fieldError(form.controls.price); as err) {
+            <small class="sfd-error">{{ err }}</small>
+          }
+        </div>
+
+        <div class="sfd-field">
+          <label for="svc-interval">
+            {{ lang.t('packs.form.interval') }}
+            <span class="sfd-hint">{{ lang.t('packs.form.interval_optional') }}</span>
+          </label>
+          <div class="sfd-suffix">
+            <input
+              pInputText
+              type="number"
+              id="svc-interval"
+              formControlName="slotIntervalMinutes"
+              class="w-full"
+              [attr.aria-invalid]="fieldError(form.controls.slotIntervalMinutes) ? 'true' : null"
+            />
+            <span class="sfd-suffix__unit">{{ lang.t('packs.unit.min') }}</span>
+          </div>
+          @if (fieldError(form.controls.slotIntervalMinutes); as err) {
+            <small class="sfd-error">{{ err }}</small>
+          }
+        </div>
+
+        <div class="sfd-field">
+          <label for="svc-status">{{ lang.t('packs.form.status') }} *</label>
+          <p-select
+            formControlName="status"
+            [options]="statusOptions()"
+            [appendTo]="'body'"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <p class="sfd-hint sfd-status-hint" role="note">{{ statusHint() }}</p>
+      <p class="sfd-hint">{{ lang.t('packs.form.base_price_hint') }}</p>
+    </section>
+
+    <!-- ── Variaciones ───────────────────────────────────────────────── -->
+    <section class="sfd-panel">
+      <div class="sfd-panel__head">
+        <h3 class="sfd-overline">{{ lang.t('packs.form.section.variations') }}</h3>
+        <span class="sfd-attr">
+          {{ lang.t('packs.attribute.label') }}:
+          <strong>{{ lang.t('packs.attribute.sessions') }}</strong>
+          · {{ lang.t('packs.form.attribute.fixed') }}
+        </span>
+      </div>
+
+      @if (loadingService()) {
+        <div class="sfd-loading" aria-hidden="true">
+          <p-skeleton height="2.5rem" />
+          <p-skeleton height="2.5rem" />
+        </div>
+      } @else {
+        <div class="sfd-variations" formArrayName="variations">
+          <div class="sfd-var-row sfd-var-row--head" aria-hidden="true">
+            <span>{{ lang.t('packs.form.term') }}</span>
+            <span class="sfd-num">{{ lang.t('packs.form.sessions') }}</span>
+            <span class="sfd-num">{{ lang.t('packs.form.price') }}</span>
+            <span class="sfd-num">{{ lang.t('packs.form.compare_at_price') }}</span>
+            <span class="sfd-num">{{ lang.t('packs.form.discount') }}</span>
+            <span class="sfd-num">{{ lang.t('packs.form.per_session') }}</span>
+            <span>{{ lang.t('packs.form.active_short') }}</span>
+            <span></span>
+          </div>
+
+          @for (group of variations.controls; track $index; let i = $index) {
+            <div class="sfd-var-row" [formGroupName]="i">
+              <div class="sfd-var-cell sfd-var-cell--term">
+                <input
+                  pInputText
+                  formControlName="term"
+                  [placeholder]="lang.t('packs.form.term_placeholder')"
+                  [attr.aria-label]="lang.t('packs.form.term')"
+                  [attr.aria-invalid]="fieldError(group.get('term')) ? 'true' : null"
+                />
+                <button type="button" class="sfd-suggest" (click)="applyTermSuggestion(i)">
+                  {{ lang.t('packs.form.suggest_term') }}
+                </button>
+                @if (fieldError(group.get('term')); as err) {
+                  <small class="sfd-error">{{ err }}</small>
+                }
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--num">
+                <input
+                  pInputText
+                  type="number"
+                  formControlName="totalSessions"
+                  [attr.aria-label]="lang.t('packs.form.sessions')"
+                  [attr.aria-invalid]="fieldError(group.get('totalSessions')) ? 'true' : null"
+                />
+                @if (fieldError(group.get('totalSessions')); as err) {
+                  <small class="sfd-error">{{ err }}</small>
+                }
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--num">
+                <input
+                  pInputText
+                  type="number"
+                  formControlName="price"
+                  [attr.aria-label]="lang.t('packs.form.price')"
+                  [attr.aria-invalid]="fieldError(group.get('price')) ? 'true' : null"
+                />
+                @if (fieldError(group.get('price')); as err) {
+                  <small class="sfd-error">{{ err }}</small>
+                }
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--num">
+                <input
+                  pInputText
+                  type="number"
+                  formControlName="compareAtPrice"
+                  [placeholder]="'—'"
+                  [attr.aria-label]="lang.t('packs.form.compare_at_price')"
+                  [attr.aria-invalid]="compareAtError(i) ? 'true' : null"
+                />
+                @if (compareAtError(i); as err) {
+                  <small class="sfd-error">{{ err }}</small>
+                }
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--discount">
+                @if (variationDiscount(i); as discount) {
+                  <span class="sfd-badge">−{{ discount }}%</span>
+                }
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--per">
+                <b>{{ formatClp(variationPerSession(i)) }}</b>
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--active">
+                <input
+                  type="checkbox"
+                  formControlName="active"
+                  [attr.aria-label]="lang.t('packs.form.active_short')"
+                />
+              </div>
+
+              <div class="sfd-var-cell sfd-var-cell--actions">
+                <button
+                  type="button"
+                  class="sfd-icon-btn"
+                  [attr.aria-label]="lang.t('packs.form.remove_term')"
+                  (click)="removeVariation(i)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          }
+
+          <button type="button" class="sfd-add" (click)="addVariation()">
+            + {{ lang.t('packs.form.add_term') }}
+          </button>
+
+          <p class="sfd-hint">{{ lang.t('packs.form.variations_hint') }}</p>
+        </div>
+      }
+    </section>
+
+    <!-- ── Imagen ─────────────────────────────────────────────────────── -->
+    <section class="sfd-panel">
+      <h3 class="sfd-overline">{{ lang.t('packs.form.image.title') }}</h3>
+
+      @if (imageThumbUrl() && !selectedFile()) {
+        <img class="sfd-image__preview" [src]="imageThumbUrl()" alt="" />
+      } @else if (selectedFile()) {
+        <span class="sfd-image__name">{{ selectedFile()?.name }}</span>
+      } @else {
+        <span class="sfd-image__empty">{{ lang.t('packs.form.image.empty') }}</span>
+      }
+
+      <div class="sfd-field">
+        <label for="svc-image">{{ lang.t('packs.form.image.label') }}</label>
+        <input
+          id="svc-image"
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+          [disabled]="isCreate()"
+          (change)="onFileChange($event)"
+        />
+      </div>
+
+      @if (isCreate()) {
+        <p class="sfd-hint">{{ lang.t('packs.form.image.create_note') }}</p>
+      }
+      @if (imageError()) {
+        <small class="sfd-error">{{ imageError() }}</small>
+      }
+      <p class="sfd-hint">{{ lang.t('packs.form.image.hint') }}</p>
+    </section>
+
+    <!-- ── Estado (espejo) ────────────────────────────────────────────── -->
+    <section class="sfd-panel">
+      <h3 class="sfd-overline">{{ lang.t('packs.form.section.publishing') }}</h3>
+      <div class="sfd-toggle-row">
+        <span class="sfd-active-badge" [class.is-on]="activeState()">
+          {{ activeState() ? lang.t('packs.form.active_yes') : lang.t('packs.form.active_no') }}
+        </span>
+      </div>
+      <p class="sfd-hint">{{ lang.t('packs.form.active_hint') }}</p>
+    </section>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="sfd-footer">
+      <span class="sfd-footnote">{{ lang.t('packs.form.footnote') }}</span>
+      <div class="sfd-actions">
+        <p-button
+          [label]="lang.t('packs.form.cancel')"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="onClose()"
+        />
+        <p-button
+          [label]="saveLabel()"
+          icon="pi pi-check"
+          [loading]="saving()"
+          [disabled]="!isFormValid() || loadingService()"
+          (onClick)="onSave()"
+        />
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,28 @@
+{
+  "title": "Servicios y packs con variaciones por sesiones",
+  "brief": "Gestión de servicios y packs en el panel admin de Bookwise (Kinesilk): un atributo por servicio (Sesiones) con términos 1/3/6, un precio por término, precio de lista opcional para el badge de descuento, una imagen por servicio y una sugerencia de variaciones que nunca aplica precios ni descuentos sola. Reusa la vista /admin/packs y agrega los diálogos que faltan.",
+  "feature": "odd/tasks/services-packs-variations.md",
+  "artboards": [
+    {
+      "file": "01-lista-tabla.html",
+      "title": "Lista expandible (densa)",
+      "tradeoff": "Escanea y compara muchos servicios rápido y deja los términos a un clic; pierde fuerza visual y la imagen queda en 44 px.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-lista-tarjetas.html",
+      "title": "Grilla de tarjetas con imagen",
+      "tradeoff": "La imagen manda y cada término se lee como una opción de compra; ocupa más alto y comparar precios entre servicios cuesta más.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-dialogo-servicio.html",
+      "title": "Diálogo de servicio con términos",
+      "tradeoff": "Un solo lugar para datos, imagen y variaciones, con precio por sesión y vista previa en vivo; el diálogo es alto y pide scroll en pantallas chicas.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

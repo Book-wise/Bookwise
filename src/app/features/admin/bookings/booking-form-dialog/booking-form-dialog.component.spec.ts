@@ -9,6 +9,7 @@ import { BookingsApiService } from '@services/api/bookings-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { signal } from '@angular/core';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -16,7 +17,7 @@ import { HttpErrorService } from '@services/http-error.service';
 import { MessageService } from 'primeng/api';
 import { rutValidator } from '@shared/validators/rut.validator';
 import type { NgForm } from '@angular/forms';
-import type { Client, Provider } from '@models';
+import type { Client, ClientPack, Provider } from '@models';
 
 describe('BookingFormDialogComponent', () => {
   let component: BookingFormDialogComponent;
@@ -27,19 +28,28 @@ describe('BookingFormDialogComponent', () => {
     (signal as unknown as import('@angular/core').WritableSignal<T>).set(value);
   }
 
+  let refStoreMock: any;
+  let servicesStoreMock: any;
+
   beforeEach(async () => {
-    const clientsApi = { getClients: vi.fn().mockReturnValue(of([])), createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })) } as any;
+    const clientsApi = { getClients: vi.fn().mockReturnValue(of([])), createClient: vi.fn().mockReturnValue(of({ id: 1, first_name: 'Test', last_name: 'Patient' })), getClientPacks: vi.fn().mockReturnValue(of([])) } as any;
     const providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
     const bookingsApi = { updateBooking: vi.fn(), createBooking: vi.fn(), getBookings: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } as any;
     const servicesApi = { createService: vi.fn() } as any;
 
-    const refStoreMock = {
+    refStoreMock = {
       clients: signal([] as Client[]),
       locations: signal([]),
       services: signal([]),
       packs: signal([]),
       allLoaded: () => true,
       invalidateClients: vi.fn(),
+    };
+
+    servicesStoreMock = {
+      services: refStoreMock.services,
+      packs: refStoreMock.packs,
+      loaded: () => ({ services: true, packs: true }),
       invalidateServices: vi.fn(),
     };
 
@@ -52,6 +62,7 @@ describe('BookingFormDialogComponent', () => {
         { provide: BookingsApiService, useValue: bookingsApi },
         { provide: ServicesApiService, useValue: servicesApi },
         { provide: ReferenceStore, useValue: refStoreMock },
+        { provide: ServicesStore, useValue: servicesStoreMock },
         ClientDetailStore,
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         { provide: MessageService, useValue: { add: vi.fn() } },
@@ -61,6 +72,41 @@ describe('BookingFormDialogComponent', () => {
 
     fixture = TestBed.createComponent(BookingFormDialogComponent);
     component = fixture.componentInstance;
+  });
+
+  describe('visibilidad de servicios en el selector', () => {
+    const activeService = { id: 1, name: 'Kinesiología', duration_minutes: 60, price: '25000', active: true };
+    const inactiveService = { id: 2, name: 'Servicio retirado', duration_minutes: 45, price: '30000', active: false };
+    const activePack = { id: 10, service_id: 1, name: 'Pack 3', total_sessions: 3, price: '67500', active: true };
+    const inactivePack = { id: 11, service_id: 1, name: 'Pack viejo', total_sessions: 6, price: '120000', active: false };
+
+    it('no ofrece servicios inactivos', () => {
+      refStoreMock.services.set([activeService, inactiveService] as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+
+      expect(values).toContain('svc_1');
+      expect(values).not.toContain('svc_2');
+    });
+
+    it('no ofrece packs (las variaciones se eligen en el paso Variación)', () => {
+      refStoreMock.packs.set([activePack, inactivePack] as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+
+      expect(values).not.toContain('pack_10');
+      expect(values).not.toContain('pack_11');
+    });
+
+    it('mantiene visible el servicio inactivo de la reserva que se edita', () => {
+      refStoreMock.services.set([activeService, inactiveService] as never);
+
+      component.openNew({ id: 99, service_id: 2, service_pack_id: null, price: 30000 } as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+      expect(values).toContain('svc_2');
+      expect(component.selectedServiceKey).toBe('svc_2');
+    });
   });
 
   describe('panel toggling (mutual exclusion)', () => {
@@ -800,6 +846,188 @@ describe('BookingFormDialogComponent', () => {
       setProviders([activeProvider, inactiveProvider, inactiveAssigned, anotherActive]);
 
       expect(optionValues()).toEqual([null, 1, 4]);
+    });
+  });
+
+  describe('servicio → variación (dos pasos)', () => {
+    const activeService = { id: 1, name: 'Kinesiología', duration_minutes: 60, price: '25000', active: true };
+    const otherService = { id: 2, name: 'Masaje', duration_minutes: 45, price: '20000', active: true };
+    const inactiveService = { id: 3, name: 'Retirado', duration_minutes: 45, price: '30000', active: false };
+    const pack1 = { id: 101, service_id: 1, name: '1 sesión', total_sessions: 1, price: '25000', active: true };
+    const pack3 = { id: 103, service_id: 1, name: '3 sesiones', total_sessions: 3, price: '67500', active: true };
+    const pack6 = { id: 106, service_id: 1, name: '6 sesiones', total_sessions: 6, price: '120000', active: true };
+    const otherPack = { id: 201, service_id: 2, name: '3 sesiones masaje', total_sessions: 3, price: '50000', active: true };
+
+    it('serviceOptions no ofrece packs y excluye servicios inactivos', () => {
+      refStoreMock.services.set([activeService, inactiveService] as never);
+      refStoreMock.packs.set([pack3] as never);
+
+      const values = component.serviceOptions().map((o) => o.value);
+
+      expect(values).toEqual(['svc_1']);
+      expect(values).not.toContain('pack_103');
+    });
+
+    it('variationOptions devuelve variaciones activas del servicio ordenadas por sesiones', () => {
+      refStoreMock.services.set([activeService, otherService] as never);
+      refStoreMock.packs.set([pack6, pack1, otherPack, { ...pack3, active: false }] as never);
+      component.selectedServiceId.set(1);
+
+      const options = component.variationOptions();
+
+      expect(options.map((o) => o.value)).toEqual(['term_101', 'term_106']);
+      expect(options.map((o) => o.sessions)).toEqual([1, 6]);
+    });
+
+    it('servicio sin packs activos → variationOptions vacío', () => {
+      refStoreMock.services.set([otherService] as never);
+      refStoreMock.packs.set([pack3] as never);
+      component.selectedServiceId.set(2);
+
+      expect(component.variationOptions()).toEqual([]);
+    });
+
+    it('elegir una variación setea service_pack_id, price y duration_minutes del término', () => {
+      refStoreMock.services.set([activeService] as never);
+      refStoreMock.packs.set([pack1, pack3] as never);
+      component.selectedServiceId.set(1);
+      component.selectedVariationKey = 'term_103';
+
+      component.onVariationChange();
+
+      expect(component.formData.service_pack_id).toBe(103);
+      expect(component.formData.price).toBe(67500);
+      expect(component.formData.duration_minutes).toBe(60);
+    });
+
+    it('cambiar de servicio limpia service_pack_id y la variación elegida', () => {
+      refStoreMock.services.set([activeService, otherService] as never);
+      refStoreMock.packs.set([pack1, pack3, otherPack] as never);
+      component.selectedServiceId.set(1);
+      component.selectedVariationKey = 'term_103';
+      component.formData.service_pack_id = 103;
+      component.formData.price = 67500;
+      component.selectedServiceKey = 'svc_2';
+
+      component.onServiceChange();
+
+      expect(component.formData.service_pack_id).toBeNull();
+      expect(component.selectedVariationKey).toBe('');
+      expect(component.formData.service_id).toBe(2);
+    });
+  });
+
+  describe('badge de descuento por término', () => {
+    const service = { id: 1, name: 'Kinesiología', duration_minutes: 60, price: '25000', active: true };
+    const pack1 = { id: 101, service_id: 1, name: '1 sesión', total_sessions: 1, price: '25000', active: true };
+    const pack3 = { id: 103, service_id: 1, name: '3 sesiones', total_sessions: 3, price: '67500', active: true };
+
+    it('3 sesiones a $67.500 con 1 sesión a $25.000 ⇒ discountPercent 10', () => {
+      refStoreMock.services.set([service] as never);
+      refStoreMock.packs.set([pack1, pack3] as never);
+      component.selectedServiceId.set(1);
+
+      const option = component.variationOptions().find((o) => o.value === 'term_103');
+
+      expect(option?.discountPercent).toBe(10);
+      expect(option?.perSession).toBe(22500);
+    });
+
+    it('un término de 1 sesión ⇒ sin badge', () => {
+      refStoreMock.services.set([service] as never);
+      refStoreMock.packs.set([pack1] as never);
+      component.selectedServiceId.set(1);
+
+      const option = component.variationOptions().find((o) => o.value === 'term_101');
+
+      expect(option?.discountPercent).toBe(0);
+    });
+
+    it('sin referencia válida ⇒ sin badge', () => {
+      refStoreMock.services.set([{ ...service, price: '0' }] as never);
+      refStoreMock.packs.set([pack3] as never);
+      component.selectedServiceId.set(1);
+
+      const option = component.variationOptions().find((o) => o.value === 'term_103');
+
+      expect(option?.discountPercent).toBe(0);
+    });
+  });
+
+  describe('resumen del pack del paciente', () => {
+    const activeService = { id: 1, name: 'Kinesiología', duration_minutes: 60, price: '25000', active: true };
+    const pack3 = { id: 103, service_id: 1, name: '3 sesiones', total_sessions: 3, price: '67500', active: true };
+
+    function clientPack(overrides: Partial<ClientPack> = {}): ClientPack {
+      return {
+        id: 500,
+        client_id: 42,
+        service_pack_id: 103,
+        total_sessions: 3,
+        used_sessions: 1,
+        remaining_sessions: 2,
+        status: 'active',
+        ...overrides,
+      } as ClientPack;
+    }
+
+    it('con getClientPacks devolviendo un pack del servicio se muestra «1 de 3»', async () => {
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClientPacks: ReturnType<typeof vi.fn> };
+      clientsApi.getClientPacks.mockReturnValue(of([clientPack()]));
+
+      refStoreMock.services.set([activeService] as never);
+      refStoreMock.packs.set([pack3] as never);
+      component['lang'].setLang('es');
+
+      component.visible = true;
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.formData.client_id = 42;
+      component.selectedServiceId.set(1);
+      component.onClientChange();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const summary = fixture.debugElement.query(By.css('.paid-summary'));
+      expect(summary).not.toBeNull();
+      expect((summary.nativeElement as HTMLElement).textContent).toContain('1 de 3');
+    });
+
+    it('sin pack ⇒ no se muestra el resumen', async () => {
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClientPacks: ReturnType<typeof vi.fn> };
+      clientsApi.getClientPacks.mockReturnValue(of([]));
+
+      refStoreMock.services.set([activeService] as never);
+      refStoreMock.packs.set([pack3] as never);
+
+      component.visible = true;
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.formData.client_id = 42;
+      component.selectedServiceId.set(1);
+      component.onClientChange();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(fixture.debugElement.query(By.css('.paid-summary'))).toBeNull();
+    });
+
+    it('no re-consulta getClientPacks si el cliente no cambió', () => {
+      const clientsApi = TestBed.inject(ClientsApiService) as unknown as { getClientPacks: ReturnType<typeof vi.fn> };
+      clientsApi.getClientPacks.mockClear();
+      clientsApi.getClientPacks.mockReturnValue(of([clientPack()]));
+
+      refStoreMock.services.set([activeService] as never);
+      refStoreMock.packs.set([pack3] as never);
+      component.formData.client_id = 42;
+      component.selectedServiceId.set(1);
+
+      component.onClientChange();
+      component.onServiceChange();
+
+      expect(clientsApi.getClientPacks).toHaveBeenCalledTimes(1);
     });
   });
 });

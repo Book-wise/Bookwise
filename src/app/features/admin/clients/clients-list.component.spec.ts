@@ -8,6 +8,7 @@ import { ClientsApiService, ClientPage } from '@services/api/clients-api.service
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import type { Client } from '@models';
 
 if (!window.matchMedia) {
@@ -64,8 +65,9 @@ describe('ClientsListComponent', () => {
         { provide: MessageService, useValue: { add: vi.fn() } },
         {
           provide: ReferenceStore,
-          useValue: { locations: signal([]), providers: signal([]), services: signal([]) },
+          useValue: { locations: signal([]), providers: signal([]) },
         },
+        { provide: ServicesStore, useValue: { services: signal([]) } },
         LanguageService,
       ],
     }).compileComponents();

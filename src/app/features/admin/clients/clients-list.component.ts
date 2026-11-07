@@ -29,6 +29,7 @@ import { LanguageService } from '@services/language.service';
 import { PatientTab } from '@core/stores/client-detail.store';
 import { ClientsStore } from '@core/stores/clients.store';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ClientDetailDialogComponent } from './client-detail-dialog/client-detail-dialog.component';
 import { ClientFormDialogComponent } from './client-form-dialog/client-form-dialog.component';
@@ -88,6 +89,7 @@ export class ClientsListComponent implements OnInit {
   private readonly clientsStore = inject(ClientsStore);
   private readonly httpError = inject(HttpErrorService);
   private readonly refStore = inject(ReferenceStore);
+  private readonly servicesStore = inject(ServicesStore);
   private readonly messageService = inject(MessageService);
   protected readonly lang = inject(LanguageService);
   private readonly searchSubject = new Subject<void>();
@@ -175,7 +177,7 @@ export class ClientsListComponent implements OnInit {
       .map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
   readonly serviceOptions = computed(() =>
-    this.refStore
+    this.servicesStore
       .services()
       .filter((s) => s.active)
       .map((s) => ({ label: s.name, value: s.id })),

@@ -3,12 +3,12 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { of, throwError, Subject } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ReferenceStore } from './reference.store';
+import { ServicesStore } from './services.store';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
-import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { RolesApiService } from '@services/api/roles-api.service';
-import type { Client, Location, Provider, Service, ServicePack, Region, LocationComuna, Role } from '@models';
+import type { Client, Location, Provider, Region, LocationComuna, Role } from '@models';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,14 +24,6 @@ function makeLocation(overrides: Partial<Location> = {}): Location {
 
 function makeProvider(overrides: Partial<Provider> = {}): Provider {
   return { id: 1, first_name: 'Dr.', last_name: 'Uno', ...overrides } as Provider;
-}
-
-function makeService(overrides: Partial<Service> = {}): Service {
-  return { id: 1, name: 'Consulta', price: 30000, duration_minutes: 45, ...overrides } as Service;
-}
-
-function makePack(overrides: Partial<ServicePack> = {}): ServicePack {
-  return { id: 1, name: 'Pack 10 sesiones', price: 200000, total_sessions: 10, ...overrides } as ServicePack;
 }
 
 function makeRegion(overrides: Partial<Region> = {}): Region {
@@ -55,8 +47,12 @@ describe('ReferenceStore', () => {
   let clientsApi: Partial<Record<keyof ClientsApiService, ReturnType<typeof vi.fn>>>;
   let locationsApi: Partial<Record<keyof LocationsApiService, ReturnType<typeof vi.fn>>>;
   let providersApi: Partial<Record<keyof ProvidersApiService, ReturnType<typeof vi.fn>>>;
-  let servicesApi: Partial<Record<keyof ServicesApiService, ReturnType<typeof vi.fn>>>;
   let rolesApi: Partial<Record<keyof RolesApiService, ReturnType<typeof vi.fn>>>;
+  let servicesStore: {
+    loadServices: ReturnType<typeof vi.fn>;
+    loadPacks: ReturnType<typeof vi.fn>;
+    reloadAll: ReturnType<typeof vi.fn>;
+  };
 
   // The store never calls RolesApiService during init/loaders; this default
   // keeps the DI graph complete for every describe that does not mutate.
@@ -65,6 +61,11 @@ describe('ReferenceStore', () => {
       getRoles: vi.fn().mockReturnValue(of([])),
       assignProviderRoles: vi.fn().mockReturnValue(of({ data: [] })),
     } as any;
+    servicesStore = {
+      loadServices: vi.fn(),
+      loadPacks: vi.fn(),
+      reloadAll: vi.fn().mockReturnValue(of(undefined)),
+    };
   });
 
   function createStore() {
@@ -74,8 +75,8 @@ describe('ReferenceStore', () => {
         { provide: ClientsApiService, useValue: clientsApi },
         { provide: LocationsApiService, useValue: locationsApi },
         { provide: ProvidersApiService, useValue: providersApi },
-        { provide: ServicesApiService, useValue: servicesApi },
         { provide: RolesApiService, useValue: rolesApi },
+        { provide: ServicesStore, useValue: servicesStore },
       ],
     });
     store = TestBed.inject(ReferenceStore);
@@ -88,7 +89,6 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       createStore();
     });
 
@@ -96,8 +96,6 @@ describe('ReferenceStore', () => {
       expect(store.clients()).toEqual([]);
       expect(store.locations()).toEqual([]);
       expect(store.providers()).toEqual([]);
-      expect(store.services()).toEqual([]);
-      expect(store.packs()).toEqual([]);
     });
 
     it('allLoaded() is true once all entities load', () => {
@@ -113,9 +111,12 @@ describe('ReferenceStore', () => {
       expect(err.clients).toBeNull();
       expect(err.locations).toBeNull();
       expect(err.providers).toBeNull();
-      expect(err.services).toBeNull();
-      expect(err.packs).toBeNull();
       expect(err.regions).toBeNull();
+    });
+
+    it('delegates services and packs to ServicesStore on init', () => {
+      expect(servicesStore.loadServices).toHaveBeenCalledTimes(1);
+      expect(servicesStore.loadPacks).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -126,7 +127,6 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([makeClient({ id: 42 })])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([makeLocation()])), getRegions: vi.fn().mockReturnValue(of({ data: [makeRegion()] })), getComunas: vi.fn().mockReturnValue(of({ data: [makeComuna()] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider()])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([makeService()])), getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })) } as any;
       createStore();
     });
 
@@ -139,46 +139,33 @@ describe('ReferenceStore', () => {
       expect(store.locations()).toHaveLength(1);
     });
 
-    it('populates services from API response', () => {
-      expect(store.services()).toHaveLength(1);
-    });
-
     it('populates providers from API response', () => {
       expect(store.providers()).toHaveLength(1);
     });
 
-    it('populates packs from API response (unwraps .data)', () => {
-      expect(store.packs()).toHaveLength(1);
-    });
-
-    it('calls all API methods on init', () => {
+    it('calls all loaders on init (five lists + regions)', () => {
       expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
       expect(locationsApi.getLocations).toHaveBeenCalledTimes(1);
-      expect(servicesApi.getServices).toHaveBeenCalledTimes(1);
       expect(providersApi.getProviders).toHaveBeenCalledTimes(1);
-      expect(servicesApi.getPacks).toHaveBeenCalledTimes(1);
+      expect(servicesStore.loadServices).toHaveBeenCalledTimes(1);
+      expect(servicesStore.loadPacks).toHaveBeenCalledTimes(1);
       expect(locationsApi.getRegions).toHaveBeenCalledTimes(1);
     });
   });
 
-  // ── Comptuted signals ──────────────────────────────────────────────
+  // ── Computed signals ──────────────────────────────────────────────
 
   describe('computed signals', () => {
     beforeEach(() => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       createStore();
     });
 
     it('invalidateClients resets loaded.clients to false before refetch', () => {
       expect(store.loaded().clients).toBe(true);
-      // invalidateClients sets loaded.clients=false then immediately refetches;
-      // with sync of(), the fetch completes in the same microtask
       store.invalidateClients();
-      // Since rxMethod with of() is synchronous, loaded is back to true.
-      // The important thing is the hook is correct: refetch happened.
       expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
     });
 
@@ -198,7 +185,6 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([makeClient({ id: 1 })])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([makeLocation()])), getRegions: vi.fn().mockReturnValue(of({ data: [makeRegion()] })), getComunas: vi.fn().mockReturnValue(of({ data: [makeComuna()] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider()])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([makeService()])), getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })) } as any;
       createStore();
     });
 
@@ -211,11 +197,6 @@ describe('ReferenceStore', () => {
       expect(store.clients()).toHaveLength(1); // still populated
     });
 
-    it('invalidateServices resets loaded flag and refetches', () => {
-      store.invalidateServices();
-      expect(servicesApi.getServices).toHaveBeenCalledTimes(2);
-    });
-
     it('invalidateLocations resets loaded flag and refetches', () => {
       store.invalidateLocations();
       expect(locationsApi.getLocations).toHaveBeenCalledTimes(2);
@@ -226,24 +207,18 @@ describe('ReferenceStore', () => {
       expect(providersApi.getProviders).toHaveBeenCalledTimes(2);
     });
 
-    it('invalidatePacks resets loaded flag and refetches', () => {
-      store.invalidatePacks();
-      expect(servicesApi.getPacks).toHaveBeenCalledTimes(2);
-    });
-
     it('invalidateAll resets all loaded flags and refetches everything', () => {
       store.invalidateAll();
 
       expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
       expect(locationsApi.getLocations).toHaveBeenCalledTimes(2);
-      expect(servicesApi.getServices).toHaveBeenCalledTimes(2);
       expect(providersApi.getProviders).toHaveBeenCalledTimes(2);
-      expect(servicesApi.getPacks).toHaveBeenCalledTimes(2);
+      expect(servicesStore.loadServices).toHaveBeenCalledTimes(2);
+      expect(servicesStore.loadPacks).toHaveBeenCalledTimes(2);
       expect(locationsApi.getRegions).toHaveBeenCalledTimes(2);
     });
 
     it('refetched data replaces existing data', () => {
-      // Change the mock to return different data on next call
       clientsApi.getClients!.mockReturnValue(of([makeClient({ id: 99 })]));
 
       store.invalidateClients();
@@ -260,7 +235,6 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(throwError(() => new Error('API error'))) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       createStore();
     });
 
@@ -281,7 +255,6 @@ describe('ReferenceStore', () => {
     });
 
     it('retry succeeds after invalidateClients when API recovers', () => {
-      // Cleared error + successful retry
       clientsApi.getClients!.mockReturnValue(of([makeClient({ id: 7 })]));
 
       store.invalidateClients();
@@ -299,12 +272,10 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       createStore();
     });
 
     it('loadClients fetches clients via API', () => {
-      // Already called once on init; mock new data
       clientsApi.getClients!.mockReturnValue(of([makeClient({ id: 77 })]));
       store.loadClients();
       expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
@@ -320,7 +291,6 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider({ roles: initialRoles })])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       rolesApi = {
         getRoles: vi.fn().mockReturnValue(of([])),
         assignProviderRoles: vi.fn(),
@@ -357,7 +327,6 @@ describe('ReferenceStore', () => {
 
       expect(providersApi.updateProvider).toHaveBeenCalledWith(1, { last_name: 'Actualizado' });
       expect(store.providers()[0].last_name).toBe('Actualizado');
-      // Canonical fields come from the server response
       expect(store.providers()[0].phone).toBe('+56900000000');
       expect(store.providers()).toHaveLength(1);
     });
@@ -400,7 +369,6 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([])), getRegions: vi.fn().mockReturnValue(of({ data: [] })), getComunas: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider({ active: true })])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       rolesApi = {
         getRoles: vi.fn().mockReturnValue(of([])),
         assignProviderRoles: vi.fn(),
@@ -415,7 +383,6 @@ describe('ReferenceStore', () => {
       const responses: { message: string; data: Provider }[] = [];
       store.toggleProviderActive(1, false).subscribe((res) => responses.push(res));
 
-      // Optimistic flip: state changed synchronously before the server answers
       expect(store.providers()[0].active).toBe(false);
       expect(providersApi.updateProvider).toHaveBeenCalledWith(1, { active: false });
 
@@ -426,7 +393,6 @@ describe('ReferenceStore', () => {
       expect(responses).toHaveLength(1);
       expect(responses[0].message).toBe('ok');
       expect(store.providers()[0].active).toBe(false);
-      // Canonical fields come from the server response
       expect(store.providers()[0].phone).toBe('+56911111111');
     });
 
@@ -438,7 +404,6 @@ describe('ReferenceStore', () => {
 
       expect(received).toBeInstanceOf(HttpErrorResponse);
       expect((received as HttpErrorResponse).status).toBe(500);
-      // Rollback: provider is active again
       expect(store.providers()[0].active).toBe(true);
     });
 
@@ -459,12 +424,10 @@ describe('ReferenceStore', () => {
       const err = received as HttpErrorResponse;
       expect(err.status).toBe(409);
       expect(err.error).toEqual(conflictBody);
-      // Rollback happened before re-throw
       expect(store.providers()[0].active).toBe(true);
     });
 
     it('reactivates without any gating (PATCH {active:true}, 200 merge)', () => {
-      // Provider starts inactive: re-mock the loader and refetch
       providersApi.getProviders!.mockReturnValue(of([makeProvider({ id: 1, active: false })]));
       store.invalidateProviders();
       expect(store.providers()[0].active).toBe(false);
@@ -493,7 +456,6 @@ describe('ReferenceStore', () => {
         getAllComunas: vi.fn().mockReturnValue(of({ data: [] })),
       } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       rolesApi = {
         getRoles: vi.fn().mockReturnValue(of([])),
         assignProviderRoles: vi.fn(),
@@ -531,7 +493,6 @@ describe('ReferenceStore', () => {
       expect(locationsApi.updateLocation).toHaveBeenCalledWith(1, { active: false, force: true });
       expect(store.locations()).toHaveLength(1);
       expect(store.locations()[0].active).toBe(false);
-      // Canonical fields come from the server response
       expect(store.locations()[0].city).toBe('Santiago');
     });
 
@@ -557,7 +518,6 @@ describe('ReferenceStore', () => {
         getAllComunas: vi.fn().mockReturnValue(of({ data: [] })),
       } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([])), getPacks: vi.fn().mockReturnValue(of({ data: [] })) } as any;
       rolesApi = {
         getRoles: vi.fn().mockReturnValue(of([])),
         assignProviderRoles: vi.fn(),
@@ -572,7 +532,6 @@ describe('ReferenceStore', () => {
       const responses: { message: string; data: Location }[] = [];
       store.toggleLocationActive(1, false).subscribe((res) => responses.push(res));
 
-      // Optimistic flip: state changed synchronously before the server answers
       expect(store.locations()[0].active).toBe(false);
       expect(locationsApi.updateLocation).toHaveBeenCalledWith(1, { active: false });
 
@@ -583,7 +542,6 @@ describe('ReferenceStore', () => {
       expect(responses).toHaveLength(1);
       expect(responses[0].message).toBe('ok');
       expect(store.locations()[0].active).toBe(false);
-      // Canonical fields come from the server response
       expect(store.locations()[0].city).toBe('Santiago');
     });
 
@@ -606,7 +564,6 @@ describe('ReferenceStore', () => {
 
       expect(received).toBeInstanceOf(HttpErrorResponse);
       expect((received as HttpErrorResponse).status).toBe(500);
-      // Rollback: location is active again
       expect(store.locations()[0].active).toBe(true);
     });
 
@@ -627,12 +584,10 @@ describe('ReferenceStore', () => {
       const err = received as HttpErrorResponse;
       expect(err.status).toBe(409);
       expect(err.error).toEqual(conflictBody);
-      // Rollback happened before re-throw
       expect(store.locations()[0].active).toBe(true);
     });
 
     it('reactivates without any gating (PATCH {active:true}, 200 merge)', () => {
-      // Location starts inactive: re-mock the loader and refetch
       locationsApi.getLocations!.mockReturnValue(of([makeLocation({ id: 1, active: false })]));
       store.invalidateLocations();
       expect(store.locations()[0].active).toBe(false);
@@ -657,16 +612,15 @@ describe('ReferenceStore', () => {
       clientsApi = { getClients: vi.fn().mockReturnValue(of([makeClient({ id: 42 })])) } as any;
       locationsApi = { getLocations: vi.fn().mockReturnValue(of([makeLocation()])), getRegions: vi.fn().mockReturnValue(of({ data: [makeRegion()] })), getAllComunas: vi.fn().mockReturnValue(of({ data: [makeComuna()] })) } as any;
       providersApi = { getProviders: vi.fn().mockReturnValue(of([makeProvider()])) } as any;
-      servicesApi = { getServices: vi.fn().mockReturnValue(of([makeService()])), getPacks: vi.fn().mockReturnValue(of({ data: [makePack()] })) } as any;
       createStore();
     });
 
-    it('keeps onInit fan-out unchanged (six loads including regions)', () => {
+    it('keeps onInit fan-out unchanged (five lists + regions)', () => {
       expect(clientsApi.getClients).toHaveBeenCalledTimes(1);
       expect(locationsApi.getLocations).toHaveBeenCalledTimes(1);
-      expect(servicesApi.getServices).toHaveBeenCalledTimes(1);
       expect(providersApi.getProviders).toHaveBeenCalledTimes(1);
-      expect(servicesApi.getPacks).toHaveBeenCalledTimes(1);
+      expect(servicesStore.loadServices).toHaveBeenCalledTimes(1);
+      expect(servicesStore.loadPacks).toHaveBeenCalledTimes(1);
       expect(locationsApi.getRegions).toHaveBeenCalledTimes(1);
     });
 
@@ -675,9 +629,8 @@ describe('ReferenceStore', () => {
 
       expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
       expect(locationsApi.getLocations).toHaveBeenCalledTimes(2);
-      expect(servicesApi.getServices).toHaveBeenCalledTimes(2);
       expect(providersApi.getProviders).toHaveBeenCalledTimes(2);
-      expect(servicesApi.getPacks).toHaveBeenCalledTimes(2);
+      expect(servicesStore.reloadAll).toHaveBeenCalledTimes(1);
       // Geography is tenant-independent: it is not part of the switch reload.
       expect(locationsApi.getRegions).toHaveBeenCalledTimes(1);
     });
@@ -694,25 +647,24 @@ describe('ReferenceStore', () => {
       expect(second$).toBe(first$);
       // 1 from onInit + exactly 1 coalesced reload
       expect(clientsApi.getClients).toHaveBeenCalledTimes(2);
+      expect(servicesStore.reloadAll).toHaveBeenCalledTimes(1);
     });
 
-    it('clears the five tenant lists before the reload resolves', () => {
+    it('clears its own tenant lists before the reload resolves and delegates services/packs', () => {
       expect(store.locations()).toHaveLength(1);
       expect(store.clients()).toHaveLength(1);
+      expect(store.providers()).toHaveLength(1);
 
       locationsApi.getLocations!.mockReturnValue(new Subject<Location[]>().asObservable());
       providersApi.getProviders!.mockReturnValue(new Subject<Provider[]>().asObservable());
-      servicesApi.getServices!.mockReturnValue(new Subject<Service[]>().asObservable());
       clientsApi.getClients!.mockReturnValue(new Subject<Client[]>().asObservable());
-      servicesApi.getPacks!.mockReturnValue(new Subject<{ data: ServicePack[] }>().asObservable());
 
       store.reloadAll().subscribe();
 
       expect(store.locations()).toEqual([]);
       expect(store.providers()).toEqual([]);
-      expect(store.services()).toEqual([]);
       expect(store.clients()).toEqual([]);
-      expect(store.packs()).toEqual([]);
+      expect(servicesStore.reloadAll).toHaveBeenCalledTimes(1);
     });
 
     it('completes without error when a loader fails (non-fatal)', () => {
@@ -733,6 +685,7 @@ describe('ReferenceStore', () => {
       store.reloadAll().subscribe();
 
       expect(clientsApi.getClients).toHaveBeenCalledTimes(3); // 1 init + 2 sequential reloads
+      expect(servicesStore.reloadAll).toHaveBeenCalledTimes(2);
     });
   });
 });
