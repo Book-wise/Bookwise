@@ -1,7 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  HostListener,
   OnInit,
+  ViewChild,
   computed,
   inject,
   signal,
@@ -9,7 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { SkeletonModule } from 'primeng/skeleton';
 import { LanguageService } from '@services/language.service';
-import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import { AuthService } from '@services/auth.service';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import type { Service, ServicePack } from '@models';
@@ -19,9 +22,15 @@ import {
   serviceInitials,
   termsForService,
 } from './services-terms.util';
+import { buildWooCsv, buildWooRows, serviceFingerprint } from './services-export.util';
+import { ServicesExportStore } from './services-export.store';
+import type { WooSyncState } from './services-export.store';
+import { ServiceFormDialogComponent } from './service-form-dialog/service-form-dialog.component';
 
 export type StatusFilter = 'all' | 'active' | 'inactive';
 export type ListView = 'cards' | 'list';
+export type WooFilter = 'all' | 'changed' | 'never' | 'synced';
+export type ExportScope = 'all' | 'changed' | 'selected';
 
 /** Un servicio del catálogo con sus términos (packs) ya resueltos. */
 export interface ServiceRow {
@@ -38,31 +47,41 @@ export interface ServiceRow {
  * así que no hay alta ni edición y no se muestran acciones sin handler.
  *
  * Sin `compare_at_price` no hay badge de descuento: no se inventan porcentajes.
+ *
+ * El exportador a WooCommerce (artboard 04) agrega: menú de alcance, barra de
+ * sincronización, filtro `Woo:`, selección múltiple y estado por servicio. El
+ * diálogo de validación previa del artboard 05 queda fuera de este alcance.
  */
 @Component({
   selector: 'bw-packs-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, SkeletonModule, BwCurrencyPipe],
+  imports: [CommonModule, SkeletonModule, BwCurrencyPipe, ServiceFormDialogComponent],
   templateUrl: './packs-list.component.html',
-  styleUrls: ['./packs-list.component.scss'],
+  styleUrls: [
+    './packs-list.component.scss',
+    './packs-list-table.scss',
+    './packs-list-export.scss',
+    './packs-list-mobile.scss',
+  ],
 })
 export class PacksListComponent implements OnInit {
-  private readonly refStore = inject(ReferenceStore);
+  private readonly servicesStore = inject(ServicesStore);
   private readonly auth = inject(AuthService);
   private readonly lang = inject(LanguageService);
+  private readonly exportStore = inject(ServicesExportStore);
 
   private readonly VIEW_PREFIX = 'bw:services:vista';
 
-  /** Catálogo compartido (una sola carga por sesión, ver ReferenceStore). */
-  readonly services = computed<Service[]>(() => this.refStore.services());
-  readonly packs = computed<ServicePack[]>(() => this.refStore.packs());
+  /** Catálogo compartido (una sola carga por sesión, ver ServicesStore). */
+  readonly services = computed<Service[]>(() => this.servicesStore.services());
+  readonly packs = computed<ServicePack[]>(() => this.servicesStore.packs());
   readonly loading = computed(
-    () => !this.refStore.loaded().services || !this.refStore.loaded().packs,
+    () => !this.servicesStore.loaded().services || !this.servicesStore.loaded().packs,
   );
   /** Error de carga reportado por el store (por entidad). */
   readonly loadError = computed<string | null>(
-    () => this.refStore.error().services ?? this.refStore.error().packs,
+    () => this.servicesStore.error().services ?? this.servicesStore.error().packs,
   );
 
   readonly search = signal('');
@@ -71,6 +90,18 @@ export class PacksListComponent implements OnInit {
   readonly expandedId = signal<number | null>(null);
   readonly suggestionDismissed = signal(false);
   readonly onlyMissing = signal(false);
+
+  // ── Diálogo de servicio (crear/editar) ────────────────────────────────────
+  readonly dialogVisible = signal(false);
+  readonly dialogMode = signal<'create' | 'edit'>('create');
+  readonly dialogService = signal<Service | null>(null);
+
+  // ── Exportador a WooCommerce ──────────────────────────────────────────────
+  readonly wooFilter = signal<WooFilter>('all');
+  readonly exportMenuOpen = signal(false);
+  readonly selectedIds = signal<ReadonlySet<number>>(new Set<number>());
+
+  @ViewChild('exportMenu') private readonly exportMenu?: ElementRef<HTMLElement>;
 
   /** Servicios con sus términos, ordenados por sesiones. */
   readonly rows = computed<ServiceRow[]>(() =>
@@ -101,15 +132,58 @@ export class PacksListComponent implements OnInit {
     }),
   );
 
+  /** Estado de sincronización por servicio (reactivo a las huellas persistidas). */
+  readonly wooStates = computed<Map<number, WooSyncState>>(() => {
+    const map = new Map<number, WooSyncState>();
+    for (const row of this.rows()) {
+      map.set(
+        row.service.id,
+        this.exportStore.stateFor(row.service.id, serviceFingerprint(row.service, row.terms)),
+      );
+    }
+    return map;
+  });
+
+  readonly exportCounts = computed(() => this.exportStore.counts(this.rows()));
+  readonly changesCount = computed(() => {
+    const { changed, never } = this.exportCounts();
+    return changed + never;
+  });
+
+  readonly selectedCount = computed(() => this.selectedIds().size);
+  readonly selectedVariationsCount = computed(() =>
+    this.rows().reduce(
+      (total, row) =>
+        this.selectedIds().has(row.service.id)
+          ? total + row.terms.filter((t) => t.active).length
+          : total,
+      0,
+    ),
+  );
+  readonly hasSelection = computed(() => this.selectedCount() > 0);
+
+  readonly syncLabel = computed(() => {
+    const at = this.exportStore.lastExportAt();
+    if (!at) return this.lang.t('packs.sync.never');
+    return this.lang.t('packs.sync.last', { when: this.formatDateTime(at) });
+  });
+
   readonly visibleRows = computed<ServiceRow[]>(() => {
     const term = normalizeSearch(this.search());
     const status = this.status();
     const onlyMissing = this.onlyMissing();
+    const woo = this.wooFilter();
 
     return this.rows().filter((row) => {
       if (onlyMissing && row.terms.some((t) => t.active)) return false;
       if (status === 'active' && !row.service.active) return false;
       if (status === 'inactive' && row.service.active) return false;
+
+      const wooState = this.stateFor(row);
+      if (woo === 'changed' && wooState !== 'changed') return false;
+      if (woo === 'never' && wooState !== 'new') return false;
+      if (woo === 'synced' && wooState !== 'synced') return false;
+
       if (term && !normalizeSearch(row.service.name).includes(term)) return false;
       return true;
     });
@@ -126,16 +200,15 @@ export class PacksListComponent implements OnInit {
   }
 
   /**
-   * Servicios y packs viven en el `ReferenceStore`, que ya hidrata el catálogo
-   * completo una sola vez por sesión. Solo pedimos una entidad si nadie la
-   * cargó todavía, para no duplicar requests al entrar a la pantalla.
+   * Servicios y packs viven en el `ServicesStore`. Solo pedimos una entidad si
+   * nadie la cargó todavía, para no duplicar requests al entrar a la pantalla.
    */
   private ensureReferenceData(): void {
-    const loaded = this.refStore.loaded();
-    const loading = this.refStore.loading();
+    const loaded = this.servicesStore.loaded();
+    const loading = this.servicesStore.loading();
 
-    if (!loaded.services && !loading.services) this.refStore.loadServices();
-    if (!loaded.packs && !loading.packs) this.refStore.loadPacks();
+    if (!loaded.services && !loading.services) this.servicesStore.loadServices();
+    if (!loaded.packs && !loading.packs) this.servicesStore.loadPacks();
   }
 
   t(key: string, params?: Record<string, string>): string {
@@ -178,12 +251,17 @@ export class PacksListComponent implements OnInit {
       .replace(/\s/g, '');
   }
 
+  // ── Filtros y vista ───────────────────────────────────────────────────────
   onSearch(value: string): void {
     this.search.set(value);
   }
 
   setStatus(value: string): void {
     this.status.set(value as StatusFilter);
+  }
+
+  setWooFilter(value: string): void {
+    this.wooFilter.set(value as WooFilter);
   }
 
   setView(next: ListView): void {
@@ -205,6 +283,153 @@ export class PacksListComponent implements OnInit {
 
   clearMissingFilter(): void {
     this.onlyMissing.set(false);
+  }
+
+  // ── Selección múltiple ────────────────────────────────────────────────────
+  isSelected(serviceId: number): boolean {
+    return this.selectedIds().has(serviceId);
+  }
+
+  // ── Diálogo de servicio (crear/editar) ────────────────────────────────────
+  openCreate(): void {
+    this.dialogMode.set('create');
+    this.dialogService.set(null);
+    this.dialogVisible.set(true);
+  }
+
+  openEdit(service: Service): void {
+    this.dialogMode.set('edit');
+    this.dialogService.set(service);
+    this.dialogVisible.set(true);
+  }
+
+  onDialogClosed(): void {
+    this.dialogVisible.set(false);
+  }
+
+  onDialogSaved(): void {
+    this.dialogVisible.set(false);
+    // Refresca el catálogo: los servicios llevan las variaciones y los packs
+    // son su materialización, así que ambos se invalidan para que las tarjetas
+    // reflejen los términos recién guardados.
+    this.servicesStore.invalidateServices();
+    this.servicesStore.invalidatePacks();
+  }
+
+  toggleSelect(serviceId: number): void {
+    const next = new Set(this.selectedIds());
+    if (next.has(serviceId)) {
+      next.delete(serviceId);
+    } else {
+      next.add(serviceId);
+    }
+    this.selectedIds.set(next);
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set<number>());
+  }
+
+  // ── Estado de sincronización Woo ──────────────────────────────────────────
+  stateFor(row: ServiceRow): WooSyncState {
+    return this.wooStates().get(row.service.id) ?? 'new';
+  }
+
+  wooStateLabel(row: ServiceRow): string {
+    return this.lang.t(`packs.woo.state.${this.stateFor(row)}`);
+  }
+
+  wooStateClass(row: ServiceRow): string {
+    return `sp-woo-state sp-woo-state--${this.stateFor(row)}`;
+  }
+
+  /** Aviso §7: tiene términos exportables pero ninguno de 1 sesión. */
+  showNoSingleTerm(row: ServiceRow): boolean {
+    const activeTerms = row.terms.filter((t) => t.active);
+    return activeTerms.length > 0 && !activeTerms.some((t) => t.total_sessions === 1);
+  }
+
+  // ── Exportador ────────────────────────────────────────────────────────────
+  toggleExportMenu(): void {
+    this.exportMenuOpen.set(!this.exportMenuOpen());
+  }
+
+  closeExportMenu(): void {
+    this.exportMenuOpen.set(false);
+  }
+
+  onExportScope(scope: ExportScope): void {
+    this.closeExportMenu();
+    // El ítem «Los seleccionados» cambia a la vista de lista antes de exportar.
+    if (scope === 'selected') this.setView('list');
+    this.exportRows(this.rowsForExport(scope));
+  }
+
+  exportSelection(): void {
+    this.exportRows(this.rowsForExport('selected'));
+  }
+
+  private rowsForExport(scope: ExportScope): ServiceRow[] {
+    if (scope === 'all') return this.rows();
+    if (scope === 'selected') {
+      return this.rows().filter((row) => this.selectedIds().has(row.service.id));
+    }
+    return this.rows().filter((row) => this.stateFor(row) !== 'synced');
+  }
+
+  private exportRows(rows: ServiceRow[]): void {
+    if (rows.length === 0) return;
+
+    const { csv } = buildWooCsv(buildWooRows(rows));
+    this.downloadCsv(csv);
+    this.exportStore.recordExport(rows);
+  }
+
+  private downloadCsv(csv: string): void {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = this.csvFilename();
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }
+
+  private csvFilename(): string {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `servicios-woo-${yyyy}-${mm}-${dd}.csv`;
+  }
+
+  private formatDateTime(iso: string): string {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    const locale = this.lang.lang() === 'en' ? 'en-GB' : 'es-CL';
+    return new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.exportMenuOpen.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.exportMenuOpen()) return;
+    const target = event.target as Node;
+    if (this.exportMenu && !this.exportMenu.nativeElement.contains(target)) {
+      this.exportMenuOpen.set(false);
+    }
   }
 
   trackRow(_index: number, row: ServiceRow): number {

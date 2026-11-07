@@ -1,11 +1,15 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
+import { of } from 'rxjs';
 
 import { MessageService } from 'primeng/api';
 import { PacksListComponent } from './packs-list.component';
 import { LanguageService } from '@services/language.service';
-import { ReferenceStore } from '@core/stores/reference.store';
+import { ServicesStore } from '@core/stores/services.store';
 import { AuthService } from '@services/auth.service';
+import { ServicesExportStore } from './services-export.store';
+import { ServicesApiService } from '@services/api/services-api.service';
+import { HttpErrorService } from '@services/http-error.service';
 import type { Service, ServicePack } from '@models';
 
 function makeService(overrides: Partial<Service> = {}): Service {
@@ -93,10 +97,21 @@ describe('PacksListComponent (Servicios y packs)', () => {
       imports: [PacksListComponent],
       providers: [
         provideZonelessChangeDetection(),
-        { provide: ReferenceStore, useValue: store },
+        { provide: ServicesStore, useValue: store },
         { provide: MessageService, useValue: { add: vi.fn() } },
         { provide: AuthService, useValue: { user: () => ({ id: 7, tenant_id: 3 }) } },
+        {
+          provide: ServicesApiService,
+          useValue: {
+            getService: vi.fn(() => of(makeService())),
+            createService: vi.fn(),
+            updateService: vi.fn(),
+            uploadServiceImage: vi.fn(),
+          },
+        },
+        { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         LanguageService,
+        ServicesExportStore,
       ],
     }).compileComponents();
 
@@ -297,16 +312,43 @@ describe('PacksListComponent (Servicios y packs)', () => {
     expect((rows[0] as HTMLElement).textContent).toContain('Rehabilitación deportiva');
   });
 
-  // ── Regla 11: read-only, sin botones muertos ─────────────────────────────
-  it('no renderiza acciones de escritura mientras el backend no las soporte', async () => {
+  // ── Regla 11: acciones de escritura (crear/editar) ─────────────────────
+  it('expone las acciones de escritura y ya no muestra el aviso de solo lectura', async () => {
     await setup();
     const el = fixture.nativeElement as HTMLElement;
 
-    expect(el.querySelectorAll('[data-testid="create-service"]').length).toBe(0);
-    expect(el.querySelectorAll('[data-testid="edit-service"]').length).toBe(0);
-    expect(el.textContent).toContain('consulta');
+    expect(el.querySelectorAll('[data-testid="create-service"]').length).toBe(1);
+    expect(el.querySelectorAll('[data-testid="edit-service"]').length).toBeGreaterThan(0);
+    expect(el.textContent).not.toContain('consulta');
   });
-  // ── Regla 12: una sola carga compartida (ReferenceStore) ─────────────────
+  // ── Diálogo de servicio (crear/editar) ───────────────────────────────────
+  it('«+ Nuevo servicio» abre el diálogo en modo create', async () => {
+    await setup();
+
+    const button = fixture.nativeElement.querySelector(
+      '[data-testid="create-service"]',
+    ) as HTMLButtonElement;
+    button.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+
+    expect(component.dialogVisible()).toBe(true);
+    expect(component.dialogMode()).toBe('create');
+    expect(component.dialogService()).toBeNull();
+  });
+
+  it('«Editar» abre el diálogo en modo edit con el servicio correcto', async () => {
+    await setup();
+
+    const buttons = fixture.nativeElement.querySelectorAll('[data-testid="edit-service"]');
+    (buttons[0] as HTMLButtonElement).dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+
+    expect(component.dialogVisible()).toBe(true);
+    expect(component.dialogMode()).toBe('edit');
+    expect(component.dialogService()).toBe(services[0]);
+  });
+
+  // ── Regla 12: una sola carga compartida (ServicesStore) ─────────────────
   it('no vuelve a pedir datos si el store ya los tiene cargados', async () => {
     await setup();
 
@@ -325,5 +367,182 @@ describe('PacksListComponent (Servicios y packs)', () => {
     await setup({ error: 'boom' });
 
     expect(fixture.nativeElement.textContent).toContain('No se pudieron cargar los servicios');
+  });
+
+  // ── Exportador a WooCommerce (artboard 04) ────────────────────────────────
+  it('el botón de exportar abre y cierra el menú (toggle, Escape y click afuera)', async () => {
+    await setup();
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="export-menu-button"]',
+    );
+
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeNull();
+
+    button.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeTruthy();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeNull();
+
+    button.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeTruthy();
+
+    document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="menu"]')).toBeNull();
+  });
+
+  it('tildar una tarjeta la agrega a la selección y muestra la barra', async () => {
+    await setup();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="selection-bar"]')).toBeNull();
+
+    const checkbox = fixture.nativeElement.querySelector('[data-testid="card-checkbox"]');
+    checkbox.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+
+    expect(checkbox.getAttribute('aria-checked')).toBe('true');
+    const bar = fixture.nativeElement.querySelector('[data-testid="selection-bar"]');
+    expect(bar).toBeTruthy();
+    expect(bar.textContent).toContain('1 servicios seleccionados');
+    expect(bar.textContent).toContain('2 variaciones');
+  });
+
+  it('«Limpiar selección» vacía la selección y oculta la barra', async () => {
+    await setup();
+    const checkbox = fixture.nativeElement.querySelector('[data-testid="card-checkbox"]');
+    checkbox.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="selection-bar"]')).toBeTruthy();
+
+    fixture.nativeElement
+      .querySelector('[data-testid="clear-selection"]')
+      .dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="selection-bar"]')).toBeNull();
+    expect(checkbox.getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('el filtro Woo: filtra por estado de exportación', async () => {
+    await setup();
+    const wooFilter: HTMLSelectElement = fixture.nativeElement.querySelector(
+      '[data-testid="woo-filter"]',
+    );
+    const cards = () => fixture.nativeElement.querySelectorAll('[data-testid="service-card"]');
+
+    // Sin exportar nada todavía: todos están «sin exportar».
+    wooFilter.value = 'never';
+    wooFilter.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(cards().length).toBe(3);
+
+    wooFilter.value = 'synced';
+    wooFilter.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(cards().length).toBe(0);
+
+    // Registra el servicio 1 como exportado y verifica «Al día».
+    const exportStore = TestBed.inject(ServicesExportStore);
+    exportStore.recordExport([
+      { service: services[0], terms: packs.filter((p) => p.service_id === 1) },
+    ]);
+    fixture.detectChanges();
+
+    wooFilter.value = 'synced';
+    wooFilter.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(cards().length).toBe(1);
+    expect(cards()[0].textContent).toContain('Kinesiología general');
+
+    wooFilter.value = 'all';
+    wooFilter.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(cards().length).toBe(3);
+  });
+
+  it('el aviso «sin término 1 sesión» aparece solo cuando corresponde', async () => {
+    await setup();
+    store.packs.set([
+      makePack({ id: 11, service_id: 1, total_sessions: 1, price: '25000' }),
+      makePack({ id: 12, service_id: 1, total_sessions: 3, price: '67500' }),
+      makePack({ id: 13, service_id: 2, total_sessions: 5, price: '145000' }),
+    ]);
+    fixture.detectChanges();
+
+    const notices = fixture.nativeElement.querySelectorAll('[data-testid="no-single-term"]');
+    expect(notices.length).toBe(1);
+    expect(notices[0].textContent).toContain('sin precio unitario');
+  });
+
+  it('exportar invoca la descarga del CSV y registra la exportación', async () => {
+    await setup();
+
+    const originalCreate = URL.createObjectURL;
+    const originalRevoke = URL.revokeObjectURL;
+    const createObjectURL = vi.fn().mockReturnValue('blob:fake');
+    const revokeObjectURL = vi.fn();
+    URL.createObjectURL = createObjectURL as typeof URL.createObjectURL;
+    URL.revokeObjectURL = revokeObjectURL as typeof URL.revokeObjectURL;
+    const clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
+
+    try {
+      fixture.nativeElement
+        .querySelector('[data-testid="export-menu-button"]')
+        .dispatchEvent(new Event('click'));
+      fixture.detectChanges();
+
+      fixture.nativeElement
+        .querySelector('[data-testid="export-all"]')
+        .dispatchEvent(new Event('click'));
+      fixture.detectChanges();
+
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake');
+
+      const blob = createObjectURL.mock.calls[0][0] as Blob;
+      const csv = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(blob);
+      });
+      expect(csv).toContain('Type,SKU');
+      expect(csv).toContain('svc-1');
+
+      // La barra de sincronización refleja la exportación registrada.
+      expect(fixture.nativeElement.textContent).toContain('Última exportación');
+    } finally {
+      URL.createObjectURL = originalCreate;
+      URL.revokeObjectURL = originalRevoke;
+      clickSpy.mockRestore();
+    }
+  });
+
+  it('la afordancia de imagen está habilitada y abre el diálogo en edición', async () => {
+    await setup();
+
+    const button = fixture.nativeElement.querySelector(
+      '[data-testid="image-button"]',
+    ) as HTMLButtonElement | null;
+
+    expect(button).not.toBeNull();
+    expect(button!.disabled).toBe(false);
+    expect(button!.getAttribute('aria-label')).toContain('Cambiar la imagen');
+
+    button!.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+
+    expect(component.dialogVisible()).toBe(true);
+    expect(component.dialogMode()).toBe('edit');
+    expect(component.dialogService()).toBe(services[0]);
   });
 });

@@ -6,9 +6,79 @@
         <p class="sp-subtitle">{{ subtitle() }}</p>
       }
     </div>
-  </header>
 
-  <p class="sp-note" role="note">{{ t('packs.readonly') }}</p>
+    <div class="sp-head__actions">
+      <button
+        type="button"
+        class="sp-btn sp-btn--cta"
+        data-testid="create-service"
+        (click)="openCreate()"
+      >
+        + {{ t('packs.form.new_service') }}
+      </button>
+
+      <div class="sp-export" #exportMenu>
+        <button
+          type="button"
+          class="sp-btn sp-btn--outlined"
+          data-testid="export-menu-button"
+          [attr.aria-haspopup]="'menu'"
+          [attr.aria-expanded]="exportMenuOpen()"
+          [attr.aria-label]="t('packs.export.menu_aria')"
+          (click)="toggleExportMenu()"
+        >
+          <span aria-hidden="true">⤓</span>
+          {{ t('packs.export.button') }}
+        </button>
+
+        @if (exportMenuOpen()) {
+          <div class="sp-export__menu" role="menu" [attr.aria-label]="t('packs.export.menu_aria')">
+            <button
+              type="button"
+              class="sp-export__item"
+              role="menuitem"
+              data-testid="export-all"
+              (click)="onExportScope('all')"
+            >
+              <strong>{{ t('packs.export.scope.all') }}</strong>
+              <small>
+                {{
+                  t('packs.export.scope.all_hint', {
+                    services: str(this.services().length),
+                    variations: str(this.activeTermsCount())
+                  })
+                }}
+              </small>
+            </button>
+
+            <button
+              type="button"
+              class="sp-export__item"
+              role="menuitem"
+              data-testid="export-changed"
+              [disabled]="changesCount() === 0"
+              (click)="onExportScope('changed')"
+            >
+              <strong>{{ t('packs.export.scope.changed', { count: str(changesCount()) }) }}</strong>
+              <small>{{ t('packs.export.scope.changed_hint') }}</small>
+            </button>
+
+            <button
+              type="button"
+              class="sp-export__item"
+              role="menuitem"
+              data-testid="export-selected"
+              [disabled]="!hasSelection()"
+              (click)="onExportScope('selected')"
+            >
+              <strong>{{ t('packs.export.scope.selected', { count: str(selectedCount()) }) }}</strong>
+              <small>{{ t('packs.export.scope.selected_hint') }}</small>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
 
   @if (showSuggestion()) {
     <div class="sp-suggest" data-testid="suggestion">
@@ -42,6 +112,66 @@
     </div>
   }
 
+  <div class="sp-sync" data-testid="sync-bar">
+    <span class="sp-sync__dot" aria-hidden="true"></span>
+    <span class="sp-sync__text">
+      <strong>{{ syncLabel() }}</strong>
+      <small>
+        {{
+          t('packs.sync.summary', {
+            services: str(this.services().length),
+            variations: str(this.activeTermsCount())
+          })
+        }}
+      </small>
+    </span>
+    <span class="sp-sync__actions">
+      <button
+        type="button"
+        class="sp-btn sp-btn--outlined sp-btn--sm"
+        data-testid="export-changes"
+        [disabled]="changesCount() === 0"
+        (click)="onExportScope('changed')"
+      >
+        {{ t('packs.sync.export_changes', { count: str(changesCount()) }) }}
+      </button>
+    </span>
+  </div>
+
+  @if (hasSelection()) {
+    <div class="sp-selbar" role="status" data-testid="selection-bar">
+      <span class="sp-selbar__text">
+        <strong>
+          {{
+            t('packs.select.count', {
+              services: str(selectedCount()),
+              variations: str(selectedVariationsCount())
+            })
+          }}
+        </strong>
+        <small>{{ t('packs.select.hint') }}</small>
+      </span>
+      <span class="sp-selbar__actions">
+        <button
+          type="button"
+          class="sp-btn sp-btn--ghost sp-btn--sm"
+          data-testid="clear-selection"
+          (click)="clearSelection()"
+        >
+          {{ t('packs.select.clear') }}
+        </button>
+        <button
+          type="button"
+          class="sp-btn sp-btn--cta sp-btn--sm"
+          data-testid="export-selection"
+          (click)="exportSelection()"
+        >
+          {{ t('packs.select.export') }}
+        </button>
+      </span>
+    </div>
+  }
+
   <div class="sp-toolbar">
     <label class="sp-search">
       <span class="sp-search__icon" aria-hidden="true">⌕</span>
@@ -68,6 +198,26 @@
         </option>
         <option value="inactive" [selected]="status() === 'inactive'">
           {{ t('packs.filter.inactive') }}
+        </option>
+      </select>
+    </label>
+
+    <label class="sp-select">
+      <span class="sp-select__label">{{ t('packs.woo.label') }}</span>
+      <select
+        data-testid="woo-filter"
+        [attr.aria-label]="t('packs.woo.aria')"
+        (change)="setWooFilter($any($event.target).value)"
+      >
+        <option value="all" [selected]="wooFilter() === 'all'">{{ t('packs.woo.all') }}</option>
+        <option value="changed" [selected]="wooFilter() === 'changed'">
+          {{ t('packs.woo.changed') }}
+        </option>
+        <option value="never" [selected]="wooFilter() === 'never'">
+          {{ t('packs.woo.never') }}
+        </option>
+        <option value="synced" [selected]="wooFilter() === 'synced'">
+          {{ t('packs.woo.synced') }}
         </option>
       </select>
     </label>
@@ -124,10 +274,40 @@
   } @else if (view() === 'cards') {
     <div class="sp-grid">
       @for (row of visibleRows(); track row.service.id) {
-        <article class="sp-card" data-testid="service-card">
-          <div class="sp-media" aria-hidden="true">
-            <span class="sp-media__initials">{{ initials(row.service.name) }}</span>
-            <span class="sp-media__duration">
+        <article
+          class="sp-card"
+          data-testid="service-card"
+          [class.is-selected]="isSelected(row.service.id)"
+        >
+          <div class="sp-media">
+            <button
+              type="button"
+              class="sp-pick"
+              role="checkbox"
+              data-testid="card-checkbox"
+              [attr.aria-checked]="isSelected(row.service.id)"
+              [attr.aria-label]="t('packs.select.checkbox', { name: row.service.name })"
+              (click)="toggleSelect(row.service.id)"
+            >
+              <span class="sp-pick__mark" aria-hidden="true">✓</span>
+            </button>
+            <span class="sp-media__initials" aria-hidden="true">{{ initials(row.service.name) }}</span>
+
+            <button
+              type="button"
+              class="sp-media__image-btn"
+              data-testid="image-button"
+              [attr.title]="t('packs.image.change', { name: row.service.name })"
+              [attr.aria-label]="t('packs.image.change', { name: row.service.name })"
+              (click)="openEdit(row.service)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" />
+                <circle cx="12" cy="13" r="3.2" />
+              </svg>
+              {{ t('packs.image.action') }}
+            </button>
+            <span class="sp-media__duration" aria-hidden="true">
               {{ row.service.duration_minutes }} {{ t('packs.unit.min') }}
             </span>
           </div>
@@ -165,6 +345,26 @@
                 }
               </ul>
             }
+
+            @if (showNoSingleTerm(row)) {
+              <p class="sp-no-single" data-testid="no-single-term">
+                {{ t('packs.woo.no_single_term') }}
+              </p>
+            }
+          </div>
+
+          <div class="sp-card__foot">
+            <span [class]="wooStateClass(row)" data-testid="woo-state">
+              {{ wooStateLabel(row) }}
+            </span>
+            <button
+              type="button"
+              class="sp-btn sp-btn--ghost sp-btn--sm sp-card__edit"
+              data-testid="edit-service"
+              (click)="openEdit(row.service)"
+            >
+              {{ t('packs.form.edit') }}
+            </button>
           </div>
         </article>
       }
@@ -179,26 +379,43 @@
             <th>{{ t('packs.col.terms') }}</th>
             <th class="sp-num">{{ t('packs.col.base_price') }}</th>
             <th>{{ t('packs.col.status') }}</th>
+            <th><span class="sp-visually-hidden">{{ t('packs.col.actions') }}</span></th>
           </tr>
         </thead>
         <tbody>
           @for (row of visibleRows(); track row.service.id) {
-            <tr [class.is-open]="expandedId() === row.service.id">
+            <tr
+              [class.is-open]="expandedId() === row.service.id"
+              [class.is-selected]="isSelected(row.service.id)"
+            >
               <td class="sp-col-toggle">
-                <button
-                  type="button"
-                  class="sp-icon-btn"
-                  data-testid="row-toggle"
-                  [attr.aria-expanded]="expandedId() === row.service.id"
-                  [attr.aria-label]="
-                    expandedId() === row.service.id
-                      ? t('packs.row.collapse')
-                      : t('packs.row.expand')
-                  "
-                  (click)="toggleRow(row.service.id)"
-                >
-                  <span class="sp-chevron" [class.is-open]="expandedId() === row.service.id">▸</span>
-                </button>
+                <div class="sp-pick-cell">
+                  <button
+                    type="button"
+                    class="sp-pick sp-pick--inline"
+                    role="checkbox"
+                    data-testid="row-checkbox"
+                    [attr.aria-checked]="isSelected(row.service.id)"
+                    [attr.aria-label]="t('packs.select.checkbox', { name: row.service.name })"
+                    (click)="toggleSelect(row.service.id)"
+                  >
+                    <span class="sp-pick__mark" aria-hidden="true">✓</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="sp-icon-btn"
+                    data-testid="row-toggle"
+                    [attr.aria-expanded]="expandedId() === row.service.id"
+                    [attr.aria-label]="
+                      expandedId() === row.service.id
+                        ? t('packs.row.collapse')
+                        : t('packs.row.expand')
+                    "
+                    (click)="toggleRow(row.service.id)"
+                  >
+                    <span class="sp-chevron" [class.is-open]="expandedId() === row.service.id">▸</span>
+                  </button>
+                </div>
               </td>
               <td>
                 <div class="sp-svc">
@@ -230,21 +447,39 @@
                     }
                   </span>
                 }
+                @if (showNoSingleTerm(row)) {
+                  <p class="sp-no-single" data-testid="no-single-term">
+                    {{ t('packs.woo.no_single_term') }}
+                  </p>
+                }
               </td>
-              <td class="sp-num sp-amount">{{ row.service.price | bwCurrency }}</td>
-              <td>
+              <td class="sp-num sp-amount" [attr.data-label]="t('packs.col.base_price')">{{ row.service.price | bwCurrency }}</td>
+              <td [attr.data-label]="t('packs.col.status')">
                 <span
                   class="bw-chip"
                   [class]="row.service.active ? 'bw-chip--success' : 'bw-chip--danger'"
                 >
                   {{ row.service.active ? t('packs.status.active') : t('packs.status.inactive') }}
                 </span>
+                <span [class]="wooStateClass(row)" data-testid="woo-state">
+                  {{ wooStateLabel(row) }}
+                </span>
+              </td>
+              <td class="sp-actions" [attr.data-label]="t('packs.col.actions')">
+                <button
+                  type="button"
+                  class="sp-btn sp-btn--ghost sp-btn--sm"
+                  data-testid="edit-service"
+                  (click)="openEdit(row.service)"
+                >
+                  {{ t('packs.form.edit') }}
+                </button>
               </td>
             </tr>
 
             @if (expandedId() === row.service.id) {
               <tr class="sp-subrow">
-                <td colspan="5">
+                <td colspan="6">
                   <div class="sp-sub" data-testid="terms-subrow">
                     <div class="sp-sub__head">
                       <span class="sp-overline">
@@ -294,4 +529,12 @@
       </table>
     </div>
   }
+
+  <bw-service-form-dialog
+    [visible]="dialogVisible()"
+    [mode]="dialogMode()"
+    [service]="dialogService()"
+    (closed)="onDialogClosed()"
+    (saved)="onDialogSaved()"
+  />
 </div>

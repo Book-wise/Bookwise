@@ -1,0 +1,198 @@
+// ============================================
+// Servicios y packs — tabla (vista de lista)
+// ============================================
+// Tabla densa y su sub-fila de términos, con la clase `.sp-table` como raíz.
+// La adaptación a mobile vive en packs-list-mobile.scss.
+
+// ── Tabla ───────────────────────────────────────────────────────────────────
+.sp-table-card {
+  display: block;
+  padding: 0;
+}
+
+.sp-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    font-size: var(--bw-font-overline);
+    font-weight: var(--bw-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--surface-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    font-size: var(--bw-font-table);
+    border-bottom: 1px solid var(--surface-border);
+    vertical-align: middle;
+  }
+
+  tbody tr:hover {
+    background: var(--bw-surface-muted);
+  }
+
+  tbody tr.is-open,
+  tbody tr.is-open:hover {
+    background: var(--bw-50);
+  }
+}
+
+.sp-col-toggle {
+  width: 3rem;
+  text-align: center;
+}
+
+.sp-num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-amount {
+  font-size: var(--bw-font-amount);
+  font-weight: var(--bw-weight-medium);
+  letter-spacing: var(--bw-tracking-tight);
+}
+
+.sp-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sp-svc {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__text {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  &__name {
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-color);
+  }
+
+  &__meta {
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+}
+
+.sp-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: var(--bw-radius-md);
+  background: linear-gradient(135deg, var(--bw-100), var(--bw-50));
+  border: 1px solid var(--bw-100);
+  color: var(--bw-500);
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-bold);
+}
+
+.sp-terms-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.sp-term-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3125rem;
+  padding: 0.1875rem 0.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-sm);
+  background: var(--surface-card);
+  font-size: var(--bw-font-caption);
+  white-space: nowrap;
+  color: var(--text-color-secondary);
+
+  b {
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-color);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── Sub-fila de términos ────────────────────────────────────────────────────
+.sp-subrow > td {
+  padding: 0;
+  background: var(--bw-50);
+}
+
+.sp-sub {
+  padding: 0.5rem 1rem 1rem 4.5rem;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  &__note {
+    margin-left: auto;
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+
+  &__service {
+    margin: 0 0 0.5rem;
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+}
+
+.sp-overline {
+  font-size: var(--bw-font-overline);
+  font-weight: var(--bw-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--bw-tracking-overline);
+  color: var(--bw-500);
+}
+
+.sp-subtable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-md);
+  overflow: hidden;
+
+  th {
+    font-size: var(--bw-font-overline);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  td {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--bw-font-table);
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.sp-muted {
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-caption);
+}
