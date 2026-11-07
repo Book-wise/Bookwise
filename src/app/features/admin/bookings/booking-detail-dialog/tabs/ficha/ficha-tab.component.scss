@@ -16,7 +16,7 @@
   border-radius: var(--bw-radius-sm);
   background: var(--bw-50);
   border: 1px solid var(--bw-100);
-  color: var(--bw-500);
+  color: var(--bw-tab-color);
   font-size: var(--bw-font-caption);
   font-weight: var(--bw-weight-medium);
 }
@@ -28,10 +28,23 @@
   gap: var(--bw-space-md);
 }
 
+.ficha__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--bw-space-sm);
+}
+
 .ficha__section {
   font-size: var(--bw-font-table);
   font-weight: var(--bw-weight-medium);
   color: var(--text-color);
+}
+
+.ficha__no-types {
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
 }
 
 .ficha__add {
@@ -43,7 +56,7 @@
   border: 1px solid transparent;
   border-radius: var(--bw-radius-md);
   background: var(--bw-300);
-  color: var(--surface-card);
+  color: var(--bw-text-on-brand);
   font-family: inherit;
   font-size: var(--bw-font-caption);
   font-weight: var(--bw-weight-medium);
@@ -51,7 +64,7 @@
   text-decoration: none;
   white-space: nowrap;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: color-mix(in srgb, var(--bw-300) 88%, var(--bw-900));
   }
 
@@ -60,10 +73,11 @@
     outline-offset: 2px;
   }
 
-  &--disabled {
+  &:disabled {
     background: var(--bw-50);
     border-color: var(--bw-100);
-    color: var(--bw-500);
+    color: var(--bw-tab-color);
+    cursor: not-allowed;
   }
 }
 
@@ -125,13 +139,13 @@
   padding: 0;
   font-family: inherit;
   font-size: var(--bw-font-table);
-  color: var(--bw-500);
+  color: var(--bw-tab-color);
   text-decoration: underline;
   cursor: pointer;
   white-space: nowrap;
 
   &:hover {
-    color: var(--bw-300);
+    color: var(--bw-200);
   }
 
   &:focus-visible {

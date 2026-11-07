@@ -5,6 +5,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TabsModule } from 'primeng/tabs';
 import { RouterLink } from '@angular/router';
 import { Appearance, APPEARANCE_OPTIONS, ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
@@ -12,13 +13,24 @@ import { AuthService } from '@services/auth.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
+import { ClinicalRecordTypesComponent } from './clinical-record-types.component';
 
+/**
+ * `/admin/configuraciones` (y `/provider/configuraciones`).
+ *
+ * Reorganizada en pestañas (artboard
+ * `design/config-tipos-ficha/02-maestro-detalle-builder.html`): Perfil,
+ * Apariencia, Negocio principal, Feriados y Fichas médicas. Las tres últimas
+ * solo para admin. El catálogo clínico lo provee el store de dominio root
+ * `ClinicalRecordTypesStore`.
+ */
 @Component({
   selector: 'bw-configuraciones',
   standalone: true,
   imports: [
     CommonModule, FormsModule, CardModule, ButtonModule, SelectModule,
-    ToggleSwitchModule, RouterLink, UserAvatarComponent,
+    ToggleSwitchModule, TabsModule, RouterLink, UserAvatarComponent,
+    ClinicalRecordTypesComponent,
   ],
   templateUrl: './configuraciones.component.html',
   styleUrls: ['./configuraciones.component.scss'],
@@ -29,6 +41,8 @@ export class ConfiguracionesComponent {
   private tenantSettingsApi = inject(TenantSettingsApiService);
   private httpError = inject(HttpErrorService);
   readonly lang = inject(LanguageService);
+
+  readonly activeTab = signal<string>('profile');
 
   readonly appearance = computed(() => this.themeService.appearance);
   readonly appearanceOptions = computed(() =>
@@ -71,6 +85,11 @@ export class ConfiguracionesComponent {
         error: () => this.blockHolidays.set(null),
       });
     });
+  }
+
+  onTabChange(value: string | number | undefined): void {
+    if (value === undefined) return;
+    this.activeTab.set(String(value));
   }
 
   onBlockHolidaysChange(value: boolean): void {

@@ -10,6 +10,21 @@ import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
 
+// PrimeNG TabList binds a ResizeObserver on init; jsdom does not provide one.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {
+      /* test no-op */
+    }
+    unobserve() {
+      /* test no-op */
+    }
+    disconnect() {
+      /* test no-op */
+    }
+  } as typeof ResizeObserver;
+}
+
 describe('ConfiguracionesComponent — holidays setting', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<ConfiguracionesComponent>>;
   let component: ConfiguracionesComponent;

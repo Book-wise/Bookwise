@@ -22,7 +22,7 @@ import { PaymentTabComponent } from './tabs/payment/payment-tab.component';
 import { ReservaTabComponent } from './tabs/reserva/reserva-tab.component';
 import { HistorialTabComponent } from './tabs/historial/historial-tab.component';
 import { FichaTabComponent } from './tabs/ficha/ficha-tab.component';
-import type { ClinicalRecord, ClinicalRecordType } from './tabs/ficha/clinical-record.model';
+import type { ClinicalRecord, ClinicalRecordType } from '@models';
 import { Router } from '@angular/router';
 
 export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';

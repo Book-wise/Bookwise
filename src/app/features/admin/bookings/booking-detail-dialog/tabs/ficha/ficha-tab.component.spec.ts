@@ -1,11 +1,20 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
 import { MessageService } from 'primeng/api';
 import { FichaTabComponent } from './ficha-tab.component';
 import { LanguageService } from '@services/language.service';
-import type { ClinicalRecord, ClinicalRecordType } from './clinical-record.model';
+import { ClinicalRecordTypesStore } from '@core/stores/clinical-record-types.store';
+import { ClinicalRecordsStore, type SessionClinicalRecord } from '@core/stores/clinical-records.store';
+import { BookingDialogStore } from '@core/stores/booking-dialog.store';
+import type { ClinicalRecord, ClinicalRecordType } from '@models';
 
-function makeRecord(overrides: Partial<ClinicalRecord> = {}): ClinicalRecord {
+function makeType(overrides: Partial<ClinicalRecordType> = {}): ClinicalRecordType {
+  return { id: 10, name: 'Ficha clínica', active: true, fields: [], ...overrides };
+}
+
+function makeHistoryRecord(overrides: Partial<ClinicalRecord> = {}): ClinicalRecord {
   return {
     id: 1,
     record_type_id: 10,
@@ -17,13 +26,27 @@ function makeRecord(overrides: Partial<ClinicalRecord> = {}): ClinicalRecord {
   };
 }
 
-function makeType(overrides: Partial<ClinicalRecordType> = {}): ClinicalRecordType {
-  return { id: 10, name: 'Ficha clínica · Evaluación kinesiológica lumbar', active: true, ...overrides };
+function makeSessionRecord(overrides: Partial<SessionClinicalRecord> = {}): SessionClinicalRecord {
+  return {
+    id: 1,
+    record_type_id: 10,
+    title: 'Ficha clínica · Evaluación kinesiológica lumbar',
+    created_at: '2026-11-12T10:30:00-03:00',
+    author_name: 'Camila Rojas',
+    booking_id: 900,
+    client_id: 7,
+    values: {},
+    pendingSync: true,
+    ...overrides,
+  };
 }
 
 describe('FichaTabComponent', () => {
   let fixture: ComponentFixture<FichaTabComponent>;
   let component: FichaTabComponent;
+  let typesStore: InstanceType<typeof ClinicalRecordTypesStore>;
+  let recordsStore: InstanceType<typeof ClinicalRecordsStore>;
+  const bookingSignal = signal<{ id: number; client?: { id: number } } | null>(null);
 
   async function setup(): Promise<void> {
     await TestBed.configureTestingModule({
@@ -32,10 +55,17 @@ describe('FichaTabComponent', () => {
         provideZonelessChangeDetection(),
         { provide: MessageService, useValue: { add: vi.fn() } },
         LanguageService,
+        { provide: BookingDialogStore, useValue: { booking: bookingSignal } },
       ],
     }).compileComponents();
 
     TestBed.inject(LanguageService).setLang('es');
+    typesStore = TestBed.inject(ClinicalRecordTypesStore);
+    recordsStore = TestBed.inject(ClinicalRecordsStore);
+    patchState(unprotected(typesStore), { types: [], selectedId: null, search: '', draft: null });
+    patchState(unprotected(recordsStore), { records: [] });
+    bookingSignal.set(null);
+
     fixture = TestBed.createComponent(FichaTabComponent);
     component = fixture.componentInstance;
   }
@@ -62,12 +92,14 @@ describe('FichaTabComponent', () => {
 
   it('renderiza una tarjeta por ficha asociada, con fecha y autor', async () => {
     await setup();
-    fixture.componentRef.setInput('records', [makeRecord({ id: 1 }), makeRecord({ id: 2, title: 'Ficha clínica · Evaluación inicial' })]);
+    bookingSignal.set({ id: 900 });
+    patchState(unprotected(recordsStore), {
+      records: [makeSessionRecord({ id: 1 }), makeSessionRecord({ id: 2, title: 'Ficha clínica · Evaluación inicial' })],
+    });
     render();
 
     const cards = fixture.nativeElement.querySelectorAll('[data-testid="associated-record"]');
     expect(cards.length).toBe(2);
-    // El título se muestra en mayúsculas por CSS; el textContent conserva el original.
     expect(cards[0].textContent).toContain('Evaluación kinesiológica lumbar');
     expect(cards[0].textContent).toContain('12/11/2026');
     expect(cards[0].textContent).toContain('Camila Rojas');
@@ -75,7 +107,8 @@ describe('FichaTabComponent', () => {
 
   it('emite el id del registro al pedir «Ver más detalles»', async () => {
     await setup();
-    fixture.componentRef.setInput('records', [makeRecord({ id: 42 })]);
+    bookingSignal.set({ id: 900 });
+    patchState(unprotected(recordsStore), { records: [makeSessionRecord({ id: 42 })] });
     render();
 
     const emitted: number[] = [];
@@ -88,34 +121,74 @@ describe('FichaTabComponent', () => {
     expect(emitted).toEqual([42]);
   });
 
-  it('sin tipos configurados ofrece configurarlos en vez de agregar', async () => {
+  it('sin tipos configurados deshabilita «Agregar», muestra el hint y sigue emitiendo configureTypes', async () => {
     await setup();
     render();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="add-record"]')).toBeNull();
+    const addButton = fixture.nativeElement.querySelector('[data-testid="add-record"]');
+    expect(addButton).toBeTruthy();
+    expect(addButton.disabled).toBe(true);
+
+    const hint = fixture.nativeElement.querySelector('[data-testid="no-types-hint"]');
+    expect(hint).toBeTruthy();
+    expect(hint.textContent).toContain('Todavía no hay tipos de ficha configurados');
 
     const emitted: void[] = [];
     component.configureTypes.subscribe(() => emitted.push(undefined));
 
-    const button = fixture.nativeElement.querySelector('[data-testid="configure-types"]');
-    expect(button).toBeTruthy();
-    button.dispatchEvent(new Event('click'));
+    const configureButton = fixture.nativeElement.querySelector('[data-testid="configure-types"]');
+    expect(configureButton).toBeTruthy();
+    configureButton.dispatchEvent(new Event('click'));
 
     expect(emitted.length).toBe(1);
   });
 
-  it('con tipos activos muestra el botón de agregar y descarta los inactivos del menú', async () => {
+  it('lista solo tipos activos del catálogo y los ordena por sort_order (o creación)', async () => {
     await setup();
-    fixture.componentRef.setInput('recordTypes', [
-      makeType({ id: 10, name: 'Láser despigmentación' }),
-      makeType({ id: 11, name: 'Láser tatuajes' }),
-      makeType({ id: 12, name: 'Tipo retirado', active: false }),
-    ]);
+    patchState(unprotected(typesStore), {
+      types: [
+        makeType({ id: 1, name: 'C · sin orden', active: true }),
+        makeType({ id: 2, name: 'A · orden 10', active: true, sort_order: 10 }),
+        makeType({ id: 3, name: 'B · orden 20', active: true, sort_order: 20 }),
+        makeType({ id: 4, name: 'Tipo retirado', active: false }),
+      ],
+    });
     render();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="add-record"]')).toBeTruthy();
-    expect(component.typeMenuItems().length).toBe(2);
+    const addButton = fixture.nativeElement.querySelector('[data-testid="add-record"]');
+    expect(addButton.disabled).toBe(false);
+    expect(component.typeMenuItems().map((i) => i.label)).toEqual([
+      'A · orden 10',
+      'B · orden 20',
+      'C · sin orden',
+    ]);
     expect(component.typeMenuItems().map((i) => i.label)).not.toContain('Tipo retirado');
+  });
+
+  it('al elegir un tipo abre el diálogo de captura con ese tipo', async () => {
+    await setup();
+    patchState(unprotected(typesStore), {
+      types: [makeType({ id: 5, name: 'Láser', fields: [{ key: 'f1', label: 'Zona', type: 'text', required: false }] })],
+    });
+    render();
+
+    component.typeMenuItems()[0].command!({});
+    render();
+
+    expect(component.formVisible()).toBe(true);
+    expect(component.selectedType()?.id).toBe(5);
+    expect(fixture.nativeElement.querySelector('bw-record-form-dialog')).toBeTruthy();
+  });
+
+  it('muestra el chip «Sin guardar» en los registros de la sesión', async () => {
+    await setup();
+    bookingSignal.set({ id: 900 });
+    patchState(unprotected(recordsStore), { records: [makeSessionRecord({ id: 1 })] });
+    render();
+
+    const chip = fixture.nativeElement.querySelector('[data-testid="pending-sync"]');
+    expect(chip).toBeTruthy();
+    expect(chip.textContent).toContain('Sin guardar');
   });
 
   it('muestra el historial de consultas anteriores y su estado vacío', async () => {
@@ -123,7 +196,7 @@ describe('FichaTabComponent', () => {
     render();
     expect(fixture.nativeElement.querySelector('[data-testid="history-empty"]')).toBeTruthy();
 
-    fixture.componentRef.setInput('history', [makeRecord({ id: 7, author_name: 'Kinesilk' })]);
+    fixture.componentRef.setInput('history', [makeHistoryRecord({ id: 7, author_name: 'Kinesilk' })]);
     render();
 
     const cards = fixture.nativeElement.querySelectorAll('[data-testid="history-record"]');
