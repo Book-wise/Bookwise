@@ -1,88 +1,459 @@
+// ── Datos de facturación · asistente por pasos ────────────────────────────────
+// Rail de progreso (15rem, sticky) + panel de un solo paso. Solo tokens.
+
 .billing-data {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bw-space-md);
+}
 
-  &__banner {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    background: color-mix(in srgb, var(--primary-color, #6366f1) 8%, transparent);
-    color: var(--text-color, #1f2937);
-    font-size: 0.9375rem;
+// ── Encabezado de página ──────────────────────────────────────────────────────
 
-    i {
-      color: var(--primary-color, #6366f1);
-      margin-top: 0.125rem;
-    }
-  }
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--bw-space-md);
+  flex-wrap: wrap;
 
-  &__notice {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    background: var(--surface-100, #f3f4f6);
-    color: var(--text-color-secondary, #4b5563);
-    font-size: 0.875rem;
-  }
-
-  &__form {
+  &__text {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  &__radios {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-    min-height: 2.5rem;
-  }
-
-  &__radio {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
-
-  &__empty {
-    margin: 0;
-    color: var(--text-color-secondary, #6b7280);
+    gap: 0.25rem;
   }
 
   &__actions {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    gap: var(--bw-space-sm);
+    margin-left: auto;
+  }
+}
+
+.page-title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: var(--bw-text-2xl);
+  font-weight: var(--bw-weight-semibold);
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-table);
+}
+
+// ── Tipografía auxiliar ───────────────────────────────────────────────────────
+
+.overline {
+  font-size: var(--bw-font-overline);
+  font-weight: var(--bw-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--bw-tracking-overline);
+  color: var(--text-color-secondary);
+}
+
+// ── Aviso de solo lectura / cuenta ausente ────────────────────────────────────
+
+.billing-data__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--bw-radius-md);
+  background: var(--bw-surface-muted);
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-table);
+}
+
+.billing-data__empty {
+  margin: 0;
+  color: var(--text-color-secondary);
+}
+
+// ── Asistente: grilla rail + panel ────────────────────────────────────────────
+
+.billing-data__wizard {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: var(--bw-space-lg);
+  align-items: start;
+}
+
+.billing-data__rail {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-lg);
+  position: sticky;
+  top: 1rem;
+}
+
+.billing-data__rail-head {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.billing-data__rail-head-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .overline {
+    margin: 0;
   }
 
-  .field--full {
-    grid-column: 1 / -1;
+  .bw-chip {
+    margin-left: auto;
+  }
+}
+
+.billing-data__progress {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.billing-data__progress-seg {
+  height: 0.375rem;
+  flex: 1;
+  border-radius: var(--bw-radius-pill);
+  background: var(--bw-surface-muted);
+  position: relative;
+  overflow: hidden;
+
+  span {
+    position: absolute;
+    inset: 0;
+    background: var(--bw-300);
+    border-radius: inherit;
+    transform-origin: left center;
+    transition: transform var(--bw-transition-base);
   }
 
-  .field-error {
-    color: var(--red-500, #ef4444);
+  &.is-partial span {
+    background: var(--bw-warning);
+  }
+}
+
+// ── Lista de pasos ────────────────────────────────────────────────────────────
+
+.billing-data__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem;
+}
+
+.billing-data__step-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.5rem;
+  border: none;
+  border-radius: var(--bw-radius-md);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--bw-transition-fast);
+
+  &:hover {
+    background: var(--bw-surface-muted);
   }
 
-  .field-hint {
-    color: var(--text-color-secondary, #6b7280);
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 2px;
+  }
+}
+
+.billing-data__step.is-active .billing-data__step-btn {
+  background: color-mix(in srgb, var(--bw-300) 10%, transparent);
+}
+
+.billing-data__step-num {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--bw-radius-pill);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-bold);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+.billing-data__step.is-active .billing-data__step-num {
+  background: var(--bw-300);
+  border-color: var(--bw-300);
+  color: var(--bw-text-on-brand);
+}
+
+.billing-data__step.is-partial .billing-data__step-num {
+  background: color-mix(in srgb, var(--bw-warning) 18%, transparent);
+  border-color: var(--bw-warning);
+  color: var(--bw-chip-text-warning);
+}
+
+.billing-data__step-text {
+  min-width: 0;
+  display: grid;
+  gap: 0.125rem;
+  justify-items: start;
+}
+
+.billing-data__step-title {
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
+  color: var(--text-color);
+}
+
+.billing-data__step.is-active .billing-data__step-title {
+  color: var(--bw-500);
+  font-weight: var(--bw-weight-semibold);
+}
+
+.billing-data__step-summary {
+  margin: 0;
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
+  overflow-wrap: anywhere;
+}
+
+.billing-data__step-chip {
+  margin-top: 0.25rem;
+  font-size: var(--bw-font-caption);
+}
+
+// ── "Qué falta" ───────────────────────────────────────────────────────────────
+
+.billing-data__missing {
+  display: grid;
+  gap: 0.375rem;
+  padding: 0.75rem 0.5rem 0;
+  border-top: 1px solid var(--surface-border);
+}
+
+.billing-data__missing-head {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+
+  .overline {
+    margin: 0;
+  }
+}
+
+.billing-data__missing-count {
+  margin-left: auto;
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-bold);
+  color: var(--bw-chip-text-warning);
+}
+
+.billing-data__missing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem;
+}
+
+.billing-data__missing-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--bw-font-caption);
+  color: var(--text-color);
+
+  > i {
+    color: var(--bw-warning);
+    flex-shrink: 0;
+    font-size: 0.8125rem;
   }
 
-  @media (max-width: 767px) {
-    &__grid {
-      grid-template-columns: minmax(0, 1fr);
-    }
+  > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.billing-data__missing-go {
+  margin-left: auto;
+  padding: 0.125rem 0.375rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--bw-radius-sm);
+  font-size: var(--bw-font-caption);
+  font-family: inherit;
+  color: var(--bw-500);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bw-50);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 2px;
+  }
+}
+
+.billing-data__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
+
+  i {
+    color: var(--text-color-secondary);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+}
+
+// ── Panel del paso activo ─────────────────────────────────────────────────────
+
+.billing-data__panel {
+  // No `overflow: hidden` acá: el desplegable de países de `bw-phone-input`
+  // (`.iti__dropdown-content`, position absolute) se recorta. Las esquinas las
+  // redondea cada bloque hijo (la barra de acciones ya trae su border-radius).
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-lg);
+  box-shadow: var(--bw-shadow-card);
+}
+
+.billing-data__panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border);
+
+  h2 {
+    margin: 0;
+    font-size: var(--bw-font-title);
+    font-weight: var(--bw-weight-semibold);
+    color: var(--text-heading);
+  }
+
+  .bw-chip {
+    margin-left: auto;
+  }
+}
+
+.billing-data__panel-head-text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+
+  .overline {
+    margin: 0;
+  }
+}
+
+.billing-data__panel-body {
+  padding: 1.25rem;
+}
+
+// ── Formulario por paso ───────────────────────────────────────────────────────
+
+.billing-data__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--bw-space-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+
+  > label {
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-label);
+  }
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+.billing-data__radios {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  min-height: var(--bw-control-height);
+}
+
+.billing-data__radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.field-error {
+  color: var(--bw-chip-text-danger);
+  font-size: var(--bw-font-caption);
+}
+
+.field-hint {
+  color: var(--text-color-secondary);
+  font-size: var(--bw-font-caption);
+}
+
+// ── Acciones al pie del panel ─────────────────────────────────────────────────
+
+.billing-data__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--bw-50);
+  border-radius: 0 0 var(--bw-radius-lg) var(--bw-radius-lg);
+}
+
+.billing-data__actions-note {
+  margin-right: auto;
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 767px) {
+  .billing-data__wizard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .billing-data__rail {
+    position: static;
+  }
+
+  .billing-data__grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -1,15 +1,18 @@
 <div class="billing-data">
-  <div class="page-header">
+  <header class="page-header">
     <div class="page-header__text">
       <h1 class="page-title">{{ lang.t('billing.data.title') }}</h1>
       <p class="page-subtitle">{{ lang.t('billing.data.subtitle') }}</p>
     </div>
-  </div>
-
-  <p class="billing-data__banner">
-    <i class="pi pi-info-circle" aria-hidden="true"></i>
-    <span>{{ lang.t('billing.data.banner') }}</span>
-  </p>
+    <div class="page-header__actions">
+      <p-button
+        severity="secondary"
+        [outlined]="true"
+        icon="pi pi-file"
+        [label]="lang.t('billing.data.view_invoices')"
+        [routerLink]="'/admin/facturacion/historial'" />
+    </div>
+  </header>
 
   @if (!account()) {
     <p-card>
@@ -23,129 +26,242 @@
       </p>
     }
 
-    <form [formGroup]="form" (ngSubmit)="save()" class="billing-data__form">
-      <!-- Información básica -->
-      <p-card [header]="lang.t('billing.data.section.basic')">
-        <div class="billing-data__grid">
-          <div class="field field--full">
-            <label>{{ lang.t('billing.data.taxpayer_type') }}</label>
-            <div class="billing-data__radios">
-              @for (option of taxpayerOptions; track option.value) {
-                <label class="billing-data__radio">
-                  <p-radiobutton
-                    [value]="option.value"
-                    formControlName="taxpayer_type"
-                    [inputId]="'taxpayer-' + option.value" />
-                  <span>{{ lang.t(option.labelKey) }}</span>
-                </label>
-              }
+    <form [formGroup]="form" (ngSubmit)="save()" class="billing-data__wizard">
+      <!-- Rail lateral: progreso, pasos y "qué falta". -->
+      <aside class="billing-data__rail" [attr.aria-label]="lang.t('billing.data.wizard.rail_title')">
+        <div class="billing-data__rail-head">
+          <div class="billing-data__rail-head-row">
+            <p class="overline">{{ lang.t('billing.data.wizard.rail_title') }}</p>
+            <span class="bw-chip bw-chip--warning">
+              <span class="bw-chip__dot" aria-hidden="true"></span>
+              {{ lang.t('billing.data.wizard.progress', { done: doneCount().toString(), total: totalFields.toString() }) }}
+            </span>
+          </div>
+          <div
+            class="billing-data__progress"
+            role="progressbar"
+            [attr.aria-valuenow]="doneCount()"
+            [attr.aria-valuemin]="0"
+            [attr.aria-valuemax]="totalFields">
+            @for (stepView of stepViews(); track stepView.id) {
+              <span
+                class="billing-data__progress-seg"
+                [class.is-partial]="stepView.status === 'partial'"
+                [class.is-empty]="stepView.status === 'empty'">
+                <span [style.transform]="'scaleX(' + (stepView.done / stepView.total) + ')'"></span>
+              </span>
+            }
+          </div>
+        </div>
+
+        <ol class="billing-data__steps">
+          @for (stepView of stepViews(); track stepView.id) {
+            <li
+              class="billing-data__step"
+              [class.is-active]="step() === stepView.id"
+              [class.is-complete]="stepView.status === 'complete'"
+              [class.is-partial]="stepView.status === 'partial'">
+              <button
+                type="button"
+                class="billing-data__step-btn"
+                (click)="step.set(stepView.id)"
+                [attr.aria-current]="step() === stepView.id ? 'step' : null">
+                <span class="billing-data__step-num" aria-hidden="true">
+                  @if (stepView.status === 'partial') {
+                    <i class="pi pi-exclamation-circle"></i>
+                  } @else {
+                    {{ stepView.id }}
+                  }
+                </span>
+                <span class="billing-data__step-text">
+                  <span class="billing-data__step-title">{{ stepView.title }}</span>
+                  @if (stepView.summary) {
+                    <span class="billing-data__step-summary">{{ stepView.summary }}</span>
+                  }
+                  <span class="bw-chip billing-data__step-chip" [ngClass]="stepChipClass(stepView.status)">
+                    <span class="bw-chip__dot" aria-hidden="true"></span>
+                    {{ stepView.statusLabel }}
+                  </span>
+                </span>
+              </button>
+            </li>
+          }
+        </ol>
+
+        @if (missing().length) {
+          <div class="billing-data__missing">
+            <div class="billing-data__missing-head">
+              <p class="overline">{{ lang.t('billing.data.wizard.missing_title') }}</p>
+              <span class="billing-data__missing-count">{{ missing().length }}</span>
             </div>
+            <ul class="billing-data__missing-list">
+              @for (item of missing(); track item.control) {
+                <li class="billing-data__missing-item">
+                  <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                  <span>{{ item.label }}</span>
+                  <button
+                    type="button"
+                    class="billing-data__missing-go"
+                    (click)="step.set(item.stepId)">
+                    {{ lang.t('billing.data.wizard.go_step', { n: item.stepId.toString() }) }}
+                  </button>
+                </li>
+              }
+            </ul>
+            <p class="billing-data__note">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              <span>{{ lang.t('billing.data.wizard.note') }}</span>
+            </p>
           </div>
+        }
+      </aside>
 
-          <div class="field">
-            <label for="rut">{{ lang.t('billing.data.rut') }}</label>
-            <input pInputText id="rut" formControlName="rut" class="w-full" autocomplete="off" />
-            @if (form.controls.rut.touched && form.controls.rut.invalid) {
-              <small class="field-error">{{ lang.t('billing.data.rut_invalid') }}</small>
+      <!-- Panel del paso activo. -->
+      <section class="billing-data__panel">
+        <header class="billing-data__panel-head">
+          <div class="billing-data__panel-head-text">
+            <p class="overline">{{ lang.t('billing.data.wizard.step_of', { n: step().toString() }) }}</p>
+            <h2>{{ activeStep().title }}</h2>
+          </div>
+          <span class="bw-chip" [ngClass]="stepChipClass(activeStep().status)">
+            <span class="bw-chip__dot" aria-hidden="true"></span>
+            {{ activeStep().statusLabel }}
+          </span>
+        </header>
+
+        <div class="billing-data__panel-body">
+          @switch (step()) {
+            @case (1) {
+              <div class="billing-data__grid">
+                <div class="field field--full">
+                  <label>{{ lang.t('billing.data.taxpayer_type') }}</label>
+                  <div class="billing-data__radios">
+                    @for (option of taxpayerOptions; track option.value) {
+                      <label class="billing-data__radio">
+                        <p-radiobutton
+                          [value]="option.value"
+                          formControlName="taxpayer_type"
+                          [inputId]="'taxpayer-' + option.value" />
+                        <span>{{ lang.t(option.labelKey) }}</span>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="rut">{{ lang.t('billing.data.rut') }}</label>
+                  <input pInputText id="rut" formControlName="rut" class="w-full" autocomplete="off" />
+                  @if (form.controls.rut.touched && form.controls.rut.invalid) {
+                    <small class="field-error">{{ lang.t('billing.data.rut_invalid') }}</small>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="legal_name">{{ lang.t('billing.data.legal_name') }}</label>
+                  <input pInputText id="legal_name" formControlName="legal_name" class="w-full" />
+                </div>
+
+                <div class="field field--full">
+                  <label for="sii_activity">{{ lang.t('billing.data.sii_activity') }}</label>
+                  <p-autocomplete
+                    inputId="sii_activity"
+                    formControlName="sii_activity"
+                    [suggestions]="giroSuggestions()"
+                    (completeMethod)="searchGiro($event)"
+                    optionLabel="description"
+                    [dropdown]="true"
+                    [forceSelection]="true"
+                    [delay]="300"
+                    [appendTo]="'body'"
+                    [placeholder]="lang.t('billing.data.sii_activity.placeholder')"
+                    class="w-full" />
+                  @if (form.controls.sii_activity.value; as giro) {
+                    <small class="field-hint">{{ giro.code }} · {{ giro.description }}</small>
+                  }
+                </div>
+              </div>
             }
-          </div>
+            @case (2) {
+              <div class="billing-data__grid">
+                <div class="field field--full">
+                  <label for="billing_address">{{ lang.t('billing.data.address') }}</label>
+                  <input pInputText id="billing_address" formControlName="billing_address" class="w-full" />
+                </div>
 
-          <div class="field">
-            <label for="legal_name">{{ lang.t('billing.data.legal_name') }}</label>
-            <input pInputText id="legal_name" formControlName="legal_name" class="w-full" />
-          </div>
+                <div class="field">
+                  <label for="billing_region_id">{{ lang.t('billing.data.region') }}</label>
+                  <p-select
+                    inputId="billing_region_id"
+                    formControlName="billing_region_id"
+                    [options]="regions()"
+                    optionLabel="name"
+                    optionValue="id"
+                    [filter]="true"
+                    [appendTo]="'body'"
+                    [placeholder]="lang.t('billing.data.region')"
+                    class="w-full" />
+                </div>
 
-          <div class="field field--full">
-            <label for="sii_activity">{{ lang.t('billing.data.sii_activity') }}</label>
-            <p-autocomplete
-              inputId="sii_activity"
-              formControlName="sii_activity"
-              [suggestions]="giroSuggestions()"
-              (completeMethod)="searchGiro($event)"
-              optionLabel="description"
-              [dropdown]="true"
-              [forceSelection]="true"
-              [delay]="300"
-              [appendTo]="'body'"
-              [placeholder]="lang.t('billing.data.sii_activity.placeholder')"
-              class="w-full" />
-            @if (form.controls.sii_activity.value; as giro) {
-              <small class="field-hint">{{ giro.code }} · {{ giro.description }}</small>
+                <div class="field">
+                  <label for="billing_comuna_id">{{ lang.t('billing.data.comuna') }}</label>
+                  <p-select
+                    inputId="billing_comuna_id"
+                    formControlName="billing_comuna_id"
+                    [options]="comunas()"
+                    optionLabel="name"
+                    optionValue="id"
+                    [filter]="true"
+                    [appendTo]="'body'"
+                    [placeholder]="lang.t('billing.data.comuna')"
+                    [disabled]="!form.controls.billing_region_id.value"
+                    class="w-full" />
+                </div>
+              </div>
             }
-          </div>
-        </div>
-      </p-card>
+            @case (3) {
+              <div class="billing-data__grid">
+                <div class="field">
+                  <label for="billing_phone">{{ lang.t('billing.data.phone') }}</label>
+                  <bw-phone-input
+                    inputId="billing_phone"
+                    formControlName="billing_phone"
+                    [placeholder]="lang.t('billing.data.phone')" />
+                </div>
 
-      <!-- Dirección de facturación -->
-      <p-card [header]="lang.t('billing.data.section.address')">
-        <div class="billing-data__grid">
-          <div class="field field--full">
-            <label for="billing_address">{{ lang.t('billing.data.address') }}</label>
-            <input pInputText id="billing_address" formControlName="billing_address" class="w-full" />
-          </div>
-
-          <div class="field">
-            <label for="billing_region_id">{{ lang.t('billing.data.region') }}</label>
-            <p-select
-              inputId="billing_region_id"
-              formControlName="billing_region_id"
-              [options]="regions()"
-              optionLabel="name"
-              optionValue="id"
-              [filter]="true"
-              [appendTo]="'body'"
-              [placeholder]="lang.t('billing.data.region')"
-              class="w-full" />
-          </div>
-
-          <div class="field">
-            <label for="billing_comuna_id">{{ lang.t('billing.data.comuna') }}</label>
-            <p-select
-              inputId="billing_comuna_id"
-              formControlName="billing_comuna_id"
-              [options]="comunas()"
-              optionLabel="name"
-              optionValue="id"
-              [filter]="true"
-              [appendTo]="'body'"
-              [placeholder]="lang.t('billing.data.comuna')"
-              [disabled]="!form.controls.billing_region_id.value"
-              class="w-full" />
-          </div>
-        </div>
-      </p-card>
-
-      <!-- Datos de contacto -->
-      <p-card [header]="lang.t('billing.data.section.contact')">
-        <div class="billing-data__grid">
-          <div class="field">
-            <label for="billing_phone">{{ lang.t('billing.data.phone') }}</label>
-            <bw-phone-input
-              inputId="billing_phone"
-              formControlName="billing_phone"
-              [placeholder]="lang.t('billing.data.phone')" />
-          </div>
-
-          <div class="field">
-            <label for="billing_email">{{ lang.t('billing.data.email') }}</label>
-            <input pInputText id="billing_email" type="email" formControlName="billing_email" class="w-full" />
-            @if (form.controls.billing_email.touched && form.controls.billing_email.invalid) {
-              <small class="field-error">{{ lang.t('billing.data.email_invalid') }}</small>
+                <div class="field">
+                  <label for="billing_email">{{ lang.t('billing.data.email') }}</label>
+                  <input pInputText id="billing_email" type="email" formControlName="billing_email" class="w-full" />
+                  @if (form.controls.billing_email.touched && form.controls.billing_email.invalid) {
+                    <small class="field-error">{{ lang.t('billing.data.email_invalid') }}</small>
+                  }
+                </div>
+              </div>
             }
-          </div>
+          }
         </div>
-      </p-card>
 
-      @if (canEdit()) {
-        <div class="billing-data__actions">
-          <p-button
-            type="submit"
-            [label]="lang.t('billing.data.save')"
-            icon="pi pi-check"
-            [loading]="saving()"
-            [disabled]="form.invalid || saving()" />
-        </div>
-      }
+        @if (canEdit()) {
+          <footer class="billing-data__actions">
+            <span class="billing-data__actions-note">{{ lang.t('billing.data.wizard.optional_note') }}</span>
+            <p-button
+              type="button"
+              severity="secondary"
+              [outlined]="true"
+              styleClass="billing-data__back"
+              [label]="lang.t('billing.data.wizard.back')"
+              [disabled]="step() === 1 || saving()"
+              (onClick)="goBack()" />
+            <p-button
+              type="button"
+              icon="pi pi-check"
+              styleClass="billing-data__primary"
+              [label]="primaryLabel()"
+              [loading]="saving()"
+              [disabled]="form.invalid || saving()"
+              (onClick)="save(step() < 3)" />
+          </footer>
+        }
+      </section>
     </form>
   }
 </div>
