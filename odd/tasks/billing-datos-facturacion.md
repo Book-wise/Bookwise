@@ -301,3 +301,21 @@ Banner superior informativo, como en la referencia.
   la pantalla (S2): el formulario plano de 3 cards pasa a asistente por pasos, tal como el
   artboard elegido. El contrato de escritura no cambia (mismas 9 claves fiscales, mismo
   `PATCH /v1/accounts/{id}`); sí cambia la navegación y se agregan señales de completitud.
+
+## Entrega del rediseño (2026-11-08)
+
+- **Slice 1 — código** (`14b04bd`): asistente por pasos completo
+  (componente ts/html/scss + specs + i18n es/en + T8/L14 de este documento).
+  **1306 líneas autoradas en un solo commit**, por encima del slice de ~400: se decidió
+  no partirlo porque es la reescritura de **una sola pantalla** y los cortes intermedios
+  (rail sin completitud, o completitud sin guardado que avanza) dejarían estados a medio
+  cablear en el mismo archivo. Se registra acá el límite del slice; si se publica, va como
+  PR único con la carga de revisión declarada.
+- **Slice 2 — diseño** (`design/billing-datos-facturacion/`): los tres artboards, de los
+  cuales `02-asistente-pasos.html` es el elegido e implementado; 01 y 03 quedan como
+  alternativas documentadas.
+- Verificación: `billing-data.component.spec.ts` **24/24** (17 previas + 7 nuevas) y
+  `ng build` exit 0 (warnings preexistentes ajenos).
+- Bug encontrado y corregido en la misma entrega: `.billing-data__panel` tenía
+  `overflow: hidden` heredado del artboard y recortaba el desplegable de países de
+  `bw-phone-input`; se quitó del componente y del artboard.
