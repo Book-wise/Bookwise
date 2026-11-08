@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "02-asistente-pasos.html",
+  "handoffs": {
+    "02-asistente-pasos.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-08T21:34:53.923Z",
+      "startedAt": "2026-11-08T21:35:00.076Z",
+      "implementedAt": null,
+      "feature": "odd/tasks/billing-datos-facturacion.md",
+      "note": "Implementando el asistente por pasos en billing-data.component"
+    }
+  }
+}
