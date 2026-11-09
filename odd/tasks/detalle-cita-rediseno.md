@@ -218,3 +218,19 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
     `PaginatedResponse<Booking>` del servicio no refleja la realidad.
   - Nada de esto toca el rediseño del diálogo: el chip usa sólo `session_number` y `total_sessions`.
     El arreglo del recibo queda como deuda de la feature de packs (S2 excluye el diálogo grande).
+- **L26 (respuesta de Bookwise-API a la precisión de L25):** **el recibo no está roto por la API.**
+  `SaleResource` embebe `new BookingResource($this->whenLoaded('booking'))` y `SaleController::show`
+  eager-loadea `booking.packSession.clientPack.sessions`, así que **con el `develop` actual**
+  `GET /sales/{id}` ya trae `all_sessions` completo (verificado con la venta #10 / reserva #462), sin
+  depender de #94.
+  - El `[]` que se veía correspondía a la venta de **compra del pack** (`booking_id: null`): ahí el
+    desglose vive en **`data.client_pack.sessions`**, también cargado por el mismo `show`. Regla para
+    `buildItems`: `sale.booking?.pack_session?.all_sessions ?? sale.client_pack?.sessions ?? []`.
+  - `GET /sales` (listado) **no** carga sesiones: si el recibo se armara desde un ítem del listado,
+    hay que pedir el detalle por id.
+  - `SaleBookingPackSessionItem` debe crecer con `id`, `price`, `effective_price`, `attended_at` y un
+    `booking` **anulable** (`id`, `start_time`, `end_time`, `price`, `provider`, `location`, `status`):
+    las sesiones 5 y 6 de Valentina vienen con `booking: null`.
+  - Pendiente aparte: `getBookings()` tipa `Observable<PaginatedResponse<Booking>>` pero el endpoint
+    devuelve **array plano**. El store ya lo tolera; corregir el tipo obliga a tocar sus 6 consumidores
+    (dashboard, availability ×2, store, historial ×2), así que va como deuda con la feature de packs.
