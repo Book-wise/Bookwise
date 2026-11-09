@@ -99,6 +99,17 @@
       "status": "resolved",
       "sentAt": "2026-11-09T13:35:53.506Z",
       "resolvedAt": "2026-11-09T13:36:27.318Z"
+    },
+    {
+      "id": "xbkyokx9",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div > section:nth-of-type(1) > div > div:nth-of-type(2) > span",
+      "excerpt": "Sesión 3 de 6",
+      "comment": "necesitamos que el agente de front mensajee al backend para que haga seeds donde existan agendas que hayan tomado packs o servicios que vienen con la variacion para poder consumir esta informacion en el front, es decir saber cual es la sesion actual",
+      "createdAt": "2026-11-09T13:50:43.394Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:50:45.450Z",
+      "resolvedAt": "2026-11-09T13:52:17.082Z"
     }
   ]
 }

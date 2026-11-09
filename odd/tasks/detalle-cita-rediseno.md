@@ -126,3 +126,12 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   porque los artboards son HTML autocontenido) y `0e68151` (implementación: parcial `.bw-sheet`,
   utils, chips AA, los dos calendarios y sus specs). Van separados por tipo de artefacto, no por
   tamaño: la parcial, los templates y los componentes son interdependientes y no compilan por partes.
+- **L15 (usuario, comentario del canvas):** «necesitamos que el agente de front mensajee al backend para
+  que haga seeds donde existan agendas que hayan tomado packs o servicios que vienen con la variacion
+  para poder consumir esta informacion en el front, es decir saber cual es la sesion actual». No es un
+  cambio visual: el chip «Sesión 3 de 6» ya se alimenta de `booking.pack_session`. Se trasladó el
+  pedido a la sesión de Bookwise-API con el detalle de lo que necesita el front: service_pack con
+  variaciones, client_pack, reservas con `pack_session` poblado, mezcla de estados (attended /
+  scheduled / pending) y de pago (partial / paid), dos clientes y notas. Preguntas abiertas: si
+  `GET /bookings` devuelve `pack_session` en el listado, si hay endpoint para listar las sesiones de un
+  `client_pack`, y si los seeds quedan versionados o son one-shot de local.
