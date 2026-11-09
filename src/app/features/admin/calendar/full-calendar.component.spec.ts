@@ -1013,10 +1013,17 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       };
       const scope = openSheet(bookingFixture('partial', payment));
 
-      // Cabecera: iniciales, nombre completo y RUT del paciente.
+      // Cabecera, fila 1: iniciales, nombre, RUT y badge de estado.
       expect(textsOf(scope, '.bw-sheet__avatar')).toEqual(['CR']);
       expect(textsOf(scope, '.bw-sheet__name')[0]).toContain('Camila Rojas Fuentes');
-      expect(textsOf(scope, '.bw-sheet__meta .bw-chip')).toEqual(['17.842.503-6']);
+      expect(textsOf(scope, '.bw-sheet__top .bw-chip--secondary')).toEqual(['17.842.503-6']);
+      expect(textsOf(scope, '.bw-sheet__head-status')).toEqual(['Confirmado']);
+
+      // Cabecera, fila 2: el teléfono con su botón de WhatsApp.
+      expect(textsOf(scope, '.bw-sheet__contact')).toEqual(['+56 9 8123 4567']);
+      expect(scope.querySelector('.bw-sheet__wa-link')?.getAttribute('href')).toBe(
+        'https://wa.me/56981234567',
+      );
 
       // Bloque de sesión: el «cuándo» grande, la duración y la sesión del pack.
       expect(textsOf(scope, '.bw-sheet__day')).toEqual([formatSpanishLongDate(start)]);
@@ -1056,6 +1063,10 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
         'Ver pago',
         'Editar',
       ]);
+      // Iconos del footer: plus para Abonar, dollar para Ver pago, lápiz para Editar.
+      for (const icon of ['pi-plus', 'pi-dollar', 'pi-pencil']) {
+        expect(scope.querySelectorAll(`.bw-sheet__foot-actions .${icon}`).length).toBe(1);
+      }
     });
 
     it('con la reserva pagada sólo deja Ver pago', () => {

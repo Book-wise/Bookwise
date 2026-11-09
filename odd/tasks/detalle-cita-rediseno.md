@@ -151,3 +151,9 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   bloque queda **«Esta sesión»**: señala el ítem que se está mirando, sin el artículo coloquial de «La
   sesión» y sin el tono administrativo de «Atención». Sincronizado en el artboard 01 y en las dos
   plantillas.
+- **L19 (usuario):** «repara el header del dialogo de detalle de cita con el boton de whatsapp y el
+  telefono abajo y arriba el nombre el rut y el badge de estado, y a los botones del footer devuelvele
+  los iconos que tenia». Cabecera en dos filas: arriba nombre + chip de RUT + badge de estado (el nombre
+  es lo único que se recorta), abajo teléfono + botón «Hablar por WhatsApp». Footer con los iconos
+  originales: `pi pi-plus` (Abonar), `pi pi-dollar` (Ver pago), `pi pi-pencil` (Editar). Artboard 01
+  sincronizado con la misma cabecera e iconos aproximados con SVG inline.

@@ -305,6 +305,10 @@
               {{ booking.client?.first_name }} {{ booking.client?.last_name }}
             </h2>
 
+            @if (booking.client?.rut; as rut) {
+              <span class="bw-chip bw-chip--secondary">{{ rut }}</span>
+            }
+
             <span
               class="bw-chip bw-sheet__head-status"
               [style.--chip-color]="getStatusChipClass(booking.status?.name, booking.status_id)"
@@ -317,9 +321,6 @@
             </span>
           </div>
           <div class="bw-sheet__meta">
-            @if (booking.client?.rut; as rut) {
-              <span class="bw-chip bw-chip--secondary">{{ rut }}</span>
-            }
             @if (booking.client?.phone; as phone) {
               <span class="bw-sheet__contact">
                 <i class="pi pi-phone" aria-hidden="true"></i>
@@ -451,6 +452,7 @@
         @if (store.selectedBooking()?.payment_status !== 'paid') {
           <p-button
             label="Abonar"
+            icon="pi pi-plus"
             severity="secondary"
             [outlined]="true"
             (onClick)="openBookingDetail(true)"
@@ -462,12 +464,13 @@
         ) {
           <p-button
             label="Ver pago"
+            icon="pi pi-dollar"
             severity="secondary"
             [outlined]="true"
             (onClick)="openBookingDetail()"
           />
         }
-        <p-button label="Editar" (onClick)="editBooking()" />
+        <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()" />
       </div>
     </div>
   </ng-template>
