@@ -171,3 +171,22 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   WhatsApp vuelve a su propia línea (`flex-basis: 100%`) y **deja de heredar el alto global de control**:
   dentro de la cabecera el `size="small"` mide 2.125rem, no 2.5rem, que era lo que aplastaba el bloque.
   El badge de estado pasa a la fila del nombre en el artboard y en la variante del profesional.
+- **L22 (respuesta de Bookwise-API a L15):** los seeds de packs con sesiones están **listos y corridos
+  en local**, en la rama/PR `feat/pack-sessions-seeder` (**Book-wise/Bookwise-API#93, todavía sin
+  mergear**). Comando: `php artisan tenant:seed-pack-bookings 4` (Kinesilk Cordillera; aborta en
+  producción, idempotente por paciente, `--sessions=` y `--discount=` opcionales).
+  - Sembrado: `service_pack #2` «6 sesiones» sobre Kinesiología Deportiva ($229.500, -15%) y dos
+    pacientes con pack del mismo servicio: **Valentina Silva** (cliente 1) y **Matías Ortega**
+    (cliente 2).
+  - Sesiones de Valentina: 1-2 `attended`, **3 `scheduled` → reserva #462 el 10/11 16:30** (la del
+    chip «Sesión 3 de 6»), 4 `pending` con reserva el 18/11 11:00, 5-6 sin reserva. Matías: 3
+    `scheduled` → reserva #466 el 13/11 16:30.
+  - Cobros con `paid` / `partial` / `unpaid` y notas en `bookings.notes` (interna) y
+    `pack_sessions.notes` (para el paciente).
+  - **`pack_session` viene en el listado y en el detalle** de `/bookings` (con `session_number`,
+    `total_sessions`, `client_pack_id`, `service_pack_id`, `effective_price`, `price`, `notes`,
+    `status`), que es todo lo que consume el chip de este diálogo.
+  - ⚠️ `pack_session.all_sessions` llega **`[]`** en listado y detalle. Para la lista completa de
+    sesiones del paciente hay que usar **`GET /v1/clients/{id}/packs`** (por pack: `total_sessions`,
+    `used_sessions`, `remaining_sessions`, `status` y `sessions[]` con `status`, `attended_at`,
+    `price`, `notes` y `scheduled_at` ya resuelto).
