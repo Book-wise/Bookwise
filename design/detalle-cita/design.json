@@ -1,0 +1,28 @@
+{
+  "title": "Detalles de la Cita — rediseño de la tarjeta",
+  "brief": "Rediseñar el diálogo `p-dialog header=\"Detalles de la Cita\"` del calendario (hoy 500 px y diez filas label/valor planas: cliente, sesión, teléfono, servicio, profesional, ubicación, fecha, precio, estado, notas) para que la jerarquía se lea en dos segundos y hable el idioma visual de Bookwise. Alcance: calendario admin y calendario del profesional (hoy un clon más pobre), con el mismo shell en ambos. **Fuera de alcance: el diálogo grande de pestañas (`booking-detail-dialog`), que no se toca.** Foco: estructura y jerarquía de la información, no solo piel. Solo tokens existentes; tres temas conviven (claro, dark-theme, theme-kinesilk).",
+  "feature": "odd/tasks/detalle-cita-rediseno.md",
+  "artboards": [
+    {
+      "file": "01-identidad-bloques.html",
+      "title": "Identidad + bloques: quién, cuándo, cuánto",
+      "tradeoff": "La jerarquía se lee en dos segundos —paciente y estado en la cabecera, sesión con el cuándo como dato grande, pago y notas en bloques separados— y el estado de pago deja de esconderse en el footer. Cuesta alto: el diálogo pasa de ~380 px a ~560 px y con notas largas obliga a scrollear, cosa que hoy no pasa.",
+      "width": 1440,
+      "height": 1070
+    },
+    {
+      "file": "02-hora-protagonista.html",
+      "title": "La hora manda",
+      "tradeoff": "Ordena la tarjeta como se mira una agenda: franja de marca con día, rango horario, duración y sesión del pack; después el paciente en una fila y la metadata en grilla de overlines. El dato buscado está a la vista sin leer y el alto queda cerca del actual (~470 px). El costo es que el paciente pasa a segundo plano: dos citas abiertas se distinguen por hora, no por nombre.",
+      "width": 1440,
+      "height": 1040
+    },
+    {
+      "file": "03-recibo-lineal.html",
+      "title": "Recibo lineal con banda de estado",
+      "tradeoff": "Una sola columna de filas con divisorias punteadas, banda de estado en el borde superior y cierre de dinero con precio, abonado y saldo en cifra subtotal. Es la más compacta (~450 px) y la que mejor resuelve «cuánto se cobra y cuánto falta». A cambio es la más administrativa —se parece a una boleta, el paciente queda como una línea— y sus filas label/valor al costado se aprietan en mobile.",
+      "width": 1440,
+      "height": 995
+    }
+  ]
+}

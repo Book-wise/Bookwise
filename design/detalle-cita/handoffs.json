@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "01-identidad-bloques.html",
+  "handoffs": {
+    "01-identidad-bloques.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-09T13:37:07.193Z",
+      "startedAt": "2026-11-09T13:37:17.961Z",
+      "implementedAt": null,
+      "feature": "odd/tasks/detalle-cita-rediseno.md",
+      "note": "Implementando dirección 01 (identidad + bloques) en el calendario admin: cabecera con avatar/identidad/estado, bloque de sesión, pago con precio y estado, notas separadas."
+    }
+  }
+}

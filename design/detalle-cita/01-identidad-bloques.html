@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Detalles de la Cita — 01 · Identidad + bloques</title>
+<style>
+  /* ═══ Tokens reales del proyecto (src/styles/_tokens.scss + styles.scss) ═══
+     Ningún color de este artboard sale de fuera de esta lista. */
+  :root {
+    --bw-900:#012663; --bw-800:#042661; --bw-700:#0a2862; --bw-600:#083d96;
+    --bw-500:#0b3d95; --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e;
+    --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-text-on-brand:#ffffff;
+    --color-primary:var(--bw-500); --color-primary-dark:var(--bw-900);
+    --color-primary-cta:var(--bw-300); --color-accent:var(--bw-200);
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --bw-surface-muted:#f3f4f6; --surface-100:#f5f5f5;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827;
+    --text-label:#374151; --bw-tab-color:#0b3d95;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem; --bw-text-2xl:1.5rem; --bw-text-3xl:1.875rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm); --bw-font-body:var(--bw-text-base);
+    --bw-font-title:var(--bw-text-lg); --bw-font-amount:var(--bw-text-xl);
+    --bw-font-subtotal:var(--bw-text-2xl); --bw-font-kpi:var(--bw-text-3xl);
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-xs:0.25rem; --bw-space-sm:0.5rem; --bw-space-md:1rem;
+    --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-transition-fast:0.15s; --bw-transition-base:0.2s;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,0.15);
+    --bw-dialog-header-shadow:0 6px 10px -6px rgba(0,0,0,0.08);
+    --bw-control-height:2.5rem;
+    --sidebar-bg-from:var(--bw-900); --sidebar-bg-to:var(--bw-600);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 1440px; min-height: 1070px; padding: 1.5rem 2rem 2rem;
+    font-family: var(--font-family); font-size: 16px; line-height: 1.5;
+    color: var(--text-color); background: var(--surface-ground);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, p, ul, li { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  button { font-family: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; border-radius: var(--bw-radius-sm); }
+
+  /* ═══ Cabecera del board ══════════════════════════════════════════════ */
+  .board { display: grid; gap: 1rem; }
+  .board__head { display: flex; align-items: flex-start; gap: 1rem; }
+  .board__head h1 {
+    font-size: var(--bw-text-2xl); font-weight: var(--bw-weight-semibold);
+    color: var(--text-heading); letter-spacing: var(--bw-tracking-tight);
+  }
+  .board__head p {
+    margin-top: .25rem; max-width: 60rem;
+    font-size: var(--bw-font-table); color: var(--text-color-secondary);
+  }
+  .board__tag {
+    margin-left: auto; flex-shrink: 0; padding: .25rem .625rem;
+    border-radius: var(--bw-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--bw-300) 35%, transparent);
+    background: color-mix(in srgb, var(--bw-300) 10%, transparent);
+    color: var(--bw-tab-color); font-size: var(--bw-font-caption);
+    font-weight: var(--bw-weight-medium);
+  }
+  .tradeoff {
+    display: flex; gap: .5rem; padding: .625rem .875rem;
+    font-size: var(--bw-font-caption); color: var(--text-color-secondary);
+    background: var(--surface-card); border: 1px solid var(--surface-border);
+    border-left: 3px solid var(--bw-300); border-radius: var(--bw-radius-md);
+  }
+  .tradeoff strong { color: var(--text-color); font-weight: var(--bw-weight-semibold); }
+
+  /* ═══ Recetas globales del sistema ════════════════════════════════════
+     .chip = .bw-chip (_badges.scss); .btn = botón PrimeNG (_buttons.scss). */
+  .chip {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: var(--bw-font-table); font-weight: var(--bw-weight-medium);
+    color: var(--chip-text-color, var(--chip-color));
+    background: color-mix(in srgb, var(--chip-color) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+    border-radius: var(--bw-radius-sm); padding: .1rem .5rem;
+    line-height: 1.4; white-space: nowrap;
+  }
+  .chip__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--chip-color); flex-shrink: 0; }
+  .chip--secondary { --chip-color: var(--text-color-secondary); --chip-text-color: var(--bw-chip-text-secondary); }
+  .chip--primary   { --chip-color: var(--bw-500); --chip-text-color: var(--bw-chip-text-primary); }
+  .chip--warning   { --chip-color: var(--bw-warning); --chip-text-color: var(--bw-chip-text-warning); }
+  .chip--success   { --chip-color: var(--bw-success); --chip-text-color: var(--bw-chip-text-success); }
+  .chip--confirmado { --chip-color: var(--bw-status-confirmado); --chip-text-color: var(--bw-chip-text-warning); }
+  .chip--parcial    { --chip-color: var(--bw-payment-partial);   --chip-text-color: var(--bw-chip-text-warning); }
+  .chip--pack       { --chip-color: var(--bw-300); --chip-text-color: var(--bw-chip-text-primary); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .375rem;
+    height: var(--bw-control-height); padding: 0 .875rem;
+    border-radius: var(--bw-radius-md); border: 1px solid transparent;
+    font-size: var(--bw-font-table); font-weight: var(--bw-weight-medium);
+    transition: background var(--bw-transition-fast), border-color var(--bw-transition-fast);
+  }
+  .btn--primary { background: var(--bw-300); color: var(--bw-text-on-brand); border-color: var(--bw-300); }
+  .btn--primary:hover { background: var(--bw-500); border-color: var(--bw-500); }
+  .btn--outline { background: transparent; color: var(--text-color); border-color: var(--surface-border); }
+  .btn--outline:hover { background: var(--bw-surface-muted); }
+  .btn--text { background: transparent; color: var(--bw-tab-color); padding: 0 .5rem; }
+  .btn--text:hover { background: color-mix(in srgb, var(--bw-300) 10%, transparent); }
+  .btn--danger { background: transparent; color: var(--bw-chip-text-danger); border-color: color-mix(in srgb, var(--bw-chip-text-danger) 35%, transparent); }
+
+  .overline {
+    font-size: var(--bw-font-overline); font-weight: var(--bw-weight-bold);
+    text-transform: uppercase; letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+  }
+  .icon { width: 1rem; height: 1rem; flex-shrink: 0; stroke: currentColor; fill: none;
+          stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* ═══ Stage: el diálogo sobre el calendario real (contexto) ═══════════ */
+  .stage {
+    position: relative; border: 1px solid var(--surface-border);
+    border-radius: var(--bw-radius-lg); overflow: hidden; background: var(--surface-ground);
+    isolation: isolate;
+  }
+  .ctx { position: absolute; inset: 0; padding: .75rem 1rem; opacity: .55; }
+  .ctx__bar { display: flex; align-items: center; gap: .5rem; margin-bottom: .625rem; }
+  .ctx__title { font-size: var(--bw-font-title); font-weight: var(--bw-weight-semibold); color: var(--text-heading); }
+  .ctx__pill {
+    padding: .125rem .5rem; border-radius: var(--bw-radius-sm); background: var(--surface-card);
+    border: 1px solid var(--surface-border); font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+  .ctx__grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .375rem; }
+  .ctx__col { display: grid; gap: .375rem; align-content: start; }
+  .ctx__colhead {
+    font-size: var(--bw-font-overline); font-weight: var(--bw-weight-bold);
+    letter-spacing: var(--bw-tracking-overline); text-transform: uppercase;
+    color: var(--text-color-secondary); padding-bottom: .125rem;
+    border-bottom: 1px solid var(--surface-border);
+  }
+  .ctx__ev {
+    padding: .1875rem .375rem; border-radius: var(--bw-radius-sm);
+    font-size: var(--bw-text-2xs); line-height: 1.35; color: var(--text-color);
+    border-left: 3px solid var(--ev);
+    background: color-mix(in srgb, var(--ev) 22%, var(--surface-card));
+  }
+  .ctx__ev b { display: block; font-weight: var(--bw-weight-semibold); }
+  .scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .4); /* máscara por defecto de PrimeNG, no un token */ }
+
+  .stage__inner {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    gap: 1.5rem; padding: 1.25rem 1.5rem;
+  }
+
+  /* ═══ El diálogo — dirección 01 ════════════════════════════════════════ */
+  .dlg {
+    width: 500px; flex-shrink: 0; background: var(--surface-card);
+    border-radius: var(--bw-radius-lg); box-shadow: var(--bw-shadow-popover);
+    /* Banda de estado: el color sale de bookingStatusChipClass(), el mismo token
+       que pinta el chip de estado. Reconoce la cita desde la agenda. */
+    overflow: hidden; display: flex; flex-direction: column;
+    border-top: 3px solid var(--bw-status-confirmado);
+  }
+  .dlg__head {
+    display: flex; align-items: center; gap: .75rem;
+    padding: 1.25rem 1.5rem 1rem; box-shadow: var(--bw-dialog-header-shadow);
+  }
+  .avatar {
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--bw-radius-md);
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(155deg, var(--bw-600), var(--bw-300));
+    color: var(--bw-text-on-brand);
+    font-size: var(--bw-font-table); font-weight: var(--bw-weight-bold);
+    letter-spacing: .02em;
+  }
+  .who { min-width: 0; display: grid; gap: .1875rem; }
+  .who h2 {
+    font-size: var(--bw-font-title); font-weight: var(--bw-weight-semibold);
+    color: var(--text-heading); line-height: 1.25;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .who__meta { display: flex; align-items: center; gap: .375rem; flex-wrap: wrap; }
+  .who__meta .btn--whatsapp { flex-basis: 100%; justify-content: flex-start; width: fit-content; }
+  .who__tel {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: var(--bw-font-caption); color: var(--text-color-secondary);
+  }
+  .who__tel .icon { width: .8125rem; height: .8125rem; color: var(--bw-success); }
+
+  .dlg__body {
+    display: grid; gap: .75rem; padding: 1rem 1.25rem 1.25rem;
+    background: var(--surface-ground);
+  }
+
+  .block {
+    background: var(--surface-card); border: 1px solid var(--surface-border);
+    border-radius: var(--bw-radius-lg); padding: .875rem;
+    display: grid; gap: .5rem;
+  }
+  .block--session { border-left: 3px solid var(--bw-300); }
+  .session { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+  .session__day { font-size: var(--bw-font-table); color: var(--text-color-secondary); }
+  .session__time {
+    font-size: var(--bw-font-amount); font-weight: var(--bw-weight-semibold);
+    color: var(--text-heading); line-height: 1.2; letter-spacing: var(--bw-tracking-tight);
+  }
+  .session__time span { font-weight: var(--bw-weight-regular); color: var(--text-color-secondary); }
+  .session__right { display: grid; gap: .25rem; justify-items: end; }
+  .session__dur { font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+  .session__service {
+    display: flex; align-items: center; gap: .375rem; flex-wrap: wrap;
+    font-size: var(--bw-font-body); font-weight: var(--bw-weight-medium); color: var(--text-color);
+    padding-top: .5rem; border-top: 1px solid var(--surface-border);
+  }
+  .facts { display: grid; gap: .3125rem; }
+  .facts li {
+    display: flex; align-items: center; gap: .375rem;
+    font-size: var(--bw-font-table); color: var(--text-color);
+  }
+  .facts .icon { color: var(--text-color-secondary); }
+
+  .pay__row { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }
+  .pay__amount {
+    font-size: var(--bw-font-amount); font-weight: var(--bw-weight-semibold);
+    color: var(--text-heading); letter-spacing: var(--bw-tracking-tight);
+  }
+  .pay__note { font-size: var(--bw-font-caption); color: var(--text-color-secondary); }
+
+  .block--notes { background: color-mix(in srgb, var(--bw-50) 60%, var(--surface-card)); border-color: var(--bw-100); gap: .625rem; }
+  .note { display: grid; gap: .125rem; }
+  .note p { font-size: var(--bw-font-table); color: var(--text-color); }
+  .note--internal p { color: var(--text-label); }
+  .note--internal .overline { color: var(--bw-chip-text-warning); }
+
+  .dlg__foot {
+    display: flex; align-items: center; gap: .5rem; padding: 1rem 1.25rem;
+    border-top: 1px solid var(--surface-border); background: var(--surface-card);
+  }
+  .foot__actions { margin-left: auto; display: flex; gap: .5rem; }
+
+  /* Anotaciones: qué cambia contra la tarjeta de hoy */
+  .annots { display: grid; gap: .5rem; width: 300px; flex-shrink: 0; }
+  .annot {
+    display: flex; gap: .5rem; padding: .5rem .625rem;
+    background: color-mix(in srgb, var(--surface-card) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--surface-card) 40%, transparent);
+    border-radius: var(--bw-radius-md); font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+  .annot b {
+    flex-shrink: 0; width: 1.125rem; height: 1.125rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bw-300); color: var(--bw-text-on-brand);
+    font-size: var(--bw-text-2xs); font-weight: var(--bw-weight-bold);
+  }
+  .annot span { color: var(--text-color); }
+
+  .footnote {
+    display: flex; gap: .625rem; align-items: flex-start;
+    font-size: var(--bw-font-caption); color: var(--text-color-secondary);
+  }
+  .footnote b { color: var(--text-color); font-weight: var(--bw-weight-semibold); }
+
+  /* ═══ Variante profesional: mismo shell, sin cobro ni comentario interno ═ */
+  .variant { display: grid; gap: .5rem; margin: 0; }
+  .variant__cap {
+    font-size: var(--bw-font-caption); color: var(--text-color-secondary); max-width: 420px;
+  }
+  .dlg--provider { width: 420px; flex-shrink: 0; box-shadow: var(--bw-shadow-popover); }
+  .dlg--provider .dlg__head { padding: .875rem 1rem .75rem; }
+  .dlg--provider .avatar { width: 36px; height: 36px; font-size: var(--bw-font-caption); }
+  .dlg--provider .who h2 { font-size: var(--bw-font-body); }
+  .dlg--provider .dlg__body { padding: .75rem; gap: .5rem; }
+  .dlg--provider .block { padding: .75rem; gap: .375rem; }
+  .dlg--provider .session__time { font-size: var(--bw-text-lg); }
+  .dlg--provider .dlg__foot { padding: .75rem; }
+
+  /* ── WhatsApp ────────────────────────────────────────────────────────────
+     El teléfono es un dato de contacto, no un string: donde aparece el número
+     va el botón con la etiqueta explícita y el ícono real de la marca — el
+     mismo glifo de `pi-whatsapp`​ (PrimeIcons), inlineado porque el
+     artboard no puede cargar fuentes externas. En la app es
+     `<p-button icon="pi pi-whatsapp" label="Hablar por WhatsApp" severity="success" [outlined]="true">`. */
+  .btn--whatsapp {
+    height: 2.125rem;              /* size="small" de PrimeNG */
+    padding: 0 .625rem;
+    font-size: var(--bw-font-caption);
+    background: transparent;
+    color: var(--bw-chip-text-success);
+    border: 1px solid color-mix(in srgb, var(--bw-success) 45%, transparent);
+    white-space: nowrap;
+  }
+  .btn--whatsapp:hover {
+    background: color-mix(in srgb, var(--bw-success) 12%, transparent);
+  }
+  .wa { width: .9375rem; height: .9375rem; flex-shrink: 0; fill: currentColor; stroke: none; }
+
+</style>
+</head>
+<body>
+<div class="board">
+
+  <header class="board__head">
+    <div>
+      <h1>Detalles de la Cita — identidad + bloques</h1>
+      <p>
+        El diálogo del calendario deja de ser una lista de diez filas planas. Arriba va <b>quién</b>
+        (avatar, nombre, RUT, teléfono y estado); adentro, tres bloques con el peso que corresponde:
+        <b>la sesión</b> (cuándo, cuánto dura, qué servicio, con quién y dónde), <b>el pago</b> (cifra,
+        estado y saldo) y <b>las notas</b>. El mismo shell sirve para el calendario del profesional.
+      </p>
+    </div>
+    <span class="board__tag">Dirección 01</span>
+  </header>
+
+  <div class="tradeoff">
+    <strong>Tradeoff:</strong> la jerarquía se lee en dos segundos —paciente, sesión, cobro— y el
+    estado de pago deja de esconderse en el footer. Cuesta alto: el diálogo pasa de ~380 px a ~560 px,
+    y con notas largas hay que scrollear, cosa que hoy no pasa.
+  </div>
+
+  <!-- ══ Stage ══════════════════════════════════════════════════════════ -->
+  <section class="stage" aria-label="Diálogo sobre el calendario">
+    <div class="ctx" aria-hidden="true">
+      <div class="ctx__bar">
+        <span class="ctx__title">Calendario</span>
+        <span class="ctx__pill">Hoy</span>
+        <span class="ctx__pill">Semana</span>
+        <span class="ctx__pill">Mes</span>
+        <span class="ctx__pill" style="margin-left:auto">14 – 20 de noviembre</span>
+      </div>
+      <div class="ctx__grid">
+        <div class="ctx__col">
+          <div class="ctx__colhead">Lun 10</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-asiste)"><b>09:00</b>Camila Rojas</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-confirmado)"><b>11:30</b>Tomás Vidal</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-reservado)"><b>16:00</b>Antonia Pérez</div>
+        </div>
+        <div class="ctx__col">
+          <div class="ctx__colhead">Mar 11</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-confirmado)"><b>10:00</b>Ignacio Soto</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-pendiente)"><b>12:30</b>Josefa Muñoz</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-asiste)"><b>17:15</b>Matías Fuentes</div>
+        </div>
+        <div class="ctx__col">
+          <div class="ctx__colhead">Mié 12</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-reservado)"><b>08:30</b>Florencia Díaz</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-asiste)"><b>15:00</b>Vicente Lara</div>
+        </div>
+        <div class="ctx__col">
+          <div class="ctx__colhead">Jue 13</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-confirmado)"><b>09:45</b>Catalina Reyes</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-pendiente)"><b>18:00</b>Benjamín Cáceres</div>
+        </div>
+        <div class="ctx__col">
+          <div class="ctx__colhead">Vie 14</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-confirmado)"><b>09:30</b>Camila Rojas</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-reservado)"><b>11:00</b>Agustina Vera</div>
+          <div class="ctx__ev" style="--ev:var(--bw-status-asiste)"><b>16:30</b>Diego Arancibia</div>
+        </div>
+      </div>
+    </div>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <div class="stage__inner">
+      <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-a-title">
+        <header class="dlg__head">
+          <span class="avatar" aria-hidden="true">CR</span>
+          <div class="who">
+            <h2 id="dlg-a-title">Camila Rojas Fuentes</h2>
+            <div class="who__meta">
+              <span class="chip chip--secondary">17.842.503-6</span>
+              <span class="who__tel">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3.5 21l1.9-5.2A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+                +56 9 8123 4567
+              </span>
+              <a class="btn btn--whatsapp" href="https://wa.me/56981234567" target="_blank" rel="noopener noreferrer">
+                <svg class="wa" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/></svg>
+                Hablar por WhatsApp
+              </a>
+            </div>
+          </div>
+          <span class="chip chip--confirmado" style="margin-left:auto">
+            <span class="chip__dot"></span>Confirmado
+          </span>
+        </header>
+
+        <div class="dlg__body">
+          <section class="block block--session">
+            <p class="overline">La sesión</p>
+            <div class="session">
+              <div>
+                <p class="session__day">viernes 14 de noviembre</p>
+                <p class="session__time">09:30 <span>– 10:15</span></p>
+              </div>
+              <div class="session__right">
+                <span class="chip chip--pack">Sesión 3 de 6</span>
+                <p class="session__dur">45 min</p>
+              </div>
+            </div>
+            <p class="session__service">
+              Kinesiología deportiva
+              <span class="chip chip--secondary">Pack hombro · 6 sesiones</span>
+            </p>
+            <ul class="facts">
+              <li>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 20a8 8 0 0 1 16 0"/></svg>
+                Nicolás Herrera Salas
+              </li>
+              <li>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                Sede Providencia · Box 2
+              </li>
+            </ul>
+          </section>
+
+          <section class="block">
+            <p class="overline">Precio sesión</p>
+            <div class="pay__row">
+              <p class="pay__amount">$38.000</p>
+              <span class="chip chip--parcial"><span class="chip__dot"></span>Pago parcial</span>
+            </div>
+            <p class="pay__note">Abonado $20.000 · saldo pendiente $18.000</p>
+          </section>
+
+          <section class="block block--notes">
+            <div class="note">
+              <p class="overline">Notas para el paciente</p>
+              <p>Llegar 10 minutos antes con ropa cómoda. Traer la orden médica.</p>
+            </div>
+            <div class="note note--internal">
+              <p class="overline">Comentario interno</p>
+              <p>Segunda sesión de hombro derecho; si refiere EVA &gt; 4, bajar la carga del manguito.</p>
+            </div>
+          </section>
+        </div>
+
+        <footer class="dlg__foot">
+          <button class="btn btn--text">Cerrar</button>
+          <div class="foot__actions">
+            <button class="btn btn--outline">Abonar</button>
+            <button class="btn btn--outline">Ver pago</button>
+            <button class="btn btn--primary">Editar</button>
+          </div>
+        </footer>
+      </div>
+
+      <figure class="variant">
+        <figcaption class="variant__cap">Calendario del profesional · mismo shell, sin cobro ni comentario interno</figcaption>
+        <div class="dlg dlg--provider" role="group" aria-label="Variante profesional del diálogo">
+          <header class="dlg__head">
+            <span class="avatar" aria-hidden="true">CR</span>
+            <div class="who">
+              <h2>Camila Rojas Fuentes</h2>
+              <div class="who__meta">
+                <span class="chip chip--secondary">17.842.503-6</span>
+              </div>
+            </div>
+            <span class="chip chip--confirmado" style="margin-left:auto"><span class="chip__dot"></span>Confirmado</span>
+          </header>
+          <div class="dlg__body">
+            <section class="block block--session">
+              <p class="overline">La sesión</p>
+              <div class="session">
+                <div>
+                  <p class="session__day">viernes 14 de noviembre</p>
+                  <p class="session__time">09:30 <span>– 10:15</span></p>
+                </div>
+                <div class="session__right">
+                  <span class="chip chip--pack">3 de 6</span>
+                </div>
+              </div>
+              <p class="session__service">Kinesiología deportiva</p>
+              <ul class="facts">
+                <li>
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                  Sede Providencia · Box 2
+                </li>
+              </ul>
+            </section>
+            <section class="block block--notes">
+              <div class="note">
+                <p class="overline">Notas para el paciente</p>
+                <p>Llegar 10 minutos antes con ropa cómoda.</p>
+              </div>
+            </section>
+          </div>
+          <footer class="dlg__foot">
+            <button class="btn btn--text">Cerrar</button>
+            <div class="foot__actions"><button class="btn btn--primary">Editar</button></div>
+          </footer>
+        </div>
+      </figure>
+
+      <aside class="annots" aria-label="Qué cambia">
+        <div class="annot"><b>1</b><span>El paciente y su estado quedan en la cabecera: con dos citas abiertas se distinguen sin leer el cuerpo.</span></div>
+        <div class="annot"><b>2</b><span>El cuándo deja de ser la séptima fila: pasa a ser el dato grande del bloque de sesión.</span></div>
+        <div class="annot"><b>3</b><span>El estado de pago y el saldo se ven sin tocar un botón; «Abonar» sigue apareciendo solo si hay saldo.</span></div>
+        <div class="annot"><b>4</b><span>Las notas se separan por lector: paciente vs. interno, con overline ámbar para lo interno.</span></div>
+        <div class="annot"><b>5</b><span>El footer depende del pago: sin pago → <b>Abonar</b>; parcial → <b>Abonar</b> + <b>Ver pago</b>; pagado → <b>Ver pago</b>. <b>Editar</b> va siempre.</span></div>
+      </aside>
+    </div>
+  </section>
+
+
+<p class="footnote">
+    <b>Implementación:</b> las dos superficies comparten cabecera (avatar + identidad + chip de
+    estado), bloque de sesión, footer y la banda de 3 px con el color del estado en el borde
+    superior. Todo sale de tokens existentes — <code>--bw-300</code>,
+    <code>--bw-50</code>/<code>--bw-100</code>, <code>--bw-radius-lg</code>,
+    <code>--bw-shadow-popover</code>, <code>--bw-font-amount</code> — y de las recetas globales
+    <code>.bw-chip</code> y <code>.bw-card</code>; no hay color nuevo que replicar en los tres temas.
+  </p>
+
+</div>
+</body>
+</html>
