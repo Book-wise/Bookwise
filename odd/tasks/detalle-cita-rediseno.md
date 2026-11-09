@@ -204,3 +204,17 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   viene `[]`, hoy cae al fallback de **una sola línea** con el precio de la reserva en vez de las 6
   sesiones. No rompe, pero degrada el recibo de una venta de pack. Va como deuda para la feature de
   packs, no para este rediseño (el diálogo grande está fuera de alcance).
+- **L25 (respuesta de Bookwise-API a L24):** era un hueco, no una decisión, y **lo arreglan en la API**
+  (PR **#94**, `fix/booking-detail-pack-sessions`): `GET /bookings/{id}` ahora carga las sesiones del
+  pack, así que `pack_session.all_sessions` viene completo (ordenado por `session_number`, con `status`,
+  `price`, `effective_price`, `attended_at`, `booking_id` y `booking.start_time` con offset). **En el
+  listado sigue `[]` a propósito** (payload del calendario; el chip sólo necesita `session_number` +
+  `total_sessions`).
+  - Consecuencia para el recibo: `payment-tab` **no** debe armarse desde un ítem del listado. Hoy
+    consume `GET /sales/{id}` (`salesApi.getSale`), cuyo `booking` embebido es otro recurso — queda
+    abierto si #94 lo cubre o si hay que pedir `GET /bookings/{id}` aparte.
+  - `GET /bookings` responde **array plano**, no el envelope `{data, links, meta}`: el store ya lo
+    tolera (`Array.isArray(raw) ? raw : raw.data ?? []`), así que no rompe, pero el tipo
+    `PaginatedResponse<Booking>` del servicio no refleja la realidad.
+  - Nada de esto toca el rediseño del diálogo: el chip usa sólo `session_number` y `total_sessions`.
+    El arreglo del recibo queda como deuda de la feature de packs (S2 excluye el diálogo grande).
