@@ -135,3 +135,9 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   scheduled / pending) y de pago (partial / paid), dos clientes y notas. Preguntas abiertas: si
   `GET /bookings` devuelve `pack_session` en el listado, si hay endpoint para listar las sesiones de un
   `client_pack`, y si los seeds quedan versionados o son one-shot de local.
+- **L16 (usuario, comentario del canvas):** «en este diseño el boton quedo el boton de whatsapp abajo,
+  asegurate de que en la implementacion tambien quede abajo, porque en la implementacion lo que bajo
+  fue el estado». Corregido en `.bw-sheet`: el nombre y el chip de estado comparten una fila propia
+  (`__top`, con el nombre truncándose si hace falta y el chip sin encogerse) y el botón de WhatsApp
+  pasa a `flex-basis: 100%`, así que siempre cae en su renglón, debajo de RUT y teléfono. En mobile
+  (≤520 px) el chip sí puede bajar bajo el nombre.

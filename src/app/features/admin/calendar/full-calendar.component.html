@@ -300,9 +300,22 @@
         <span class="bw-sheet__avatar" aria-hidden="true">{{ sheetInitials() }}</span>
 
         <div class="bw-sheet__who">
-          <h2 class="bw-sheet__name">
-            {{ booking.client?.first_name }} {{ booking.client?.last_name }}
-          </h2>
+          <div class="bw-sheet__top">
+            <h2 class="bw-sheet__name">
+              {{ booking.client?.first_name }} {{ booking.client?.last_name }}
+            </h2>
+
+            <span
+              class="bw-chip bw-sheet__head-status"
+              [style.--chip-color]="getStatusChipClass(booking.status?.name, booking.status_id)"
+              [style.--chip-text-color]="
+                getStatusChipTextClass(booking.status?.name, booking.status_id)
+              "
+            >
+              <span class="bw-chip__dot"></span>
+              {{ booking.status?.name || 'Sin estado' }}
+            </span>
+          </div>
           <div class="bw-sheet__meta">
             @if (booking.client?.rut; as rut) {
               <span class="bw-chip bw-chip--secondary">{{ rut }}</span>
@@ -332,16 +345,6 @@
           </div>
         </div>
 
-        <span
-          class="bw-chip bw-sheet__head-status"
-          [style.--chip-color]="getStatusChipClass(booking.status?.name, booking.status_id)"
-          [style.--chip-text-color]="
-            getStatusChipTextClass(booking.status?.name, booking.status_id)
-          "
-        >
-          <span class="bw-chip__dot"></span>
-          {{ booking.status?.name || 'Sin estado' }}
-        </span>
       </div>
     }
   </ng-template>

@@ -41,10 +41,22 @@
   &__who {
     display: grid;
     gap: 0.1875rem;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  // Nombre y estado comparten la primera línea: el estado nunca se va abajo,
+  // el nombre es lo único que se recorta.
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     min-width: 0;
   }
 
   &__name {
+    flex: 1 1 auto;
+    min-width: 0;
     margin: 0;
     font-size: var(--bw-font-title);
     font-weight: var(--bw-weight-semibold);
@@ -82,13 +94,16 @@
 
   &__head-status {
     margin-left: auto;
-    flex-shrink: 0;
+    flex: 0 0 auto;
   }
 
   // El botón de WhatsApp va envuelto en un enlace: el `p-button` conserva su
   // receta de severidad `success` y acá sólo se anula el subrayado.
   &__wa-link {
     display: inline-flex;
+    flex-basis: 100%; // siempre en su propia línea, debajo de RUT y teléfono
+    width: fit-content;
+    margin-top: 0.125rem;
     text-decoration: none;
   }
 
@@ -264,6 +279,11 @@
 // En pantallas angostas el chip de estado baja a su propia línea en vez de
 // apretar el nombre; el diálogo conserva su ancho con `maxWidth: 96vw`.
 @media (max-width: 520px) {
+  .bw-sheet__top {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
   .bw-sheet__head-status {
     margin-left: 0;
   }
