@@ -147,3 +147,7 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   (diálogo admin y variante del profesional) y en las dos plantillas reales para que diseño e
   implementación no se separen. Alternativas si no convence: «Fecha y hora», «Información de la cita»,
   «Horario».
+- **L18 (usuario, comentario del canvas):** «esta sesion» sobre el overline «Atención» — el rótulo del
+  bloque queda **«Esta sesión»**: señala el ítem que se está mirando, sin el artículo coloquial de «La
+  sesión» y sin el tono administrativo de «Atención». Sincronizado en el artboard 01 y en las dos
+  plantillas.
