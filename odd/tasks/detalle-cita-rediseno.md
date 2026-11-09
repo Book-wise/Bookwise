@@ -157,3 +157,11 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   es lo único que se recorta), abajo teléfono + botón «Hablar por WhatsApp». Footer con los iconos
   originales: `pi pi-plus` (Abonar), `pi pi-dollar` (Ver pago), `pi pi-pencil` (Editar). Artboard 01
   sincronizado con la misma cabecera e iconos aproximados con SVG inline.
+- **L20 (usuario, decisión):** «2 y commiteas el ajeno asi lo puedes integrar». El WIP de la otra
+  sesión (perfil/tenant) se commitea tal cual en esta rama para no perderlo. **Aviso registrado**: ese
+  estado no compila y revierte material de develop — `i18n/es.ts` pierde 555 claves, `auth.service.ts`
+  pierde 6 APIs públicas (`hasPermission`, `hasAllPermissions`, `isAdminGeneral`,
+  `syncTokenFromStorage`, `updateAccount`, `needsOnboarding`), `calendar-prefs.service.ts` pierde
+  `getLastProviderId`/`setLastProviderId` y `app-header.component.ts` pierde `appearance`,
+  `appearanceOptions` y `onAppearanceChange`. El commit `wip:` deja constancia; integrarlo exige
+  restaurar antes esos archivos desde develop.
