@@ -122,3 +122,7 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
     specs de la util y de las constantes.
   - Diferencia consciente con el artboard: el diálogo real conserva el botón × de PrimeNG y la
     `p-button` de WhatsApp mide 2.5 rem (alto global de control), no 2.125 rem.
+- **L14 (commits del work unit):** `683f813` (design: 3 artboards + este documento, 1.799 líneas
+  porque los artboards son HTML autocontenido) y `0e68151` (implementación: parcial `.bw-sheet`,
+  utils, chips AA, los dos calendarios y sus specs). Van separados por tipo de artefacto, no por
+  tamaño: la parcial, los templates y los componentes son interdependientes y no compilan por partes.
