@@ -141,3 +141,9 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   (`__top`, con el nombre truncándose si hace falta y el chip sin encogerse) y el botón de WhatsApp
   pasa a `flex-basis: 100%`, así que siempre cae en su renglón, debajo de RUT y teléfono. En mobile
   (≤520 px) el chip sí puede bajar bajo el nombre.
+- **L17 (usuario, comentario del canvas):** «la sesion, me parece poco profesional, prueba otra
+  palabra u otra forma de escribirlo». El overline del bloque pasa de «La sesión» a **«Atención»** —
+  el término que usa el rubro para la cita clínica, sin coloquialismos. Aplicado en el artboard 01
+  (diálogo admin y variante del profesional) y en las dos plantillas reales para que diseño e
+  implementación no se separen. Alternativas si no convence: «Fecha y hora», «Información de la cita»,
+  «Horario».
