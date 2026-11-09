@@ -165,3 +165,9 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
   `getLastProviderId`/`setLastProviderId` y `app-header.component.ts` pierde `appearance`,
   `appearanceOptions` y `onAppearanceChange`. El commit `wip:` deja constancia; integrarlo exige
   restaurar antes esos archivos desde develop.
+- **L21 (usuario, comentario del canvas con captura del diálogo real):** «esta todo un poco encima los
+  elementos, podemos mejorarlo?». Ajustes de aire en la cabecera de `.bw-sheet`: cabecera alineada
+  arriba (`align-items: flex-start`), separación explícita por filas (`row-gap: .25rem`), el botón de
+  WhatsApp vuelve a su propia línea (`flex-basis: 100%`) y **deja de heredar el alto global de control**:
+  dentro de la cabecera el `size="small"` mide 2.125rem, no 2.5rem, que era lo que aplastaba el bloque.
+  El badge de estado pasa a la fila del nombre en el artboard y en la variante del profesional.

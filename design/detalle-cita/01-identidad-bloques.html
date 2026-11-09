@@ -180,7 +180,7 @@
     border-top: 3px solid var(--bw-status-confirmado);
   }
   .dlg__head {
-    display: flex; align-items: center; gap: .75rem;
+    display: flex; align-items: flex-start; column-gap: .75rem; row-gap: .25rem;
     padding: 1.25rem 1.5rem 1rem; box-shadow: var(--bw-dialog-header-shadow);
   }
   .avatar {
@@ -191,16 +191,24 @@
     font-size: var(--bw-font-table); font-weight: var(--bw-weight-bold);
     letter-spacing: .02em;
   }
-  .who { min-width: 0; display: grid; gap: .1875rem; }
-  .who__name-row { display: flex; align-items: center; gap: .375rem; min-width: 0; }
+  .who { min-width: 0; display: grid; gap: .25rem; }
+  .who__name-row {
+    display: flex; align-items: center; column-gap: .375rem; row-gap: .25rem;
+    min-width: 0; flex-wrap: wrap;
+  }
   .who__name-row h2 { flex: 1 1 auto; min-width: 0; }
+  .who__name-row .chip:last-child { margin-left: auto; }
   .who h2 {
     font-size: var(--bw-font-title); font-weight: var(--bw-weight-semibold);
     color: var(--text-heading); line-height: 1.25;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .who__meta { display: flex; align-items: center; gap: .375rem; flex-wrap: wrap; }
-  .who__meta .btn--whatsapp { flex-basis: 100%; justify-content: flex-start; width: fit-content; }
+  .who__meta {
+    display: flex; align-items: center; column-gap: .5rem; row-gap: .25rem; flex-wrap: wrap;
+  }
+  .who__meta .btn--whatsapp {
+    flex-basis: 100%; justify-content: flex-start; width: fit-content; margin-top: .125rem;
+  }
   .who__tel {
     display: inline-flex; align-items: center; gap: .25rem;
     font-size: var(--bw-font-caption); color: var(--text-color-secondary);
@@ -390,6 +398,9 @@
             <div class="who__name-row">
               <h2 id="dlg-a-title">Camila Rojas Fuentes</h2>
               <span class="chip chip--secondary">17.842.503-6</span>
+              <span class="chip chip--confirmado">
+                <span class="chip__dot"></span>Confirmado
+              </span>
             </div>
             <div class="who__meta">
               <span class="who__tel">
@@ -402,9 +413,6 @@
               </a>
             </div>
           </div>
-          <span class="chip chip--confirmado" style="margin-left:auto">
-            <span class="chip__dot"></span>Confirmado
-          </span>
         </header>
 
         <div class="dlg__body">
@@ -473,12 +481,12 @@
           <header class="dlg__head">
             <span class="avatar" aria-hidden="true">CR</span>
             <div class="who">
-              <h2>Camila Rojas Fuentes</h2>
-              <div class="who__meta">
+              <div class="who__name-row">
+                <h2>Camila Rojas Fuentes</h2>
                 <span class="chip chip--secondary">17.842.503-6</span>
+                <span class="chip chip--confirmado"><span class="chip__dot"></span>Confirmado</span>
               </div>
             </div>
-            <span class="chip chip--confirmado" style="margin-left:auto"><span class="chip__dot"></span>Confirmado</span>
           </header>
           <div class="dlg__body">
             <section class="block block--session">
