@@ -143,6 +143,18 @@
       "status": "resolved",
       "sentAt": "2026-11-09T13:58:58.214Z",
       "resolvedAt": "2026-11-09T13:59:50.711Z"
+    },
+    {
+      "id": "huq4rjby",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > header",
+      "excerpt": "CR Camila Rojas Fuentes 17.842.503-6 +56 9 8123 4567 Hablar por WhatsApp Confirmado",
+      "comment": "te muestro como ha quedado en realidad , esta todo un poco encima los elementos, podemos mejorarlo?",
+      "createdAt": "2026-11-09T14:19:53.667Z",
+      "status": "open",
+      "sentAt": "2026-11-09T14:19:55.278Z",
+      "resolvedAt": null,
+      "screenshot": ".screenshots/huq4rjby.png"
     }
   ]
 }
