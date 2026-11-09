@@ -190,3 +190,17 @@ sigue sin ella; su plantilla queda cubierta por el build, no por un test de comp
     sesiones del paciente hay que usar **`GET /v1/clients/{id}/packs`** (por pack: `total_sessions`,
     `used_sessions`, `remaining_sessions`, `status` y `sessions[]` con `status`, `attended_at`,
     `price`, `notes` y `scheduled_at` ya resuelto).
+- **L23 (respuesta de Bookwise-API a las dos preguntas de L22):**
+  - `GET /v1/clients/{id}/packs` exige **`clients.view`** (no `client_packs.view`, que sólo gatea
+    `/client-packs`), y además corre `ClientPolicy@view`: para un paciente que no es del profesional
+    devuelve **403**, no lista vacía. `clients.view` ya está en la baseline de `staff`, así que el
+    profesional puede leer los packs de sus pacientes. El front debe tratar ese **403 como «no
+    aplica»**, no como error.
+  - `scheduled_at` llega en **hora local con offset** (`2026-11-10T16:30:00-03:00`): no hay que
+    convertir nada, alcanza con formatear el offset que ya viene. El offset sale de `app.timezone`
+    (America/Santiago), no de una columna por sucursal: si entra un tenant en otra zona, revisar.
+- **L24 (hallazgo del front a partir de L22, fuera del alcance de S2):** `payment-tab.component.ts`
+  (`buildItems`) arma el desglose del recibo desde `booking.pack_session.all_sessions`; como ese array
+  viene `[]`, hoy cae al fallback de **una sola línea** con el precio de la reserva en vez de las 6
+  sesiones. No rompe, pero degrada el recibo de una venta de pack. Va como deuda para la feature de
+  packs, no para este rediseño (el diálogo grande está fuera de alcance).
