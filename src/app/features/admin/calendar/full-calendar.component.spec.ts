@@ -19,9 +19,12 @@ import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { Booking, Location, Provider, User } from '@models';
+import { Booking, BookingStatus, Client, Location, Provider, Service, User } from '@models';
 import type { EventContentArg } from '@fullcalendar/core';
 import { DateTime } from 'luxon';
+import { formatCLP } from '@shared/config/currency.config';
+import type { Payment } from '@models';
+import { formatSpanishLongDate } from '@core/utils/booking-sheet.util';
 
 /**
  * Integration tests for the calendar-navigation flow inside FullCalendarComponent.
@@ -928,4 +931,162 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(build(mirror)).toBe('');
     });
   });
+
+  // ── Ficha de la cita («Detalles de la Cita») ──────────────────────────────
+  // El rediseño mueve la jerarquía al template, pero el contrato de acciones y
+  // el dato de pago tienen que seguir siendo los mismos: estos tests los pinean.
+  describe('detalle de la cita (ficha compartida)', () => {
+    const start = '2025-11-14T09:30:00';
+
+    function bookingFixture(
+      paymentStatus: Booking['payment_status'],
+      payment: Payment | null = null,
+    ): Booking {
+      return {
+        id: 452,
+        start_time: start,
+        end_time: '2025-11-14T10:15:00',
+        effective_duration_minutes: 45,
+        price: 38000,
+        notes: 'Llegar 10 minutos antes con ropa cómoda.',
+        internal_notes: 'Segunda sesión de hombro derecho.',
+        status_id: 2,
+        status: { id: 2, name: 'Confirmado', color: '#ECBE51' } as BookingStatus,
+        client: {
+          id: 88,
+          first_name: 'Camila',
+          last_name: 'Rojas Fuentes',
+          email: 'camila.rojas@correo.cl',
+          phone: '+56 9 8123 4567',
+          rut: '17.842.503-6',
+          active: true,
+        } as Client,
+        service: {
+          id: 3,
+          name: 'Kinesiología deportiva',
+          price: 38000,
+        } as unknown as Service,
+        provider: { id: 7, first_name: 'Nicolás', last_name: 'Herrera Salas' } as Provider,
+        location: { id: 1, name: 'Sede Providencia' } as unknown as Location,
+        payment_status: paymentStatus,
+        payment: payment as Booking['payment'],
+        pack_session: {
+          session_number: 3,
+          total_sessions: 6,
+          client_pack_id: 1,
+          service_pack_id: 2,
+          status: 'scheduled',
+        },
+      };
+    }
+
+    /** Abre la ficha con la reserva dada y devuelve el nodo donde vive el shell. */
+    function openSheet(booking: Booking): ParentNode {
+      mockBookingsApi.getBookings.mockReturnValue(of({ data: [booking], meta: {} }) as never);
+      store.loadEvents({ dateFrom: '2025-11-01', dateTo: '2025-11-30' });
+      store.selectBooking(booking);
+      component.showEventDialog.set(true);
+      fixture.detectChanges();
+
+      const host = fixture.nativeElement as HTMLElement;
+      return host.querySelector('.bw-sheet__body') ? host : document;
+    }
+
+    function textsOf(scope: ParentNode, selector: string): string[] {
+      return Array.from(scope.querySelectorAll(selector)).map((node) =>
+        (node.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
+    }
+
+    afterEach(() => {
+      component.showEventDialog.set(false);
+      fixture.detectChanges();
+    });
+
+    it('ordena la ficha por jerarquía: identidad, sesión, pago y notas', () => {
+      const payment: Payment = {
+        id: 9,
+        total_amount: 38000,
+        paid_amount: 20000,
+        remaining_amount: 18000,
+        status: 'partial',
+      };
+      const scope = openSheet(bookingFixture('partial', payment));
+
+      // Cabecera: iniciales, nombre completo y RUT del paciente.
+      expect(textsOf(scope, '.bw-sheet__avatar')).toEqual(['CR']);
+      expect(textsOf(scope, '.bw-sheet__name')[0]).toContain('Camila Rojas Fuentes');
+      expect(textsOf(scope, '.bw-sheet__meta .bw-chip')).toEqual(['17.842.503-6']);
+
+      // Bloque de sesión: el «cuándo» grande, la duración y la sesión del pack.
+      expect(textsOf(scope, '.bw-sheet__day')).toEqual([formatSpanishLongDate(start)]);
+      expect(textsOf(scope, '.bw-sheet__time')[0]).toContain('09:30');
+      expect(textsOf(scope, '.bw-sheet__time')[0]).toContain('10:15');
+      expect(textsOf(scope, '.bw-sheet__duration')).toEqual(['45 min']);
+      expect(textsOf(scope, '.bw-sheet__session-side .bw-chip')).toEqual(['Sesión 3 de 6']);
+      expect(textsOf(scope, '.bw-sheet__service')).toEqual(['Kinesiología deportiva']);
+      expect(textsOf(scope, '.bw-sheet__fact').join(' ')).toContain('Nicolás Herrera Salas');
+      expect(textsOf(scope, '.bw-sheet__fact').join(' ')).toContain('Sede Providencia');
+
+      // Pago visible sin abrir nada: precio, estado, abonado y saldo.
+      expect(textsOf(scope, '.bw-sheet__amount')).toEqual([formatCLP(38000)]);
+      expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pago parcial']);
+      expect(textsOf(scope, '.bw-sheet__pay-note')[0]).toContain(formatCLP(20000));
+      expect(textsOf(scope, '.bw-sheet__pay-note')[0]).toContain(formatCLP(18000));
+
+      // Las notas se separan por lector.
+      expect(textsOf(scope, '.bw-sheet__note--internal')[0]).toContain(
+        'Segunda sesión de hombro derecho.',
+      );
+    });
+
+    it('ofrece Abonar y Ver pago con pago parcial', () => {
+      const scope = openSheet(
+        bookingFixture('partial', {
+          id: 9,
+          total_amount: 38000,
+          paid_amount: 20000,
+          remaining_amount: 18000,
+          status: 'partial',
+        }),
+      );
+
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Abonar',
+        'Ver pago',
+        'Editar',
+      ]);
+    });
+
+    it('con la reserva pagada sólo deja Ver pago', () => {
+      const scope = openSheet(
+        bookingFixture('paid', {
+          id: 9,
+          total_amount: 38000,
+          paid_amount: 38000,
+          remaining_amount: 0,
+          status: 'paid',
+        }),
+      );
+
+      expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pagado']);
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Ver pago',
+        'Editar',
+      ]);
+    });
+
+    it('sin pagos registrados ofrece sólo Abonar y lo dice', () => {
+      // El backend manda `{}` cuando no hay pagos: no debe pintar montos.
+      const scope = openSheet(bookingFixture('unpaid', {} as Payment));
+
+      expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pago pendiente']);
+      expect(textsOf(scope, '.bw-sheet__pay-note')).toEqual(['Sin pagos registrados']);
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Abonar',
+        'Editar',
+      ]);
+    });
+  });
+
 });

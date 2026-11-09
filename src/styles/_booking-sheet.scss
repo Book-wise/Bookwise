@@ -1,0 +1,282 @@
+// ============================================
+// Bookwise — Booking sheet (diálogo «Detalles de la Cita»)
+// ============================================
+//
+// Una sola receta para el detalle de una cita, compartida por el calendario
+// admin y el del profesional. Vive global —como `.bw-card` o `.bw-chip`—
+// porque la consumen dos features y no se resuelve con `::ng-deep` por
+// componente.
+//
+// Jerarquía (decisión de diseño `design/detalle-cita/01-identidad-bloques.html`):
+//   head   quién: avatar + nombre + RUT, teléfono/WhatsApp y estado
+//   body   la sesión (cuándo / cuánto dura / qué / con quién / dónde),
+//          el pago (precio + estado + abonado y saldo) y las notas
+//   foot   acciones (Cerrar · Abonar · Ver pago · Editar)
+
+.bw-sheet {
+  // ── Cabecera: identidad ───────────────────────────────────────────────────
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--bw-radius-md);
+    background: linear-gradient(155deg, var(--bw-600), var(--bw-300));
+    color: var(--bw-text-on-brand);
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-bold);
+    letter-spacing: 0.02em;
+  }
+
+  &__who {
+    display: grid;
+    gap: 0.1875rem;
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: var(--bw-font-title);
+    font-weight: var(--bw-weight-semibold);
+    line-height: 1.25;
+    color: var(--text-heading);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  // Teléfono y correo: dato de contacto, no texto suelto.
+  &__contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+    text-decoration: none;
+
+    i {
+      font-size: 0.8125rem;
+    }
+
+    &:hover {
+      color: var(--bw-tab-color);
+    }
+  }
+
+  &__head-status {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  // El botón de WhatsApp va envuelto en un enlace: el `p-button` conserva su
+  // receta de severidad `success` y acá sólo se anula el subrayado.
+  &__wa-link {
+    display: inline-flex;
+    text-decoration: none;
+  }
+
+  // ── Cuerpo: bloques ──────────────────────────────────────────────────────
+  &__body {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  &__block {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.875rem;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--bw-radius-lg);
+
+    &--session {
+      border-left: 3px solid var(--bw-300);
+    }
+
+    // Notas: superficie tenue, para que no compitan con la sesión.
+    &--notes {
+      gap: 0.625rem;
+      background: color-mix(in srgb, var(--bw-50) 60%, var(--surface-card));
+      border-color: var(--bw-100);
+    }
+  }
+
+  &__overline {
+    margin: 0;
+    font-size: var(--bw-font-overline);
+    font-weight: var(--bw-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-color-secondary);
+  }
+
+  // ── Bloque de sesión ─────────────────────────────────────────────────────
+  &__session {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__day {
+    margin: 0;
+    font-size: var(--bw-font-table);
+    color: var(--text-color-secondary);
+  }
+
+  &__time {
+    margin: 0;
+    font-size: var(--bw-font-amount);
+    font-weight: var(--bw-weight-semibold);
+    letter-spacing: var(--bw-tracking-tight);
+    line-height: 1.2;
+    color: var(--text-heading);
+  }
+
+  &__time-end {
+    font-weight: var(--bw-weight-regular);
+    color: var(--text-color-secondary);
+  }
+
+  &__session-side {
+    display: grid;
+    gap: 0.25rem;
+    justify-items: end;
+  }
+
+  &__duration {
+    margin: 0;
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+
+  &__service {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    margin: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--surface-border);
+    font-size: var(--bw-font-body);
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-color);
+  }
+
+  &__facts {
+    display: grid;
+    gap: 0.3125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__fact {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: var(--bw-font-table);
+    color: var(--text-color);
+
+    i {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  // ── Bloque de pago ───────────────────────────────────────────────────────
+  &__pay-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__amount {
+    margin: 0;
+    font-size: var(--bw-font-amount);
+    font-weight: var(--bw-weight-semibold);
+    letter-spacing: var(--bw-tracking-tight);
+    color: var(--text-heading);
+  }
+
+  &__pay-note {
+    margin: 0;
+    font-size: var(--bw-font-caption);
+    color: var(--text-color-secondary);
+  }
+
+  // ── Notas ────────────────────────────────────────────────────────────────
+  &__note {
+    display: grid;
+    gap: 0.125rem;
+
+    p {
+      margin: 0;
+      font-size: var(--bw-font-table);
+      color: var(--text-color);
+    }
+
+    // El comentario interno no es para el paciente: se marca en ámbar.
+    &--internal {
+      p {
+        color: var(--text-label);
+      }
+
+      .bw-sheet__overline {
+        color: var(--bw-chip-text-warning);
+      }
+    }
+  }
+
+  // ── Footer ───────────────────────────────────────────────────────────────
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  &__foot-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+}
+
+// En pantallas angostas el chip de estado baja a su propia línea en vez de
+// apretar el nombre; el diálogo conserva su ancho con `maxWidth: 96vw`.
+@media (max-width: 520px) {
+  .bw-sheet__head-status {
+    margin-left: 0;
+  }
+
+  .bw-sheet__session {
+    flex-direction: column;
+  }
+
+  .bw-sheet__session-side {
+    justify-items: start;
+  }
+
+  .bw-sheet__foot {
+    flex-wrap: wrap;
+  }
+}

@@ -29,11 +29,20 @@ import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
-import { Booking, BlockedSlot, Location, Provider } from '@models';
+import { Booking, BlockedSlot, Location, Payment, Provider } from '@models';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
-import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/booking-statuses';
+import {
+  BOOKING_STATUSES,
+  bookingStatusChipClass,
+  bookingStatusChipTextClass,
+} from '../bookings/constants/booking-statuses';
+import {
+  formatSpanishLongDate,
+  personInitials,
+  whatsappHref as buildWhatsappHref,
+} from '@core/utils/booking-sheet.util';
 import { blockedCardHtml, eventCardHtml } from './calendar-event-content';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
@@ -1524,4 +1533,32 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   getStatusChipClass(statusName?: string, statusId?: number): string {
     return bookingStatusChipClass(statusName, statusId);
   }
+
+  /** Texto AA del chip de estado — el acento solo no es legible sobre su tinte. */
+  getStatusChipTextClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipTextClass(statusName, statusId);
+  }
+
+  /** Iniciales del avatar en la ficha de la cita. */
+  readonly sheetInitials = computed(() => {
+    const client = this.store.selectedBooking()?.client;
+    return personInitials(client?.first_name, client?.last_name);
+  });
+
+  /** «viernes 14 de noviembre»: el día del bloque de sesión. */
+  readonly sheetLongDate = computed(() =>
+    formatSpanishLongDate(this.store.selectedBooking()?.start_time),
+  );
+
+  /** Enlace de WhatsApp del teléfono del cliente (null si no hay número). */
+  readonly whatsappHref = buildWhatsappHref;
+
+  /**
+   * Pago real de la reserva. El backend manda `{}` cuando no hay pagos, así que
+   * la mera presencia del objeto no alcanza: sin montos no hay nada que mostrar.
+   */
+  readonly sheetPayment = computed(() => {
+    const payment = this.store.selectedBooking()?.payment as Payment | undefined;
+    return payment && typeof payment.paid_amount === 'number' ? payment : null;
+  });
 }

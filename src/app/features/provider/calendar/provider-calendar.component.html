@@ -188,60 +188,109 @@
 </p-popover>
 
 <!-- Dialog detalle de reserva -->
+<!-- Mismo shell que el calendario admin: `.bw-sheet`
+     (src/styles/_booking-sheet.scss).
+     Spec: design/detalle-cita/01-identidad-bloques.html (variante profesional) -->
 <p-dialog
-  header="Detalles de la Cita"
   [visible]="showEventDialog()"
   (visibleChange)="showEventDialog.set($event)"
   [modal]="true"
-  [style]="{ width: '500px' }"
   [draggable]="false"
   [resizable]="false"
+  [style]="{ width: '520px', maxWidth: '96vw' }"
 >
-  @if (store.selectedBooking(); as booking) {
-    <div class="event-details">
-      <div class="detail-row">
-        <span class="label">Cliente:</span>
-        <span class="value">{{ booking.client?.first_name }} {{ booking.client?.last_name }}</span>
-      </div>
-      @if (booking.client?.rut) {
-        <div class="detail-row">
-          <span class="label">RUT:</span>
-          <span class="value">{{ booking.client!.rut }}</span>
+  <ng-template pTemplate="header">
+    @if (store.selectedBooking(); as booking) {
+      <div class="bw-sheet__head">
+        <span class="bw-sheet__avatar" aria-hidden="true">{{ sheetInitials() }}</span>
+
+        <div class="bw-sheet__who">
+          <h2 class="bw-sheet__name">
+            {{ booking.client?.first_name }} {{ booking.client?.last_name }}
+          </h2>
+          <div class="bw-sheet__meta">
+            @if (booking.client?.rut; as rut) {
+              <span class="bw-chip bw-chip--secondary">{{ rut }}</span>
+            }
+          </div>
         </div>
-      }
-      <div class="detail-row">
-        <span class="label">Servicio:</span>
-        <span class="value">{{ booking.service?.name }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Ubicación:</span>
-        <span class="value">{{ booking.location?.name }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Fecha:</span>
-        <span class="value">{{ booking.start_time | date: 'dd/MM/yyyy HH:mm' }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Precio:</span>
-        <span class="value">{{ booking.price | bwCurrency }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Estado:</span>
-        <span class="bw-chip" [style.--chip-color]="getStatusChipClass(booking.status?.name)">
+
+        <span
+          class="bw-chip bw-sheet__head-status"
+          [style.--chip-color]="getStatusChipClass(booking.status?.name, booking.status_id)"
+          [style.--chip-text-color]="
+            getStatusChipTextClass(booking.status?.name, booking.status_id)
+          "
+        >
+          <span class="bw-chip__dot"></span>
           {{ booking.status?.name || 'Sin estado' }}
         </span>
       </div>
-      @if (booking.notes) {
-        <div class="detail-row">
-          <span class="label">Notas:</span>
-          <span class="value">{{ booking.notes }}</span>
+    }
+  </ng-template>
+
+  @if (store.selectedBooking(); as booking) {
+    <div class="bw-sheet__body">
+      <section class="bw-sheet__block bw-sheet__block--session">
+        <p class="bw-sheet__overline">La sesión</p>
+
+        <div class="bw-sheet__session">
+          <div>
+            <p class="bw-sheet__day">{{ sheetLongDate() }}</p>
+            <p class="bw-sheet__time">
+              {{ booking.start_time | date: 'HH:mm' }}
+              <span class="bw-sheet__time-end">
+                – {{ booking.end_time | date: 'HH:mm' }}
+              </span>
+            </p>
+          </div>
+          <div class="bw-sheet__session-side">
+            @if (booking.pack_session; as pack) {
+              <span class="bw-chip bw-chip--primary">
+                Sesión {{ pack.session_number }} de {{ pack.total_sessions }}
+              </span>
+            }
+            @if (booking.effective_duration_minutes) {
+              <p class="bw-sheet__duration">{{ booking.effective_duration_minutes }} min</p>
+            }
+          </div>
         </div>
+
+        <p class="bw-sheet__service">{{ booking.service?.name }}</p>
+
+        <ul class="bw-sheet__facts">
+          @if (booking.location; as location) {
+            <li class="bw-sheet__fact">
+              <i class="pi pi-map-marker" aria-hidden="true"></i>
+              {{ location.name }}
+            </li>
+          }
+          <li class="bw-sheet__fact">
+            <i class="pi pi-tag" aria-hidden="true"></i>
+            {{ booking.price | bwCurrency }}
+          </li>
+        </ul>
+      </section>
+
+      @if (booking.notes) {
+        <section class="bw-sheet__block bw-sheet__block--notes">
+          <div class="bw-sheet__note">
+            <p class="bw-sheet__overline">Notas para el paciente</p>
+            <p>{{ booking.notes }}</p>
+          </div>
+        </section>
       }
     </div>
   }
+
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" (onClick)="closeDialog()" class="p-button-text"></p-button>
-    <p-button label="Editar" icon="pi pi-pencil" (onClick)="editBooking()"></p-button>
+    <div class="bw-sheet__foot">
+      <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
+
+      <div class="bw-sheet__foot-actions">
+        <p-button label="Editar" (onClick)="editBooking()" />
+      </div>
+    </div>
   </ng-template>
 </p-dialog>
 

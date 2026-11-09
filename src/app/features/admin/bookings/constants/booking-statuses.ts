@@ -31,6 +31,33 @@ export function bookingStatusChipClass(statusName?: string, statusId?: number): 
 }
 
 /**
+ * Text colour (WCAG AA) that pairs with `bookingStatusChipClass`.
+ *
+ * The accent returned above (`--bw-status-*`) is unreadable as text on its own
+ * 18% tint — pastel statuses like `#FCCAC2` would be invisible. Every chip that
+ * renders a label next to the dot must set both variables, so the label keeps
+ * the AA value while the tint and the dot keep the status accent.
+ */
+export function bookingStatusChipTextClass(statusName?: string, statusId?: number): string {
+  const status =
+    (statusId && BOOKING_STATUSES.find((s) => s.value === statusId)) ||
+    BOOKING_STATUSES.find((s) => s.label.toLowerCase() === statusName?.toLowerCase());
+
+  switch (status?.severity) {
+    case 'info':
+      return 'var(--bw-chip-text-online)';
+    case 'warn':
+      return 'var(--bw-chip-text-warning)';
+    case 'success':
+      return 'var(--bw-chip-text-success)';
+    case 'danger':
+      return 'var(--bw-chip-text-danger)';
+    default:
+      return 'var(--bw-chip-text-secondary)';
+  }
+}
+
+/**
  * Map a sale payment status to a chip CSS variable (single source of truth in _tokens.scss).
  * Missing status is treated as unpaid.
  */

@@ -7,8 +7,6 @@
 // the admin and provider calendars:
 //   • .cal-* skeletons (admin layout)
 //   • .calendar-loading radius/padding override (common core is global)
-//   • .event-details (grid variant)
-//   • .session-badge + detail helpers
 //   • .slot-menu (admin variant)
 
 .full-calendar-container {
@@ -129,76 +127,6 @@
       display: block;
     }
   }
-}
-
-.event-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-
-  .detail-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    &--full {
-      grid-column: 1 / -1;
-    }
-
-    .label {
-      font-weight: 600;
-      color: var(--text-color-secondary);
-      font-size: 0.875rem;
-    }
-
-    .value {
-      color: var(--text-color);
-      font-size: 1rem;
-    }
-  }
-}
-
-.session-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  background: var(--green-50, #f0fdf4);
-  color: var(--green-800, #166534);
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.25rem 0.625rem;
-  border-radius: 999px;
-  width: fit-content;
-
-  &__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green-500, #22c55e);
-    flex-shrink: 0;
-  }
-}
-
-.detail-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.detail-sep {
-  color: var(--text-color-secondary);
-  font-size: 0.875rem;
-}
-
-.detail-rut {
-  font-size: 0.875rem !important;
-  color: var(--text-color-secondary) !important;
-}
-
-.whatsapp-link {
-  text-decoration: none;
-  display: inline-flex;
 }
 
 // ── Slot menu (admin variant) ─────────────────────────────────────────────────

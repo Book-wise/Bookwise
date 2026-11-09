@@ -7,7 +7,6 @@
 // calendars:
 //   • .cal-* skeletons (provider layout)
 //   • .calendar-loading radius/padding override (common core is global)
-//   • .event-details (flex variant)
 //   • .slot-menu (provider variant)
 
 .full-calendar-container {
@@ -61,29 +60,6 @@
   .cal-sk-col {
     background: rgba(0, 0, 0, 0.04);
     border-radius: 2px;
-  }
-}
-
-.event-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
-  .detail-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    .label {
-      font-weight: 600;
-      color: #6b7280;
-      font-size: 0.875rem;
-    }
-
-    .value {
-      color: #1f2937;
-      font-size: 1rem;
-    }
   }
 }
 

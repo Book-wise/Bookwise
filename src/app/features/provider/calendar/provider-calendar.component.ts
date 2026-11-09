@@ -32,7 +32,12 @@ import { dayClosedKind, holidayNameFor, type HolidayMap } from '@core/utils/cale
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
-import { BOOKING_STATUSES, bookingStatusChipClass } from '@features/admin/bookings/constants/booking-statuses';
+import {
+  BOOKING_STATUSES,
+  bookingStatusChipClass,
+  bookingStatusChipTextClass,
+} from '@features/admin/bookings/constants/booking-statuses';
+import { formatSpanishLongDate, personInitials } from '@core/utils/booking-sheet.util';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
@@ -908,4 +913,20 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   getStatusChipClass(statusName?: string, statusId?: number): string {
     return bookingStatusChipClass(statusName, statusId);
   }
+
+  /** Texto AA del chip de estado — el acento solo no es legible sobre su tinte. */
+  getStatusChipTextClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipTextClass(statusName, statusId);
+  }
+
+  /** Iniciales del avatar en la ficha de la cita. */
+  readonly sheetInitials = computed(() => {
+    const client = this.store.selectedBooking()?.client;
+    return personInitials(client?.first_name, client?.last_name);
+  });
+
+  /** «viernes 14 de noviembre»: el día del bloque de sesión. */
+  readonly sheetLongDate = computed(() =>
+    formatSpanishLongDate(this.store.selectedBooking()?.start_time),
+  );
 }
