@@ -23,41 +23,56 @@
         />
       </div>
 
-      <ul class="ct-list__items">
-        @for (type of store.filteredTypes(); track type.id) {
-          <li>
-            <button
-              type="button"
-              class="ct-item"
-              [class.is-selected]="type.id === store.selectedId()"
-              [attr.aria-current]="type.id === store.selectedId() ? 'true' : null"
-              (click)="store.select(type.id)"
-            >
-              <span
-                class="ct-item__dot"
-                [class.is-off]="!type.active"
-                aria-hidden="true"
-              ></span>
-              <span class="ct-item__body">
-                <span class="ct-item__name">{{ type.name || t('settings.clinical_types.untitled') }}</span>
-                <span class="ct-item__meta">{{ fieldMetaLabel(type.fields.length) }}</span>
-              </span>
-              <span class="ct-item__status">
-                {{ type.active ? t('settings.clinical_types.status.active') : t('settings.clinical_types.status.inactive') }}
-              </span>
-            </button>
-          </li>
-        } @empty {
-          <li class="ct-list__empty">{{ t('settings.clinical_types.list.empty') }}</li>
-        }
-      </ul>
+      @if (store.loading()) {
+        <p class="ct-list__empty" data-testid="ct-loading">{{ t('settings.clinical_types.loading') }}</p>
+      } @else if (store.error()) {
+        <div class="ct-list__empty" data-testid="ct-error">
+          <p>{{ t('settings.clinical_types.load_error') }}</p>
+          <p>{{ store.error() }}</p>
+          <p-button
+            [label]="t('settings.clinical_types.retry')"
+            size="small"
+            [outlined]="true"
+            (onClick)="store.load()"
+          />
+        </div>
+      } @else {
+        <ul class="ct-list__items">
+          @for (type of store.filteredTypes(); track type.id) {
+            <li>
+              <button
+                type="button"
+                class="ct-item"
+                [class.is-selected]="type.id === store.selectedId()"
+                [attr.aria-current]="type.id === store.selectedId() ? 'true' : null"
+                (click)="store.select(type.id)"
+              >
+                <span
+                  class="ct-item__dot"
+                  [class.is-off]="!type.active"
+                  aria-hidden="true"
+                ></span>
+                <span class="ct-item__body">
+                  <span class="ct-item__name">{{ type.name || t('settings.clinical_types.untitled') }}</span>
+                  <span class="ct-item__meta">{{ fieldMetaLabel(type.fields.length) }}</span>
+                </span>
+                <span class="ct-item__status">
+                  {{ type.active ? t('settings.clinical_types.status.active') : t('settings.clinical_types.status.inactive') }}
+                </span>
+              </button>
+            </li>
+          } @empty {
+            <li class="ct-list__empty">{{ t('settings.clinical_types.list.empty') }}</li>
+          }
+        </ul>
 
-      <div class="ct-list__new">
-        <button type="button" class="ct-new" (click)="store.createType()">
-          <i class="pi pi-plus" aria-hidden="true"></i>
-          {{ t('settings.clinical_types.new') }}
-        </button>
-      </div>
+        <div class="ct-list__new">
+          <button type="button" class="ct-new" (click)="store.createType()">
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ t('settings.clinical_types.new') }}
+          </button>
+        </div>
+      }
     </section>
 
     <!-- ── Editor del tipo seleccionado ───────────────────────────── -->
@@ -101,8 +116,8 @@
             <p-button
               [label]="t('settings.clinical_types.save')"
               size="small"
-              [disabled]="!store.dirty()"
-              (onClick)="store.saveDraft()"
+              [disabled]="!store.dirty() || store.saving()"
+              (onClick)="onSave()"
             />
           </span>
         </div>

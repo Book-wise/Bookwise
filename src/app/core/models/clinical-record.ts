@@ -1,12 +1,11 @@
 /**
  * Dominio clínico (ficha médica).
  *
- * El backend **todavía no** expone `clinical_record_types` ni `clinical_records`
- * (contrato en `odd/tasks/ficha-medica.md`, F4). Estos tipos describen ese
- * contrato para que la pestaña Ficha y el catálogo de Configuraciones tengan
- * una forma estable cuando el endpoint exista. Mientras tanto, los consumidores
- * de solo-lectura reciben colecciones vacías y el catálogo se edita en memoria
- * (ver `clinical-record-types.store.ts`): no se inventan datos del servidor.
+ * Contrato confirmado en `docs/clinical-records-contract.md` (backend
+ * `origin/develop` de Bookwise-API, `79ef31d`). La API devuelve `fields`
+ * siempre en el listado de tipos y `record_type` embebido en cada ficha; el
+ * cliente normaliza esas formas en los `*ApiService` (ver
+ * `@services/api/clinical-record-*.service.ts`).
  */
 
 /** Tipo de dato de un campo de ficha (mapea el desplegable del constructor). */
@@ -19,8 +18,8 @@ export interface ClinicalRecordField {
   label: string;
   type: ClinicalRecordFieldType;
   required: boolean;
-  /** Solo para `type === 'select'`: opciones separadas por coma. */
-  options?: string[];
+  /** Solo para `type === 'select'`. La API devuelve `null` para el resto. */
+  options?: string[] | null;
 }
 
 /** Tipo de ficha configurable por negocio (pantalla de Configuraciones). */
@@ -34,12 +33,15 @@ export interface ClinicalRecordType {
   fields: ClinicalRecordField[];
 }
 
-/** Registro clínico ya creado, asociado a una reserva y a un paciente. */
+/** Registro clínico ya creado, asociado a un paciente y (opcional) a una reserva. */
 export interface ClinicalRecord {
   id: number;
+  client_id: number;
   record_type_id: number;
   /** Nombre del tipo tal como se muestra (mayúsculas en la tarjeta). */
   title: string;
+  /** Valores capturados por campo (`key` → valor). */
+  values: Record<string, unknown>;
   /** ISO-8601 de creación del registro. */
   created_at: string;
   /** Quién firmó/registró la ficha. El backend lo sirve denormalizado (contrato L8). */

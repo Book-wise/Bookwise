@@ -17,7 +17,7 @@
         class="ficha__add"
         data-testid="add-record"
         aria-haspopup="true"
-        [disabled]="!hasTypes()"
+        [disabled]="!hasTypes() || !clientId()"
         (click)="typeMenu.toggle($event)"
       >
         {{ t('ficha.add') }} <span aria-hidden="true">▾</span>
@@ -43,9 +43,6 @@
         <article class="ficha__record" data-testid="associated-record">
           <div class="ficha__record-body">
             <h3 class="ficha__record-title">{{ record.title }}</h3>
-            @if (record.pendingSync) {
-              <span class="bw-chip bw-chip--warning" data-testid="pending-sync">{{ t('ficha.pending_sync') }}</span>
-            }
             <div class="ficha__record-meta">
               <span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -115,13 +112,15 @@
 
   <!-- ── Diálogo de captura ────────────────────────────────────────────── -->
   @if (selectedType(); as type) {
-    <bw-record-form-dialog
-      [visible]="formVisible()"
-      [type]="type"
-      [bookingId]="bookingId()"
-      [clientId]="clientId()"
-      (closed)="formVisible.set(false)"
-      (saved)="formVisible.set(false)"
-    />
+    @if (clientId(); as clientIdValue) {
+      <bw-record-form-dialog
+        [visible]="formVisible()"
+        [type]="type"
+        [bookingId]="bookingId()"
+        [clientId]="clientIdValue"
+        (closed)="formVisible.set(false)"
+        (saved)="formVisible.set(false)"
+      />
+    }
   }
 </div>
