@@ -98,6 +98,8 @@
       <p-button
         [label]="t('ficha.form.save')"
         icon="pi pi-check"
+        [disabled]="saving()"
+        [loading]="saving()"
         (onClick)="onSave()"
       />
     </div>

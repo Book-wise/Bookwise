@@ -6,7 +6,7 @@ import { LanguageService } from '@services/language.service';
 import { ClinicalRecordTypesStore } from '@core/stores/clinical-record-types.store';
 import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
 import { BookingDialogStore } from '@core/stores/booking-dialog.store';
-import type { ClinicalRecord, ClinicalRecordType } from '@models';
+import type { ClinicalRecordType } from '@models';
 import { RecordFormDialogComponent } from './record-form-dialog/record-form-dialog.component';
 
 /**
@@ -15,8 +15,7 @@ import { RecordFormDialogComponent } from './record-form-dialog/record-form-dial
  * El catálogo de tipos y los registros de la reserva se leen de los stores de
  * dominio root (`ClinicalRecordTypesStore`, `ClinicalRecordsStore`); el
  * `BookingDialogStore` (provisto por el diálogo) aporta el `booking_id`/
- * `client_id` actuales. Los inputs `records`/`recordTypes` se conservan por
- * compatibilidad con el template del padre, que hoy pasa colecciones vacías.
+ * `client_id` actuales. Solo recibe `serviceLabel` del padre.
  */
 @Component({
   selector: 'bw-ficha-tab',
@@ -32,12 +31,6 @@ export class FichaTabComponent {
   private readonly recordsStore = inject(ClinicalRecordsStore);
   private readonly dialogStore = inject(BookingDialogStore);
 
-  /** Fichas ya asociadas a la reserva abierta (heredado del padre; hoy vacío). */
-  readonly records = input<ClinicalRecord[]>([]);
-  /** Historial de consultas anteriores del paciente. */
-  readonly history = input<ClinicalRecord[]>([]);
-  /** Catálogo de tipos heredado del padre; el store root es la fuente real. */
-  readonly recordTypes = input<ClinicalRecordType[]>([]);
   /** Etiqueta del servicio contratado, ya formateada por el padre. */
   readonly serviceLabel = input<string>('');
 
@@ -49,6 +42,8 @@ export class FichaTabComponent {
   readonly clientId = computed(() => this.dialogStore.booking()?.client?.id ?? null);
 
   readonly associatedRecords = computed(() => this.recordsStore.byBooking(this.bookingId()));
+  /** Historial de consultas anteriores: fichas del paciente en otras reservas. */
+  readonly history = computed(() => this.recordsStore.historyFor(this.bookingId()));
   readonly hasRecords = computed(() => this.associatedRecords().length > 0);
   readonly hasHistory = computed(() => this.history().length > 0);
 

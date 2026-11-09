@@ -1,4 +1,5 @@
-import { computed } from '@angular/core';
+import { computed, inject } from '@angular/core';
+import { EMPTY, finalize, Observable, tap } from 'rxjs';
 import {
   patchState,
   signalStore,
@@ -11,18 +12,20 @@ import type {
   ClinicalRecordFieldType,
   ClinicalRecordType,
 } from '@models';
+import {
+  ClinicalRecordTypesApiService,
+  type ClinicalRecordTypePayload,
+} from '@services/api/clinical-record-types-api.service';
 
 /**
  * Store de dominio del catálogo de tipos de ficha (pestaña «Fichas médicas» de
  * Configuraciones y selector «Agregar tipo de ficha» de la reserva).
  *
- * El backend **aún no** expone `clinical_record_types` (contrato F4 en
- * `odd/tasks/ficha-medica.md`), así que este store edita una colección en
- * memoria que arranca **vacía**: el usuario crea tipos y campos en vivo, pero
- * nada se persiste entre visitas. Cuando el endpoint exista, `load()` cargará
- * la lista y `saveDraft()`/`removeField()` delegarán al API; la forma de los
- * datos ya respeta el contrato (`fields` con `key`, `label`, `type`,
- * `required`, `options`).
+ * `load()` pide el listado (`GET /clinical-record-types`, que ya trae `fields`
+ * completo por tipo); `saveDraft()` persiste por `POST` (tipo nuevo, id local
+ * negativo) o `PATCH` (tipo existente). El editor muta un `draft` en vivo y
+ * `saveDraft()` devuelve un observable para que el componente pinte el toast de
+ * error; en éxito el store reemplaza el tipo y adopta el id del servidor.
  */
 
 interface ClinicalRecordTypesState {
@@ -31,6 +34,10 @@ interface ClinicalRecordTypesState {
   search: string;
   /** Copia de trabajo del tipo seleccionado (edición en vivo). */
   draft: ClinicalRecordType | null;
+  loading: boolean;
+  loaded: boolean;
+  error: string | null;
+  saving: boolean;
 }
 
 const initialState: ClinicalRecordTypesState = {
@@ -38,10 +45,14 @@ const initialState: ClinicalRecordTypesState = {
   selectedId: null,
   search: '',
   draft: null,
+  loading: false,
+  loaded: false,
+  error: null,
+  saving: false,
 };
 
-/** Ids/keys locales hasta que el backend los genere. */
-let nextTypeId = 1;
+/** Ids negativos para borradores locales (aún sin POST); el servidor asigna el real. */
+let nextLocalTypeId = -1;
 let nextFieldKey = 1;
 
 function cloneType(type: ClinicalRecordType): ClinicalRecordType {
@@ -79,7 +90,21 @@ export const ClinicalRecordTypesStore = signalStore(
     }),
   })),
 
-  withMethods((store) => ({
+  withMethods((store, typesApi = inject(ClinicalRecordTypesApiService)) => ({
+    /** Carga el catálogo una sola vez por sesión (root store compartido). */
+    load(): void {
+      if (store.loaded() || store.loading()) return;
+      patchState(store, { loading: true, error: null });
+      typesApi.getTypes().subscribe({
+        next: (types) => patchState(store, { types, loading: false, loaded: true }),
+        error: (err: Error) =>
+          patchState(store, {
+            loading: false,
+            error: err.message ?? 'Error al cargar los tipos de ficha',
+          }),
+      });
+    },
+
     select(id: number): void {
       const type = store.types().find((t) => t.id === id) ?? null;
       patchState(store, { selectedId: id, draft: type ? cloneType(type) : null });
@@ -90,12 +115,14 @@ export const ClinicalRecordTypesStore = signalStore(
     },
 
     createType(): void {
-      const id = nextTypeId++;
+      const id = nextLocalTypeId--;
+      const maxSort = store.types().reduce((max, t) => Math.max(max, t.sort_order ?? 0), 0);
       const type: ClinicalRecordType = {
         id,
         name: '',
         description: null,
         active: true,
+        sort_order: maxSort + 10,
         fields: [],
       };
       patchState(store, (state) => ({
@@ -181,15 +208,37 @@ export const ClinicalRecordTypesStore = signalStore(
       });
     },
 
-    saveDraft(): void {
-      patchState(store, (state) => {
-        if (!state.draft) return {};
-        const committed = cloneType(state.draft);
-        return {
-          types: state.types.map((t) => (t.id === committed.id ? committed : t)),
-          draft: cloneType(committed),
-        };
-      });
+    /** Persiste el draft (POST si es nuevo, PATCH si ya tiene id de servidor). */
+    saveDraft(): Observable<ClinicalRecordType> {
+      const draft = store.draft();
+      if (!draft) return EMPTY;
+
+      const payload: ClinicalRecordTypePayload = {
+        name: draft.name,
+        description: draft.description ?? null,
+        active: draft.active,
+        sort_order: draft.sort_order,
+        fields: draft.fields,
+      };
+      const isNew = draft.id < 0;
+      patchState(store, { saving: true });
+
+      const request = isNew
+        ? typesApi.createType(payload)
+        : typesApi.updateType(draft.id, payload);
+
+      return request.pipe(
+        tap((created) =>
+          patchState(store, (state) => ({
+            types: state.types.map((t) =>
+              t.id === draft.id || t.id === created.id ? created : t,
+            ),
+            selectedId: created.id,
+            draft: cloneType(created),
+          })),
+        ),
+        finalize(() => patchState(store, { saving: false })),
+      );
     },
 
     discardDraft(): void {

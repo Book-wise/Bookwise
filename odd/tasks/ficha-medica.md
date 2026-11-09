@@ -31,9 +31,14 @@ Implementación empezada el 2026-11-03.
 | F1 | Pestaña Ficha presentacional: fichas de la reserva + historial + CTA de tipos, con estados vacíos honestos | ✅ hecho | `feat(bookings)` de esta sesión |
 | F2 | Configuraciones con pestañas + «Fichas médicas» (lista de tipos + editor de campos) | ✅ hecho | — |
 | F3 | Detalle de la ficha detrás de «Ver más detalles» (campos por tipo) | ⏳ pendiente | — |
-| F4 | Contrato backend del dominio clínico (ver abajo) | ⏳ pedido | — |
+| F4 | Contrato backend del dominio clínico (ver abajo) | ✅ hecho | `docs/clinical-records-contract.md` |
+| F5 | Servicios API clínicos (`clinical-record-types-api`, `clinical-records-api`) + mapeo de shapes | ✅ hecho | — |
+| F6 | `ClinicalRecordTypesStore` por HTTP (load/create/update) | ✅ hecho | — |
+| F7 | `ClinicalRecordsStore` por HTTP (loadByClient/create) | ✅ hecho | — |
+| F8 | Cablear componentes (diálogo, ficha-tab, form, configuraciones) | ✅ hecho | — |
+| F9 | i18n/UX (loading/error/saving, quitar «Sin guardar») | ✅ hecho | — |
 
-## Contrato pendiente con el backend
+## Contrato backend (confirmado — `docs/clinical-records-contract.md`)
 
 1. `clinical_record_types` (tenant-scoped): `name`, `active`, `sort_order` y **`fields`**
    (`key`, `label`, `type`, `required`, `options`) — una ficha láser no pide lo mismo que una kinésica.
@@ -148,4 +153,16 @@ Implementación empezada el 2026-11-03.
   reemplazar los stores en memoria por HTTP. **Preguntado:** si `GET /clinical-record-types` incluye
   `fields` por tipo en el listado (el editor de campos lo necesita; si no, sería N+1) y cuál es el
   `per_page` por defecto.
+- **L9 (2026-11-10, cableado a la API):** la API clínica ya está en `origin/develop` de
+  Bookwise-API (`79ef31d`); contrato cerrado en `docs/clinical-records-contract.md`. Se arranca el
+  cableado en `feat/ficha-medica-api` (worktree `.worktrees/ficha-medica-api`): servicios API + stores
+  por HTTP + componentes. F3 (detalle de ficha) queda **fuera de este cableado**: hay un WIP
+  (`wip(ficha-medica)` en `feat/billing-wizard-steps`) que lo atiende.
+- **L10 (2026-11-10, cableado completo):** F5–F9 implementados. Servicios API
+  (`ClinicalRecordTypesApiService`, `ClinicalRecordsApiService`) + specs; `ClinicalRecordTypesStore`
+  (load/saveDraft POST-PATCH) y `ClinicalRecordsStore` (loadByClient/create) por HTTP; `ClinicalRecord`
+  normalizado (`client_id`, `values`, `title` desde `record_type.name`, sin `pendingSync`); componentes
+  cableados (diálogo dispara load, ficha-tab lee history del store, record-form-dialog guarda async,
+  catálogo con carga/error/reintentar); i18n actualizada (quitado «Sin guardar»). Evidencia: build
+  verde y specs clínicos verdes (29 tests) más ficha/record-form-dialog/booking-detail-dialog verdes.
 
