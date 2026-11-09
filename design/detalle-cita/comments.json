@@ -110,6 +110,39 @@
       "status": "resolved",
       "sentAt": "2026-11-09T13:50:45.450Z",
       "resolvedAt": "2026-11-09T13:52:17.082Z"
+    },
+    {
+      "id": "tp3n150s",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > header > div > div",
+      "excerpt": "17.842.503-6 +56 9 8123 4567 Hablar por WhatsApp",
+      "comment": "en este diseño el boton quedo el boton de whatsapp abajo, asegurate de que en la implementacion tambien quede abajo, porque en la implementacion lo que bajo fue el estado.",
+      "createdAt": "2026-11-09T13:52:49.808Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:52:52.121Z",
+      "resolvedAt": "2026-11-09T13:55:45.574Z"
+    },
+    {
+      "id": "dy5vjapm",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div > section:nth-of-type(1) > p:nth-of-type(1)",
+      "excerpt": "LA SESIÓN",
+      "comment": "la sesion, me parece poco profesional, prueba otra palabra u otra forma de escribirlo",
+      "createdAt": "2026-11-09T13:55:55.260Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:56:01.733Z",
+      "resolvedAt": "2026-11-09T13:57:16.246Z"
+    },
+    {
+      "id": "3ud0952i",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div > section:nth-of-type(1) > p:nth-of-type(1)",
+      "excerpt": "ATENCIÓN",
+      "comment": "esta sesion",
+      "createdAt": "2026-11-09T13:58:52.810Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:58:58.214Z",
+      "resolvedAt": "2026-11-09T13:59:50.711Z"
     }
   ]
 }

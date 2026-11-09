@@ -7,9 +7,10 @@
       "queued": false,
       "sentAt": "2026-11-09T13:37:07.193Z",
       "startedAt": "2026-11-09T13:37:17.961Z",
-      "implementedAt": "2026-11-09T13:50:55.242Z",
+      "implementedAt": "2026-11-09T13:56:04.125Z",
       "feature": "odd/tasks/detalle-cita-rediseno.md",
-      "note": "Implementado y commiteado (0e68151) en feat/booking-detail-card-redesign: shell .bw-sheet compartido por los dos calendarios, util de fecha/avatar/WhatsApp, chips de estado con contraste AA y 4 specs nuevas. Verificado en verde (build + 48 specs del calendario) antes de un incidente de worktree compartido con otra sesión. Sin previewUrl: el árbol de trabajo tiene ahora los cambios en curso de esa otra sesión y no compila."
+      "note": "Corregido: el chip de estado queda en la fila del nombre y el botón «Hablar por WhatsApp» baja siempre a su propio renglón, como el artboard. Verificado en un worktree limpio (build OK + 48/48 specs del calendario). Preview servida desde ese worktree limpio, no desde el árbol compartido que tiene el WIP de otra sesión.",
+      "previewUrl": "http://localhost:4300/admin/calendar"
     }
   }
 }
