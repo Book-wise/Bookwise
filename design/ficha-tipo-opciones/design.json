@@ -1,0 +1,28 @@
+{
+  "title": "Opciones de un campo select en el constructor de tipos de ficha",
+  "brief": "En Configuraciones → Fichas, el editor de campos de un tipo permite elegir el tipo `select` pero no capturar sus `options`, así que guardar devuelve error de validación («Un campo select requiere opciones»). Hace falta un control para cargar N opciones dentro de una fila de una grilla de 4 columnas (handle, nombre, tipo, obligatorio). Las tres direcciones resuelven dónde vive ese control y cómo se agregan/quitan opciones.",
+  "feature": "odd/tasks/ficha.md",
+  "artboards": [
+    {
+      "file": "01-fila-expandible-chips.html",
+      "title": "La fila se expande y muestra chips",
+      "tradeoff": "Al elegir `select` la fila crece y aparece un input «Agregar opción» con Enter + chips removibles: se ve el estado real de las opciones y se edita en el lugar. A cambio la tabla deja de ser uniforme y una fila con muchas opciones empuja al resto.",
+      "width": 1200,
+      "height": 760
+    },
+    {
+      "file": "02-textarea-una-por-linea.html",
+      "title": "Textarea: una opción por línea",
+      "tradeoff": "Un textarea bajo la fila, una opción por línea, habilitado sólo para `select`. Es el control más simple de construir y de pegar desde otro lado, y no necesita agregar/quitar por ítem. A cambio no se ve el resultado como una lista de chips y es fácil dejar líneas vacías o repetidas.",
+      "width": 1200,
+      "height": 760
+    },
+    {
+      "file": "03-popover-por-campo.html",
+      "title": "Popover «Opciones» por fila",
+      "tradeoff": "La fila se queda igual de compacta y un botón «Opciones (3)» abre un popover con el listado editable (agregar, renombrar, reordenar, borrar). Mantiene la tabla legible aunque haya muchos campos, a cambio esconde el dato detrás de un click y es más UI que mantener.",
+      "width": 1200,
+      "height": 760
+    }
+  ]
+}

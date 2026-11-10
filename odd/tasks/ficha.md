@@ -23,6 +23,11 @@ Implementación empezada el 2026-11-03.
   en ficha» — los campos de la ficha necesitan un tipo **`image`**: subir/guardar la imagen, mostrar un
   enlace de descarga/visualización en el detalle de la ficha, e incluir la imagen o su enlace en el
   PDF generado.
+- **S14 (seba, verbatim):** «en el frontende del tab fichas en admin/configuraciones: necesitamos implementar
+  las opciones del select: Error de validación — Guardar cambios / Un campo select requiere opciones.
+  levantemos un design para eso?» — el editor de campos **no tiene editor de `options`** (nunca lo tuvo,
+  ni para `select`), así que un campo `select` no se puede guardar: la API responde con error de
+  validación. Hace falta agregar la captura de opciones en el constructor de campos.
 
 ## Lo que existe hoy en el producto
 
@@ -44,6 +49,7 @@ Implementación empezada el 2026-11-03.
 | F7 | `ClinicalRecordsStore` por HTTP (loadByClient/create) | ✅ hecho | — |
 | F8 | Cablear componentes (diálogo, ficha-tab, form, configuraciones) | ✅ hecho | — |
 | F9 | i18n/UX (loading/error/saving, quitar «Sin guardar») | ✅ hecho | — |
+| F11 | Editor de `options` para campos `select` en el constructor de tipos (Configuraciones → Fichas) | ⏳ pendiente | — |
 | F10 | Campo de tipo `image` en la ficha: subir/guardar imagen + enlace en el detalle + enlace/imagen en el PDF | ⏳ pendiente | — |
 
 ## Contrato backend (confirmado — `docs/clinical-records-contract.md`)
@@ -272,3 +278,22 @@ Implementación empezada el 2026-11-03.
   Nota de entorno: un probe sin token a `127.0.0.1:9999/api/v1/clinical-records` devolvió **500**, no
   401 — probablemente falten las migraciones del feature en la BD local o el token; a verificar por
   el lado del backend antes del E2E.
+- **L21 (2026-11-10, E2E real contra el backend local + bug encontrado):** con el BE levantado hice el
+  E2E del contrato con curl (login `admin@kinesilk.cl`, tenant Kinesilk). **Confirmado**: `images[key]`
+  = `null` antes de subir; `POST /clinical-records` sin la clave image → 201; mandar `values[key]` de un
+  campo image → **422 `clinical_record_image_managed`**; key inválida → **422
+  `clinical_record_image_key_invalid`**; multipart `key`+`file` → 200; `GET .../image/{key}` → 200 con
+  `Cache-Control: no-store, private`; `author_name` resuelto.
+  **Hallazgos**: (1) la API **sí escribe** `values[key] = { full, thumb }` con rutas internas del disco
+  cuando la imagen se subió — el front pintaba **`[object Object]`** en el detalle; **corregido** con
+  test RED→GREEN (los campos `image` se excluyen de `visibleFields` y `hasValue` descarta objetos).
+  (2) `POST /clinical-records` (create) devuelve `images: null`, no el mapa como el detalle.
+  (3) La descarga sirve la versión **optimizada webp** (subí PNG de 70 KB, bajó 11,5 KB webp).
+  (4) Cualquier request sin token devuelve **500 `Route [login] not defined`** en vez de 401 (no es del
+  dominio clínico; me hizo creer que faltaban migraciones). Los cuatro puntos se reportaron al backend.
+- **L22 (2026-11-10, F11: opciones de `select`):** el editor de campos de Configuraciones **nunca tuvo**
+  editor de `options`, así que un campo `select` no se puede guardar (la API responde «Un campo select
+  requiere opciones»). Diseño `design/ficha-tipo-opciones/` con 3 direcciones: `01-fila-expandible-chips`
+  (la fila crece y muestra chips), `02-textarea-una-por-linea` (textarea, una por línea) y
+  `03-popover-por-campo` (botón «Opciones (N)» que abre un popover con la lista editable). Sin artboard
+  elegido todavía.
