@@ -217,15 +217,15 @@
   }
 
   i {
-    // Círculo azul alrededor de la flecha (mismo estilo del antiguo tab de
-    // colapso): lo traemos de vuelta, pero dentro del botón con texto.
+    // Círculo alrededor de la flecha: mismo patrón del antiguo tab de colapso,
+    // pero por tokens para que cada tema lo pinte con su propio acento.
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    background: var(--bw-700);
-    box-shadow: var(--bw-shadow-sidebar-tab);
-    color: rgba(255, 255, 255, 0.85);
+    border: 2px solid var(--sidebar-control-border);
+    background: var(--sidebar-control-bg);
+    box-shadow: var(--sidebar-control-shadow);
+    color: var(--sidebar-control-fg);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -233,10 +233,10 @@
     flex-shrink: 0;
 
     &:hover {
-      background: var(--bw-300);
-      border-color: rgba(255, 255, 255, 0.5);
-      box-shadow: var(--bw-shadow-sidebar-tab-hover);
-      color: #fff;
+      background: var(--sidebar-control-bg-hover);
+      border-color: var(--sidebar-control-border-hover);
+      box-shadow: var(--sidebar-control-shadow-hover);
+      color: var(--sidebar-control-fg-hover);
     }
   }
 

@@ -269,6 +269,16 @@ body.theme-kinesilk {
   --sidebar-active-bg:   rgba(47, 47, 38, 0.12);
   --sidebar-active-border: #2f5d5a;
   --sidebar-divider:     rgba(47, 47, 38, 0.12);
+  // El sidebar de este tema es powder blue con texto oscuro: el círculo del
+  // control no puede ser navy con icono blanco ni llevar un borde blanco.
+  --sidebar-control-bg:            rgba(47, 47, 38, 0.08);
+  --sidebar-control-fg:            #2f2f26;
+  --sidebar-control-border:        rgba(47, 47, 38, 0.18);
+  --sidebar-control-bg-hover:      #2f5d5a;
+  --sidebar-control-fg-hover:      #ffffff;
+  --sidebar-control-border-hover:  #2f5d5a;
+  --sidebar-control-shadow:        0 2px 6px rgba(47, 47, 38, 0.16);
+  --sidebar-control-shadow-hover:  0 3px 10px rgba(47, 93, 90, 0.32);
   // The layout SCSS falls back to `rgba(255,255,255,0.65)` when this is unset
   // (white-on-light); define it so the sidebar user role reads as dark text.
   --sidebar-text-secondary: rgba(47, 47, 38, 0.6);
