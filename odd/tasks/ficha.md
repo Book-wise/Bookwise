@@ -262,3 +262,13 @@ Implementación empezada el 2026-11-03.
   + footer no entraban y el widget quedaba recortado. En el drawer ahora scrollea el sidebar completo y la nav
   pasa a `flex: 0 0 auto`. Sin spec del layout (no existe `admin-layout.component.spec.ts`): verificación por
   build + revisión visual. Commit `2c5ff93`.
+- **L20 (2026-11-10, #95 mergeado — F10 desbloqueada para E2E):** Bookwise-API mergeó
+  `feat/clinical-record-images` en `develop` (`82565ea`); las rutas `GET .../image/{key}`,
+  `POST .../image` y `GET .../pdf` ya están en `routes/api.php`. Los dos detalles del contrato que
+  condicionan el front siguen vigentes (`images[key]` = `null` sin subir; descarga 404 = no visible,
+  403 sólo al subir). **Limitación conocida confirmada por el mantenedor:** las fichas **no se
+  restauran**, así que el soft delete borra también los archivos de imagen; si algún día el front
+  ofrece «restaurar ficha», la ficha vuelve **sin imágenes** y hay que decirlo en la UI.
+  Nota de entorno: un probe sin token a `127.0.0.1:9999/api/v1/clinical-records` devolvió **500**, no
+  401 — probablemente falten las migraciones del feature en la BD local o el token; a verificar por
+  el lado del backend antes del E2E.
