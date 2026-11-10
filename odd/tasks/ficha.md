@@ -16,6 +16,13 @@ Implementación empezada el 2026-11-03.
 - **S3 (seba, verbatim):** «si esa pantalla puedes crearla en configuraciones, inicialmente, como una
   pantalla mas» — el catálogo vive en una pantalla propia dentro de Configuraciones
   (`design/ficha-medica/04-config-tipos-ficha.html`).
+- **S4 (seba, verbatim):** «bien si diseñaste algo pero lo importante en realidad es que la imagen se
+  puede guardar y luego descargar y que tenga el enlace de descarga o visualizacion de la imagen en el
+  pdf, cosa de poder verlo directamente, y que al revisar la ficha tambien le de el enlace para la
+  imagen, me di cuenta que tenemos que poder usar un campo de imagen en lo del formulario que se añade
+  en ficha» — los campos de la ficha necesitan un tipo **`image`**: subir/guardar la imagen, mostrar un
+  enlace de descarga/visualización en el detalle de la ficha, e incluir la imagen o su enlace en el
+  PDF generado.
 
 ## Lo que existe hoy en el producto
 
@@ -37,6 +44,7 @@ Implementación empezada el 2026-11-03.
 | F7 | `ClinicalRecordsStore` por HTTP (loadByClient/create) | ✅ hecho | — |
 | F8 | Cablear componentes (diálogo, ficha-tab, form, configuraciones) | ✅ hecho | — |
 | F9 | i18n/UX (loading/error/saving, quitar «Sin guardar») | ✅ hecho | — |
+| F10 | Campo de tipo `image` en la ficha: subir/guardar imagen + enlace en el detalle + enlace/imagen en el PDF | ⏳ pendiente | — |
 
 ## Contrato backend (confirmado — `docs/clinical-records-contract.md`)
 
@@ -179,4 +187,27 @@ Implementación empezada el 2026-11-03.
   lista con breadcrumb «volver»), `02-acordeon-inline.html` (la ficha se expande en su tarjeta) y
   `03-panel-lateral.html` (lista + detalle en dos columnas). El artboard elegido se implementará como
   F3, reemplazando el `record-detail-dialog` (p-dialog aparte) del WIP `3dd4d33`.
+- **L13 (2026-11-10, campo de imagen en la ficha):** el usuario pidió un campo de tipo `image` en el
+  formulario de ficha (S4): que la imagen se pueda subir y guardar, que el detalle de la ficha muestre
+  un enlace de descarga/visualización, y que el PDF generado incluya la imagen o su enlace. Es un
+  requisito nuevo sobre el contrato clínico cerrado: hoy `ClinicalRecordFieldType` es
+  `text|longtext|number|select|date` y `values` es JSON plano. Falta definir el storage de imagen para
+  clinical-records con Bookwise-API (el contrato L6 lo anticipó como «storage propio, mismo pedido que
+  la imagen del servicio»).
+- **L14 (2026-11-10, contrato F10 image decidido):** el backend confirmó el contrato de imagen y lo
+  implementa en un PR. `fields[].type` acepta `image` (sin `options`; `required` no se evalúa en
+  create/update). Subida `POST /clinical-records/{id}/image` (multipart `key`+`file`, jpeg|png|webp ≤10MB,
+  dos tamaños, re-subir reemplaza). Lectura `GET /clinical-records/{id}/image/{key}` → binario con auth,
+  **sin URL pública** (fetch+blob con Bearer para `<img>`). El detalle agrega `images` (rutas relativas);
+  el listado no. PDF: `GET /clinical-records/{id}/pdf` (dompdf, embebe imágenes) — el front no arma el PDF.
+  `values[key]` de un campo `image` es gestionado por el server (422 `clinical_record_image_managed`).
+- **L15 (2026-11-10, decisión: sin enlaces de imagen en el PDF):** el usuario preguntó si conviene poner
+  el enlace de la imagen dentro del PDF. **No.** El endpoint de imagen exige Bearer + `clinical.view`,
+  y un PDF es portátil: lo abre Acrobat, se reenvía, se imprime; el lector no tiene sesión, así que el
+  link daría 401/403 y quedaría inútil. Además, hacerlo público para que el link «funcione» sería una
+  fuga de datos de salud por URL adivinable (en el ejemplo de S3 tenía sentido porque la URL era
+  pública/firmada; acá no). **Regla**: en el PDF las imágenes van **embebidas** por la API (dompdf reads
+  del disco privado) y **sin links**; el enlace «Ver/Descargar imagen» vive sólo en la app autenticada
+  (`fetch`+blob con Bearer). Si alguna vez se quieren links compartibles, la vía es
+  `temporarySignedRoute` (URL firmada de vida corta), no un endpoint público: otro contrato.
 

@@ -67,6 +67,17 @@
       "status": "resolved",
       "sentAt": "2026-11-10T01:20:43.951Z",
       "resolvedAt": "2026-11-10T01:21:53.026Z"
+    },
+    {
+      "id": "tw1mmqm2",
+      "file": "01-master-detalle.html",
+      "selector": "#actions > button:nth-of-type(2)",
+      "excerpt": "Imprimir ficha",
+      "comment": "cuando le de click aqui deberia abrir en una nueva pestaña un pdf generado similar al que deje en /home/seba/codingProjects/Bookwise/ficha_de_eliminacion_de_tatuajes_con_laser_1794274088.pdf  puedes presentarme el diseño del pdf?",
+      "createdAt": "2026-11-10T01:33:27.889Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:33:27.908Z",
+      "resolvedAt": "2026-11-10T01:36:19.967Z"
     }
   ]
 }
