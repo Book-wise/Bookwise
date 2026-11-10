@@ -165,4 +165,12 @@ Implementación empezada el 2026-11-03.
   cableados (diálogo dispara load, ficha-tab lee history del store, record-form-dialog guarda async,
   catálogo con carga/error/reintentar); i18n actualizada (quitado «Sin guardar»). Evidencia: build
   verde y specs clínicos verdes (29 tests) más ficha/record-form-dialog/booking-detail-dialog verdes.
+- **L11 (2026-11-10, merge a develop):** `feat/ficha-medica-api` rebaseada sobre `develop` (sin
+  conflictos; lo único que le faltaba era `bccf25c`, docs de pack-sessions) y mergeada por
+  fast-forward (`4d3caf4`). Verificación completa: `npm run build` verde; suite **1012 pass / 7 fail**,
+  los 7 preexistentes y ajenos a ficha médica (calendar-navigation 1, historial-reserva 3,
+  booking-form-dialog 2, booking-detail-dialog 1 por timeout de keep-alive). Único ítem abierto del
+  dominio: **F3** (detalle de ficha tras «Ver más detalles»), que vive en el WIP `wip(ficha-medica)`
+  de `feat/billing-wizard-steps`. Pendiente de deploy: `dev.bookwise.cl` no expone aún los endpoints
+  clínicos (gate PHP 8.3.6 < 8.3.36, escalado a devops); el dev local (`127.0.0.1:9999`) sí los tiene.
 
