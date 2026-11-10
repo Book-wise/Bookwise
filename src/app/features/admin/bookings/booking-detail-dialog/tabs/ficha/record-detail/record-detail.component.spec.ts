@@ -65,7 +65,10 @@ describe('RecordDetailComponent', () => {
 
     TestBed.inject(LanguageService).setLang('es');
     recordsStore = TestBed.inject(ClinicalRecordsStore);
-    patchState(unprotected(recordsStore), { records: [record] });
+    patchState(unprotected(recordsStore), {
+      byClient: { [record.client_id]: [record] },
+      loadedClients: { [record.client_id]: true },
+    });
 
     fixture = TestBed.createComponent(RecordDetailComponent);
     component = fixture.componentInstance;

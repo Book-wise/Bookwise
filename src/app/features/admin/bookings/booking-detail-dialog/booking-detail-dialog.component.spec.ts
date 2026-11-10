@@ -239,5 +239,22 @@ describe('BookingDetailDialogComponent', () => {
     expect(clinicalRecordTypesApi.getTypes).toHaveBeenCalledTimes(1);
     expect(clinicalRecordsApi.getRecords).toHaveBeenCalledWith({ client_id: 7 });
   });
+
+  it('reusa el listado cacheado al reabrir el diálogo del mismo paciente', () => {
+    component.open(booking, 'ficha');
+    component.close();
+    component.open(booking, 'ficha');
+
+    expect(clinicalRecordsApi.getRecords).toHaveBeenCalledTimes(1);
+  });
+
+  it('pide las fichas de cada paciente por separado', () => {
+    component.open(booking, 'ficha');
+    component.open({ ...booking, id: 13, client: { ...client, id: 8 } }, 'ficha');
+
+    expect(clinicalRecordsApi.getRecords).toHaveBeenCalledTimes(2);
+    expect(clinicalRecordsApi.getRecords).toHaveBeenNthCalledWith(1, { client_id: 7 });
+    expect(clinicalRecordsApi.getRecords).toHaveBeenNthCalledWith(2, { client_id: 8 });
+  });
 });
 

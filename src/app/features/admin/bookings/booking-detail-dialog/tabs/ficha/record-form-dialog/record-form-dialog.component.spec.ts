@@ -52,7 +52,12 @@ describe('RecordFormDialogComponent', () => {
     }).compileComponents();
 
     recordsStore = TestBed.inject(ClinicalRecordsStore);
-    patchState(unprotected(recordsStore), { records: [] });
+    patchState(unprotected(recordsStore), {
+      byClient: { 7: [] },
+      loadedClients: { 7: true },
+      loadingClients: {},
+      error: null,
+    });
 
     fixture = TestBed.createComponent(RecordFormDialogComponent);
     component = fixture.componentInstance;
@@ -170,8 +175,8 @@ describe('RecordFormDialogComponent', () => {
     expect(savedEmitted.length).toBe(1);
     expect(component.saving()).toBe(false);
 
-    expect(recordsStore.records().length).toBe(1);
-    const record = recordsStore.records()[0];
+    expect(recordsStore.recordsFor(7).length).toBe(1);
+    const record = recordsStore.recordsFor(7)[0];
     expect(record.id).toBe(123);
     expect(record.record_type_id).toBe(10);
     expect(record.title).toBe('Ficha clínica');
@@ -194,7 +199,7 @@ describe('RecordFormDialogComponent', () => {
 
     expect(savedEmitted.length).toBe(0);
     expect(component.saving()).toBe(false);
-    expect(recordsStore.records().length).toBe(0);
+    expect(recordsStore.recordsFor(7).length).toBe(0);
     expect(httpError.handle).toHaveBeenCalledTimes(1);
     expect(httpError.handle).toHaveBeenCalledWith(expect.any(Error), 'ficha.form.save');
   });
@@ -230,7 +235,7 @@ describe('RecordFormDialogComponent', () => {
         record_type_id: 10,
         values: { f_name: 'Ana' },
       });
-      expect(recordsStore.records().length).toBe(1);
+      expect(recordsStore.recordsFor(7).length).toBe(1);
     });
   });
 });

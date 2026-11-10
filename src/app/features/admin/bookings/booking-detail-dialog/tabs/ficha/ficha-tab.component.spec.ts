@@ -80,7 +80,12 @@ describe('FichaTabComponent', () => {
     typesStore = TestBed.inject(ClinicalRecordTypesStore);
     recordsStore = TestBed.inject(ClinicalRecordsStore);
     patchState(unprotected(typesStore), { types: [], selectedId: null, search: '', draft: null });
-    patchState(unprotected(recordsStore), { records: [] });
+    patchState(unprotected(recordsStore), {
+      byClient: {},
+      loadedClients: {},
+      loadingClients: {},
+      error: null,
+    });
     bookingSignal.set(null);
 
     fixture = TestBed.createComponent(FichaTabComponent);
@@ -109,9 +114,15 @@ describe('FichaTabComponent', () => {
 
   it('renderiza una tarjeta por ficha asociada, con fecha y autor', async () => {
     await setup();
-    bookingSignal.set({ id: 900 });
+    bookingSignal.set({ id: 900, client: { id: 7 } });
     patchState(unprotected(recordsStore), {
-      records: [makeSessionRecord({ id: 1 }), makeSessionRecord({ id: 2, title: 'Ficha clínica · Evaluación inicial' })],
+      byClient: {
+        7: [
+          makeSessionRecord({ id: 1 }),
+          makeSessionRecord({ id: 2, title: 'Ficha clínica · Evaluación inicial' }),
+        ],
+      },
+      loadedClients: { 7: true },
     });
     render();
 
@@ -124,9 +135,9 @@ describe('FichaTabComponent', () => {
 
   it('«Ver más detalles» muestra el detalle inline en lugar de la lista', async () => {
     await setup();
-    bookingSignal.set({ id: 900 });
+    bookingSignal.set({ id: 900, client: { id: 7 } });
     patchState(unprotected(typesStore), { types: [makeType({ id: 10, name: 'Ficha clínica' })] });
-    patchState(unprotected(recordsStore), { records: [makeSessionRecord({ id: 42 })] });
+    patchState(unprotected(recordsStore), { byClient: { 7: [makeSessionRecord({ id: 42 })] } });
     render();
 
     fixture.nativeElement
@@ -145,8 +156,8 @@ describe('FichaTabComponent', () => {
 
   it('«Volver a las fichas» vuelve a la lista inline', async () => {
     await setup();
-    bookingSignal.set({ id: 900 });
-    patchState(unprotected(recordsStore), { records: [makeSessionRecord({ id: 42 })] });
+    bookingSignal.set({ id: 900, client: { id: 7 } });
+    patchState(unprotected(recordsStore), { byClient: { 7: [makeSessionRecord({ id: 42 })] } });
     render();
 
     fixture.nativeElement
@@ -241,15 +252,29 @@ describe('FichaTabComponent', () => {
     render();
     expect(fixture.nativeElement.querySelector('[data-testid="history-empty"]')).toBeTruthy();
 
-    bookingSignal.set({ id: 900 });
+    bookingSignal.set({ id: 900, client: { id: 7 } });
     patchState(unprotected(recordsStore), {
-      records: [makeHistoryRecord({ id: 7, author_name: 'Kinesilk' })],
+      byClient: { 7: [makeHistoryRecord({ id: 7, author_name: 'Kinesilk' })] },
     });
     render();
 
     const cards = fixture.nativeElement.querySelectorAll('[data-testid="history-record"]');
     expect(cards.length).toBe(1);
     expect(cards[0].textContent).toContain('Kinesilk');
+  });
+
+  it('no muestra las fichas cacheadas de otro paciente', async () => {
+    await setup();
+    bookingSignal.set({ id: 900, client: { id: 7 } });
+    // Las fichas existen, pero en el bucket del paciente 8.
+    patchState(unprotected(recordsStore), {
+      byClient: { 8: [makeSessionRecord({ id: 5, client_id: 8 })] },
+    });
+    render();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="associated-empty"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('[data-testid="associated-record"]').length).toBe(0);
+    expect(fixture.nativeElement.querySelector('[data-testid="history-empty"]')).toBeTruthy();
   });
 
   it('formatea la fecha como dd/mm/aaaa - h:mm am/pm', async () => {
