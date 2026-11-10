@@ -10,6 +10,8 @@ Fuentes leídas (solo lectura, sin tocar código de la app):
 | `src/styles/_cards.scss` | `.bw-card` + variantes |
 | `src/styles/_buttons.scss` | `.bw-day-btn`, `.bw-icon-btn` |
 | `src/styles/_tables.scss` | `.bw-detail-table`, `.bw-txn-table`, `.hpg-items-table`, `.hpg-txn-table` |
+| `src/styles/_booking-sheet.scss` | `.bw-sheet` (shell del diálogo «Detalles de la Cita») |
+| `src/styles/_scrollbars.scss` | scrollbars del navegador en los tres temas |
 
 Todo lo que sigue son valores que **existen** en esas fuentes. Nada inventado.
 
@@ -110,6 +112,22 @@ que vale `#2f2f26` en este tema.
 | `--sidebar-hover-bg` / `--sidebar-active-bg` | `rgba(255,255,255,0.08)` / `rgba(255,255,255,0.14)` |
 | `--sidebar-active-border` | `var(--bw-300)` |
 | `--sidebar-divider` | `rgba(255,255,255,0.1)` |
+
+### 1.7 Control del sidebar (flecha de colapsar/cerrar menú) (`_tokens.scss`)
+
+El círculo de la flecha vive como token porque en Kinesilk el círculo navy con borde blanco se
+leía como si fuera de otro tema.
+
+| Token | Claro y oscuro (`_tokens.scss`) | Kinesilk (`styles.scss`) |
+|---|---|---|
+| `--sidebar-control-bg` | `var(--bw-700)` | `rgba(47,47,38,0.08)` |
+| `--sidebar-control-fg` | `rgba(255,255,255,0.85)` | `#2f2f26` |
+| `--sidebar-control-border` | `rgba(255,255,255,0.25)` | `rgba(47,47,38,0.18)` |
+| `--sidebar-control-bg-hover` | `var(--bw-300)` | `#2f5d5a` |
+| `--sidebar-control-fg-hover` | `#ffffff` | `#ffffff` |
+| `--sidebar-control-border-hover` | `rgba(255,255,255,0.5)` | `#2f5d5a` |
+| `--sidebar-control-shadow` | `var(--bw-shadow-sidebar-tab)` | `0 2px 6px rgba(47,47,38,0.16)` |
+| `--sidebar-control-shadow-hover` | `var(--bw-shadow-sidebar-tab-hover)` | `0 3px 10px rgba(47,93,90,0.32)` |
 
 ---
 
@@ -224,7 +242,46 @@ Sin bordes internos (`border: none !important`), densidad alta, `font-size: var(
 - `--p-dialog-footer-padding: 1.25rem` (global, `!important`).
 - Tema oscuro: header/content/footer a `--surface-card`.
 
-### 4.6 Otros patrones globales
+### 4.6 `.bw-sheet` — shell del diálogo de la cita (`_booking-sheet.scss`)
+
+Shell compartido por `admin/calendar` y `provider/calendar` para el diálogo «Detalles de la Cita».
+Sin `::ng-deep`, sólo tokens.
+
+- Cabecera: avatar + identidad (nombre + chip de RUT) + canales de contacto (teléfono con botón
+  WhatsApp, correo). El nombre es lo único que se recorta; el chip de estado no se encoge.
+- Bloques: cada uno con `background var(--surface-card)`, `border 1px solid var(--surface-border)`,
+  `border-radius var(--bw-radius-lg)`. La variante `--session` lleva borde izquierdo 3px
+  `--bw-300`; `--notes` usa `color-mix(in srgb, var(--bw-50) 60%, var(--surface-card))` con borde
+  `--bw-100`.
+- Overline de bloque: `--bw-font-overline` + mayúsculas + `--text-color-secondary`.
+- Montos: `--bw-font-amount` con `--text-heading`.
+- Footer: fila de acciones con `border-top 1px solid var(--surface-border)`.
+
+### 4.7 Scrollbars (`_scrollbars.scss`)
+
+Sin flechas y con el riel del tema, en los tres temas.
+
+- Chromium/Safari: `*::-webkit-scrollbar` de `10px`; `::-webkit-scrollbar-button` en `display:none`
+  (quita las flechas de Windows); riel `var(--bw-surface-muted)` (también `corner`); thumb
+  `color-mix(in srgb, var(--text-color-secondary) 45%, transparent)` con `border 2px solid` del riel
+  y `background-clip: padding-box`, hover 70%, active 85%; radio `--bw-radius-pill`.
+- Firefox: bloque `@supports (-moz-appearance: none)` con `scrollbar-width: thin` y
+  `scrollbar-color` (thumb, riel). El guard es necesario porque esas propiedades existen también en
+  Chromium moderno y apagarían las reglas `::-webkit-scrollbar`.
+- Los colores se leen con `var()` **dentro de cada regla**: un token derivado declarado en `:root`
+  sustituiría con los valores de `:root` y no se re-resolvería en `body.dark-theme`.
+
+### 4.8 PrimeNG: tabs atados a tokens (`styles.scss`)
+
+El preset está fijo en claro (`darkModeSelector: false` en `app.config.ts`), así que `p-tabs`
+resuelve `tablist` y `tabpanel` a `{content.background}` = blanco. En `body.dark-theme` se atan:
+`--p-tabs-tablist-background: transparent`, `--p-tabs-tabpanel-background: transparent`,
+`--p-tabs-tablist-border-color: var(--surface-border)`, `--p-tabs-tabpanel-color: var(--text-color)`,
+`--p-tabs-tab-color: var(--text-color-secondary)`, `--p-tabs-tab-hover-color: var(--text-color)`,
+`--p-tabs-tab-active-color` y `--p-tabs-tab-active-border-color` y `--p-tabs-active-bar-background`
+en `var(--bw-tab-color)`.
+
+### 4.9 Otros patrones globales
 
 - Skeleton: `.bw-sk-card` con shimmer `bw-skeleton-shimmer 1.4s ease-in-out infinite`.
 - Banner de cupo: `.bw-capacity-cta` — `padding .75rem 1rem`, `border-radius .5rem`,
