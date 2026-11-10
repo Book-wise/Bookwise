@@ -365,9 +365,11 @@ describe('RecordDetailComponent', () => {
   it('el valor que la API escribe en `values` para un campo image no se pinta como texto', async () => {
     const urls = mockObjectUrls();
     try {
-      // La API real devuelve `values[key] = { full, thumb }` (rutas internas del
-      // disco) cuando la imagen ya se subió. Eso no es texto: pintarlo daba
-      // "[object Object]" en el detalle.
+      // Guarda defensiva: hasta el PR #97 del backend, la API devolvía
+      // `values[key] = { full, thumb }` (rutas internas del disco) cuando la
+      // imagen ya estaba subida, y pintarlo daba "[object Object]". Desde #97 la
+      // clave ya no viene en `values`, pero el detalle sigue sin depender de eso:
+      // los campos `image` se excluyen por tipo y un objeto nunca se pinta.
       const record = makeRecord({
         images: { lesion: '/clinical-records/123/image/lesion' },
         values: {

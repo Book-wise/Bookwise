@@ -51,6 +51,18 @@ Implementación empezada el 2026-11-03.
 | F9 | i18n/UX (loading/error/saving, quitar «Sin guardar») | ✅ hecho | — |
 | F11 | Editor de `options` para campos `select` en el constructor de tipos (Configuraciones → Fichas) | ⏳ pendiente | — |
 | F10 | Campo de tipo `image` en la ficha: subir/guardar imagen + enlace en el detalle + enlace/imagen en el PDF | ⏳ pendiente | — |
+- **S15 (seba, verbatim, comentario de canvas sobre el artboard 01 de `design/ficha-tipo-opciones/`):**
+  «implementa esto para las opciones» — dirección elegida: **la fila se expande y muestra chips**. Al
+  elegir `select` en una fila, debajo aparece el capturador de opciones: **chips removibles** (✕ por
+  chip) + input «Agregar opción» donde **Enter agrega** y **Backspace en un campo vacío borra la
+  última**. Un contador «N opciones» cierra el bloque. Todo tokenizado, en los tres temas.
+- **S16 (seba, verbatim):** «tambien puedes revisar una especie de bug, cuando modifico o el primero o
+  el segundo elemento de los campos de la ficha se cambian los dos a la vez, corrijelo» — al editar un
+  campo del constructor de tipos se modificaban **dos filas a la vez**. Causa: `makeFieldKey()` usa un
+  contador de módulo (`field_1`, `field_2`…) que no se siembra con los campos del tipo cargado, así que
+  agregar un campo a un tipo de la API (que ya trae `field_1`) produce **claves duplicadas**, y los
+  `update*` buscaban por clave y actualizaban todas las coincidencias. Fix: actualizar **por índice** y
+  generar claves **sin colisión** contra los campos existentes.
 
 ## Contrato backend (confirmado — `docs/clinical-records-contract.md`)
 
@@ -297,3 +309,16 @@ Implementación empezada el 2026-11-03.
   (la fila crece y muestra chips), `02-textarea-una-por-linea` (textarea, una por línea) y
   `03-popover-por-campo` (botón «Opciones (N)» que abre un popover con la lista editable). Sin artboard
   elegido todavía.
+- **L23 (2026-11-10, PR #97 del backend cierra los 4 hallazgos del E2E):** (1) las claves `image` **dejan
+  de aparecer en `values`** — `images` queda como única fuente de verdad, así que `values` sólo trae
+  campos normales; se descartó `image_refs` por el mismo motivo (dos fuentes = el problema). (2) `POST` y
+  `PATCH` devuelven **las mismas claves que el detalle**, `images` incluido (el listado sigue sin él, S4),
+  con un test que compara las formas para que no vuelvan a divergir. (3) el **500 `Route [login] not
+  defined`** era un bug pre-existente: sin `Authorization` **ni `Accept: application/json`** el guard
+  intentaba redirigir a la ruta web `login`; ahora el render de `AuthenticationException` devuelve
+  **401 JSON siempre**. (4) la descarga optimizada (webp ≤1600 px, sin endpoint de original) es **lo
+  esperado**; nombrar la descarga por el mime del blob es correcto.
+  **Consecuencia en el front:** el filtro de `record-detail` (excluir campos `image` de `visibleFields` y
+  descartar objetos en `hasValue`) **se queda** como guarda defensiva: funciona con el contrato viejo y
+  con el nuevo, y expresa la intención (una imagen no es un campo de texto). El test se reescribió para
+  decir que protege la forma pre-#97. Pendiente: **rehacer el E2E** cuando #97 esté mergeado.
