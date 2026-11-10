@@ -57,7 +57,7 @@
       }
     </nav>
 
-    @if (!isMobile() && !effectivelyCollapsed()) {
+    @if (!effectivelyCollapsed() && (!isMobile() || mobileMenuOpen())) {
       <div class="sidebar-widget">
         <bw-agenda-navigator />
       </div>
