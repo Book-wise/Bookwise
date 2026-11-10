@@ -37,7 +37,7 @@ Implementación empezada el 2026-11-03.
 |---|---|---|---|
 | F1 | Pestaña Ficha presentacional: fichas de la reserva + historial + CTA de tipos, con estados vacíos honestos | ✅ hecho | `feat(bookings)` de esta sesión |
 | F2 | Configuraciones con pestañas + «Fichas médicas» (lista de tipos + editor de campos) | ✅ hecho | — |
-| F3 | Detalle de la ficha detrás de «Ver más detalles» (campos por tipo) | ⏳ pendiente | — |
+| F3 | Detalle de la ficha detrás de «Ver más detalles» (campos por tipo) | ✅ hecho | `df81d8d` |
 | F4 | Contrato backend del dominio clínico (ver abajo) | ✅ hecho | `docs/clinical-records-contract.md` |
 | F5 | Servicios API clínicos (`clinical-record-types-api`, `clinical-records-api`) + mapeo de shapes | ✅ hecho | — |
 | F6 | `ClinicalRecordTypesStore` por HTTP (load/create/update) | ✅ hecho | — |
@@ -210,4 +210,17 @@ Implementación empezada el 2026-11-03.
   del disco privado) y **sin links**; el enlace «Ver/Descargar imagen» vive sólo en la app autenticada
   (`fetch`+blob con Bearer). Si alguna vez se quieren links compartibles, la vía es
   `temporarySignedRoute` (URL firmada de vida corta), no un endpoint público: otro contrato.
+- **L16 (2026-11-10, F3 implementada — handoff de `design/ficha-detalle-inline/01-master-detalle.html`):**
+  `bw-record-detail` (nuevo, inline, sin `p-dialog`) reemplaza la lista dentro de la misma pestaña. Modo
+  lectura: breadcrumb «‹ Volver a las fichas» + «Editar ficha»/«Imprimir ficha», tarjeta con título en
+  mayúsculas, meta (fecha · autor) y `dl` sólo con campos con valor. Modo edición: el mismo Reactive Forms
+  dinámico del diálogo de captura (helpers compartidos `record-form-fields.ts` + `record-format.ts`),
+  cabecera reducida a «‹ Volver» y «Guardar cambios»/«Cancelar» al pie; Guardar hace
+  `ClinicalRecordsStore.update` (PATCH `values`) y vuelve a lectura. `openRecord` (output viejo) eliminado.
+  Evidencia: `ng build` verde; **29 tests verdes** (ficha-tab 11, record-detail 10, store 2,
+  record-form-dialog 6 de PRESERVE por el helper compartido) + booking-detail-dialog 12. Commits:
+  `044b152` (diseño + contrato F10) y `df81d8d` (implementación). Desvíos conscientes: (a) sin `.bw-chip`
+  «Sesión N de M» porque `ClinicalRecord` no lo trae (no se inventó dato); (b) si el tipo no está en el
+  catálogo, se muestran las claves crudas y «Editar ficha» queda deshabilitado; (c) «Imprimir ficha»
+  sigue con `window.print()` + TODO de `GET /clinical-records/{id}/pdf` hasta F10.
 
