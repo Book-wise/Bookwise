@@ -136,7 +136,9 @@ export class RecordDetailComponent {
           type: field.type,
           value: values[field.key],
         }))
-        .filter((field) => this.hasValue(field.value));
+        // Los campos `image` van en su propio bloque: la API escribe en
+        // `values[key]` un `{ full, thumb }` de rutas internas, no texto.
+        .filter((field) => field.type !== 'image' && this.hasValue(field.value));
     }
 
     // Sin tipo en el catálogo (p. ej. un tipo retirado) solo se conocen las
@@ -400,6 +402,10 @@ export class RecordDetailComponent {
   private hasValue(value: unknown): boolean {
     if (value === null || value === undefined) return false;
     if (Array.isArray(value)) return value.length > 0;
+    // Un objeto no es un valor pintable (p. ej. la referencia `{ full, thumb }`
+    // que la API escribe para los campos `image`): se descarta antes que
+    // renderizar `[object Object]`.
+    if (typeof value === 'object') return false;
     return String(value).trim() !== '';
   }
 }

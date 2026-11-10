@@ -362,6 +362,30 @@ describe('RecordDetailComponent', () => {
     }
   });
 
+  it('el valor que la API escribe en `values` para un campo image no se pinta como texto', async () => {
+    const urls = mockObjectUrls();
+    try {
+      // La API real devuelve `values[key] = { full, thumb }` (rutas internas del
+      // disco) cuando la imagen ya se subió. Eso no es texto: pintarlo daba
+      // "[object Object]" en el detalle.
+      const record = makeRecord({
+        images: { lesion: '/clinical-records/123/image/lesion' },
+        values: {
+          diagnostico: 'Lumbalgia mecánica',
+          lesion: { full: 'clinical/x.webp', thumb: 'clinical/x_thumb.webp' },
+        },
+      });
+      await setup(record, makeType(IMAGE_FIELDS));
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.textContent).not.toContain('[object Object]');
+      // Solo el campo de texto se pinta como campo; la imagen va en su bloque.
+      expect(el.querySelectorAll('.detail__field').length).toBe(1);
+    } finally {
+      urls.restore();
+    }
+  });
+
   it('«Ver imagen» abre el blob en una pestaña nueva y «Descargar» lo descarga', async () => {
     const urls = mockObjectUrls();
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
