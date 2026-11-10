@@ -83,6 +83,17 @@
   --sidebar-active-bg:    rgba(255, 255, 255, 0.14);
   --sidebar-active-border: var(--bw-300);
   --sidebar-divider:      rgba(255, 255, 255, 0.1);
+  // Control circular del botón de colapsar/cerrar menú (flecha del sidebar).
+  // Vive como token porque en el tema Kinesilk el círculo navy con borde
+  // blanco se leía como si fuera de otro tema.
+  --sidebar-control-bg:            var(--bw-700);
+  --sidebar-control-fg:            rgba(255, 255, 255, 0.85);
+  --sidebar-control-border:        rgba(255, 255, 255, 0.25);
+  --sidebar-control-bg-hover:      var(--bw-300);
+  --sidebar-control-fg-hover:      #ffffff;
+  --sidebar-control-border-hover:  rgba(255, 255, 255, 0.5);
+  --sidebar-control-shadow:        var(--bw-shadow-sidebar-tab);
+  --sidebar-control-shadow-hover:  var(--bw-shadow-sidebar-tab-hover);
 
   // ── Surfaces (light mode) ─────────────────────
   --surface-ground: #f0f5ff;
