@@ -73,7 +73,9 @@
     left: 0;
     top: 0;
     transform: translateX(-100%);
-    width: 220px !important;
+    // 240px (en vez de 220) para que la grilla de 7 columnas del mini
+    // calendario respire: a 220px cada celda quedaba en ~24px.
+    width: 240px !important;
     height: 100vh;
     height: 100dvh;
     transition: transform var(--bw-transition-slow) ease;
