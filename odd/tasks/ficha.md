@@ -224,3 +224,17 @@ Implementación empezada el 2026-11-03.
   catálogo, se muestran las claves crudas y «Editar ficha» queda deshabilitado; (c) «Imprimir ficha»
   sigue con `window.print()` + TODO de `GET /clinical-records/{id}/pdf` hasta F10.
 
+- **L17 (2026-11-10, contrato F10 implementado en el backend — PR #95):** `Book-wise/Bookwise-API#95`
+  (`feat/clinical-record-images`) abre el contrato acordado en L14: tipo `image` sin `options` con
+  `required` no evaluado, `POST /clinical-records/{id}/image` (multipart `key`+`file`, `clinical.manage`
+  + scoping), `GET .../image/{key}` (`clinical.view`, `Cache-Control: private, no-store`),
+  `GET .../pdf` (imágenes embebidas, sin links) y `images` sólo en el detalle. Verificado: 13 tests del
+  feature (89 assertions), suites clínicas 34 verdes, Pint OK.
+  **Dos detalles que condicionan el front:** (1) `images[key]` viene **`null`**, no omitido, cuando el
+  campo existe sin subir nada → señal de «sin imagen» sin llamar al endpoint; (2) la descarga responde
+  **404 (no 403)** cuando la ficha no es visible (mismo criterio que `GET /clinical-records/{id}`) →
+  el front trata 404 como «no hay imagen»; el **403 sólo aparece al subir** sobre un paciente que no es
+  tuyo → se trata como «no aplica», no como error técnico.
+  El backend además cerró un agujero de su propia revisión: la descarga aceptaba cualquier clave y podía
+  apuntar a una ruta arbitraria del disco; ahora sólo sirve claves declaradas `image` y rutas bajo
+  `clinical/` sin `..`, con test que falla si se quita la guarda.
