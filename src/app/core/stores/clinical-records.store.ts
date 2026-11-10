@@ -39,6 +39,8 @@ const initialState: ClinicalRecordsState = {
  * devuelto por el servidor (id, `author_name` y `created_at` resueltos).
  * `update()` hace el PATCH de `values` y reemplaza ese registro en el estado
  * local (el detalle inline vuelve a la lectura con los valores guardados).
+ * `uploadImage()` sube la imagen de un campo `image` y reemplaza el registro
+ * con la respuesta del servidor (que ya incluye `images`).
  */
 export const ClinicalRecordsStore = signalStore(
   { providedIn: 'root' },
@@ -48,6 +50,12 @@ export const ClinicalRecordsStore = signalStore(
   withMethods((store, recordsApi = inject(ClinicalRecordsApiService)) => {
     const byDateDesc = (a: ClinicalRecord, b: ClinicalRecord): number =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+
+    /** Reemplaza un registro del listado local por la versión del servidor. */
+    const replaceRecord = (updated: ClinicalRecord): void =>
+      patchState(store, {
+        records: store.records().map((record) => (record.id === updated.id ? updated : record)),
+      });
 
     return {
       /** Fichas asociadas a una reserva, más recientes primero. */
@@ -98,13 +106,17 @@ export const ClinicalRecordsStore = signalStore(
        * reemplaza ese registro en el listado local con la respuesta del server.
        */
       update(id: number, values: Record<string, unknown>): Observable<ClinicalRecord> {
-        return recordsApi.updateRecord(id, { values }).pipe(
-          tap((updated) =>
-            patchState(store, {
-              records: store.records().map((record) => (record.id === updated.id ? updated : record)),
-            }),
-          ),
-        );
+        return recordsApi.updateRecord(id, { values }).pipe(tap(replaceRecord));
+      },
+
+      /**
+       * Sube la imagen de un campo `image` (`POST /clinical-records/{id}/image`)
+       * y reemplaza el registro con la respuesta del server, que ya trae
+       * `images` actualizado (re-subir la misma `key` reemplaza el archivo).
+       * No toca `values`: la clave de imagen la gestiona el servidor.
+       */
+      uploadImage(id: number, key: string, file: File): Observable<ClinicalRecord> {
+        return recordsApi.uploadImage(id, key, file).pipe(tap(replaceRecord));
       },
     };
   }),

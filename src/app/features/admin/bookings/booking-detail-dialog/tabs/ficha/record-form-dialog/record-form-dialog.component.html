@@ -18,7 +18,7 @@
       <div class="rfd-field">
         <label [for]="'rfd-' + field.key">
           {{ field.label }}
-          @if (field.required) {
+          @if (field.required && field.type !== 'image') {
             <span class="rfd-required" aria-hidden="true">*</span>
           }
         </label>
@@ -75,6 +75,13 @@
               [attr.aria-required]="field.required ? 'true' : null"
               class="rfd-control"
             />
+          }
+          @case ('image') {
+            <!-- El campo image no lleva control: la imagen se sube después de
+                 guardar la ficha desde el detalle (POST .../image). -->
+            <p class="rfd-control rfd-note" data-testid="image-after-save">
+              {{ t('ficha.form.image_after_save') }}
+            </p>
           }
         }
 

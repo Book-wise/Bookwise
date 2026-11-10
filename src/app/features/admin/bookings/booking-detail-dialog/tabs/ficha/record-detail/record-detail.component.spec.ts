@@ -2,7 +2,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { RecordDetailComponent } from './record-detail.component';
 import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
 import { ClinicalRecordsApiService } from '@services/api/clinical-records-api.service';
@@ -44,7 +44,12 @@ describe('RecordDetailComponent', () => {
   let fixture: ComponentFixture<RecordDetailComponent>;
   let component: RecordDetailComponent;
   let recordsStore: InstanceType<typeof ClinicalRecordsStore>;
-  let recordsApi: { updateRecord: ReturnType<typeof vi.fn> };
+  let recordsApi: {
+    updateRecord: ReturnType<typeof vi.fn>;
+    uploadImage: ReturnType<typeof vi.fn>;
+    getImageBlob: ReturnType<typeof vi.fn>;
+    getPdf: ReturnType<typeof vi.fn>;
+  };
   let httpError: { handle: ReturnType<typeof vi.fn> };
 
   async function setup(record: ClinicalRecord, type: ClinicalRecordType | null): Promise<void> {
@@ -82,7 +87,12 @@ describe('RecordDetailComponent', () => {
   }
 
   beforeEach(() => {
-    recordsApi = { updateRecord: vi.fn() };
+    recordsApi = {
+      updateRecord: vi.fn(),
+      uploadImage: vi.fn(),
+      getImageBlob: vi.fn().mockReturnValue(of(new Blob(['png'], { type: 'image/png' }))),
+      getPdf: vi.fn(),
+    };
     httpError = { handle: vi.fn() };
   });
 
@@ -246,13 +256,219 @@ describe('RecordDetailComponent', () => {
     expect(emitted.length).toBe(2);
   });
 
-  it('«Imprimir ficha» usa window.print mientras no exista el PDF', async () => {
+  it('«Imprimir ficha» abre el PDF como blob en una pestaña nueva', async () => {
     await setup(makeRecord(), makeType(FIELDS));
 
+    const pdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    recordsApi.getPdf.mockReturnValue(of(pdf));
+    const urls = mockObjectUrls();
     const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
-    buttonByText('Imprimir ficha')!.click();
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 
-    expect(printSpy).toHaveBeenCalledTimes(1);
-    printSpy.mockRestore();
+    try {
+      buttonByText('Imprimir ficha')!.click();
+      render();
+
+      expect(recordsApi.getPdf).toHaveBeenCalledTimes(1);
+      expect(recordsApi.getPdf).toHaveBeenCalledWith(123);
+      expect(urls.create).toHaveBeenCalledWith(pdf);
+      expect(openSpy).toHaveBeenCalledWith('blob:fake', '_blank');
+      expect(printSpy).not.toHaveBeenCalled();
+    } finally {
+      urls.restore();
+      printSpy.mockRestore();
+      openSpy.mockRestore();
+    }
+  });
+
+  it('si el PDF falla, «Imprimir ficha» cae a window.print', async () => {
+    await setup(makeRecord(), makeType(FIELDS));
+
+    recordsApi.getPdf.mockReturnValue(throwError(() => new Error('boom')));
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+
+    try {
+      buttonByText('Imprimir ficha')!.click();
+      render();
+
+      expect(recordsApi.getPdf).toHaveBeenCalledTimes(1);
+      expect(printSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      printSpy.mockRestore();
+    }
+  });
+
+  // ── Campo image (F10) ────────────────────────────────────────────────
+
+  const IMAGE_FIELDS: ClinicalRecordField[] = [
+    makeField({ key: 'diagnostico', label: 'Diagnóstico' }),
+    makeField({ key: 'lesion', label: 'Lesión', type: 'image' }),
+  ];
+
+  const withImage = (): ClinicalRecord =>
+    makeRecord({ images: { lesion: '/clinical-records/123/image/lesion' } });
+
+  function mockObjectUrls(): {
+    create: ReturnType<typeof vi.fn>;
+    revoke: ReturnType<typeof vi.fn>;
+    restore: () => void;
+  } {
+    const originalCreate = URL.createObjectURL;
+    const originalRevoke = URL.revokeObjectURL;
+    const create = vi.fn().mockReturnValue('blob:fake');
+    const revoke = vi.fn();
+    URL.createObjectURL = create as typeof URL.createObjectURL;
+    URL.revokeObjectURL = revoke as typeof URL.revokeObjectURL;
+    return {
+      create,
+      revoke,
+      restore: () => {
+        URL.createObjectURL = originalCreate;
+        URL.revokeObjectURL = originalRevoke;
+      },
+    };
+  }
+
+  function selectFile(file: File): void {
+    const input = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="image-upload"]',
+    ) as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change'));
+    render();
+  }
+
+  it('en lectura muestra la imagen del campo image con «Ver imagen» y «Descargar»', async () => {
+    const urls = mockObjectUrls();
+    try {
+      await setup(withImage(), makeType(IMAGE_FIELDS));
+
+      expect(recordsApi.getImageBlob).toHaveBeenCalledWith(123, 'lesion');
+
+      const el = fixture.nativeElement as HTMLElement;
+      const img = el.querySelector('[data-testid="image-thumb"]') as HTMLImageElement;
+      expect(img).toBeTruthy();
+      expect(img.getAttribute('src')).toBe('blob:fake');
+      expect(el.querySelector('[data-testid="image-empty"]')).toBeNull();
+
+      const view = buttonByText('Ver imagen');
+      expect(view).toBeTruthy();
+      expect(fixture.nativeElement.textContent).toContain('Descargar');
+
+      // La imagen vive dentro del detalle y el campo image no se pinta como texto.
+      expect(el.querySelectorAll('.detail__field').length).toBe(1);
+    } finally {
+      urls.restore();
+    }
+  });
+
+  it('«Ver imagen» abre el blob en una pestaña nueva y «Descargar» lo descarga', async () => {
+    const urls = mockObjectUrls();
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    try {
+      await setup(withImage(), makeType(IMAGE_FIELDS));
+
+      buttonByText('Ver imagen')!.click();
+      expect(openSpy).toHaveBeenCalledWith('blob:fake', '_blank');
+
+      // La descarga se hace con un <a download> sintético.
+      const clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
+      try {
+        buttonByText('Descargar')!.click();
+      } finally {
+        clickSpy.mockRestore();
+      }
+
+      expect(recordsApi.getImageBlob).toHaveBeenCalledTimes(1);
+    } finally {
+      urls.restore();
+      openSpy.mockRestore();
+    }
+  });
+
+  it('un campo image con `images[key] = null` muestra el estado vacío sin llamar a la API', async () => {
+    await setup(makeRecord({ images: { lesion: null } }), makeType(IMAGE_FIELDS));
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(recordsApi.getImageBlob).not.toHaveBeenCalled();
+    expect(el.querySelector('[data-testid="image-thumb"]')).toBeNull();
+    expect(el.querySelector('[data-testid="image-empty"]')?.textContent).toContain('Sin imagen');
+  });
+
+  it('un 404 al leer la imagen es «no hay imagen», no un error', async () => {
+    recordsApi.getImageBlob.mockReturnValue(throwError(() => ({ status: 404 })));
+    await setup(withImage(), makeType(IMAGE_FIELDS));
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="image-empty"]')?.textContent).toContain('Sin imagen');
+    expect(el.querySelector('[data-testid="image-thumb"]')).toBeNull();
+    expect(httpError.handle).not.toHaveBeenCalled();
+  });
+
+  it('al destruir el componente revoca los object URL creados', async () => {
+    const urls = mockObjectUrls();
+    try {
+      await setup(withImage(), makeType(IMAGE_FIELDS));
+      expect(urls.create).toHaveBeenCalledTimes(1);
+
+      fixture.destroy();
+
+      expect(urls.revoke).toHaveBeenCalledWith('blob:fake');
+    } finally {
+      urls.restore();
+    }
+  });
+
+  it('en edición sube la imagen al elegir el archivo, sin pasar por «Guardar cambios»', async () => {
+    const updated = withImage();
+    recordsApi.uploadImage.mockReturnValue(of(updated));
+    await setup(makeRecord({ images: null }), makeType(IMAGE_FIELDS));
+
+    buttonByText('Editar ficha')!.click();
+    render();
+
+    const input = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="image-upload"]',
+    ) as HTMLInputElement;
+    expect(input.accept).toBe('image/jpeg,image/png,image/webp');
+
+    selectFile(new File(['binario'], 'lesion.png', { type: 'image/png' }));
+
+    expect(recordsApi.uploadImage).toHaveBeenCalledTimes(1);
+    expect(recordsApi.uploadImage.mock.calls[0][0]).toBe(123);
+    expect(recordsApi.uploadImage.mock.calls[0][1]).toBe('lesion');
+    expect((recordsApi.uploadImage.mock.calls[0][2] as File).name).toBe('lesion.png');
+    // La imagen no viaja en `values`: no hay PATCH del formulario.
+    expect(recordsApi.updateRecord).not.toHaveBeenCalled();
+  });
+
+  it('en edición rechaza un archivo de más de 10 MB con error inline y no llama a la API', async () => {
+    await setup(makeRecord({ images: null }), makeType(IMAGE_FIELDS));
+
+    buttonByText('Editar ficha')!.click();
+    render();
+
+    const big = new File(['x'], 'grande.png', { type: 'image/png' });
+    Object.defineProperty(big, 'size', { value: 10 * 1024 * 1024 + 1 });
+    selectFile(big);
+
+    expect(recordsApi.uploadImage).not.toHaveBeenCalled();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.detail__error')?.textContent).toContain(
+      '10 MB',
+    );
+  });
+
+  it('un 403 al subir se muestra como aviso neutro, no como error técnico', async () => {
+    recordsApi.uploadImage.mockReturnValue(throwError(() => ({ status: 403 })));
+    await setup(makeRecord({ images: null }), makeType(IMAGE_FIELDS));
+
+    buttonByText('Editar ficha')!.click();
+    render();
+    selectFile(new File(['binario'], 'lesion.png', { type: 'image/png' }));
+
+    const error = (fixture.nativeElement as HTMLElement).querySelector('.detail__error');
+    expect(error?.textContent).toContain('No puedes subir la imagen de esta ficha');
+    expect(httpError.handle).not.toHaveBeenCalled();
   });
 });

@@ -67,3 +67,52 @@ describe('ClinicalRecordsStore.update', () => {
     expect(store.records()).toEqual([original]);
   });
 });
+
+describe('ClinicalRecordsStore.uploadImage', () => {
+  let store: InstanceType<typeof ClinicalRecordsStore>;
+  let recordsApi: { uploadImage: ReturnType<typeof vi.fn> };
+
+  const file = (): File => new File(['binario'], 'lesion.png', { type: 'image/png' });
+
+  beforeEach(() => {
+    recordsApi = { uploadImage: vi.fn() };
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: ClinicalRecordsApiService, useValue: recordsApi },
+      ],
+    });
+    store = TestBed.inject(ClinicalRecordsStore);
+    patchState(unprotected(store), { records: [] });
+  });
+
+  it('sube la imagen y reemplaza el registro con la respuesta del servidor', () => {
+    const original = makeRecord({ id: 1, images: null });
+    const other = makeRecord({ id: 2, title: 'Ficha láser' });
+    const updated = makeRecord({ id: 1, images: { lesion: '/clinical-records/1/image/lesion' } });
+    patchState(unprotected(store), { records: [original, other] });
+    recordsApi.uploadImage.mockReturnValue(of(updated));
+    const image = file();
+
+    let emitted: ClinicalRecord | null = null;
+    store.uploadImage(1, 'lesion', image).subscribe((record) => (emitted = record));
+
+    expect(recordsApi.uploadImage).toHaveBeenCalledTimes(1);
+    expect(recordsApi.uploadImage).toHaveBeenCalledWith(1, 'lesion', image);
+    expect(emitted).toEqual(updated);
+    expect(store.records()).toEqual([updated, other]);
+    expect(store.records().length).toBe(2);
+  });
+
+  it('un error de la subida no altera el estado local', () => {
+    const original = makeRecord({ id: 1, images: null });
+    patchState(unprotected(store), { records: [original] });
+    recordsApi.uploadImage.mockReturnValue(throwError(() => new Error('boom')));
+
+    let errored = false;
+    store.uploadImage(1, 'lesion', file()).subscribe({ error: () => (errored = true) });
+
+    expect(errored).toBe(true);
+    expect(store.records()).toEqual([original]);
+  });
+});
