@@ -1,29 +1,49 @@
-// ── Layout ──────────────────────────────────────────────────────────────────
+// ── Layout (dos filas) ───────────────────────────────────────────────────────
+// Fila 1: la cabecera a todo el ancho — nunca se mueve cuando el panel se abre.
+// Fila 2: el cuerpo, con el panel (en flujo) + el contenido.
 
 .layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
   background: var(--surface-ground);
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
+.layout__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+// ── Panel ────────────────────────────────────────────────────────────────────
+// Desktop: en flujo y de 0px a 250px, así al abrirse EMPUJA el contenido (sin
+// scrim ni oscurecimiento). Mobile: drawer fijo con transform + scrim.
 
 .sidebar {
-  width: 220px;
-  flex-shrink: 0;
+  --sidebar-width: 250px;
+
+  flex: 0 0 auto;
+  width: var(--sidebar-width);
+  // Sin `min-width: 0` el mínimo de contenido de los hijos impediría llegar a 0.
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
-  border-right: none;
-  position: relative;
   height: 100%;
+  background: linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+  position: relative;
   z-index: var(--z-drawer);
-  transition: width var(--bw-transition-slow) ease;
-  overflow: hidden;
+  // Recorta el contenido (que mantiene su ancho) durante la transición de ancho.
+  overflow-x: hidden;
+  // Válvula de seguridad: con un viewport muy corto el panel scrollea.
+  overflow-y: auto;
+  transition:
+    width var(--bw-transition-slow) ease,
+    transform var(--bw-transition-slow) ease;
 
-  // Decorative glow top-right
+  // Glow decorativo arriba a la derecha. (`top` negativo no agranda el área de
+  // scroll: el origen del scroll está en 0.)
   &::before {
     content: '';
     position: absolute;
@@ -36,252 +56,111 @@
     pointer-events: none;
   }
 
-  // Decorative circle bottom-left
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -60px;
-    left: -40px;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(4, 106, 244, 0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
+  // Sin `::after` inferior: el círculo usaba `bottom: -60px` y, al ser un
+  // posicionado absoluto dentro de un contenedor con `overflow-y: auto`,
+  // agrandaba el área scrolleable y dejaba ~60px muertos debajo del footer.
+  // La identidad del panel ya la da el gradiente de marca.
+}
 
-  &.collapsed {
-    width: 64px;
-
-    .nav-label {
-      display: none;
-    }
-
-    .sidebar-header {
-      justify-content: center;
-      padding: 0.375rem 0.5rem;
-
-      // En 64px el logo-icon-wrapper reduce su padding horizontal para que el
-      // icono ocupe el ancho y quede alineado con la altura del navbar header.
-      .logo-icon-wrapper {
-        padding: 0.25rem 0.375rem;
-      }
-    }
-  }
-
-  @media (max-width: 991px) {
-    position: fixed;
-    left: 0;
-    top: 0;
-    transform: translateX(-100%);
-    // 240px (en vez de 220) para que la grilla de 7 columnas del mini
-    // calendario respire: a 220px cada celda quedaba en ~24px.
-    width: 240px !important;
-    height: 100vh;
-    height: 100dvh;
-    transition: transform var(--bw-transition-slow) ease;
-    // Overlay por encima del header (z-topbar=500) y del backdrop (300): el
-    // drawer cubre todo al abrirse, para que el logo/header del drawer no quede
-    // tapado por la barra superior.
-    z-index: 600;
-    // En el drawer el mini calendario vive debajo de la navegación y, con un
-    // viewport corto, header + nav + widget + footer no entran: se scrollea el
-    // sidebar entero en vez de recortar el widget (antes `.sidebar-nav` era el
-    // único que scrolleaba y el resto quedaba fuera de vista).
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    &.mobile-open {
-      transform: translateX(0);
-    }
-    .nav-label {
-      display: inline !important;
-    }
-
-    .sidebar-nav {
-      flex: 0 0 auto;
-      overflow-y: visible;
-    }
-
-    .sidebar-widget {
-      flex: 0 0 auto;
-    }
+// Cerrado en desktop: el panel mide 0px y el contenido ocupa todo el ancho.
+@media (min-width: 992px) {
+  .layout:not(.panel-open) .sidebar {
+    width: 0;
+    overflow: hidden;
   }
 }
 
-// ── Sidebar Header ────────────────────────────────────────────────────────────
-
-.sidebar-header {
-  // Altura IGUAL a la barra superior (topbar ≈ 67px: avatar 36px + chip padding
-  // 12px + border 2px + app-header padding 16px + border 1px) para que el logo
-  // quede en la misma fila y alineado con el contenido de la barra.
-  height: 4.1875rem;
-  min-height: 4.1875rem;
-  padding: 0.375rem 0.625rem;
-  border-bottom: 1px solid var(--sidebar-divider);
-  background: rgba(255, 255, 255, 0.22);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.75rem;
+// Los bloques internos van por encima del glow decorativo. Sin `min-width`
+// fijo: los hijos se ajustan al ancho real del panel (la animación de ancho la
+// resuelve `.sidebar` con su propio `overflow`).
+.sidebar-nav,
+.sidebar-widget,
+.sidebar-footer {
   position: relative;
   z-index: 1;
-
-  .logo-wrapper,
-  .logo-icon-wrapper {
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 10px;
-    padding: 0.25rem 0.625rem;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .logo-hidden {
-    display: none;
-  }
-
-  .sidebar-logo {
-    width: 100%;
-    max-width: 200px;
-    max-height: 2.5rem;
-    height: auto;
-    object-fit: contain;
-    display: block;
-  }
-
-  .sidebar-icon-img {
-    height: 2.5rem;
-    width: auto;
-    object-fit: contain;
-    display: block;
-  }
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
+// ── Navegación original del sidebar (S11) ────────────────────────────────────
 
 .sidebar-nav {
-  flex: 1;
-  padding: 0.625rem 0.5rem;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  overflow-y: auto;
-  position: relative;
-  z-index: 1;
-}
-
-// Widget de navegación por fecha (bw-agenda-navigator) dentro del sidebar.
-.sidebar-widget {
+  gap: 0.25rem;
   padding: 0.625rem 0.5rem 0.75rem;
-  position: relative;
-  z-index: 1;
 }
 
-// ── Flecha de colapso/cierre (dentro del drawer, separada del contenido) ────────
-
-.sidebar-collapse-btn {
+.nav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.625rem;
-  padding: 0.625rem 0.75rem;
-  margin: 0;
-  border-radius: 0;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--bw-radius-lg);
   color: var(--sidebar-text);
-  background: none;
-  border: none;
-  // Línea separadora SOLO debajo (entre la flecha y el menú).
-  border-bottom: 1px solid var(--sidebar-divider);
-  width: 100%;
-  font-size: 0.875rem;
+  text-decoration: none;
+  font-size: var(--bw-font-table);
   font-family: var(--font-family);
+  white-space: nowrap;
   cursor: pointer;
-  text-align: left;
-  transition: all 0.18s ease;
+  transition:
+    background var(--bw-transition-fast) ease,
+    color var(--bw-transition-fast) ease;
+
+  i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
 
   &:hover {
     background: var(--sidebar-hover-bg);
     color: var(--sidebar-text-hover);
   }
 
-  &__label {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  i {
-    // Círculo alrededor de la flecha: mismo patrón del antiguo tab de colapso,
-    // pero por tokens para que cada tema lo pinte con su propio acento.
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 2px solid var(--sidebar-control-border);
-    background: var(--sidebar-control-bg);
-    box-shadow: var(--sidebar-control-shadow);
-    color: var(--sidebar-control-fg);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    flex-shrink: 0;
-
-    &:hover {
-      background: var(--sidebar-control-bg-hover);
-      border-color: var(--sidebar-control-border-hover);
-      box-shadow: var(--sidebar-control-shadow-hover);
-      color: var(--sidebar-control-fg-hover);
-    }
-  }
-
-  // Colapsada (64px): solo el icono, centrado, sin la línea separadora.
-  .sidebar.collapsed & {
-    justify-content: center;
-    padding: 0.625rem 0.5rem;
-    border-bottom: none;
-
-    .sidebar-collapse-btn__label {
-      display: none;
-    }
+  // Activo: fondo tenue + barra interior de 3px (inset, no altera el layout).
+  &.active {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-text-active);
+    font-weight: var(--bw-weight-medium);
+    box-shadow: inset 3px 0 0 var(--bw-300);
   }
 }
 
-// ── Footer ────────────────────────────────────────────────────────────────────
+// ── Mes: tarjeta clara fija sobre el gradiente (S5) ──────────────────────────
+
+.sidebar-widget {
+  flex: 0 0 auto;
+  padding: 0 0.5rem 0.5rem;
+}
+
+// ── Pie del panel: cerrar sesión ─────────────────────────────────────────────
 
 .sidebar-footer {
-  padding: 0.5rem;
+  margin-top: auto;
+  flex: 0 0 auto;
+  padding: 0.375rem;
   border-top: 1px solid var(--sidebar-divider);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  position: relative;
-  z-index: 1;
 }
-
-// ── Botón de salir (logout) del pie del sidebar ────────────────────────────────
 
 .sidebar-logout {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.75rem;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--bw-radius-lg);
   color: rgba(252, 165, 165, 0.85);
   background: none;
   border: none;
   width: 100%;
-  font-size: 0.875rem;
+  font-size: var(--bw-font-table);
   font-family: var(--font-family);
+  white-space: nowrap;
   cursor: pointer;
   text-align: left;
-  transition: all 0.18s ease;
+  transition:
+    background var(--bw-transition-fast) ease,
+    color var(--bw-transition-fast) ease;
 
   &:hover {
     background: rgba(239, 68, 68, 0.12);
@@ -296,130 +175,43 @@
   }
 
   span {
-    flex: 1;
     min-width: 0;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  // Colapsada (64px): solo el icono, centrado.
-  .sidebar.collapsed & {
-    justify-content: center;
-    padding: 0.625rem 0.5rem;
-  }
 }
 
-.theme-selector {
-  padding: 0 0.25rem;
-}
+// ── Mobile: drawer + scrim ───────────────────────────────────────────────────
+// Sin ancho para empujar: el panel se abre encima del contenido. Empieza DEBAJO
+// de la cabecera para que la misma hamburguesa siga visible y pueda cerrarlo.
 
-// ── Usuario autenticado (footer del sidebar) ─────────────────────────────────
+@media (max-width: 991px) {
+  .sidebar {
+    // 240px para que la grilla de 7 columnas del mini calendario respire.
+    --sidebar-width: 240px;
 
-.sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.375rem 0.5rem 0.5rem;
-  border-bottom: 1px solid var(--sidebar-divider);
-  margin-bottom: 0.25rem;
+    position: fixed;
+    top: var(--bw-app-header-height);
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: auto;
+    transform: translateX(-100%);
+    box-shadow: var(--bw-shadow-popover);
 
-  &--collapsed {
-    justify-content: center;
-    padding: 0.5rem 0;
-  }
-
-  .sidebar-user__info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    gap: 0.125rem;
-  }
-
-  .sidebar-user__name {
-    font-size: 0.875rem;
-    font-weight: var(--bw-weight-semibold);
-    color: var(--sidebar-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .sidebar-user__role {
-    font-size: 0.75rem;
-    color: var(--sidebar-text-secondary, rgba(255, 255, 255, 0.65));
-  }
-}
-
-:host ::ng-deep .theme-select {
-  width: 100%;
-  font-size: 0.875rem;
-}
-
-// ── Nav Items ─────────────────────────────────────────────────────────────────
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.75rem;
-  border-radius: var(--bw-radius-lg);
-  color: var(--sidebar-text);
-  text-decoration: none;
-  transition: all 0.18s ease;
-  cursor: pointer;
-  border: none;
-  background: none;
-  width: 100%;
-  font-size: 0.875rem;
-  font-family: var(--font-family);
-  text-align: left;
-
-  i {
-    font-size: 1rem;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  &:hover {
-    background: var(--sidebar-hover-bg);
-    color: var(--sidebar-text-hover);
-  }
-
-  &.active {
-    background: var(--sidebar-active-bg);
-    color: var(--sidebar-text-active);
-    font-weight: 500;
-    border-left: 3px solid var(--bw-300);
-    padding-left: calc(0.75rem - 3px);
-  }
-
-  &.logout-btn {
-    color: rgba(252, 165, 165, 0.8);
-    &:hover {
-      background: rgba(239, 68, 68, 0.12);
-      color: #fca5a5;
-    }
-  }
-
-  &.dark-mode-btn {
-    color: rgba(253, 230, 138, 0.75);
-    &:hover {
-      background: rgba(245, 158, 11, 0.12);
-      color: #fde68a;
+    &.mobile-open {
+      transform: translateX(0);
     }
   }
 }
-
-// ── Mobile Overlay ────────────────────────────────────────────────────────────
 
 .mobile-overlay {
   position: fixed;
-  inset: 0;
+  // El scrim no cubre la cabecera: la hamburguesa sigue accesible.
+  inset: var(--bw-app-header-height) 0 0 0;
   background: rgba(0, 0, 0, 0.55);
   z-index: var(--z-backdrop);
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn var(--bw-transition-base) ease;
 
   @media (min-width: 992px) {
     display: none !important;
@@ -435,28 +227,24 @@
   }
 }
 
-// ── Main Content ──────────────────────────────────────────────────────────────
+// ── Contenido ────────────────────────────────────────────────────────────────
 
 .main-content {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
   height: 100%;
-  // Sin padding-top en ningún viewport: el AppHeader (sticky) va flush al tope.
-  // El header contrarresta el padding lateral con margen negativo para ser
-  // full-width. El padding lateral/bottom lo conservan las páginas internas.
-  padding: 0 1.25rem 1.25rem;
+  overflow-y: auto;
+  // La cabecera ya no vive acá: el padding superior reemplaza su margen.
+  padding: var(--bw-space-lg) 1.25rem 1.25rem;
   background: var(--surface-ground);
   transition: background var(--bw-transition-base);
 
   @media (max-width: 991px) {
-    // Top 0 para que el header sticky pegue al tope; lateral/bottom los pone
-    // cada página. El header usa margen negativo (-1rem) para ser full-width.
-    padding: 0 1rem 1rem;
+    padding: var(--bw-space-md) 1rem 1rem;
   }
 }
 
-// ── Dark theme (sidebar is theme-invariant — only surfaces change) ────────────
+// ── Dark theme (el chrome del panel es invariante; cambian las superficies) ──
 
 body.dark-theme {
   .layout {

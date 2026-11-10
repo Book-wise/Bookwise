@@ -1,15 +1,10 @@
 import { Component, signal, computed, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { SelectModule } from 'primeng/select';
-import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
-import { FormsModule } from '@angular/forms';
 import { AuthService } from '@services/auth.service';
-import { ThemeService, ThemeName } from '@services/theme.service';
-import { LanguageService, Language } from '@services/language.service';
+import { LanguageService } from '@services/language.service';
 import { ABILITIES } from '@shared/config/abilities.config';
 import { AppHeaderComponent } from '@shared/components/app-header/app-header.component';
 import { AgendaNavigatorComponent } from '@shared/components/agenda-navigator/agenda-navigator.component';
@@ -18,29 +13,33 @@ import { SubscriptionInactiveDialogComponent } from '@shared/components/subscrip
 @Component({
   selector: 'bw-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, ToastModule, SelectModule, FormsModule, TooltipModule, AppHeaderComponent, AgendaNavigatorComponent, SubscriptionInactiveDialogComponent],
+  imports: [CommonModule, RouterModule, ToastModule, AppHeaderComponent, AgendaNavigatorComponent, SubscriptionInactiveDialogComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
 export class AdminLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
-  private themeService = inject(ThemeService);
   readonly langService = inject(LanguageService);
 
-  sidebarCollapsed = signal(false);
-  mobileMenuOpen = signal(false);
-  isMobile = signal(false);
+  /** Drawer abierto en mobile (≤991px). Lo consume el header y el scrim. */
+  readonly mobileMenuOpen = signal(false);
+  /**
+   * Panel abierto en desktop (>991px): empuja el contenido, sin scrim.
+   * Arranca ABIERTO: hoy el sidebar siempre está visible, así que cerrarlo por
+   * defecto dejaría al usuario sin navegación hasta que descubra la hamburguesa.
+   */
+  readonly desktopPanelOpen = signal(true);
+  readonly isMobile = signal(false);
 
-  // On mobile the sidebar is always in expanded format — collapsed is desktop-only
-  readonly effectivelyCollapsed = computed(() => this.sidebarCollapsed() && !this.isMobile());
-
-  themeOptions = this.themeService.themeOptions;
-  currentTheme = signal<ThemeName>(this.themeService.currentTheme);
-
-  // ── Usuario autenticado (identidad visible en el footer del sidebar) ────────
-  readonly userName = computed(() => this.authService.user()?.name ?? '');
-  readonly userRoleLabel = computed(() => this.roleLabel(this.authService.userRole()));
+  /**
+   * Estado abierto del panel, sin importar el viewport. Es la única fuente que
+   * consume la hamburguesa de `bw-app-header` y el CSS del layout: en desktop
+   * empuja el contenido y en mobile abre el drawer con scrim.
+   */
+  readonly panelOpen = computed(() =>
+    this.isMobile() ? this.mobileMenuOpen() : this.desktopPanelOpen(),
+  );
 
   /** Ítems crudos del menú: cada uno declara el permission key requerido.
    *  `ability` null = siempre visible (dashboard). */
@@ -70,29 +69,23 @@ export class AdminLayoutComponent {
   private checkScreenSize(): void {
     const mobile = window.innerWidth < 992;
     this.isMobile.set(mobile);
-    // Al volver a desktop (o al salir de mobile), el panel overlay nunca debe
-    // quedar "abierto": sin esto, redimensionar de mobile→desktop dejaba un
-    // overlay fantasma (ya que la sidebar colapsada es un estado distinto).
+    // Al cambiar de breakpoint el panel nunca queda "abierto" en el modo que ya
+    // no corresponde: un drawer abierto al pasar a desktop dejaría el panel
+    // empujado sin haberse pedido y viceversa.
     if (!mobile && this.mobileMenuOpen()) {
       this.mobileMenuOpen.set(false);
+    }
+    if (mobile && this.desktopPanelOpen()) {
+      this.desktopPanelOpen.set(false);
     }
   }
 
   toggleSidebar(): void {
     if (this.isMobile()) {
-      this.mobileMenuOpen.update(v => !v);
+      this.mobileMenuOpen.update((v) => !v);
     } else {
-      this.sidebarCollapsed.update(v => !v);
+      this.desktopPanelOpen.update((v) => !v);
     }
-  }
-
-  onThemeChange(themeName: ThemeName): void {
-    this.themeService.setTheme(themeName);
-    this.currentTheme.set(themeName);
-  }
-
-  onLangChange(lang: Language): void {
-    this.langService.setLang(lang);
   }
 
   closeMenus(): void {
@@ -101,13 +94,6 @@ export class AdminLayoutComponent {
 
   logout(): void {
     this.authService.logout();
-  }
-
-  /** Etiqueta i18n del rol de sesión (`admin`/`provider`), distinta del rol de negocio. */
-  private roleLabel(role: string | null): string {
-    if (role === 'admin') return this.langService.t('ui.role.admin');
-    if (role === 'provider') return this.langService.t('ui.role.provider');
-    return '';
   }
 
   isActive(link: string): boolean {
