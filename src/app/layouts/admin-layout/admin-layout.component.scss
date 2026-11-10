@@ -81,12 +81,27 @@
     // drawer cubre todo al abrirse, para que el logo/header del drawer no quede
     // tapado por la barra superior.
     z-index: 600;
+    // En el drawer el mini calendario vive debajo de la navegación y, con un
+    // viewport corto, header + nav + widget + footer no entran: se scrollea el
+    // sidebar entero en vez de recortar el widget (antes `.sidebar-nav` era el
+    // único que scrolleaba y el resto quedaba fuera de vista).
+    overflow-y: auto;
+    overflow-x: hidden;
 
     &.mobile-open {
       transform: translateX(0);
     }
     .nav-label {
       display: inline !important;
+    }
+
+    .sidebar-nav {
+      flex: 0 0 auto;
+      overflow-y: visible;
+    }
+
+    .sidebar-widget {
+      flex: 0 0 auto;
     }
   }
 }
