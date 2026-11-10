@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 · Panel único con secciones colapsables</title>
+<style>
+  :root{
+    --bw-900:#012663;--bw-700:#0a2862;--bw-600:#083d96;--bw-300:#046af4;
+    --surface-ground:#f0f5ff;--surface-card:#ffffff;--surface-border:#e5e7eb;--surface-muted:#f3f4f6;
+    --text:#1a2744;--text-2:#6b7280;--heading:#111827;
+    --sidebar-bg-from:#012663;--sidebar-bg-to:#083d96;
+    --sidebar-text:rgba(255,255,255,.68);--sidebar-text-hover:#fff;
+    --sidebar-hover-bg:rgba(255,255,255,.08);--sidebar-active-bg:rgba(255,255,255,.14);
+    --sidebar-divider:rgba(255,255,255,.1);
+    --sidebar-control-bg:#0a2862;--sidebar-control-fg:rgba(255,255,255,.85);--sidebar-control-border:rgba(255,255,255,.25);
+    --radius-md:6px;--radius-lg:8px;--radius-pill:999px;
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:#e8eefb;color:var(--text);padding:28px;font-size:14px}
+  h1{font-size:20px;color:var(--heading);margin-bottom:4px}
+  .lead{font-size:13px;color:var(--text-2);margin-bottom:22px;max-width:78ch;line-height:1.5}
+  .row{display:flex;gap:22px;align-items:flex-start;margin-bottom:26px;flex-wrap:wrap}
+  .scene{display:flex;flex-direction:column;gap:8px}
+  .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}
+  .label b{color:var(--heading);font-weight:700}
+  .frame{border:1px solid var(--surface-border);border-radius:10px;overflow:hidden;background:var(--surface-ground);
+         box-shadow:0 8px 24px rgba(1,38,99,.08);display:flex;position:relative}
+
+  /* panel único */
+  .sb{width:220px;flex-shrink:0;display:flex;flex-direction:column;
+      background:linear-gradient(175deg,var(--sidebar-bg-from),var(--sidebar-bg-to));position:relative;z-index:2}
+  .sb__head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+            padding:8px 10px;border-bottom:1px solid var(--sidebar-divider);flex-shrink:0}
+  .sb__logo{background:rgba(255,255,255,.72);border-radius:8px;padding:4px 10px;font-weight:800;font-size:12px;color:#012663}
+  .sb__toggle{width:26px;height:26px;border-radius:var(--radius-pill);border:2px solid var(--sidebar-control-border);
+              background:var(--sidebar-control-bg);color:var(--sidebar-control-fg);
+              display:inline-flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;flex-shrink:0}
+  .sb__nav{display:flex;flex-direction:column;gap:2px;padding:6px;flex-shrink:0}
+  .it{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--radius-lg);
+      color:var(--sidebar-text);font-size:13px;text-decoration:none}
+  .it svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+  .it .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .it:hover{background:var(--sidebar-hover-bg);color:var(--sidebar-text-hover)}
+  .it.is-active{background:var(--sidebar-active-bg);color:var(--sidebar-text-hover);box-shadow:inset 3px 0 0 var(--bw-300)}
+
+  /* sección colapsable */
+  .sec{border-top:1px solid var(--sidebar-divider);flex-shrink:0}
+  .sec__btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;background:none;border:none;
+            color:var(--sidebar-text);font-family:inherit;font-size:10px;font-weight:700;
+            letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  .sec__btn:hover{background:var(--sidebar-hover-bg);color:var(--sidebar-text-hover)}
+  .sec__btn .chev{margin-left:auto;font-size:9px;transition:transform .15s ease}
+  .sec__body{padding:0 8px 8px}
+  .sb[data-open="false"] .sec__body{display:none}
+  .sb[data-open="false"] .sec__btn .chev{transform:rotate(-90deg)}
+
+  .cal{background:rgba(255,255,255,.94);border-radius:10px;padding:9px;color:#1a2744}
+  .cal__nav{display:flex;align-items:center;gap:3px;height:26px}
+  .cal__arrow{width:18px;height:18px;border:none;border-radius:5px;background:transparent;color:#6b7280;font-size:9px;cursor:pointer}
+  .cal__lbl{flex:1;text-align:center;line-height:1.1}
+  .cal__y{display:block;font-size:9px;color:#6b7280}
+  .cal__m{display:block;font-size:11px;font-weight:600;text-transform:capitalize}
+  .cal__today{border:none;background:transparent;color:#046af4;font-size:9px;font-weight:600;cursor:pointer;font-family:inherit}
+  .cal__grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-top:5px}
+  .cal__h{text-align:center;font-size:8px;font-weight:600;color:#9ca3af;text-transform:uppercase;padding:1px 0}
+  .cal__d{height:21px;border:none;border-radius:5px;background:transparent;color:#1a2744;font-size:10px;
+          font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .cal__d:hover{background:rgba(4,106,244,.1);color:#046af4}
+  .cal__d.is-today{background:#046af4;color:#fff;font-weight:600}
+  .cal__d.is-sel{background:rgba(4,106,244,.28);color:#046af4;font-weight:700;box-shadow:inset 0 0 0 1.5px #046af4}
+  .cal__d.is-empty{background:transparent;cursor:default}
+
+  .sb__foot{margin-top:auto;padding:6px;border-top:1px solid var(--sidebar-divider);flex-shrink:0}
+  .sb__out{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--radius-lg);color:rgba(252,165,165,.85);font-size:13px}
+
+  /* contenido */
+  .ct{flex:1;padding:14px;min-width:0;background:var(--surface-ground)}
+  .topbar{height:38px;background:var(--surface-card);border:1px solid var(--surface-border);border-radius:8px;
+          display:flex;align-items:center;gap:8px;padding:0 10px;margin-bottom:10px}
+  .ham{width:26px;height:26px;border:1px solid var(--surface-border);border-radius:7px;background:var(--surface-card);
+       color:var(--text);display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+  .pill{height:20px;border-radius:var(--radius-pill);background:var(--surface-muted);flex:1;max-width:130px}
+  .grid7{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .cell{height:40px;border-radius:6px;background:var(--surface-card);border:1px solid var(--surface-border)}
+  .cell.tall{height:80px}
+
+  /* mobile */
+  .phone{width:260px;height:470px;position:relative;border-radius:14px;overflow:hidden;background:var(--surface-ground);
+         border:1px solid var(--surface-border)}
+  .phone .sb{position:absolute;inset:0 auto 0 0;width:225px}
+  .phone .scrim{position:absolute;inset:0 0 0 225px;background:rgba(0,0,0,.55)}
+  .note{font-size:12px;color:var(--text-2);line-height:1.5;max-width:56ch;margin-top:6px}
+  .note b{color:var(--heading)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+       padding:2px 7px;border-radius:var(--radius-pill);background:rgba(4,106,244,.12);color:#0b3d95;margin-left:6px}
+  .tag--warn{background:rgba(245,158,11,.16);color:#92400e}
+</style>
+</head>
+<body>
+
+<h1>03 · Panel único con secciones colapsables</h1>
+<p class="lead">No hay dos contenedores: es <b>el mismo panel</b> en desktop y mobile. Lo que cambia es el estado por defecto de la sección «Mes»: abierta en desktop, <b>cerrada en mobile</b>. Así el drawer entra completo en cualquier teléfono sin scroll, y el calendario sigue a un click de distancia.</p>
+
+<div class="row">
+  <div class="scene">
+    <span class="label">Desktop · <b>sección «Mes» abierta</b></span>
+    <div class="frame" style="width:420px;height:330px">
+      <aside class="sb" data-open="true">
+        <div class="sb__head"><span class="sb__logo">Bookwise</span><button class="sb__toggle">&#8249;</button></div>
+        <nav class="sb__nav">
+          <a class="it"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="txt">Dashboard</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/></svg><span class="txt">Ubicaciones</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span class="txt">Profesionales</span></a>
+          <a class="it is-active"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="txt">Agenda</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M2 21c0-3 3-5 7-5s7 2 7 5"/><path d="M17 11h5M19.5 8.5v5"/></svg><span class="txt">Clientes</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/></svg><span class="txt">Servicios y packs</span></a>
+        </nav>
+        <div class="sec">
+          <button class="sec__btn">Mes <span class="chev">&#9662;</span></button>
+          <div class="sec__body">
+            <div class="cal">
+              <div class="cal__nav">
+                <button class="cal__arrow">&#8249;</button>
+                <span class="cal__lbl"><span class="cal__y">2026</span><span class="cal__m">noviembre</span></span>
+                <button class="cal__today">Hoy</button>
+                <button class="cal__arrow">&#8250;</button>
+              </div>
+              <div class="cal__grid">
+                <span class="cal__h">L</span><span class="cal__h">M</span><span class="cal__h">M</span><span class="cal__h">J</span><span class="cal__h">V</span><span class="cal__h">S</span><span class="cal__h">D</span>
+                <button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d">1</button>
+                <button class="cal__d">2</button><button class="cal__d">3</button><button class="cal__d">4</button><button class="cal__d">5</button><button class="cal__d">6</button><button class="cal__d">7</button><button class="cal__d">8</button>
+                <button class="cal__d">9</button><button class="cal__d is-today">10</button><button class="cal__d">11</button><button class="cal__d">12</button><button class="cal__d">13</button><button class="cal__d">14</button><button class="cal__d">15</button>
+                <button class="cal__d">16</button><button class="cal__d">17</button><button class="cal__d">18</button><button class="cal__d">19</button><button class="cal__d">20</button><button class="cal__d">21</button><button class="cal__d">22</button>
+                <button class="cal__d">23</button><button class="cal__d is-sel">24</button><button class="cal__d">25</button><button class="cal__d">26</button><button class="cal__d">27</button><button class="cal__d">28</button><button class="cal__d">29</button>
+                <button class="cal__d">30</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sb__foot"><div class="sb__out"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</div></div>
+      </aside>
+      <div class="ct">
+        <div class="topbar"><span class="ham">&#9776;</span><span class="pill"></span><span class="pill" style="max-width:80px"></span></div>
+        <div class="grid7"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell tall"></div><div class="cell tall"></div><div class="cell tall"></div><div class="cell tall"></div></div>
+      </div>
+    </div>
+    <span class="note">En desktop hay alto de sobra: la sección arranca <b>abierta</b>. El botón de cerrar menú pasa a la cabecera como control circular, sin gastar una fila entera.</span>
+  </div>
+
+  <div class="scene">
+    <span class="label">Desktop · <b>sección colapsada</b><span class="tag">72px recuperados</span></span>
+    <div class="frame" style="width:420px;height:330px">
+      <aside class="sb" data-open="false">
+        <div class="sb__head"><span class="sb__logo">Bookwise</span><button class="sb__toggle">&#8249;</button></div>
+        <nav class="sb__nav">
+          <a class="it"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="txt">Dashboard</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/></svg><span class="txt">Ubicaciones</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span class="txt">Profesionales</span></a>
+          <a class="it is-active"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="txt">Agenda</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M2 21c0-3 3-5 7-5s7 2 7 5"/><path d="M17 11h5M19.5 8.5v5"/></svg><span class="txt">Clientes</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/></svg><span class="txt">Servicios y packs</span></a>
+        </nav>
+        <div class="sec">
+          <button class="sec__btn">Mes <span class="chev">&#9662;</span></button>
+          <div class="sec__body"></div>
+        </div>
+        <div class="sb__foot"><div class="sb__out"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</div></div>
+      </aside>
+      <div class="ct">
+        <div class="topbar"><span class="ham">&#9776;</span><span class="pill"></span></div>
+        <div class="grid7"><div class="cell"></div><div class="cell"></div><div class="cell tall"></div><div class="cell tall"></div><div class="cell tall"></div><div class="cell tall"></div></div>
+      </div>
+    </div>
+    <span class="note">Colapsada queda solo el rótulo «Mes ▸». Es el estado por defecto en <b>mobile</b> y el que se recuerda por usuario.</span>
+  </div>
+</div>
+
+<div class="row">
+  <div class="scene">
+    <span class="label">Mobile · <b>sección cerrada por defecto</b></span>
+    <div class="phone">
+      <aside class="sb" data-open="false">
+        <div class="sb__head"><span class="sb__logo">B</span><button class="sb__toggle">&#8249;</button></div>
+        <nav class="sb__nav">
+          <a class="it"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="txt">Dashboard</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/></svg><span class="txt">Ubicaciones</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span class="txt">Profesionales</span></a>
+          <a class="it is-active"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="txt">Agenda</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M2 21c0-3 3-5 7-5s7 2 7 5"/><path d="M17 11h5M19.5 8.5v5"/></svg><span class="txt">Clientes</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/></svg><span class="txt">Servicios y packs</span></a>
+        </nav>
+        <div class="sec">
+          <button class="sec__btn">Mes <span class="chev">&#9662;</span></button>
+        </div>
+        <div class="sb__foot"><div class="sb__out"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</div></div>
+      </aside>
+      <div class="scrim"></div>
+    </div>
+    <span class="note">Sin scroll: cabecera 44px + nav 6×31px + sección plegada 30px + footer 44px ≈ <b>304px</b>.</span>
+  </div>
+
+  <div class="scene">
+    <span class="label">Mobile · <b>usuario abre «Mes»</b></span>
+    <div class="phone" style="height:400px">
+      <aside class="sb" data-open="true">
+        <div class="sb__head"><span class="sb__logo">B</span><button class="sb__toggle">&#8249;</button></div>
+        <nav class="sb__nav">
+          <a class="it is-active"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="txt">Agenda</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M2 21c0-3 3-5 7-5s7 2 7 5"/><path d="M17 11h5M19.5 8.5v5"/></svg><span class="txt">Clientes</span></a>
+          <a class="it"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/></svg><span class="txt">Servicios y packs</span></a>
+        </nav>
+        <div class="sec">
+          <button class="sec__btn">Mes <span class="chev">&#9662;</span></button>
+          <div class="sec__body">
+            <div class="cal">
+              <div class="cal__nav">
+                <button class="cal__arrow">&#8249;</button>
+                <span class="cal__lbl"><span class="cal__y">2026</span><span class="cal__m">noviembre</span></span>
+                <button class="cal__today">Hoy</button>
+                <button class="cal__arrow">&#8250;</button>
+              </div>
+              <div class="cal__grid">
+                <span class="cal__h">L</span><span class="cal__h">M</span><span class="cal__h">M</span><span class="cal__h">J</span><span class="cal__h">V</span><span class="cal__h">S</span><span class="cal__h">D</span>
+                <button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d is-empty"></button><button class="cal__d">1</button>
+                <button class="cal__d">2</button><button class="cal__d">3</button><button class="cal__d">4</button><button class="cal__d">5</button><button class="cal__d">6</button><button class="cal__d">7</button><button class="cal__d">8</button>
+                <button class="cal__d">9</button><button class="cal__d is-today">10</button><button class="cal__d">11</button><button class="cal__d">12</button><button class="cal__d">13</button><button class="cal__d">14</button><button class="cal__d">15</button>
+                <button class="cal__d">16</button><button class="cal__d">17</button><button class="cal__d">18</button><button class="cal__d">19</button><button class="cal__d">20</button><button class="cal__d">21</button><button class="cal__d">22</button>
+                <button class="cal__d">23</button><button class="cal__d is-sel">24</button><button class="cal__d">25</button><button class="cal__d">26</button><button class="cal__d">27</button><button class="cal__d">28</button><button class="cal__d">29</button>
+                <button class="cal__d">30</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sb__foot"><div class="sb__out">Salir</div></div>
+      </aside>
+      <div class="scrim"></div>
+    </div>
+    <span class="note">Al abrirla sí aparece (≈ 250px). Como la nav esa vez tiene 3 ítems visibles, entra igual. Si el alto aprieta, la sección es lo primero que se pliega.</span>
+  </div>
+</div>
+
+</body>
+</html>
