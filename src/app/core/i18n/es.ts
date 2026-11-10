@@ -559,7 +559,7 @@ export const ES: Record<string, string> = {
   'settings.holidays.block': 'Bloquear reservas en feriados',
   'settings.holidays.block.hint': 'Si está activo, los feriados nacionales cierran la agenda en todas las sucursales.',
   'settings.holidays.save_action': 'guardar configuración de feriados',
-  'settings.clinical_types.title': 'Fichas médicas',
+  'settings.clinical_types.title': 'Fichas',
   'settings.clinical_types.list.title': 'Tipos',
   'settings.clinical_types.list.active': 'activos',
   'settings.clinical_types.search': 'Buscar tipo de ficha',

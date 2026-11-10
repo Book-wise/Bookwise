@@ -1,4 +1,4 @@
-# Ficha médica (pestaña del diálogo de reserva)
+# Ficha (pestaña del diálogo de reserva)
 
 Diseño: `design/ficha-medica/` (4 artboards) y `design/config-tipos-ficha/` (4 artboards, F2).
 Implementación empezada el 2026-11-03.
@@ -173,4 +173,10 @@ Implementación empezada el 2026-11-03.
   dominio: **F3** (detalle de ficha tras «Ver más detalles»), que vive en el WIP `wip(ficha-medica)`
   de `feat/billing-wizard-steps`. Pendiente de deploy: `dev.bookwise.cl` no expone aún los endpoints
   clínicos (gate PHP 8.3.6 < 8.3.36, escalado a devops); el dev local (`127.0.0.1:9999`) sí los tiene.
+- **L12 (2026-11-10, gentle-design del detalle inline):** el usuario pidió que F3 no abra un segundo
+  diálogo, sino que el detalle quede inline dentro del mismo diálogo de reserva. Diseño
+  `design/ficha-detalle-inline/` con 3 direcciones: `01-master-detalle.html` (el detalle reemplaza la
+  lista con breadcrumb «volver»), `02-acordeon-inline.html` (la ficha se expande en su tarjeta) y
+  `03-panel-lateral.html` (lista + detalle en dos columnas). El artboard elegido se implementará como
+  F3, reemplazando el `record-detail-dialog` (p-dialog aparte) del WIP `3dd4d33`.
 
