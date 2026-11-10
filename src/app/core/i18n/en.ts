@@ -572,7 +572,7 @@ export const EN: Record<string, string> = {
   'settings.holidays.block': 'Block bookings on holidays',
   'settings.holidays.block.hint': 'When on, national holidays close the agenda across all locations.',
   'settings.holidays.save_action': 'save holidays setting',
-  'settings.clinical_types.title': 'Medical records',
+  'settings.clinical_types.title': 'Records',
   'settings.clinical_types.list.title': 'Types',
   'settings.clinical_types.list.active': 'active',
   'settings.clinical_types.search': 'Search record type',

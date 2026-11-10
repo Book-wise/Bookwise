@@ -1,7 +1,7 @@
 {
   "title": "Tipos de ficha en Configuraciones",
   "brief": "Catálogo de tipos de ficha médica administrable desde /admin/configuraciones: nombre, estado, orden y campos propios (label, tipo de dato, requerido, opciones). Los tipos activos son los que después aparecen en el desplegable «Agregar tipo de registro/ficha» de la pestaña Ficha del diálogo de reserva de la agenda.",
-  "feature": "odd/tasks/ficha-medica.md",
+  "feature": "odd/tasks/ficha.md",
   "artboards": [
     {
       "file": "01-config-seccion-dialogo.html",
