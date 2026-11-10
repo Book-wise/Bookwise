@@ -123,6 +123,29 @@
   .record__link { border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--tab); white-space: nowrap; }
   .record__link:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; border-radius: 4px; }
 
+  .modal { position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; padding: 24px; }
+  .modal__backdrop { position: absolute; inset: 0; background: rgba(1,38,99,.55); }
+  .pdf-sheet {
+    position: relative; z-index: 1;
+    width: 640px; max-width: 100%; max-height: 90vh; overflow: auto;
+    background: #fff; color: #111; border-radius: 4px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    padding: 40px 46px 44px; font-size: 13px; line-height: 1.55;
+  }
+  .modal__close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: none; border-radius: 8px; background: #e5e7eb; color: #374151; font-size: 16px; cursor: pointer; }
+  .pdf-sheet__brand { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #6b7280; }
+  .pdf-sheet__logo { width: 30px; height: 30px; border-radius: 6px; background: #012663; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  .pdf-sheet__title { font-size: 19px; font-weight: 700; text-transform: uppercase; color: #012663; margin: 16px 0 2px; letter-spacing: .02em; line-height: 1.2; }
+  .pdf-sheet__sub { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+  .pdf-sheet hr { border: none; border-top: 1px solid #e5e7eb; margin: 14px 0; }
+  .pdf-sheet__section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin: 2px 0 6px; }
+  .pdf-sheet__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+  .pdf-sheet__field dt { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+  .pdf-sheet__field dd { font-size: 13px; color: #111; margin: 0; }
+  .pdf-sheet__sign { display: flex; gap: 44px; margin-top: 30px; }
+  .pdf-sheet__sign > div { flex: 1; }
+  .pdf-sheet__sign .line { border-top: 1px solid #111; margin-top: 44px; padding-top: 5px; font-size: 11px; color: #6b7280; text-align: center; }
+
   @media (prefers-reduced-motion: no-preference) {
     .detail { animation: fade .18s ease-out; }
     @keyframes fade { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -187,7 +210,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
             Editar ficha
           </button>
-          <button class="btn btn--secondary" type="button">
+          <button class="btn btn--secondary" type="button" id="printBtn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>
             Imprimir ficha
           </button>
@@ -265,6 +288,61 @@
     </div>
   </div>
 
+  <!-- Vista previa del PDF (en la app real se abre en una pestaña nueva) -->
+  <div class="modal is-hidden" id="pdfModal" role="dialog" aria-modal="true" aria-label="Vista previa del PDF de la ficha">
+    <div class="modal__backdrop" id="pdfBackdrop"></div>
+    <div class="pdf-sheet">
+      <button class="modal__close" id="pdfClose" type="button" aria-label="Cerrar vista previa">×</button>
+
+      <div class="pdf-sheet__brand">
+        <span class="pdf-sheet__logo" aria-hidden="true">B</span>
+        <span>Bookwise · Estética Láser</span>
+      </div>
+      <h2 class="pdf-sheet__title">Ficha de eliminación de tatuajes con láser</h2>
+      <div class="pdf-sheet__sub">Registro de cada sesión</div>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Paciente</div>
+      <dl class="pdf-sheet__grid">
+        <div class="pdf-sheet__field"><dt>Nombre</dt><dd>Valentina Silva</dd></div>
+        <div class="pdf-sheet__field"><dt>RUT</dt><dd>12.345.678-9</dd></div>
+        <div class="pdf-sheet__field"><dt>Teléfono</dt><dd>+56 9 1234 5678</dd></div>
+        <div class="pdf-sheet__field"><dt>Correo</dt><dd>valentina@correo.cl</dd></div>
+      </dl>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Sesión</div>
+      <dl class="pdf-sheet__grid">
+        <div class="pdf-sheet__field"><dt>Fecha</dt><dd>12/11/2026</dd></div>
+        <div class="pdf-sheet__field"><dt>Sesión Nº</dt><dd>3 de 6</dd></div>
+        <div class="pdf-sheet__field"><dt>Zona tratada</dt><dd>Antebrazo izquierdo</dd></div>
+        <div class="pdf-sheet__field"><dt>Fototipo de piel</dt><dd>III</dd></div>
+      </dl>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Parámetros del láser</div>
+      <dl class="pdf-sheet__grid">
+        <div class="pdf-sheet__field"><dt>Longitud de onda</dt><dd>1064 nm</dd></div>
+        <div class="pdf-sheet__field"><dt>Fluencia</dt><dd>5,5 J/cm²</dd></div>
+        <div class="pdf-sheet__field"><dt>Spot</dt><dd>4 mm</dd></div>
+        <div class="pdf-sheet__field"><dt>Pulsos</dt><dd>120</dd></div>
+      </dl>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Observaciones</div>
+      <p style="margin:0; color:#111;">Buena respuesta al tratamiento. Sin ampollas ni sangrado. Se indica hidratación y evitar sol directo 48 h.</p>
+
+      <div class="pdf-sheet__sign">
+        <div><div class="line">Firma del profesional</div></div>
+        <div><div class="line">Firma del paciente</div></div>
+      </div>
+    </div>
+  </div>
+
 <script>
   const listView = document.getElementById('listView');
   const detailView = document.getElementById('detailView');
@@ -297,6 +375,11 @@
   document.getElementById('editBtn').addEventListener('click', enterEdit);
   document.getElementById('cancelBtn').addEventListener('click', backToRead);
   document.getElementById('saveBtn').addEventListener('click', backToRead);
+
+  const pdfModal = document.getElementById('pdfModal');
+  document.getElementById('printBtn').addEventListener('click', () => pdfModal.classList.remove('is-hidden'));
+  document.getElementById('pdfClose').addEventListener('click', () => pdfModal.classList.add('is-hidden'));
+  document.getElementById('pdfBackdrop').addEventListener('click', () => pdfModal.classList.add('is-hidden'));
 </script>
 </body>
 </html>
