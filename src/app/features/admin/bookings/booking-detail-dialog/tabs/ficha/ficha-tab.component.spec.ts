@@ -122,20 +122,57 @@ describe('FichaTabComponent', () => {
     expect(cards[0].textContent).toContain('Camila Rojas');
   });
 
-  it('emite el id del registro al pedir «Ver más detalles»', async () => {
+  it('«Ver más detalles» muestra el detalle inline en lugar de la lista', async () => {
+    await setup();
+    bookingSignal.set({ id: 900 });
+    patchState(unprotected(typesStore), { types: [makeType({ id: 10, name: 'Ficha clínica' })] });
+    patchState(unprotected(recordsStore), { records: [makeSessionRecord({ id: 42 })] });
+    render();
+
+    fixture.nativeElement
+      .querySelector('[data-testid="associated-record"] .ficha__link')
+      .dispatchEvent(new Event('click'));
+    render();
+
+    const detail = fixture.nativeElement.querySelector('bw-record-detail');
+    expect(detail).toBeTruthy();
+    expect(detail.textContent).toContain('Ficha clínica');
+    expect(fixture.nativeElement.querySelectorAll('[data-testid="associated-record"]').length).toBe(0);
+    expect(fixture.nativeElement.querySelector('[data-testid="associated-empty"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="history-record"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="history-empty"]')).toBeNull();
+  });
+
+  it('«Volver a las fichas» vuelve a la lista inline', async () => {
     await setup();
     bookingSignal.set({ id: 900 });
     patchState(unprotected(recordsStore), { records: [makeSessionRecord({ id: 42 })] });
     render();
 
-    const emitted: number[] = [];
-    component.openRecord.subscribe((id) => emitted.push(id));
-
     fixture.nativeElement
       .querySelector('[data-testid="associated-record"] .ficha__link')
       .dispatchEvent(new Event('click'));
+    render();
 
-    expect(emitted).toEqual([42]);
+    const detailDebug = fixture.debugElement.queryAll(
+      (de) => de.nativeElement?.tagName?.toLowerCase() === 'bw-record-detail',
+    );
+    detailDebug[0].triggerEventHandler('back', undefined);
+    render();
+
+    expect(fixture.nativeElement.querySelector('bw-record-detail')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('[data-testid="associated-record"]').length).toBe(1);
+  });
+
+  it('resuelve el tipo del registro desde el catálogo', async () => {
+    await setup();
+    patchState(unprotected(typesStore), {
+      types: [makeType({ id: 10, name: 'Ficha clínica' }), makeType({ id: 11, name: 'Ficha láser' })],
+    });
+
+    expect(component.typeForRecord(makeRecord({ record_type_id: 11 }))?.name).toBe('Ficha láser');
+    expect(component.typeForRecord(makeRecord({ record_type_id: 99 }))).toBeNull();
+    expect(component.typeForRecord(null)).toBeNull();
   });
 
   it('sin tipos configurados deshabilita «Agregar», muestra el hint y sigue emitiendo configureTypes', async () => {

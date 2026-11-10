@@ -37,6 +37,8 @@ const initialState: ClinicalRecordsState = {
  * la reserva) y `historyFor` (historial de consultas anteriores: todo lo que no
  * es la reserva abierta). `create()` hace el POST real y antepone el registro
  * devuelto por el servidor (id, `author_name` y `created_at` resueltos).
+ * `update()` hace el PATCH de `values` y reemplaza ese registro en el estado
+ * local (el detalle inline vuelve a la lectura con los valores guardados).
  */
 export const ClinicalRecordsStore = signalStore(
   { providedIn: 'root' },
@@ -88,6 +90,20 @@ export const ClinicalRecordsStore = signalStore(
         };
         return recordsApi.createRecord(payload).pipe(
           tap((record) => patchState(store, { records: [record, ...store.records()] })),
+        );
+      },
+
+      /**
+       * Actualiza los `values` de una ficha (`PATCH /clinical-records/{id}`) y
+       * reemplaza ese registro en el listado local con la respuesta del server.
+       */
+      update(id: number, values: Record<string, unknown>): Observable<ClinicalRecord> {
+        return recordsApi.updateRecord(id, { values }).pipe(
+          tap((updated) =>
+            patchState(store, {
+              records: store.records().map((record) => (record.id === updated.id ? updated : record)),
+            }),
+          ),
         );
       },
     };
