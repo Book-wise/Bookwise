@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "chosen": "01-rail-hover-expand.html",
+  "handoffs": {
+    "01-rail-hover-expand.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-10T03:29:10.709Z",
+      "startedAt": "2026-11-10T03:30:11.140Z",
+      "implementedAt": null
+    }
+  }
+}
