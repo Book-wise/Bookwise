@@ -238,3 +238,27 @@ Implementación empezada el 2026-11-03.
   El backend además cerró un agujero de su propia revisión: la descarga aceptaba cualquier clave y podía
   apuntar a una ruta arbitraria del disco; ahora sólo sirve claves declaradas `image` y rutas bajo
   `clinical/` sin `..`, con test que falla si se quita la guarda.
+- **L18 (2026-11-10, F10 implementada — handoff de `design/ficha-detalle-inline/01-master-detalle.html`):** cableado
+  completo contra el contrato de #95, sin esperar el merge. Modelo: `ClinicalRecordFieldType` suma `'image'` y
+  `ClinicalRecord.images`. API: `uploadImage(id, key, file)` (multipart `key`+`file`), `getImageBlob(id, key)` y
+  `getPdf(id)` (`responseType: 'blob'`), con `images` en la normalización. Store: `uploadImage` con el helper
+  `replaceRecord` compartido con `update`. `buildRecordForm` **omite** los campos `image`, así que `values` nunca
+  lleva una clave de imagen (evita el 422 `clinical_record_image_managed`). Detalle: lectura por blob +
+  object URL (revocada al destruir y al cambiar de ficha), «Ver imagen»/«Descargar», estado «Sin imagen» para
+  path `null`/ausente/404, subida inmediata en edición con tope de 10 MB inline y 403 como aviso neutro;
+  «Imprimir ficha» pide el PDF y abre el blob (fallback `window.print`). Captura: el campo `image` es una nota
+  «se agrega después de guardar», sin control. Configuraciones: `image` en `FIELD_TYPES` y «No aplica» en
+  `required`. Evidencia TDD (RED en árbol base → GREEN): 12 + 7 + 4 + 19 + 7 + 11 = **60 tests verdes**, más
+  `ng build` verde. Commit `a79aab6`.
+  **Pendiente propuesto (fuera de las superficies del worker):** `ClinicalRecordTypesStore.updateFieldType`
+  debería limpiar `options` cuando el tipo deja de ser `select`; hoy cambiar `select` → `image` deja el array
+  `options` viejo en el payload. No hay verificación E2E posible hasta que mergee #95.
+- **L19 (2026-11-10, mini calendario del sidebar en mobile):** el usuario reportó que en el drawer mobile no se
+  veía el `bw-agenda-navigator`. Causa: el template lo renderizaba con `@if (!isMobile() && !effectivelyCollapsed())`
+  y `isMobile()` es `innerWidth < 992`, así que en mobile **no se montaba nunca**. Cambiado a
+  `@if (!effectivelyCollapsed() && (!isMobile() || mobileMenuOpen()))`: en mobile se monta sólo con el drawer
+  abierto; en desktop queda igual. Segundo problema: `.sidebar` es flex column con `overflow: hidden` y sólo
+  `.sidebar-nav` scrolleaba (`flex: 1`), así que al entrar el widget en un viewport corto header + nav + widget
+  + footer no entraban y el widget quedaba recortado. En el drawer ahora scrollea el sidebar completo y la nav
+  pasa a `flex: 0 0 auto`. Sin spec del layout (no existe `admin-layout.component.spec.ts`): verificación por
+  build + revisión visual. Commit `2c5ff93`.
