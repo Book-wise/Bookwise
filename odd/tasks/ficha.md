@@ -23,6 +23,11 @@ Implementación empezada el 2026-11-03.
   en ficha» — los campos de la ficha necesitan un tipo **`image`**: subir/guardar la imagen, mostrar un
   enlace de descarga/visualización en el detalle de la ficha, e incluir la imagen o su enlace en el
   PDF generado.
+- **S14 (seba, verbatim):** «en el frontende del tab fichas en admin/configuraciones: necesitamos implementar
+  las opciones del select: Error de validación — Guardar cambios / Un campo select requiere opciones.
+  levantemos un design para eso?» — el editor de campos **no tiene editor de `options`** (nunca lo tuvo,
+  ni para `select`), así que un campo `select` no se puede guardar: la API responde con error de
+  validación. Hace falta agregar la captura de opciones en el constructor de campos.
 
 ## Lo que existe hoy en el producto
 
@@ -44,7 +49,20 @@ Implementación empezada el 2026-11-03.
 | F7 | `ClinicalRecordsStore` por HTTP (loadByClient/create) | ✅ hecho | — |
 | F8 | Cablear componentes (diálogo, ficha-tab, form, configuraciones) | ✅ hecho | — |
 | F9 | i18n/UX (loading/error/saving, quitar «Sin guardar») | ✅ hecho | — |
+| F11 | Editor de `options` para campos `select` en el constructor de tipos (Configuraciones → Fichas) | ⏳ pendiente | — |
 | F10 | Campo de tipo `image` en la ficha: subir/guardar imagen + enlace en el detalle + enlace/imagen en el PDF | ⏳ pendiente | — |
+- **S15 (seba, verbatim, comentario de canvas sobre el artboard 01 de `design/ficha-tipo-opciones/`):**
+  «implementa esto para las opciones» — dirección elegida: **la fila se expande y muestra chips**. Al
+  elegir `select` en una fila, debajo aparece el capturador de opciones: **chips removibles** (✕ por
+  chip) + input «Agregar opción» donde **Enter agrega** y **Backspace en un campo vacío borra la
+  última**. Un contador «N opciones» cierra el bloque. Todo tokenizado, en los tres temas.
+- **S16 (seba, verbatim):** «tambien puedes revisar una especie de bug, cuando modifico o el primero o
+  el segundo elemento de los campos de la ficha se cambian los dos a la vez, corrijelo» — al editar un
+  campo del constructor de tipos se modificaban **dos filas a la vez**. Causa: `makeFieldKey()` usa un
+  contador de módulo (`field_1`, `field_2`…) que no se siembra con los campos del tipo cargado, así que
+  agregar un campo a un tipo de la API (que ya trae `field_1`) produce **claves duplicadas**, y los
+  `update*` buscaban por clave y actualizaban todas las coincidencias. Fix: actualizar **por índice** y
+  generar claves **sin colisión** contra los campos existentes.
 
 ## Contrato backend (confirmado — `docs/clinical-records-contract.md`)
 
@@ -238,3 +256,69 @@ Implementación empezada el 2026-11-03.
   El backend además cerró un agujero de su propia revisión: la descarga aceptaba cualquier clave y podía
   apuntar a una ruta arbitraria del disco; ahora sólo sirve claves declaradas `image` y rutas bajo
   `clinical/` sin `..`, con test que falla si se quita la guarda.
+- **L18 (2026-11-10, F10 implementada — handoff de `design/ficha-detalle-inline/01-master-detalle.html`):** cableado
+  completo contra el contrato de #95, sin esperar el merge. Modelo: `ClinicalRecordFieldType` suma `'image'` y
+  `ClinicalRecord.images`. API: `uploadImage(id, key, file)` (multipart `key`+`file`), `getImageBlob(id, key)` y
+  `getPdf(id)` (`responseType: 'blob'`), con `images` en la normalización. Store: `uploadImage` con el helper
+  `replaceRecord` compartido con `update`. `buildRecordForm` **omite** los campos `image`, así que `values` nunca
+  lleva una clave de imagen (evita el 422 `clinical_record_image_managed`). Detalle: lectura por blob +
+  object URL (revocada al destruir y al cambiar de ficha), «Ver imagen»/«Descargar», estado «Sin imagen» para
+  path `null`/ausente/404, subida inmediata en edición con tope de 10 MB inline y 403 como aviso neutro;
+  «Imprimir ficha» pide el PDF y abre el blob (fallback `window.print`). Captura: el campo `image` es una nota
+  «se agrega después de guardar», sin control. Configuraciones: `image` en `FIELD_TYPES` y «No aplica» en
+  `required`. Evidencia TDD (RED en árbol base → GREEN): 12 + 7 + 4 + 19 + 7 + 11 = **60 tests verdes**, más
+  `ng build` verde. Commit `a79aab6`.
+  **Pendiente propuesto (fuera de las superficies del worker):** `ClinicalRecordTypesStore.updateFieldType`
+  debería limpiar `options` cuando el tipo deja de ser `select`; hoy cambiar `select` → `image` deja el array
+  `options` viejo en el payload. No hay verificación E2E posible hasta que mergee #95.
+- **L19 (2026-11-10, mini calendario del sidebar en mobile):** el usuario reportó que en el drawer mobile no se
+  veía el `bw-agenda-navigator`. Causa: el template lo renderizaba con `@if (!isMobile() && !effectivelyCollapsed())`
+  y `isMobile()` es `innerWidth < 992`, así que en mobile **no se montaba nunca**. Cambiado a
+  `@if (!effectivelyCollapsed() && (!isMobile() || mobileMenuOpen()))`: en mobile se monta sólo con el drawer
+  abierto; en desktop queda igual. Segundo problema: `.sidebar` es flex column con `overflow: hidden` y sólo
+  `.sidebar-nav` scrolleaba (`flex: 1`), así que al entrar el widget en un viewport corto header + nav + widget
+  + footer no entraban y el widget quedaba recortado. En el drawer ahora scrollea el sidebar completo y la nav
+  pasa a `flex: 0 0 auto`. Sin spec del layout (no existe `admin-layout.component.spec.ts`): verificación por
+  build + revisión visual. Commit `2c5ff93`.
+- **L20 (2026-11-10, #95 mergeado — F10 desbloqueada para E2E):** Bookwise-API mergeó
+  `feat/clinical-record-images` en `develop` (`82565ea`); las rutas `GET .../image/{key}`,
+  `POST .../image` y `GET .../pdf` ya están en `routes/api.php`. Los dos detalles del contrato que
+  condicionan el front siguen vigentes (`images[key]` = `null` sin subir; descarga 404 = no visible,
+  403 sólo al subir). **Limitación conocida confirmada por el mantenedor:** las fichas **no se
+  restauran**, así que el soft delete borra también los archivos de imagen; si algún día el front
+  ofrece «restaurar ficha», la ficha vuelve **sin imágenes** y hay que decirlo en la UI.
+  Nota de entorno: un probe sin token a `127.0.0.1:9999/api/v1/clinical-records` devolvió **500**, no
+  401 — probablemente falten las migraciones del feature en la BD local o el token; a verificar por
+  el lado del backend antes del E2E.
+- **L21 (2026-11-10, E2E real contra el backend local + bug encontrado):** con el BE levantado hice el
+  E2E del contrato con curl (login `admin@kinesilk.cl`, tenant Kinesilk). **Confirmado**: `images[key]`
+  = `null` antes de subir; `POST /clinical-records` sin la clave image → 201; mandar `values[key]` de un
+  campo image → **422 `clinical_record_image_managed`**; key inválida → **422
+  `clinical_record_image_key_invalid`**; multipart `key`+`file` → 200; `GET .../image/{key}` → 200 con
+  `Cache-Control: no-store, private`; `author_name` resuelto.
+  **Hallazgos**: (1) la API **sí escribe** `values[key] = { full, thumb }` con rutas internas del disco
+  cuando la imagen se subió — el front pintaba **`[object Object]`** en el detalle; **corregido** con
+  test RED→GREEN (los campos `image` se excluyen de `visibleFields` y `hasValue` descarta objetos).
+  (2) `POST /clinical-records` (create) devuelve `images: null`, no el mapa como el detalle.
+  (3) La descarga sirve la versión **optimizada webp** (subí PNG de 70 KB, bajó 11,5 KB webp).
+  (4) Cualquier request sin token devuelve **500 `Route [login] not defined`** en vez de 401 (no es del
+  dominio clínico; me hizo creer que faltaban migraciones). Los cuatro puntos se reportaron al backend.
+- **L22 (2026-11-10, F11: opciones de `select`):** el editor de campos de Configuraciones **nunca tuvo**
+  editor de `options`, así que un campo `select` no se puede guardar (la API responde «Un campo select
+  requiere opciones»). Diseño `design/ficha-tipo-opciones/` con 3 direcciones: `01-fila-expandible-chips`
+  (la fila crece y muestra chips), `02-textarea-una-por-linea` (textarea, una por línea) y
+  `03-popover-por-campo` (botón «Opciones (N)» que abre un popover con la lista editable). Sin artboard
+  elegido todavía.
+- **L23 (2026-11-10, PR #97 del backend cierra los 4 hallazgos del E2E):** (1) las claves `image` **dejan
+  de aparecer en `values`** — `images` queda como única fuente de verdad, así que `values` sólo trae
+  campos normales; se descartó `image_refs` por el mismo motivo (dos fuentes = el problema). (2) `POST` y
+  `PATCH` devuelven **las mismas claves que el detalle**, `images` incluido (el listado sigue sin él, S4),
+  con un test que compara las formas para que no vuelvan a divergir. (3) el **500 `Route [login] not
+  defined`** era un bug pre-existente: sin `Authorization` **ni `Accept: application/json`** el guard
+  intentaba redirigir a la ruta web `login`; ahora el render de `AuthenticationException` devuelve
+  **401 JSON siempre**. (4) la descarga optimizada (webp ≤1600 px, sin endpoint de original) es **lo
+  esperado**; nombrar la descarga por el mime del blob es correcto.
+  **Consecuencia en el front:** el filtro de `record-detail` (excluir campos `image` de `visibleFields` y
+  descartar objetos en `hasValue`) **se queda** como guarda defensiva: funciona con el contrato viejo y
+  con el nuevo, y expresa la intención (una imagen no es un campo de texto). El test se reescribió para
+  decir que protege la forma pre-#97. Pendiente: **rehacer el E2E** cuando #97 esté mergeado.
