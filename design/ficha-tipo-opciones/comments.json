@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "lvctjgad",
+      "file": "01-fila-expandible-chips.html",
+      "selector": "body > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(5)",
+      "excerpt": "Lumbar ✕ Cervical ✕ Hombro ✕ Rodilla ✕ Agregar Enter agrega · Backspace en un campo vacío borra la última · 4 opciones",
+      "comment": "implementa esto para las opciones",
+      "createdAt": "2026-11-10T03:58:41.029Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:58:41.048Z",
+      "resolvedAt": "2026-11-10T03:58:54.562Z"
+    }
+  ]
+}

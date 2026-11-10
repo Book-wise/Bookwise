@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-fila-expandible-chips.html",
+  "handoffs": {
+    "01-fila-expandible-chips.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-10T03:58:54.563Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/ficha.md"
+    }
+  }
+}
