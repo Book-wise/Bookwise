@@ -1,15 +1,29 @@
 <header class="app-header">
-  <div class="app-header__left">
-    <button
-      type="button"
-      class="app-header__menu-btn app-header__menu-btn--mobile"
-      (click)="onToggleMenu()()"
-      [attr.aria-label]="lang.t('ui.toggle_menu')"
-      [attr.aria-expanded]="mobileMenuOpen()"
-    >
-      <i class="pi" [class.pi-bars]="!mobileMenuOpen()" [class.pi-times]="mobileMenuOpen()"></i>
-    </button>
+  <!-- Hamburguesa: el MISMO botón abre y cierra el panel, a cualquier ancho.
+       Sin fondo/borde por default, `--bw-surface-muted` en hover y `--bw-700`
+       cuando el panel está abierto. -->
+  <button
+    type="button"
+    class="app-header__menu-btn"
+    [class.app-header__menu-btn--open]="panelOpen()"
+    (click)="onToggleMenu()()"
+    [attr.aria-label]="lang.t('ui.toggle_menu')"
+    [attr.aria-expanded]="panelOpen()"
+  >
+    <i class="pi" [class.pi-bars]="!panelOpen()" [class.pi-times]="panelOpen()"></i>
+  </button>
 
+  <!-- Marca: SOLO el wordmark (sin el icono), el mismo del sidebar grande. -->
+  <a
+    class="app-header__wordmark"
+    href="https://www.bookwise.cl"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <img src="assets/images/logo_side_transparente.png" alt="Bookwise" />
+  </a>
+
+  <div class="app-header__left">
     @if (business(); as biz) {
       <button
         type="button"
@@ -64,6 +78,10 @@
   </div>
 
   <div class="app-header__right">
+    <!-- Slot de los controles de calendario/período — «Hoy», «‹», «›» y el
+         select de vista (Mes / Semana / Día) — que pertenecen a la barra del
+         calendario (T4/T5). Van ACÁ, antes de las preferencias, para que el
+         selector de tema quede pegado al menú de cuenta. -->
     <div class="app-header__actions">
       <p-select
         class="app-header__theme"

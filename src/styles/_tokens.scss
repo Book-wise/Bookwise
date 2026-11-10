@@ -194,6 +194,11 @@
   // ── Form controls ─────────────────────────────
   --bw-control-height: 2.5rem;
 
+  // ── App chrome ────────────────────────────────
+  // Altura de la barra superior. La comparten la cabecera (`app-header`) y el
+  // drawer mobile, que arranca justo debajo para no tapar la hamburguesa.
+  --bw-app-header-height: 4.1875rem;
+
   // ── Z-Index Scale ─────────────────────────────────────────────────────────
   //
   //  Layer            Token              Value   Purpose

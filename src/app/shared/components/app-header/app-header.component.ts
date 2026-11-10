@@ -55,10 +55,14 @@ export class AppHeaderComponent {
     APPEARANCE_OPTIONS.map((opt) => ({ label: this.lang.t(opt.labelKey), value: opt.value })),
   );
 
-  /** True cuando la sidebar está abierta en mobile (cambia hamburguesa ↔ ✕). */
-  readonly mobileMenuOpen = input(false);
+  /**
+   * Estado abierto del panel de navegación (drawer en mobile, panel que empuja
+   * en desktop). Alias `mobileMenuOpen` porque el layout del profesional todavía
+   * lo bindea con ese nombre.
+   */
+  readonly panelOpen = input(false, { alias: 'mobileMenuOpen' });
 
-  /** Callback para abrir/cerrar la sidebar en mobile (lo provee el layout). */
+  /** Callback para abrir/cerrar el panel (lo provee el layout). */
   readonly onToggleMenu = input<() => void>(() => {});
 
   constructor() {
