@@ -18,6 +18,11 @@ import { RecordDetailComponent } from './record-detail/record-detail.component';
  * dominio root (`ClinicalRecordTypesStore`, `ClinicalRecordsStore`); el
  * `BookingDialogStore` (provisto por el diálogo) aporta el `booking_id`/
  * `client_id` actuales. Solo recibe `serviceLabel` del padre.
+ *
+ * Las fichas se leen del bucket **del paciente en curso**
+ * (`ClinicalRecordsStore.recordsFor/byBooking/historyFor`): la pestaña nunca ve
+ * los registros de otro paciente. La carga la dispara el diálogo con
+ * `loadByClient` (una sola vez por paciente).
  */
 @Component({
   selector: 'bw-ficha-tab',
@@ -42,9 +47,15 @@ export class FichaTabComponent {
   readonly bookingId = computed(() => this.dialogStore.booking()?.id ?? null);
   readonly clientId = computed(() => this.dialogStore.booking()?.client?.id ?? null);
 
-  readonly associatedRecords = computed(() => this.recordsStore.byBooking(this.bookingId()));
+  readonly associatedRecords = computed(() => {
+    const clientId = this.clientId();
+    return clientId == null ? [] : this.recordsStore.byBooking(clientId, this.bookingId());
+  });
   /** Historial de consultas anteriores: fichas del paciente en otras reservas. */
-  readonly history = computed(() => this.recordsStore.historyFor(this.bookingId()));
+  readonly history = computed(() => {
+    const clientId = this.clientId();
+    return clientId == null ? [] : this.recordsStore.historyFor(clientId, this.bookingId());
+  });
   readonly hasRecords = computed(() => this.associatedRecords().length > 0);
   readonly hasHistory = computed(() => this.history().length > 0);
 
@@ -90,7 +101,9 @@ export class FichaTabComponent {
   readonly detailRecord = computed<ClinicalRecord | null>(() => {
     const selected = this.selectedRecord();
     if (!selected) return null;
-    return this.recordsStore.records().find((record) => record.id === selected.id) ?? selected;
+    const clientId = this.clientId();
+    if (clientId == null) return selected;
+    return this.recordsStore.recordsFor(clientId).find((record) => record.id === selected.id) ?? selected;
   });
 
   /** «Ver más detalles»: abre el detalle inline en la misma pestaña. */
