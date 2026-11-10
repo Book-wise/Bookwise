@@ -330,3 +330,8 @@ Implementación empezada el 2026-11-03.
   descartar objetos en `hasValue`) **se queda** como guarda defensiva: funciona con el contrato viejo y
   con el nuevo, y expresa la intención (una imagen no es un campo de texto). El test se reescribió para
   decir que protege la forma pre-#97. Pendiente: **rehacer el E2E** cuando #97 esté mergeado.
+- **L24 (2026-11-10, #96 mergeado):** `Route::pattern('id', '[0-9]+')` en las **54 rutas** (`b18899a`, CI
+  Unit 36 + Postgres 1261/6693). `PATCH /clinical-record-types/undefined` ahora es **404**, no 500, y el
+  comportamiento queda distinguible: **404** = el id no existe / no es válido; **422** = validación del
+  payload. Sirve de red de seguridad para el bug del `isNew` mientras se aplica el fix del front.
+  #97 sigue abierto (CI); el E2E completo se rehace cuando mergee.
