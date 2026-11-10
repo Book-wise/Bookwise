@@ -399,6 +399,130 @@
   color: var(--text-color-secondary);
 }
 
+// ── Capturador de opciones de un campo `select` (F11) ──────────────────────
+// La fila se expande: chips removibles + input «Agregar opción» + contador.
+// Sólo tokens de tema, así que funciona en claro, oscuro y kinesilk.
+.ct-fopts {
+  display: grid;
+  gap: var(--bw-space-xs);
+  padding: var(--bw-space-xs) var(--bw-space-sm) var(--bw-space-sm)
+    calc(1.25rem + var(--bw-space-sm));
+}
+
+.ct-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bw-space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ct-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bw-space-xs);
+  max-width: 100%;
+  padding: 0.125rem 0.125rem 0.125rem var(--bw-space-sm);
+  background: var(--bw-50);
+  border: 1px solid var(--bw-100);
+  border-radius: var(--bw-radius-pill);
+  font-size: var(--bw-text-xs);
+  color: var(--bw-chip-text-primary);
+}
+
+.ct-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ct-chip__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--bw-radius-pill);
+  background: transparent;
+  color: inherit;
+  font-size: var(--bw-text-2xs);
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bw-100);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-500);
+    outline-offset: 1px;
+  }
+}
+
+.ct-fopts__add {
+  display: flex;
+  align-items: center;
+  gap: var(--bw-space-xs);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 2rem;
+    font-size: var(--bw-text-xs);
+  }
+}
+
+.ct-fopts__btn {
+  height: 2rem;
+  padding: 0 var(--bw-space-sm);
+  border: 1px solid var(--bw-100);
+  border-radius: var(--bw-radius-md);
+  background: var(--bw-50);
+  color: var(--bw-chip-text-primary);
+  font-family: inherit;
+  font-size: var(--bw-text-xs);
+  font-weight: var(--bw-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bw-space-xs);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bw-100);
+  }
+}
+
+.ct-fopts__count {
+  margin: 0;
+  font-size: var(--bw-text-xs);
+  font-weight: var(--bw-weight-medium);
+  color: var(--text-label);
+
+  // Un `select` sin opciones no se puede guardar (la API responde 422).
+  &.is-invalid {
+    color: var(--bw-chip-text-danger);
+  }
+}
+
+.ct-fopts__error {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--bw-space-xs);
+  font-size: var(--bw-text-xs);
+  color: var(--bw-chip-text-danger);
+}
+
+.ct-fopts__hint {
+  margin: 0;
+  font-size: var(--bw-text-2xs);
+  color: var(--text-color-secondary);
+}
+
 .ct-editor__empty {
   padding: var(--bw-space-lg) var(--bw-space-md);
   display: grid;
@@ -460,5 +584,10 @@
 
   .ct-remove {
     grid-area: remove;
+  }
+
+  // El capturador de opciones de un campo `select` no tiene columna que alinear.
+  .ct-fopts {
+    padding-left: var(--bw-space-sm);
   }
 }

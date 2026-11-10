@@ -87,12 +87,12 @@ export class ClinicalRecordTypesComponent {
     this.store.updateDraftDescription((event.target as HTMLInputElement).value);
   }
 
-  onFieldLabel(field: ClinicalRecordField, event: Event): void {
-    this.store.updateFieldLabel(field.key, (event.target as HTMLInputElement).value);
+  onFieldLabel(index: number, event: Event): void {
+    this.store.updateFieldLabel(index, (event.target as HTMLInputElement).value);
   }
 
-  onFieldType(field: ClinicalRecordField, type: ClinicalRecordFieldType): void {
-    this.store.updateFieldType(field.key, type);
+  onFieldType(index: number, type: ClinicalRecordFieldType): void {
+    this.store.updateFieldType(index, type);
   }
 
   /**
@@ -104,11 +104,35 @@ export class ClinicalRecordTypesComponent {
     return field.type === 'image';
   }
 
-  onFieldRequired(field: ClinicalRecordField, required: boolean): void {
-    this.store.updateFieldRequired(field.key, required);
+  onFieldRequired(index: number, required: boolean): void {
+    this.store.updateFieldRequired(index, required);
+  }
+
+  /** «N opciones» del capturador de opciones de un campo `select`. */
+  optionCountLabel(count: number): string {
+    return this.t('settings.clinical_types.fields.options.count', { count: String(count) });
+  }
+
+  /**
+   * Agrega la opción escrita en el input de la fila `index` (Enter o botón
+   * «Agregar»). El input se limpia sólo cuando la opción entró de verdad, así
+   * que un duplicado o un vacío queda a la vista para corregirlo.
+   */
+  onOptionAdd(index: number, input: HTMLInputElement): void {
+    if (this.store.addFieldOption(index, input.value)) input.value = '';
+  }
+
+  /** Backspace en el input vacío quita la última opción de la fila. */
+  onOptionBackspace(index: number, input: HTMLInputElement, event: Event): void {
+    if (input.value !== '') return;
+    const count = this.store.draft()?.fields[index]?.options?.length ?? 0;
+    if (!count) return;
+    event.preventDefault();
+    this.store.removeFieldOption(index, count - 1);
   }
 
   onSave(): void {
+    if (!this.store.canSave()) return;
     this.store.saveDraft().subscribe({
       error: (err) => this.httpError.handle(err, this.t('settings.clinical_types.save')),
     });
