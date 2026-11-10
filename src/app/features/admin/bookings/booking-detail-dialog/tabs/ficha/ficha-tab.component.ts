@@ -6,8 +6,10 @@ import { LanguageService } from '@services/language.service';
 import { ClinicalRecordTypesStore } from '@core/stores/clinical-record-types.store';
 import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
 import { BookingDialogStore } from '@core/stores/booking-dialog.store';
-import type { ClinicalRecordType } from '@models';
+import type { ClinicalRecord, ClinicalRecordType } from '@models';
+import { formatDateTime } from './record-format';
 import { RecordFormDialogComponent } from './record-form-dialog/record-form-dialog.component';
+import { RecordDetailComponent } from './record-detail/record-detail.component';
 
 /**
  * Pestaña **Ficha** del diálogo de detalle de la reserva.
@@ -21,7 +23,7 @@ import { RecordFormDialogComponent } from './record-form-dialog/record-form-dial
   selector: 'bw-ficha-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MenuModule, RecordFormDialogComponent],
+  imports: [CommonModule, MenuModule, RecordFormDialogComponent, RecordDetailComponent],
   templateUrl: './ficha-tab.component.html',
   styleUrls: ['./ficha-tab.component.scss'],
 })
@@ -34,7 +36,6 @@ export class FichaTabComponent {
   /** Etiqueta del servicio contratado, ya formateada por el padre. */
   readonly serviceLabel = input<string>('');
 
-  readonly openRecord = output<number>();
   /** El usuario quiere configurar los tipos de ficha (pantalla de Configuraciones). */
   readonly configureTypes = output<void>();
 
@@ -80,6 +81,29 @@ export class FichaTabComponent {
   readonly formVisible = signal(false);
   readonly selectedType = signal<ClinicalRecordType | null>(null);
 
+  /** Ficha abierta en el detalle inline (`null` = lista). */
+  readonly selectedRecord = signal<ClinicalRecord | null>(null);
+  /**
+   * El registro seleccionado re-leído del store: tras «Guardar cambios» el PATCH
+   * reemplaza el registro y el detalle vuelve a la lectura con los valores nuevos.
+   */
+  readonly detailRecord = computed<ClinicalRecord | null>(() => {
+    const selected = this.selectedRecord();
+    if (!selected) return null;
+    return this.recordsStore.records().find((record) => record.id === selected.id) ?? selected;
+  });
+
+  /** «Ver más detalles»: abre el detalle inline en la misma pestaña. */
+  openRecordDetail(record: ClinicalRecord): void {
+    this.selectedRecord.set(record);
+  }
+
+  /** Tipo del registro en el catálogo (`null` si todavía no está cargado/activo). */
+  typeForRecord(record: ClinicalRecord | null): ClinicalRecordType | null {
+    if (!record) return null;
+    return this.typesStore.types().find((type) => type.id === record.record_type_id) ?? null;
+  }
+
   private openForm(type: ClinicalRecordType): void {
     this.selectedType.set(type);
     this.formVisible.set(true);
@@ -91,18 +115,6 @@ export class FichaTabComponent {
 
   /** Fecha corta tipo `12/11/2026 - 10:30 am`. */
   formatWhen(iso: string): string {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return '';
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const suffix = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12 || 12;
-
-    return `${day}/${month}/${year} - ${hours}:${minutes} ${suffix}`;
+    return formatDateTime(iso);
   }
 }

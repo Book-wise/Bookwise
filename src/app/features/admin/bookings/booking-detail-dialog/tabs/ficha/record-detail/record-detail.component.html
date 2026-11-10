@@ -1,0 +1,158 @@
+<div class="detail" data-testid="record-detail">
+  <div class="detail__topbar">
+    <button type="button" class="detail__crumb" data-testid="detail-back" (click)="onBack()">
+      <span aria-hidden="true">‹</span> {{ t('ficha.detail.back') }}
+    </button>
+
+    @if (mode() === 'read') {
+      <div class="detail__actions">
+        <p-button
+          [label]="t('ficha.detail.edit')"
+          icon="pi pi-pencil"
+          size="small"
+          [disabled]="!type()"
+          (onClick)="enterEdit()"
+        />
+        <p-button
+          [label]="t('ficha.detail.print')"
+          icon="pi pi-print"
+          severity="secondary"
+          size="small"
+          [outlined]="true"
+          (onClick)="onPrint()"
+        />
+      </div>
+    }
+  </div>
+
+  @if (mode() === 'read') {
+    <article class="detail__card">
+      <header class="detail__head">
+        <h2 class="detail__title">{{ record().title || type()?.name }}</h2>
+        <div class="detail__meta">
+          <span>{{ formatWhen(record().created_at) }}</span>
+          @if (record().author_name) {
+            <span class="detail__dot" aria-hidden="true">·</span>
+            <span>{{ record().author_name }}</span>
+          }
+        </div>
+      </header>
+
+      <dl class="detail__fields">
+        @for (field of visibleFields(); track field.key) {
+          <div class="detail__field">
+            <dt class="detail__label">{{ field.label }}</dt>
+            <dd class="detail__value">{{ formatValue(field) }}</dd>
+          </div>
+        } @empty {
+          <p class="detail__empty" data-testid="detail-no-values">{{ t('ficha.detail.no_values') }}</p>
+        }
+      </dl>
+    </article>
+  } @else {
+    <article class="detail__card">
+      <header class="detail__head">
+        <h2 class="detail__title">{{ record().title || type()?.name }}</h2>
+        <div class="detail__meta">
+          <span>{{ formatWhen(record().created_at) }}</span>
+          @if (record().author_name) {
+            <span class="detail__dot" aria-hidden="true">·</span>
+            <span>{{ record().author_name }}</span>
+          }
+        </div>
+      </header>
+
+      <form [formGroup]="form()" class="detail__fields" novalidate>
+        @for (field of editFields(); track field.key) {
+          <div class="detail__field">
+            <dt class="detail__label">
+              <label [for]="'rd-' + field.key">
+                {{ field.label }}
+                @if (field.required) {
+                  <span class="detail__required" aria-hidden="true">*</span>
+                }
+              </label>
+            </dt>
+            <dd class="detail__value">
+              <div class="detail__control">
+                @switch (field.type) {
+                  @case ('text') {
+                    <input
+                      pInputText
+                      type="text"
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('longtext') {
+                    <textarea
+                      pInputTextarea
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                      rows="3"
+                    ></textarea>
+                  }
+                  @case ('number') {
+                    <input
+                      pInputText
+                      type="number"
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('select') {
+                    <p-select
+                      [inputId]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [options]="selectOptions(field)"
+                      optionLabel="label"
+                      optionValue="value"
+                      [appendTo]="'body'"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('date') {
+                    <input
+                      pInputText
+                      type="date"
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                }
+
+                @if (errorMessage(field); as error) {
+                  <small class="detail__error" role="alert">{{ error }}</small>
+                }
+              </div>
+            </dd>
+          </div>
+        }
+      </form>
+
+      <footer class="detail__footer">
+        <p-button
+          [label]="t('ficha.detail.save')"
+          [disabled]="saving()"
+          [loading]="saving()"
+          (onClick)="onSave()"
+        />
+        <p-button
+          [label]="t('ficha.detail.cancel')"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="onCancel()"
+        />
+      </footer>
+    </article>
+  }
+</div>

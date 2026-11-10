@@ -10,15 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -28,18 +20,7 @@ import { LanguageService } from '@services/language.service';
 import { HttpErrorService } from '@services/http-error.service';
 import type { ClinicalRecordField, ClinicalRecordType } from '@models';
 import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
-
-/**
- * Un `select` solo puede guardar valores que existan en `field.options`.
- * `required` se valida aparte (un valor vacío es `required`, no `invalidOption`).
- */
-function selectOptionValidator(options: string[]): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const value: unknown = control.value;
-    if (value === '' || value === null || value === undefined) return null;
-    return options.includes(String(value)) ? null : { invalidOption: true };
-  };
-}
+import { buildRecordForm, toSelectOptions } from '../record-form-fields';
 
 /**
  * Diálogo de captura de una ficha clínica (pestaña Ficha del diálogo de
@@ -86,7 +67,7 @@ export class RecordFormDialogComponent {
   readonly submitted = signal(false);
 
   /** Formulario dinámico: un control por cada campo del tipo, en orden. */
-  readonly form = computed(() => this.buildForm(this.type().fields));
+  readonly form = computed(() => buildRecordForm(this.type().fields));
 
   constructor() {
     // Al cambiar de tipo o reabrir el diálogo, se limpia el feedback de
@@ -98,20 +79,9 @@ export class RecordFormDialogComponent {
     });
   }
 
-  private buildForm(fields: ClinicalRecordField[]): FormGroup<Record<string, FormControl>> {
-    const controls: Record<string, FormControl> = {};
-    for (const field of fields) {
-      const validators: ValidatorFn[] = [];
-      if (field.required) validators.push(Validators.required);
-      if (field.type === 'select') validators.push(selectOptionValidator(field.options ?? []));
-      controls[field.key] = new FormControl('', { nonNullable: true, validators });
-    }
-    return new FormGroup(controls);
-  }
-
   /** Opciones de un `select` (`label` = `value` = opción). */
   selectOptions(field: ClinicalRecordField): { label: string; value: string }[] {
-    return (field.options ?? []).map((option) => ({ label: option, value: option }));
+    return toSelectOptions(field);
   }
 
   /** Mensaje de error legible por lector de pantalla, por campo. */
