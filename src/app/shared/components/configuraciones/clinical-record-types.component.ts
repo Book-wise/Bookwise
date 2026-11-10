@@ -17,6 +17,7 @@ const FIELD_TYPES: { value: ClinicalRecordFieldType; key: string }[] = [
   { value: 'number', key: 'settings.clinical_types.field.type.number' },
   { value: 'select', key: 'settings.clinical_types.field.type.select' },
   { value: 'date', key: 'settings.clinical_types.field.type.date' },
+  { value: 'image', key: 'settings.clinical_types.field.type.image' },
 ];
 
 /**
@@ -92,6 +93,15 @@ export class ClinicalRecordTypesComponent {
 
   onFieldType(field: ClinicalRecordField, type: ClinicalRecordFieldType): void {
     this.store.updateFieldType(field.key, type);
+  }
+
+  /**
+   * Un campo `image` no tiene `options` y su `required` no se evalúa (el
+   * servidor no lo valida en create/update): se muestra explícitamente como
+   * «no aplica» en vez de un switch que no hace nada.
+   */
+  isImageField(field: ClinicalRecordField): boolean {
+    return field.type === 'image';
   }
 
   onFieldRequired(field: ClinicalRecordField, required: boolean): void {

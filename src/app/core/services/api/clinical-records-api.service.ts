@@ -16,6 +16,8 @@ interface ClinicalRecordResource {
   author_name: string | null;
   created_at: string;
   record_type?: { name?: string } | null;
+  /** Solo en el detalle: ruta API-relativa por campo `image` (o `null`). */
+  images?: Record<string, string | null> | null;
 }
 
 /** Filtros combinables con AND de `GET /clinical-records`. */
@@ -40,7 +42,11 @@ export interface UpdateClinicalRecordPayload {
   values?: Record<string, unknown>;
 }
 
-/** Normaliza el recurso a la forma del front: `title` sale de `record_type.name`. */
+/**
+ * Normaliza el recurso a la forma del front: `title` sale de `record_type.name`.
+ * `values` se copia tal cual (nunca lleva claves de campos `image`: esas las
+ * gestiona el servidor y llegan en `images`, solo en el detalle).
+ */
 function toClinicalRecord(res: ClinicalRecordResource): ClinicalRecord {
   return {
     id: res.id,
@@ -49,6 +55,7 @@ function toClinicalRecord(res: ClinicalRecordResource): ClinicalRecord {
     record_type_id: res.record_type_id,
     title: res.record_type?.name ?? '',
     values: res.values ?? {},
+    images: res.images ?? null,
     created_at: res.created_at,
     author_name: res.author_name ?? null,
     created_by: res.created_by ?? null,
@@ -87,5 +94,36 @@ export class ClinicalRecordsApiService {
 
   deleteRecord(id: number): Observable<unknown> {
     return this.http.delete<unknown>(`${this.baseUrl}/clinical-records/${id}`);
+  }
+
+  /**
+   * `POST /clinical-records/{id}/image` (multipart `key` + `file`): sube la
+   * imagen de un campo `image` y devuelve la ficha completa ya con `images`.
+   * Re-subir la misma `key` reemplaza el archivo en el servidor.
+   */
+  uploadImage(id: number, key: string, file: File): Observable<ClinicalRecord> {
+    const form = new FormData();
+    form.append('key', key);
+    form.append('file', file);
+    // Sin Content-Type manual: con FormData el navegador agrega el boundary.
+    return this.http
+      .post<ClinicalRecordResource>(`${this.baseUrl}/clinical-records/${id}/image`, form)
+      .pipe(map(toClinicalRecord));
+  }
+
+  /**
+   * `GET /clinical-records/{id}/image/{key}` → binario. La ruta **no** es
+   * pública: el interceptor agrega el Bearer, por eso se pide como blob y se
+   * pinta con un object URL (un `<img src>` directo no llevaría el header).
+   */
+  getImageBlob(id: number, key: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/clinical-records/${id}/image/${encodeURIComponent(key)}`, {
+      responseType: 'blob',
+    });
+  }
+
+  /** `GET /clinical-records/{id}/pdf`: PDF con las imágenes ya embebidas (L15). */
+  getPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/clinical-records/${id}/pdf`, { responseType: 'blob' });
   }
 }

@@ -48,6 +48,50 @@
           <p class="detail__empty" data-testid="detail-no-values">{{ t('ficha.detail.no_values') }}</p>
         }
       </dl>
+
+      <!-- ── Campos image (F10): la ruta no es pública, se pinta un blob ── -->
+      @if (imageFields().length) {
+        <div class="detail__images">
+          @for (field of imageFields(); track field.key) {
+            <div class="detail__image" data-testid="record-image">
+              <span class="detail__label">{{ field.label }}</span>
+
+              @if (imageFor(field.key); as image) {
+                <div class="detail__image-body">
+                  <img
+                    class="detail__thumb"
+                    data-testid="image-thumb"
+                    [src]="image.url"
+                    [alt]="field.label"
+                  />
+                  <div class="detail__image-actions">
+                    <p-button
+                      [label]="t('ficha.detail.image_view')"
+                      icon="pi pi-external-link"
+                      size="small"
+                      [outlined]="true"
+                      (onClick)="onViewImage(field)"
+                    />
+                    <p-button
+                      [label]="t('ficha.detail.image_download')"
+                      icon="pi pi-download"
+                      size="small"
+                      [outlined]="true"
+                      (onClick)="onDownloadImage(field)"
+                    />
+                  </div>
+                </div>
+              } @else if (isImagePending(field)) {
+                <span class="detail__thumb detail__thumb--loading" aria-hidden="true"></span>
+              } @else {
+                <span class="detail__image-empty" data-testid="image-empty">
+                  {{ t('ficha.detail.image_none') }}
+                </span>
+              }
+            </div>
+          }
+        </div>
+      }
     </article>
   } @else {
     <article class="detail__card">
@@ -68,7 +112,7 @@
             <dt class="detail__label">
               <label [for]="'rd-' + field.key">
                 {{ field.label }}
-                @if (field.required) {
+                @if (field.required && field.type !== 'image') {
                   <span class="detail__required" aria-hidden="true">*</span>
                 }
               </label>
@@ -127,6 +171,28 @@
                       [attr.aria-required]="field.required ? 'true' : null"
                       class="detail__input"
                     />
+                  }
+                  @case ('image') {
+                    <!-- La imagen se sube al elegir el archivo, no al guardar. -->
+                    @if (imageFor(field.key); as image) {
+                      <img
+                        class="detail__thumb"
+                        data-testid="image-thumb"
+                        [src]="image.url"
+                        [alt]="field.label"
+                      />
+                    }
+                    <input
+                      type="file"
+                      [id]="'rd-' + field.key"
+                      class="detail__file"
+                      data-testid="image-upload"
+                      [accept]="acceptedImageTypes"
+                      (change)="onImageSelected(field, $event)"
+                    />
+                    @if (imageErrors()[field.key]; as error) {
+                      <small class="detail__error" role="alert">{{ error }}</small>
+                    }
                   }
                 }
 

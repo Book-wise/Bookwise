@@ -238,4 +238,37 @@ describe('ClinicalRecordTypesComponent', () => {
     expect(el.querySelector('[data-testid="ct-error"]')).toBeNull();
     expect(el.textContent).toContain('Láser');
   });
+
+  describe('campo image (F10)', () => {
+    it('el desplegable de tipo de campo ofrece `image`', async () => {
+      await setup();
+
+      const values = component.fieldTypeOptions().map((option) => option.value);
+      expect(values).toEqual(['text', 'longtext', 'number', 'select', 'date', 'image']);
+      expect(component.fieldTypeOptions()).toContainEqual({
+        label: 'settings.clinical_types.field.type.image',
+        value: 'image',
+      });
+    });
+
+    it('un campo image no ofrece «Obligatorio»: lo muestra como no aplicable', async () => {
+      await setup();
+      createType();
+
+      (fixture.nativeElement.querySelector('.ct-add') as HTMLButtonElement).click();
+      render();
+      await fixture.whenStable();
+
+      component.onFieldType(store.draft()!.fields[0], 'image');
+      render();
+      await fixture.whenStable();
+
+      const row = fixture.nativeElement.querySelector('.ct-frow') as HTMLElement;
+      expect(row.querySelector('.ct-frow__req')?.textContent).toContain(
+        'settings.clinical_types.required.not_applicable',
+      );
+      expect(row.querySelector('.ct-frow__req')?.textContent).not.toMatch(/required\.(yes|no)\b/);
+      expect(row.querySelector('p-toggleswitch')).toBeNull();
+    });
+  });
 });

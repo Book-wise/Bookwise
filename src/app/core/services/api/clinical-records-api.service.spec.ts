@@ -71,4 +71,70 @@ describe('ClinicalRecordsApiService', () => {
     expect(req.request.method).toBe('PATCH');
     req.flush(makeResource({ values: { motivo: 'otro' } }));
   });
+
+  describe('campo image (F10)', () => {
+    it('uploadImage envía multipart con `key` + `file` y nada de `values`', () => {
+      const file = new File(['binario'], 'lesion.png', { type: 'image/png' });
+
+      service.uploadImage(12, 'lesion', file).subscribe((res) => {
+        expect(res.images).toEqual({ lesion: '/clinical-records/12/image/lesion' });
+        expect(res.values).toEqual({ motivo: 'dolor lumbar' });
+      });
+
+      const req = httpMock.expectOne((r) => r.url === `${baseUrl}/clinical-records/12/image`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body instanceof FormData).toBe(true);
+
+      const body = req.request.body as FormData;
+      expect(body.get('key')).toBe('lesion');
+      expect(body.get('file')).toEqual(file);
+      // La clave de la imagen es gestionada por el servidor: jamás viaja en `values`.
+      expect(body.has('values')).toBe(false);
+      expect([...body.keys()].sort()).toEqual(['file', 'key']);
+
+      req.flush(makeResource({ images: { lesion: '/clinical-records/12/image/lesion' } }));
+    });
+
+    it('getImageBlob pide el binario con responseType blob', () => {
+      const blob = new Blob(['png'], { type: 'image/png' });
+
+      let received: Blob | null = null;
+      service.getImageBlob(12, 'lesion').subscribe((res) => (received = res));
+
+      const req = httpMock.expectOne(`${baseUrl}/clinical-records/12/image/lesion`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.responseType).toBe('blob');
+      req.flush(blob);
+
+      expect(received).toEqual(blob);
+    });
+
+    it('getPdf pide el PDF con responseType blob', () => {
+      const blob = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+
+      let received: Blob | null = null;
+      service.getPdf(12).subscribe((res) => (received = res));
+
+      const req = httpMock.expectOne(`${baseUrl}/clinical-records/12/pdf`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.responseType).toBe('blob');
+      req.flush(blob);
+
+      expect(received).toEqual(blob);
+    });
+
+    it('normaliza `images` (mapa en el detalle, `null` cuando no viene)', () => {
+      service
+        .getRecords({ client_id: 88 })
+        .subscribe((res) => expect(res[0].images).toEqual({ lesion: '/clinical-records/12/image/lesion' }));
+
+      httpMock
+        .expectOne((r) => r.url === `${baseUrl}/clinical-records`)
+        .flush([makeResource({ images: { lesion: '/clinical-records/12/image/lesion' } })]);
+
+      service.getRecords({ client_id: 88 }).subscribe((res) => expect(res[0].images).toBeNull());
+
+      httpMock.expectOne((r) => r.url === `${baseUrl}/clinical-records`).flush([makeResource()]);
+    });
+  });
 });

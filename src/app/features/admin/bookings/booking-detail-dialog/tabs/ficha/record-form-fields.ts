@@ -37,6 +37,10 @@ export function toControlValue(value: unknown): string {
  * Un `FormGroup` con un control no-nullable por campo, prellenado con `values`
  * (clave = `field.key`). `required` y `select` aplican las mismas reglas que el
  * diálogo de captura.
+ *
+ * Los campos `image` se **omiten**: su valor lo gestiona el servidor
+ * (`values[key]` responde `422 clinical_record_image_managed`) y la imagen se
+ * sube aparte, con `POST /clinical-records/{id}/image`.
  */
 export function buildRecordForm(
   fields: ClinicalRecordField[],
@@ -44,6 +48,7 @@ export function buildRecordForm(
 ): FormGroup {
   const controls: Record<string, FormControl> = {};
   for (const field of fields) {
+    if (field.type === 'image') continue;
     const validators: ValidatorFn[] = [];
     if (field.required) validators.push(Validators.required);
     if (field.type === 'select') validators.push(selectOptionValidator(field.options ?? []));

@@ -142,6 +142,69 @@
   color: var(--text-color-secondary);
 }
 
+// ── Campos image (F10) ──────────────────────────────────────────────────
+
+.detail__images {
+  display: grid;
+  padding: 0 var(--bw-space-md) var(--bw-space-md);
+}
+
+.detail__image {
+  display: grid;
+  grid-template-columns: 9.375rem 1fr;
+  gap: var(--bw-space-md);
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--surface-border);
+}
+
+.detail__image-body {
+  display: grid;
+  gap: var(--bw-space-sm);
+  justify-items: start;
+}
+
+.detail__thumb {
+  display: block;
+  width: 9rem;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-md);
+  background: var(--bw-surface-muted);
+  object-fit: cover;
+}
+
+.detail__thumb--loading {
+  height: 6rem;
+}
+
+.detail__image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bw-space-sm);
+}
+
+.detail__image-empty {
+  font-size: var(--bw-font-table);
+  color: var(--text-color-secondary);
+}
+
+.detail__file {
+  font-size: var(--bw-font-table);
+  color: var(--text-label);
+  background: transparent;
+  border: 1px dashed var(--surface-border);
+  border-radius: var(--bw-radius-md);
+  padding: var(--bw-space-sm);
+  width: 100%;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 2px;
+  }
+}
+
 .detail__footer {
   display: flex;
   justify-content: flex-end;
@@ -151,6 +214,11 @@
 
 @media (max-width: 640px) {
   .detail__field {
+    grid-template-columns: 1fr;
+    gap: var(--bw-space-xs);
+  }
+
+  .detail__image {
     grid-template-columns: 1fr;
     gap: var(--bw-space-xs);
   }
