@@ -1,7 +1,9 @@
 # Sidebar y su interacción de abrir/cerrar
 
 Diseño: `design/sidemenu/` (3 artboards; elegido `01-rail-hover-expand.html`).
-Estado: rediseño aprobado en canvas, implementación en curso.
+Estado (2026-11-12): layout, panel y hamburguesa implementados (T1-T3, en `c15b3f9` +
+fixes de tema/mobile). Los controles de FullCalendar (T4/T5, S6-S8) **siguen pendientes**: el
+componente del calendario no cambió contra `develop`.
 
 ## Specs
 
@@ -58,14 +60,14 @@ Estado: rediseño aprobado en canvas, implementación en curso.
 
 ## Tasks
 
-| # | Tarea | Specs | Commit |
-|---|---|---|---|
-| T1 | Layout de dos filas: cabecera a todo el ancho y cuerpo `panel + contenido` | S2, S3 | — |
-| T2 | Panel: nav original + mes (tarjeta, sin plegable) + cerrar sesión, sobre gradiente de marca | S5, S10, S11 | — |
-| T3 | Hamburguesa global en la cabecera; abierto con `--bw-700`; desktop empuja, mobile drawer con scrim | S1, S2, S3, S4, S9 | — |
-| T4 | Controles de FullCalendar arriba: `headerToolbar: false` + `prev`/`next`/`today`/`changeView` cableados, título por `datesSet` | S6, S7 | — |
-| T5 | Barra del calendario: select de vista + «Nueva Reserva»/«Bloquear Horario» juntos y con iconos | S7, S8 | — |
-| T6 | Verificación: `ng build` + specs de layout, calendario y provisión | S1-S11 | — |
+| # | Tarea | Specs | Estado | Commit |
+|---|---|---|---|---|
+| T1 | Layout de dos filas: cabecera a todo el ancho y cuerpo `panel + contenido` | S2, S3 | ✅ hecho | `c15b3f9` |
+| T2 | Panel: nav original + mes (tarjeta, sin plegable) + cerrar sesión, sobre gradiente de marca | S5, S10, S11 | ✅ hecho | `c15b3f9` |
+| T3 | Hamburguesa global en la cabecera; abierto con `--bw-700`; desktop empuja, mobile drawer con scrim | S1, S2, S3, S4, S9 | ✅ hecho | `c15b3f9`, `f522d14`, `6f4dde3`, `2c5ff93` |
+| T4 | Controles de FullCalendar arriba: `headerToolbar: false` + `prev`/`next`/`today`/`changeView` cableados, título por `datesSet` | S6, S7 | ⏳ pendiente | — |
+| T5 | Barra del calendario: select de vista + «Nueva Reserva»/«Bloquear Horario» juntos y con iconos | S7, S8 | ⏳ pendiente | — |
+| T6 | Verificación: `ng build` + specs de layout, calendario y provisión | S1-S11 | ◐ parcial — `ng build` OK y `admin-layout.component.spec` (237 líneas) en `c15b3f9`; los specs de calendario recién aplican con T4/T5 | `c15b3f9` |
 
 ## Log
 
@@ -89,3 +91,13 @@ Estado: rediseño aprobado en canvas, implementación en curso.
   sola vez para todo el admin— sino a la barra propia del calendario (donde ya viven
   `.filters`/`.calendar-actions`). Así se recupera el alto del `headerToolbar` sin filtrar controles de
   calendario en Dashboard, Clientes, etc.
+- **L6 (2026-11-12, cierre de estado y slices):** T1-T3 quedan cerrados con sus commits
+  (`c15b3f9` layout/panel/hamburguesa, `f522d14` tokens del control, `6f4dde3` drawer 240px,
+  `2c5ff93` mini calendario visible en mobile). **T4/T5 no se implementaron**: `full-calendar.component.ts`
+  no tiene diff contra `develop` y sigue con `headerToolbar`, así que la barra de calendario con
+  `prev`/`next`/`today`/`changeView` + select de vista + acciones agrupadas queda como deuda declarada
+  de esta entrega, no como algo incluido. T6 se cumple en la parte de layout (`ng build` OK y
+  `admin-layout.component.spec`); la verificación de calendario depende de T4/T5.
+  **Decisión de entrega (usuario, verbatim):** «arranca el PR actualiza los docs y pushea la rama luego
+  los slices, dale» — el PR de corrección de suite (`chore/suite-green`, PR #47) va primero y los slices
+  de la ficha se encadenan sobre él.
