@@ -56,7 +56,11 @@ describe('CalendarNavigationService', () => {
       service.navigateToCalendar(3, 7, [], mockRouter as unknown as Router);
 
       expect(mockRouter.navigate).toHaveBeenCalledTimes(1);
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin', 'calendar']);
+      // La navegación siempre viaja con el objeto de opciones: sin contexto de vista
+      // `queryParams` queda `undefined` (ruta determinista por `?date=` cuando lo hay).
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin', 'calendar'], {
+        queryParams: undefined,
+      });
     });
 
     it('hasPendingNavigation is true after navigateToCalendar', () => {
