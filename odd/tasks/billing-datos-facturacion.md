@@ -176,6 +176,14 @@ documenta que la futura tabla debe incluir `billed_tenant_id` nullable.
   PREEXISTENTES ajenos (calendar-navigation, historial-reserva ×3, booking-form-dialog ×2).
 - ✅ T7 Work-unit commits. — HECHO: `9348e19` (modelo + servicios), `3f7cc5b`
   (pantalla + sidebar), `022cea5` (correcciones de la verificación).
+- T8 [S2] **Asistente por pasos** en `/admin/facturacion/datos` (rediseño elegido:
+  `design/billing-datos-facturacion/02-asistente-pasos.html`, "Chosen" del diseño). Reemplaza
+  las 3 cards apiladas por: rail de 3 pasos (Información básica · Dirección · Contacto) con
+  chip de estado por paso y resumen, progreso compacto (chip `N de 9` + barra de 3 segmentos),
+  lista **Qué falta** con atajo a cada paso, panel de un paso con overline `Paso N de 3` y chip
+  de estado, y acciones `Volver` / `Guardar y continuar` con la nota "nada es obligatorio".
+  Sin cambios en el contrato: el PATCH sigue mandando las mismas 9 claves.
+  — PENDIENTE.
 
 ## Verificación independiente (2026-10-26)
 
@@ -274,3 +282,40 @@ Banner superior informativo, como en la referencia.
   (solo lectura) y se confirmó que **todo el contrato está mergeado en `develop`**.
 - L12 (usuario, decisión de alcance): "Pantalla + sidebar AgendaPro" → se incluye el
   sidebar agrupado en esta entrega (no se difiere).
+- L13 (usuario, rediseño): "lanza un gentle-design para mejorar la pagina de datos de
+  facturacion presente en admin/facturacion/datos". Se escribió `design/billing-datos-facturacion/`
+  con 3 direcciones sobre el estado real de la pantalla (3 `p-card` apiladas, sin señal de
+  completitud, guardar lejos de los campos, sin vista previa fiscal, y con `!canEdit()` los
+  campos no se deshabilitan):
+  - `01-formulario-preview.html` — una tarjeta con 3 bloques y barra de guardado sticky +
+    columna lateral con vista previa de la factura y "qué falta".
+  - `02-asistente-pasos.html` — rail de 3 pasos con progreso del perfil (7 de 9 datos) y un
+    solo paso abierto.
+  - `03-ficha-lectura.html` — ficha fiscal en lectura con checklist de emisión + edición en
+    panel lateral de 480 px.
+  Contexto de shell real (sidebar + app-header + sub-nav Pago/Plan) copiado de los artboards
+  existentes; solo tokens de `design/system.md`. Nada implementado todavía: falta que el
+  mantenedor elija dirección.
+- L14 (usuario, cambio de requisito): "Implement the design artboard
+  design/billing-datos-facturacion/02-asistente-pasos.html". Se reescribe la presentación de
+  la pantalla (S2): el formulario plano de 3 cards pasa a asistente por pasos, tal como el
+  artboard elegido. El contrato de escritura no cambia (mismas 9 claves fiscales, mismo
+  `PATCH /v1/accounts/{id}`); sí cambia la navegación y se agregan señales de completitud.
+
+## Entrega del rediseño (2026-11-08)
+
+- **Slice 1 — código** (`14b04bd`): asistente por pasos completo
+  (componente ts/html/scss + specs + i18n es/en + T8/L14 de este documento).
+  **1306 líneas autoradas en un solo commit**, por encima del slice de ~400: se decidió
+  no partirlo porque es la reescritura de **una sola pantalla** y los cortes intermedios
+  (rail sin completitud, o completitud sin guardado que avanza) dejarían estados a medio
+  cablear en el mismo archivo. Se registra acá el límite del slice; si se publica, va como
+  PR único con la carga de revisión declarada.
+- **Slice 2 — diseño** (`design/billing-datos-facturacion/`): los tres artboards, de los
+  cuales `02-asistente-pasos.html` es el elegido e implementado; 01 y 03 quedan como
+  alternativas documentadas.
+- Verificación: `billing-data.component.spec.ts` **24/24** (17 previas + 7 nuevas) y
+  `ng build` exit 0 (warnings preexistentes ajenos).
+- Bug encontrado y corregido en la misma entrega: `.billing-data__panel` tenía
+  `overflow: hidden` heredado del artboard y recortaba el desplegable de países de
+  `bw-phone-input`; se quitó del componente y del artboard.

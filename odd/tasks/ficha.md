@@ -2,6 +2,8 @@
 
 Diseño: `design/ficha-medica/` (4 artboards) y `design/config-tipos-ficha/` (4 artboards, F2).
 Implementación empezada el 2026-11-03.
+Estado (2026-11-12): F1-F11 cerradas en código. Verificación de E2E del dominio clínico **pendiente**
+(el backend #97 mergeó el 2026-11-12 y era el desbloqueo que pedía L23).
 
 ## Specs
 
@@ -49,8 +51,8 @@ Implementación empezada el 2026-11-03.
 | F7 | `ClinicalRecordsStore` por HTTP (loadByClient/create) | ✅ hecho | — |
 | F8 | Cablear componentes (diálogo, ficha-tab, form, configuraciones) | ✅ hecho | — |
 | F9 | i18n/UX (loading/error/saving, quitar «Sin guardar») | ✅ hecho | — |
-| F11 | Editor de `options` para campos `select` en el constructor de tipos (Configuraciones → Fichas) | ⏳ pendiente | — |
-| F10 | Campo de tipo `image` en la ficha: subir/guardar imagen + enlace en el detalle + enlace/imagen en el PDF | ⏳ pendiente | — |
+| F11 | Editor de `options` para campos `select` en el constructor de tipos (Configuraciones → Fichas) | ✅ hecho | `f4b3ade` (contrato), `c5f7f4b` (diseño), `6b2ea17` |
+| F10 | Campo de tipo `image` en la ficha: subir/guardar imagen + enlace en el detalle + enlace/imagen en el PDF | ✅ hecho | `a79aab6`, `07e3d7c` (guarda del ref del servidor) |
 - **S15 (seba, verbatim, comentario de canvas sobre el artboard 01 de `design/ficha-tipo-opciones/`):**
   «implementa esto para las opciones» — dirección elegida: **la fila se expande y muestra chips**. Al
   elegir `select` en una fila, debajo aparece el capturador de opciones: **chips removibles** (✕ por
@@ -330,3 +332,17 @@ Implementación empezada el 2026-11-03.
   descartar objetos en `hasValue`) **se queda** como guarda defensiva: funciona con el contrato viejo y
   con el nuevo, y expresa la intención (una imagen no es un campo de texto). El test se reescribió para
   decir que protege la forma pre-#97. Pendiente: **rehacer el E2E** cuando #97 esté mergeado.
+- **L24 (2026-11-10, #96 mergeado):** `Route::pattern('id', '[0-9]+')` en las **54 rutas** (`b18899a`, CI
+  Unit 36 + Postgres 1261/6693). `PATCH /clinical-record-types/undefined` ahora es **404**, no 500, y el
+  comportamiento queda distinguible: **404** = el id no existe / no es válido; **422** = validación del
+  payload. Sirve de red de seguridad para el bug del `isNew` mientras se aplica el fix del front.
+  #97 sigue abierto (CI); el E2E completo se rehace cuando mergee.
+- **L25 (2026-11-12, cierre administrativo de F10/F11 y desbloqueo del E2E):** la tabla de tareas
+  estaba atrasada respecto del código: **F11** está implementado en `6b2ea17` (chips por fila sobre el
+  contrato de `f4b3ade`, dirección de `c5f7f4b`) y **F10** en `a79aab6` más la guarda de
+  `07e3d7c`. El pendiente real de L23 se desbloqueó: el **PR #97 del backend mergeó el 2026-11-12**,
+  así que **rehacer el E2E del dominio clínico** contra el contrato nuevo sigue abierto como verificación
+  (no como código). El front no cambió por ese merge: la guarda defensiva de `record-detail` se queda.
+  **Decisión de entrega (usuario, verbatim):** «arranca el PR actualiza los docs y pushea la rama luego
+  los slices, dale» — PR de suite primero (PR #47), después slices encadenados: fixes sales/historial,
+  clinical API, F3+F10, F11, sidebar, billing.

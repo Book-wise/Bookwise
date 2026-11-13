@@ -6,7 +6,9 @@ import {
   NG_VALUE_ACCESSOR,
   Validator,
 } from '@angular/forms';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BillingDataComponent } from './billing-data.component';
 import { AuthService } from '@services/auth.service';
@@ -83,7 +85,13 @@ describe('BillingDataComponent', () => {
     getComunas: ReturnType<typeof vi.fn>;
   };
 
-  function setup(overrides: { accounts?: AccountSummary[]; currentAccountId?: number | null } = {}) {
+  function setup(
+    overrides: {
+      accounts?: AccountSummary[];
+      currentAccountId?: number | null;
+      updateBillingData?: ReturnType<typeof vi.fn>;
+    } = {},
+  ) {
     const meData: AuthMeData = {
       ...me,
       current_account_id:
@@ -95,7 +103,9 @@ describe('BillingDataComponent', () => {
       updateAccount: vi.fn(),
     };
     accountsApi = {
-      updateBillingData: vi.fn(() => of({ message: 'ok', data: { ...account, legal_name: 'Nueva SpA' } })),
+      updateBillingData:
+        overrides.updateBillingData ??
+        vi.fn(() => of({ message: 'ok', data: { ...account, legal_name: 'Nueva SpA' } })),
     };
     siiApi = {
       search: vi.fn(() =>
@@ -114,6 +124,7 @@ describe('BillingDataComponent', () => {
       imports: [BillingDataComponent],
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter([]),
         { provide: AuthService, useValue: auth },
         { provide: AccountsApiService, useValue: accountsApi },
         { provide: SiiActivitiesApiService, useValue: siiApi },
@@ -284,5 +295,133 @@ describe('BillingDataComponent', () => {
 
     expect(siiApi.search).toHaveBeenCalledWith({ search: 'peluquería', perPage: 25 });
     expect(component.giroSuggestions().length).toBe(1);
+  });
+
+  it('starts at step 1 and only shows the basic information fields', () => {
+    const { fixture } = setup();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.billing-data__panel-head-text .overline')?.textContent).toContain(
+      'Paso 1 de 3',
+    );
+    expect(el.querySelector('#rut')).toBeTruthy();
+    expect(el.querySelector('#legal_name')).toBeTruthy();
+    expect(el.querySelector('#sii_activity')).toBeTruthy();
+    expect(el.querySelector('#taxpayer-company')).toBeTruthy();
+    expect(el.querySelector('#taxpayer-individual')).toBeTruthy();
+
+    expect(el.querySelector('#billing_address')).toBeNull();
+    expect(el.querySelector('#billing_region_id')).toBeNull();
+    expect(el.querySelector('#billing_comuna_id')).toBeNull();
+    expect(el.querySelector('#billing_email')).toBeNull();
+    expect(el.querySelector('bw-phone-input')).toBeNull();
+  });
+
+  it('switches the panel to the clicked rail step', () => {
+    const { fixture } = setup();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    const stepButtons = Array.from(
+      el.querySelectorAll<HTMLButtonElement>('.billing-data__step-btn'),
+    );
+    stepButtons[1].click();
+    fixture.detectChanges();
+
+    expect(el.querySelector('.billing-data__panel-head-text .overline')?.textContent).toContain(
+      'Paso 2 de 3',
+    );
+    expect(el.querySelector('#billing_address')).toBeTruthy();
+    expect(el.querySelector('#billing_region_id')).toBeTruthy();
+    expect(el.querySelector('#billing_comuna_id')).toBeTruthy();
+    expect(el.querySelector('#rut')).toBeNull();
+    expect(el.querySelector('#legal_name')).toBeNull();
+  });
+
+  it('counts seeded data in the progress indicator and labels a complete step', () => {
+    const { fixture } = setup();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    const progress = el.querySelector('[role="progressbar"]');
+    expect(progress?.getAttribute('aria-valuenow')).toBe('9');
+    expect(progress?.getAttribute('aria-valuemin')).toBe('0');
+    expect(progress?.getAttribute('aria-valuemax')).toBe('9');
+    expect(el.textContent).toContain('9 de 9 datos');
+
+    const panelChip = el.querySelector('.billing-data__panel-head .bw-chip');
+    expect(panelChip?.textContent?.trim()).toBe('Completo');
+  });
+
+  it('lists missing data in "Qué falta" and jumps to the step that holds it', () => {
+    const partial: AccountSummary = {
+      ...account,
+      legal_name: null,
+      sii_activity: null,
+      billing_address: null,
+      billing_region_id: null,
+      billing_comuna_id: null,
+      billing_phone: null,
+      billing_email: null,
+    };
+    const { fixture } = setup({ accounts: [partial] });
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.billing-data__missing')).toBeTruthy();
+    expect(el.querySelectorAll('.billing-data__missing-item').length).toBe(7);
+
+    const goStep2 = Array.from(
+      el.querySelectorAll<HTMLButtonElement>('.billing-data__missing-go'),
+    ).find((button) => button.textContent?.includes('Ir al paso 2'));
+    expect(goStep2).toBeTruthy();
+    goStep2?.click();
+    fixture.detectChanges();
+
+    expect(el.querySelector('.billing-data__panel-head-text .overline')?.textContent).toContain(
+      'Paso 2 de 3',
+    );
+  });
+
+  it('saves and advances to the next step only on a successful response', () => {
+    const { fixture } = setup();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    el.querySelector<HTMLButtonElement>('button.billing-data__primary')?.click();
+    fixture.detectChanges();
+
+    expect(accountsApi.updateBillingData).toHaveBeenCalledTimes(1);
+    expect(el.querySelector('.billing-data__panel-head-text .overline')?.textContent).toContain(
+      'Paso 2 de 3',
+    );
+  });
+
+  it('stays on the current step when saving fails', () => {
+    const { fixture } = setup({
+      updateBillingData: vi.fn(() => throwError(() => new HttpErrorResponse({ status: 500 }))),
+    });
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    el.querySelector<HTMLButtonElement>('button.billing-data__primary')?.click();
+    fixture.detectChanges();
+
+    expect(accountsApi.updateBillingData).toHaveBeenCalledTimes(1);
+    expect(el.querySelector('.billing-data__panel-head-text .overline')?.textContent).toContain(
+      'Paso 1 de 3',
+    );
+  });
+
+  it('disables the form and hides the save actions without edit permission', () => {
+    const { fixture, component } = setup({ accounts: [{ ...account, role: 'admin' }] });
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(component.form.disabled).toBe(true);
+    expect(el.querySelector('.billing-data__notice')).toBeTruthy();
+    expect(el.querySelector('.billing-data__rail')).toBeTruthy();
+    expect(el.querySelector('.billing-data__actions')).toBeNull();
   });
 });
