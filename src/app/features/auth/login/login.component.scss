@@ -89,3 +89,110 @@
     }
   }
 }
+
+// ── Proveedores de identidad y acceso sin contraseña ──────────────────────
+// Botones nativos (no p-button): cada marca necesita su propio esquema de
+// color y PrimeNG obligaría a sobreescribir con ::ng-deep por severidad.
+
+.providers {
+  display: grid;
+  /* Icono solo, los tres en una línea: con etiqueta de texto ocupaban tres filas
+     y se comían el alto del formulario (pedido del usuario, S2). */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+.provider {
+  display: grid;
+  place-items: center;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  background: var(--surface-card, #fff);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-color, #1a2744);
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--bw-50, #f0f6ff);
+    border-color: var(--bw-200, #60a7f0);
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--bw-300, #046af4) 45%, transparent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &.apple {
+    background: #000;
+    border-color: #000;
+    color: #fff;
+  }
+
+  &.facebook {
+    background: #1877f2;
+    border-color: #1877f2;
+    color: #fff;
+  }
+}
+
+.provider-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pending-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #6b7280;
+
+  &.center {
+    text-align: center;
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin: 1.25rem 0;
+  color: #6b7280;
+  font-size: 0.8125rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--surface-border, #e5e7eb);
+  }
+}
+
+.magic-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: not-allowed;
+
+  i {
+    font-size: 0.875rem;
+  }
+}
