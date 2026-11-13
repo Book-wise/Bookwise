@@ -167,6 +167,15 @@ export const EN: Record<string, string> = {
   'auth.register_provisioning_failed': 'We could not complete your registration. Check your connection and try again.',
   'auth.login_verify_email': 'You must verify your email before logging in.',
   'auth.login.forgot': 'Forgot your password?',
+  'auth.login.heading': 'Sign in to your account',
+  'auth.login.subheading': 'Use your clinic email or the account you already work with.',
+  'auth.login.provider_google': 'Continue with Google',
+  'auth.login.provider_apple': 'Continue with Apple',
+  'auth.login.provider_facebook': 'Continue with Facebook',
+  'auth.login.providers_pending': 'Google, Apple and Facebook sign-in is coming soon.',
+  'auth.login.divider': 'or with your email',
+  'auth.login.magic_link_pending': 'Passwordless sign-in',
+  'auth.login.magic_link_note': 'Coming soon: sign in with a link sent to your email, no password.',
 
   // Auth — forgot password (public)
   'auth.forgot.title': 'Reset password',
