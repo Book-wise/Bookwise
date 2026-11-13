@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 · Popover «Opciones» por fila</title>
+<style>
+  :root{
+    --bw-900:#012663;--bw-700:#0a2862;--bw-500:#0b3d95;--bw-300:#046af4;--bw-100:#dbeafe;--bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff;--surface-card:#ffffff;--surface-border:#e5e7eb;--surface-muted:#f3f4f6;
+    --text:#1a2744;--text-2:#6b7280;--heading:#111827;--danger:#ef4444;
+    --radius-md:6px;--radius-lg:8px;--radius-pill:999px;
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--surface-ground);color:var(--text);padding:28px;font-size:14px}
+  h1{font-size:19px;color:var(--heading);margin-bottom:4px}
+  .lead{font-size:13px;color:var(--text-2);margin-bottom:20px;max-width:80ch;line-height:1.5}
+
+  .shell{position:relative;display:flex;border:1px solid var(--surface-border);border-radius:10px;overflow:visible;
+         background:var(--surface-card);box-shadow:0 8px 24px rgba(1,38,99,.08);max-width:1080px}
+  .col-list{width:250px;border-right:1px solid var(--surface-border);padding:12px}
+  .col-list h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:8px}
+  .li{padding:8px 10px;border-radius:var(--radius-lg);font-size:13px;color:var(--text)}
+  .li.on{background:rgba(4,106,244,.1);color:#0b3d95;font-weight:600;box-shadow:inset 3px 0 0 var(--bw-300)}
+  .li small{display:block;font-size:10px;color:var(--text-2);font-weight:400}
+
+  .col-editor{flex:1;padding:16px 18px 22px;min-width:0;position:relative}
+  .ed-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .ed-title{font-size:15px;font-weight:600;color:var(--heading)}
+  .ed-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+  .btn{border-radius:var(--radius-md);padding:7px 14px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer}
+  .btn--primary{background:var(--bw-300);color:#fff;border:1px solid var(--bw-300)}
+  .btn--sec{background:var(--surface-card);color:var(--text);border:1px solid var(--surface-border)}
+  .btn--link{background:none;border:1px solid var(--surface-border);color:var(--bw-500);font-weight:600}
+
+  .grid-head,.frow{display:grid;grid-template-columns:24px 1.3fr 1fr 110px 118px 32px;gap:8px;align-items:center}
+  .grid-head{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);
+             padding:0 0 6px;border-bottom:1px solid var(--surface-border)}
+  .frow{padding:8px 0;border-bottom:1px solid var(--surface-border)}
+  .inp{border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:6px 9px;
+       font-family:inherit;font-size:12px;color:var(--text);background:var(--surface-card);width:100%}
+  .handle{color:#9ca3af;font-size:11px;text-align:center}
+  .del{width:26px;height:26px;border:1px solid var(--surface-border);border-radius:var(--radius-md);
+       background:var(--surface-card);color:var(--text-2);cursor:pointer;font-size:11px}
+  .req{font-size:11px;color:var(--text-2);text-align:center}
+  .opts-btn{font-size:11px;padding:5px 8px;border-radius:var(--radius-md);border:1px solid var(--bw-100);
+            background:var(--bw-50);color:#0b3d95;font-weight:600;cursor:pointer;white-space:nowrap}
+  .opts-btn.is-empty{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.07);color:#991b1b}
+
+  /* ── popover ── */
+  .pop{position:absolute;top:196px;left:476px;width:300px;background:var(--surface-card);
+       border:1px solid var(--surface-border);border-radius:10px;box-shadow:0 16px 40px rgba(1,38,99,.22);
+       padding:12px;z-index:3}
+  .pop__t{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:8px}
+  .orow{display:flex;align-items:center;gap:6px;padding:4px 0}
+  .orow .inp{flex:1}
+  .orow .h{color:#9ca3af;font-size:11px;cursor:grab}
+  .orow .x{width:24px;height:24px;border:none;background:none;color:var(--text-2);cursor:pointer;font-size:11px;border-radius:var(--radius-md)}
+  .orow .x:hover{background:var(--surface-muted);color:#991b1b}
+  .pop__add{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--surface-border)}
+  .pop__foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .pop__count{font-size:11px;color:var(--text-2)}
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#991b1b;
+       border-radius:var(--radius-md);padding:8px 12px;font-size:12px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<h1>03 · Popover «Opciones» por fila</h1>
+<p class="lead">La fila queda igual de compacta y gana una columna propia con un botón <b>«Opciones (4)»</b> (o <b>«Opciones — falta»</b> en rojo si está vacío). El popover lista las opciones con renombrar en línea, reordenar y borrar, más un input para agregar.</p>
+
+<div class="err">Error de validación — Guardar cambios: <b>Un campo select requiere opciones.</b></div>
+
+<div class="shell">
+  <div class="col-list">
+    <h2>Tipos</h2>
+    <div class="li">Preparación física<small>2 campos · 4 fichas</small></div>
+    <div class="li on">Evaluación kinésica<small>3 campos · 12 fichas</small></div>
+    <div class="li">Ficha láser<small>4 campos · 3 fichas</small></div>
+  </div>
+
+  <div class="col-editor">
+    <div class="ed-head">
+      <div>
+        <div class="ed-title">Evaluación kinésica</div>
+        <div class="ed-sub">3 campos · usada en 12 fichas</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn--sec">Descartar</button>
+        <button class="btn btn--primary">Guardar cambios</button>
+      </div>
+    </div>
+
+    <div class="grid-head">
+      <span></span><span>Campo</span><span>Tipo</span><span>Obligatorio</span><span>Opciones</span><span></span>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Diagnóstico">
+      <select class="inp"><option>Texto</option></select>
+      <span class="req">Sí</span>
+      <span class="req">—</span>
+      <button class="del">✕</button>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Zona tratada">
+      <select class="inp"><option>Select</option></select>
+      <span class="req">Sí</span>
+      <button class="opts-btn">Opciones (4) ▾</button>
+      <button class="del">✕</button>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Evolución">
+      <select class="inp"><option>Select</option></select>
+      <span class="req">No</span>
+      <button class="opts-btn is-empty">Opciones — falta ▾</button>
+      <button class="del">✕</button>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Lesión">
+      <select class="inp"><option>Imagen</option></select>
+      <span class="req">No aplica</span>
+      <span class="req">—</span>
+      <button class="del">✕</button>
+    </div>
+
+    <div style="margin-top:12px"><button class="btn btn--sec">+ Agregar campo</button></div>
+
+    <!-- popover abierto -->
+    <div class="pop">
+      <div class="pop__t">Opciones de «Zona tratada»</div>
+      <div class="orow"><span class="h">⠿</span><input class="inp" value="Lumbar"><button class="x">✕</button></div>
+      <div class="orow"><span class="h">⠿</span><input class="inp" value="Cervical"><button class="x">✕</button></div>
+      <div class="orow"><span class="h">⠿</span><input class="inp" value="Hombro"><button class="x">✕</button></div>
+      <div class="orow"><span class="h">⠿</span><input class="inp" value="Rodilla"><button class="x">✕</button></div>
+      <div class="pop__add">
+        <input class="inp" placeholder="Nueva opción">
+        <button class="btn btn--sec">Agregar</button>
+      </div>
+      <div class="pop__foot">
+        <span class="pop__count">4 opciones</span>
+        <button class="btn btn--primary" style="padding:5px 12px">Listo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

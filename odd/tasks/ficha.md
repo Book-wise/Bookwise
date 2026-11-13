@@ -63,6 +63,14 @@ Implementación empezada el 2026-11-03.
   agregar un campo a un tipo de la API (que ya trae `field_1`) produce **claves duplicadas**, y los
   `update*` buscaban por clave y actualizaban todas las coincidencias. Fix: actualizar **por índice** y
   generar claves **sin colisión** contra los campos existentes.
+- **S17 (contrato confirmado por el backend, 2026-11-10):** para un campo `select`, `options` es un
+  **array de strings** (no `{label, value}`), **no vacío**: `options: []` equivale a ausente y da 422. El
+  error del backend llega ubicado en **`fields.<índice>.options`** (índice del array `fields`, no la
+  `key`). `select` es de **selección simple**: `values[campo]` es **un** string validado con `in_array`
+  estricto. Por eso, si el usuario borra todos los chips, el **guardado se bloquea en el formulario**
+  con el mensaje en ese campo, en vez de dejar reventar el 422.
+  Sobre `isNew`: usar `!Number.isInteger(draft.id) || draft.id < 0` (más explícito que `isFinite`); del
+  lado API el id es siempre entero positivo (`bigserial`).
 
 ## Contrato backend (confirmado — `docs/clinical-records-contract.md`)
 

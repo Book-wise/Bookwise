@@ -116,7 +116,7 @@
             <p-button
               [label]="t('settings.clinical_types.save')"
               size="small"
-              [disabled]="!store.dirty() || store.saving()"
+              [disabled]="!store.dirty() || store.saving() || !store.canSave()"
               (onClick)="onSave()"
             />
           </span>
@@ -166,14 +166,14 @@
                 <span class="sr-only">{{ t('settings.clinical_types.fields.actions') }}</span>
               </div>
 
-              @for (field of draft.fields; track field.key) {
+              @for (field of draft.fields; track $index; let i = $index) {
                 <div class="ct-frow">
                   <span class="ct-frow__handle" aria-hidden="true"><i class="pi pi-bars"></i></span>
                   <input
                     pInputText
                     type="text"
                     [value]="field.label"
-                    (input)="onFieldLabel(field, $event)"
+                    (input)="onFieldLabel(i, $event)"
                     [attr.aria-label]="t('settings.clinical_types.fields.name')"
                   />
                   <p-select
@@ -181,7 +181,7 @@
                     optionLabel="label"
                     optionValue="value"
                     [ngModel]="field.type"
-                    (ngModelChange)="onFieldType(field, $event)"
+                    (ngModelChange)="onFieldType(i, $event)"
                     [appendTo]="'body'"
                   />
                   <span class="ct-frow__req">
@@ -192,7 +192,7 @@
                     } @else {
                       <p-toggleswitch
                         [ngModel]="field.required"
-                        (ngModelChange)="onFieldRequired(field, $event)"
+                        (ngModelChange)="onFieldRequired(i, $event)"
                         [attr.aria-label]="t('settings.clinical_types.fields.required')"
                       />
                       <span>
@@ -204,11 +204,75 @@
                     type="button"
                     class="ct-remove"
                     [attr.aria-label]="t('settings.clinical_types.fields.remove')"
-                    (click)="store.removeField(field.key)"
+                    (click)="store.removeField(i)"
                   >
                     <i class="pi pi-trash" aria-hidden="true"></i>
                   </button>
                 </div>
+
+                <!-- Capturador de opciones: sólo un campo `select` las tiene -->
+                @if (field.type === 'select') {
+                  <div
+                    class="ct-fopts"
+                    role="group"
+                    [attr.aria-label]="t('settings.clinical_types.fields.options.label')"
+                  >
+                    @if (field.options?.length) {
+                      <ul class="ct-chips">
+                        @for (option of field.options; track $index; let oi = $index) {
+                          <li class="ct-chip">
+                            <span class="ct-chip__label">{{ option }}</span>
+                            <button
+                              type="button"
+                              class="ct-chip__x"
+                              [attr.aria-label]="t('settings.clinical_types.fields.options.remove')"
+                              (click)="store.removeFieldOption(i, oi)"
+                            >
+                              <i class="pi pi-times" aria-hidden="true"></i>
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    }
+                    <div class="ct-fopts__add">
+                      <input
+                        #optionInput
+                        pInputText
+                        type="text"
+                        [placeholder]="t('settings.clinical_types.fields.options.placeholder')"
+                        [attr.aria-label]="t('settings.clinical_types.fields.options.placeholder')"
+                        [attr.aria-invalid]="!field.options?.length"
+                        [attr.aria-describedby]="!field.options?.length ? 'ct-opt-error-' + i : null"
+                        (keydown.enter)="onOptionAdd(i, optionInput)"
+                        (keydown.backspace)="onOptionBackspace(i, optionInput, $event)"
+                      />
+                      <button
+                        type="button"
+                        class="ct-fopts__btn"
+                        (click)="onOptionAdd(i, optionInput)"
+                      >
+                        <i class="pi pi-plus" aria-hidden="true"></i>
+                        {{ t('settings.clinical_types.fields.options.add') }}
+                      </button>
+                    </div>
+                    @if (!field.options?.length) {
+                      <p class="ct-fopts__error" [id]="'ct-opt-error-' + i">
+                        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                        {{ t('settings.clinical_types.fields.options.required') }}
+                      </p>
+                    }
+                    <p
+                      class="ct-fopts__count"
+                      [class.is-invalid]="!field.options?.length"
+                      aria-live="polite"
+                    >
+                      {{ optionCountLabel(field.options?.length ?? 0) }}
+                    </p>
+                    <p class="ct-fopts__hint">
+                      {{ t('settings.clinical_types.fields.options.hint') }}
+                    </p>
+                  </div>
+                }
               }
             </div>
           }

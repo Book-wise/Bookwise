@@ -6,7 +6,14 @@ import { ClinicalRecordTypesStore } from '@core/stores/clinical-record-types.sto
 import { ClinicalRecordTypesApiService } from '@services/api/clinical-record-types-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
-import type { ClinicalRecordType } from '@models';
+import type { ClinicalRecordField, ClinicalRecordType } from '@models';
+
+/** Copy de las claves nuevas de F11 (el resto de claves se devuelven crudas). */
+const F11_COPY: Record<string, string> = {
+  'settings.clinical_types.fields.options.count': '{{count}} opciones',
+  'settings.clinical_types.fields.options.required':
+    'Agrega al menos una opción para poder guardar.',
+};
 
 const K = {
   empty: 'settings.clinical_types.list.empty',
@@ -42,7 +49,12 @@ describe('ClinicalRecordTypesComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ClinicalRecordTypesApiService, useValue: typesApi },
         { provide: HttpErrorService, useValue: httpError },
-        { provide: LanguageService, useValue: { t: (k: string) => k } },
+        { provide: LanguageService, useValue: { t: (key: string, params?: Record<string, string>) => {
+          const raw = F11_COPY[key] ?? key;
+          return params
+            ? raw.replace(/\{\{(\w+)\}\}/g, (_match, name: string) => params[name] ?? '')
+            : raw;
+        } } },
       ],
     }).compileComponents();
 
@@ -259,7 +271,7 @@ describe('ClinicalRecordTypesComponent', () => {
       render();
       await fixture.whenStable();
 
-      component.onFieldType(store.draft()!.fields[0], 'image');
+      component.onFieldType(0, 'image');
       render();
       await fixture.whenStable();
 
@@ -269,6 +281,329 @@ describe('ClinicalRecordTypesComponent', () => {
       );
       expect(row.querySelector('.ct-frow__req')?.textContent).not.toMatch(/required\.(yes|no)\b/);
       expect(row.querySelector('p-toggleswitch')).toBeNull();
+    });
+  });
+
+  describe('opciones del campo select (F11)', () => {
+    const OPT = {
+      label: 'settings.clinical_types.fields.options.label',
+      placeholder: 'settings.clinical_types.fields.options.placeholder',
+      add: 'settings.clinical_types.fields.options.add',
+      remove: 'settings.clinical_types.fields.options.remove',
+      count: 'settings.clinical_types.fields.options.count',
+      required: 'settings.clinical_types.fields.options.required',
+    };
+
+    /** Agrega una fila al constructor y devuelve el campo recién creado. */
+    function addFieldRow(): ClinicalRecordField {
+      (fixture.nativeElement.querySelector('.ct-add') as HTMLButtonElement).click();
+      render();
+      return store.draft()!.fields[store.draft()!.fields.length - 1];
+    }
+
+    /** Crea un tipo con un único campo de tipo `select`. */
+    function selectField(): ClinicalRecordField {
+      createType();
+      addFieldRow();
+      component.onFieldType(0, 'select');
+      render();
+      return store.draft()!.fields[0];
+    }
+
+    function optionsBlock(): HTMLElement | null {
+      return (fixture.nativeElement as HTMLElement).querySelector('.ct-fopts');
+    }
+
+    function optionInput(): HTMLInputElement {
+      return (fixture.nativeElement as HTMLElement).querySelector(
+        '.ct-fopts input',
+      ) as HTMLInputElement;
+    }
+
+    function chips(): HTMLElement[] {
+      return Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.ct-chip'),
+      );
+    }
+
+    function chipTexts(): string[] {
+      return chips().map((chip) => (chip.querySelector('.ct-chip__label')?.textContent ?? '').trim());
+    }
+
+    function counter(): HTMLElement {
+      return (fixture.nativeElement as HTMLElement).querySelector('.ct-fopts__count') as HTMLElement;
+    }
+
+    function typeInto(value: string): void {
+      const input = optionInput();
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      render();
+    }
+
+    function press(key: string): void {
+      optionInput().dispatchEvent(new KeyboardEvent('keydown', { key }));
+      render();
+    }
+
+    function currentOptions(): string[] | null | undefined {
+      return store.draft()!.fields[0].options;
+    }
+
+    it('muestra el bloque de opciones solo cuando el tipo del campo es select', async () => {
+      await setup();
+      createType();
+      const field = addFieldRow();
+
+      expect(optionsBlock()).toBeNull();
+
+      component.onFieldType(0, 'select');
+      render();
+
+      expect(optionsBlock()).toBeTruthy();
+      expect(optionInput().getAttribute('aria-label')).toBe(OPT.placeholder);
+      expect(counter().textContent).toContain('0 opciones');
+
+      component.onFieldType(0, 'image');
+      render();
+
+      expect(optionsBlock()).toBeNull();
+    });
+
+    it('Enter agrega la opción escrita como chip y limpia el input', async () => {
+      await setup();
+      selectField();
+
+      typeInto('Lumbar');
+      press('Enter');
+      typeInto('Cervical');
+      press('Enter');
+
+      expect(currentOptions()).toEqual(['Lumbar', 'Cervical']);
+      expect(chipTexts()).toEqual(['Lumbar', 'Cervical']);
+      expect(optionInput().value).toBe('');
+    });
+
+    it('el botón «Agregar» agrega igual que Enter', async () => {
+      await setup();
+      selectField();
+
+      typeInto('Hombro');
+      buttonByLabel(OPT.add)!.click();
+      render();
+
+      expect(currentOptions()).toEqual(['Hombro']);
+      expect(chipTexts()).toEqual(['Hombro']);
+      expect(optionInput().value).toBe('');
+    });
+
+    it('no agrega una opción duplicada al agregarla de nuevo', async () => {
+      await setup();
+      selectField();
+
+      typeInto('Lumbar');
+      press('Enter');
+      typeInto(' lumbar ');
+      press('Enter');
+
+      expect(currentOptions()).toEqual(['Lumbar']);
+      expect(chipTexts()).toEqual(['Lumbar']);
+    });
+
+    it('el ✕ de cada chip quita esa opción', async () => {
+      await setup();
+      selectField();
+      typeInto('Lumbar');
+      press('Enter');
+      typeInto('Cervical');
+      press('Enter');
+
+      const remove = chips()[0].querySelector('button')!;
+      expect(remove.getAttribute('aria-label')).toBe(OPT.remove);
+      remove.click();
+      render();
+
+      expect(currentOptions()).toEqual(['Cervical']);
+      expect(chipTexts()).toEqual(['Cervical']);
+    });
+
+    it('Backspace en el input vacío quita la última opción; con texto no quita nada', async () => {
+      await setup();
+      selectField();
+      typeInto('Lumbar');
+      press('Enter');
+      typeInto('Cervical');
+      press('Enter');
+
+      typeInto('Rod');
+      press('Backspace');
+      expect(currentOptions()).toEqual(['Lumbar', 'Cervical']);
+
+      typeInto('');
+      press('Backspace');
+
+      expect(currentOptions()).toEqual(['Lumbar']);
+      expect(chipTexts()).toEqual(['Lumbar']);
+    });
+
+    it('el contador refleja la cantidad de opciones y se anuncia con aria-live', async () => {
+      await setup();
+      selectField();
+
+      expect(counter().getAttribute('aria-live')).toBe('polite');
+      expect(counter().textContent).toContain('0 opciones');
+
+      typeInto('Lumbar');
+      press('Enter');
+      typeInto('Cervical');
+      press('Enter');
+
+      expect(counter().textContent).toContain('2 opciones');
+    });
+
+    it('un select sin opciones avisa en la fila y bloquea «Guardar cambios»', async () => {
+      await setup();
+      createType();
+
+      const name = nameInput();
+      name.value = 'Preparación física';
+      name.dispatchEvent(new Event('input'));
+      render();
+      addFieldRow();
+      component.onFieldType(0, 'select');
+      render();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.ct-fopts__error')?.textContent).toContain(
+        F11_COPY[OPT.required],
+      );
+      expect(counter().classList).toContain('is-invalid');
+      expect(counter().textContent).toContain('0 opciones');
+      expect(optionInput().getAttribute('aria-invalid')).toBe('true');
+      expect(optionInput().getAttribute('aria-describedby')).toBe('ct-opt-error-0');
+      expect(store.canSave()).toBe(false);
+      expect(buttonByLabel(K.save)!.disabled).toBe(true);
+
+      buttonByLabel(K.save)!.click();
+      render();
+      expect(typesApi.createType).not.toHaveBeenCalled();
+    });
+
+    it('agregar una opción quita el aviso y habilita «Guardar cambios»', async () => {
+      await setup();
+      createType();
+
+      const name = nameInput();
+      name.value = 'Preparación física';
+      name.dispatchEvent(new Event('input'));
+      render();
+      addFieldRow();
+      component.onFieldType(0, 'select');
+      render();
+      expect(buttonByLabel(K.save)!.disabled).toBe(true);
+
+      typeInto('Lumbar');
+      press('Enter');
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.ct-fopts__error')).toBeNull();
+      expect(counter().classList).not.toContain('is-invalid');
+      expect(counter().textContent).toContain('1 opciones');
+      expect(optionInput().getAttribute('aria-invalid')).not.toBe('true');
+      expect(optionInput().getAttribute('aria-describedby')).toBeNull();
+      expect(buttonByLabel(K.save)!.disabled).toBe(false);
+    });
+
+    it('«Guardar cambios» manda las opciones ordenadas del select y ninguna para otros tipos', async () => {
+      typesApi.createType.mockReturnValue(of(makeType({ id: 100, name: 'Láser' })));
+      await setup();
+      createType();
+
+      const name = nameInput();
+      name.value = 'Láser';
+      name.dispatchEvent(new Event('input'));
+      render();
+
+      const selectKey = addFieldRow().key;
+      component.onFieldType(0, 'select');
+      render();
+      typeInto('Cervical');
+      press('Enter');
+      typeInto('Lumbar');
+      press('Enter');
+
+      const textKey = addFieldRow().key;
+
+      buttonByLabel(K.save)!.click();
+      render();
+
+      expect(typesApi.createType).toHaveBeenCalledTimes(1);
+      const fields = typesApi.createType.mock.calls[0][0].fields as ClinicalRecordField[];
+      expect(fields[0]).toEqual({
+        key: selectKey,
+        label: '',
+        type: 'select',
+        required: false,
+        options: ['Cervical', 'Lumbar'],
+      });
+      const text = fields.find((f) => f.key === textKey)!;
+      expect(text).toEqual({ key: textKey, label: '', type: 'text', required: false });
+      expect('options' in text).toBe(false);
+    });
+  });
+
+  describe('campos con la misma clave (bug: se editaban dos filas a la vez)', () => {
+    /** Selecciona un tipo cargado de la API cuyos dos campos comparten `field_1`. */
+    async function selectTypeWithDuplicateKeys(): Promise<void> {
+      typesApi.getTypes.mockReturnValue(
+        of([
+          makeType({
+            id: 5,
+            name: 'Preparación física',
+            fields: [
+              { key: 'field_1', label: 'Fecha', type: 'date', required: false },
+              { key: 'field_1', label: 'Nota', type: 'text', required: false },
+            ],
+          }),
+        ]),
+      );
+      await setup();
+      (fixture.nativeElement.querySelector('.ct-item') as HTMLButtonElement).click();
+      render();
+    }
+
+    function labelInputs(): HTMLInputElement[] {
+      return Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
+          '.ct-frow > input',
+        ),
+      );
+    }
+
+    it('tipear en el primer campo no cambia el segundo', async () => {
+      await selectTypeWithDuplicateKeys();
+
+      const inputs = labelInputs();
+      expect(inputs.length).toBe(2);
+      expect(inputs.map((input) => input.value)).toEqual(['Fecha', 'Nota']);
+
+      inputs[0].value = 'Fecha de hoy';
+      inputs[0].dispatchEvent(new Event('input'));
+      render();
+
+      const fields = store.draft()!.fields;
+      expect(fields[0].label).toBe('Fecha de hoy');
+      expect(fields[1].label).toBe('Nota');
+      expect(labelInputs()[1].value).toBe('Nota');
+    });
+
+    it('«Agregar campo» no repite una clave que ya existe', async () => {
+      await selectTypeWithDuplicateKeys();
+
+      (fixture.nativeElement.querySelector('.ct-add') as HTMLButtonElement).click();
+      render();
+
+      expect(store.draft()!.fields.map((f) => f.key)).toEqual(['field_1', 'field_1', 'field_2']);
     });
   });
 });
