@@ -15,6 +15,8 @@ import { HttpErrorService } from '@services/http-error.service';
 import { MessageService } from 'primeng/api';
 import { LanguageService } from '@services/language.service';
 import { ReservaTabComponent } from './tabs/reserva/reserva-tab.component';
+import { ClinicalRecordsApiService } from '@services/api/clinical-records-api.service';
+import { ClinicalRecordTypesApiService } from '@services/api/clinical-record-types-api.service';
 import type { Booking, Client, ClientPack } from '@models';
 
 if (!window.matchMedia) {
@@ -62,6 +64,8 @@ describe('BookingDetailDialogComponent', () => {
   let bookingStore: InstanceType<typeof BookingStore>;
   let clientsApi: { getClient: ReturnType<typeof vi.fn>; getClientPacks: ReturnType<typeof vi.fn>; updateClient: ReturnType<typeof vi.fn> };
   let messageService: { add: ReturnType<typeof vi.fn> };
+  let clinicalRecordTypesApi: { getTypes: ReturnType<typeof vi.fn>; createType: ReturnType<typeof vi.fn>; updateType: ReturnType<typeof vi.fn> };
+  let clinicalRecordsApi: { getRecords: ReturnType<typeof vi.fn>; createRecord: ReturnType<typeof vi.fn>; updateRecord: ReturnType<typeof vi.fn>; deleteRecord: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     messageService = { add: vi.fn() };
@@ -69,6 +73,17 @@ describe('BookingDetailDialogComponent', () => {
       getClient: vi.fn((id: number) => of({ ...client, id })),
       getClientPacks: vi.fn().mockReturnValue(of([])),
       updateClient: vi.fn().mockReturnValue(of({ data: { ...client } })),
+    };
+    clinicalRecordTypesApi = {
+      getTypes: vi.fn().mockReturnValue(of([])),
+      createType: vi.fn(),
+      updateType: vi.fn(),
+    };
+    clinicalRecordsApi = {
+      getRecords: vi.fn().mockReturnValue(of([])),
+      createRecord: vi.fn(),
+      updateRecord: vi.fn(),
+      deleteRecord: vi.fn(),
     };
     TestBed.configureTestingModule({
       imports: [BookingDetailDialogComponent],
@@ -82,6 +97,8 @@ describe('BookingDetailDialogComponent', () => {
         { provide: AuthService, useValue: { user: signal(null) } },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         { provide: MessageService, useValue: messageService },
+        { provide: ClinicalRecordTypesApiService, useValue: clinicalRecordTypesApi },
+        { provide: ClinicalRecordsApiService, useValue: clinicalRecordsApi },
         LanguageService,
       ],
     });
@@ -214,6 +231,13 @@ describe('BookingDetailDialogComponent', () => {
 
     expect(component.detailStore.client()?.id).toBe(7);
     expect(component.dialogStore.booking()?.client?.first_name).toBe('Ana');
+  });
+
+  it('carga el catálogo de tipos y las fichas del paciente al abrir', () => {
+    component.open(booking, 'ficha');
+
+    expect(clinicalRecordTypesApi.getTypes).toHaveBeenCalledTimes(1);
+    expect(clinicalRecordsApi.getRecords).toHaveBeenCalledWith({ client_id: 7 });
   });
 });
 

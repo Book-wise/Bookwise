@@ -6,6 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { LanguageService } from '@services/language.service';
+import { HttpErrorService } from '@services/http-error.service';
 import type { ClinicalRecordField, ClinicalRecordFieldType } from '@models';
 import { ClinicalRecordTypesStore } from '@core/stores/clinical-record-types.store';
 
@@ -25,8 +26,8 @@ const FIELD_TYPES: { value: ClinicalRecordFieldType; key: string }[] = [
  * Maestro-detalle: a la izquierda la lista de tipos del negocio (nombre, cuántos
  * campos, estado) y a la derecha el editor del tipo seleccionado (nombre,
  * descripción corta, disponibilidad en la agenda y los campos con su tipo y
- * obligatoriedad). Consume `ClinicalRecordTypesStore`, que hoy edita en memoria
- * porque el backend no expone el dominio clínico todavía.
+ * obligatoriedad). Consume `ClinicalRecordTypesStore` (catálogo persistido por
+ * la API) y dispara su carga inicial en el constructor.
  */
 @Component({
   selector: 'bw-clinical-record-types',
@@ -45,7 +46,13 @@ const FIELD_TYPES: { value: ClinicalRecordFieldType; key: string }[] = [
 })
 export class ClinicalRecordTypesComponent {
   private readonly lang = inject(LanguageService);
+  private readonly httpError = inject(HttpErrorService);
   readonly store = inject(ClinicalRecordTypesStore);
+
+  constructor() {
+    // Idempotente: el store no vuelve a pedir si ya cargó o está cargando.
+    this.store.load();
+  }
 
   readonly activeCount = computed(() => this.store.types().filter((t) => t.active).length);
 
@@ -89,5 +96,11 @@ export class ClinicalRecordTypesComponent {
 
   onFieldRequired(field: ClinicalRecordField, required: boolean): void {
     this.store.updateFieldRequired(field.key, required);
+  }
+
+  onSave(): void {
+    this.store.saveDraft().subscribe({
+      error: (err) => this.httpError.handle(err, this.t('settings.clinical_types.save')),
+    });
   }
 }

@@ -25,6 +25,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
 import { LanguageService } from '@services/language.service';
+import { HttpErrorService } from '@services/http-error.service';
 import type { ClinicalRecordField, ClinicalRecordType } from '@models';
 import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
 
@@ -45,8 +46,9 @@ function selectOptionValidator(options: string[]): ValidatorFn {
  * reserva). Sigue el patrón de `provider-dialog`: Reactive Forms, outputs de
  * cierre/guardado. Renderiza los `fields` que define el tipo, en orden.
  *
- * Hoy el guardado es **solo de sesión**: llama a `ClinicalRecordsStore.create`
- * (in-memory, `pendingSync: true`) porque la API de fichas no existe todavía.
+ * El guardado llama a `ClinicalRecordsStore.create`, que hace el POST real a
+ * `/clinical-records`; el diálogo queda en estado `saving` hasta que responde y
+ * cierra solo ante un guardado exitoso.
  */
 @Component({
   selector: 'bw-record-form-dialog',
@@ -67,11 +69,15 @@ function selectOptionValidator(options: string[]): ValidatorFn {
 export class RecordFormDialogComponent {
   private readonly lang = inject(LanguageService);
   private readonly recordsStore = inject(ClinicalRecordsStore);
+  private readonly httpError = inject(HttpErrorService);
 
   visible = input(false);
   type = input.required<ClinicalRecordType>();
   bookingId = input<number | null>(null);
-  clientId = input<number | null>(null);
+  clientId = input.required<number>();
+
+  /** True mientras el POST está en vuelo (deshabilita Guardar y evita dobles envíos). */
+  readonly saving = signal(false);
 
   closed = output<void>();
   saved = output<void>();
@@ -122,17 +128,27 @@ export class RecordFormDialogComponent {
   onSave(): void {
     this.submitted.set(true);
     this.form().markAllAsTouched();
-    if (this.form().invalid) return;
+    if (this.form().invalid || this.saving()) return;
 
     const values = this.form().getRawValue() as Record<string, unknown>;
-    this.recordsStore.create({
-      recordTypeId: this.type().id,
-      title: this.type().name,
-      bookingId: this.bookingId(),
-      clientId: this.clientId(),
-      values,
-    });
-    this.saved.emit();
+    this.saving.set(true);
+    this.recordsStore
+      .create({
+        recordTypeId: this.type().id,
+        clientId: this.clientId(),
+        bookingId: this.bookingId(),
+        values,
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.saved.emit();
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.httpError.handle(err, this.t('ficha.form.save'));
+        },
+      });
   }
 
   onClose(): void {
