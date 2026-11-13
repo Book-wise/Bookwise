@@ -9,6 +9,7 @@
 @use 'styles/badges';
 @use 'styles/buttons';
 @use 'styles/booking-sheet';
+@use 'styles/scrollbars';
 @import 'intl-tel-input/dist/css/intlTelInput.css';
 
 // Importar fuentes desde assets
@@ -101,6 +102,19 @@ body.dark-theme {
   // calendario queda gris claro sobre el fondo oscuro.
   --p-skeleton-background: #334155;
   --p-skeleton-animation-background: #3f4d63;
+  // Tabs de PrimeNG: el preset está fijo en claro, así que `tablist` y
+  // `tabpanel` resuelven a `{content.background}` = blanco y la tarjeta entera
+  // aparece blanca sobre el fondo oscuro (Configuraciones, Roles). Se atan a
+  // nuestros tokens; en claro el comportamiento no cambia.
+  --p-tabs-tablist-background: transparent;
+  --p-tabs-tablist-border-color: var(--surface-border);
+  --p-tabs-tabpanel-background: transparent;
+  --p-tabs-tabpanel-color: var(--text-color);
+  --p-tabs-tab-color: var(--text-color-secondary);
+  --p-tabs-tab-hover-color: var(--text-color);
+  --p-tabs-tab-active-color: var(--bw-tab-color);
+  --p-tabs-tab-active-border-color: var(--bw-tab-color);
+  --p-tabs-active-bar-background: var(--bw-tab-color);
   --text-color:           #e4e4e7;
   --text-color-secondary: #94a3b8;
   --text-heading:         var(--text-color);
@@ -255,6 +269,16 @@ body.theme-kinesilk {
   --sidebar-active-bg:   rgba(47, 47, 38, 0.12);
   --sidebar-active-border: #2f5d5a;
   --sidebar-divider:     rgba(47, 47, 38, 0.12);
+  // El sidebar de este tema es powder blue con texto oscuro: el círculo del
+  // control no puede ser navy con icono blanco ni llevar un borde blanco.
+  --sidebar-control-bg:            rgba(47, 47, 38, 0.08);
+  --sidebar-control-fg:            #2f2f26;
+  --sidebar-control-border:        rgba(47, 47, 38, 0.18);
+  --sidebar-control-bg-hover:      #2f5d5a;
+  --sidebar-control-fg-hover:      #ffffff;
+  --sidebar-control-border-hover:  #2f5d5a;
+  --sidebar-control-shadow:        0 2px 6px rgba(47, 47, 38, 0.16);
+  --sidebar-control-shadow-hover:  0 3px 10px rgba(47, 93, 90, 0.32);
   // The layout SCSS falls back to `rgba(255,255,255,0.65)` when this is unset
   // (white-on-light); define it so the sidebar user role reads as dark text.
   --sidebar-text-secondary: rgba(47, 47, 38, 0.6);

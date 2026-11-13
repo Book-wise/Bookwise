@@ -2,92 +2,52 @@
 
 <bw-subscription-inactive-dialog />
 
-<div class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
-  <!-- Sidebar -->
-  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="effectivelyCollapsed()">
-    <div class="sidebar-header">
-      <a
-        class="logo-wrapper"
-        href="https://www.bookwise.cl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [class.logo-hidden]="effectivelyCollapsed()"
-      >
-        <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="sidebar-logo" />
-      </a>
-      <a
-        class="logo-icon-wrapper"
-        href="https://www.bookwise.cl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [class.logo-hidden]="!effectivelyCollapsed()"
-      >
-        <img src="assets/images/icono.svg" alt="BW" class="sidebar-icon-img" />
-      </a>
-    </div>
+<!-- Dos filas: la cabecera ocupa todo el ancho (y no se mueve al abrir el
+     panel) y debajo va el cuerpo `panel + contenido`. -->
+<div class="layout" [class.panel-open]="panelOpen()">
+  <bw-app-header [mobileMenuOpen]="panelOpen()" [onToggleMenu]="() => toggleSidebar()" />
 
-    <!-- Flecha de colapso/cierre, ARRIBA antes del menú, separada por una línea.
-         Desktop: colapsa/expande. Mobile: cierra el drawer. -->
-    <button
-      type="button"
-      class="sidebar-collapse-btn"
-      (click)="toggleSidebar()"
-      [pTooltip]="isMobile()
-        ? langService.t('ui.close_menu')
-        : (sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar'))"
-      tooltipPosition="top"
+  <div class="layout__body">
+    <!-- Panel de navegación: nav original + mes (tarjeta fija) + cerrar sesión,
+         sobre el gradiente de marca. Deshabilitado (inert) cuando está cerrado
+         para que sus controles no se puedan tabular. -->
+    <aside
+      class="sidebar"
+      [class.mobile-open]="mobileMenuOpen()"
+      [inert]="!panelOpen()"
     >
-      <span class="sidebar-collapse-btn__label">
-        {{ isMobile() ? langService.t('ui.close_menu') : (sidebarCollapsed() ? langService.t('ui.expand_sidebar') : langService.t('ui.collapse_sidebar')) }}
-      </span>
-      <i class="pi" [class.pi-chevron-left]="!effectivelyCollapsed()" [class.pi-chevron-right]="effectivelyCollapsed()"></i>
-    </button>
-
-    <nav class="sidebar-nav">
-      @for (item of menuItems(); track item.routerLink) {
-        <a [routerLink]="item.routerLink"
-           class="nav-item"
-           [class.active]="isActive(item.routerLink!)"
-           [title]="effectivelyCollapsed() ? langService.t(item.label!) : ''">
-          <i class="pi" [ngClass]="item.icon"></i>
-          @if (!effectivelyCollapsed()) {
+      <nav class="sidebar-nav">
+        @for (item of menuItems(); track item.routerLink) {
+          <a
+            [routerLink]="item.routerLink"
+            class="nav-item"
+            [class.active]="isActive(item.routerLink!)"
+          >
+            <i class="pi" [ngClass]="item.icon"></i>
             <span class="nav-label">{{ langService.t(item.label!) }}</span>
-          }
-        </a>
-      }
-    </nav>
+          </a>
+        }
+      </nav>
 
-    @if (!isMobile() && !effectivelyCollapsed()) {
+      <!-- Mes: tarjeta clara fija sobre el gradiente, sin cabecera plegable. -->
       <div class="sidebar-widget">
         <bw-agenda-navigator />
       </div>
+
+      <div class="sidebar-footer">
+        <button type="button" class="sidebar-logout" (click)="logout()">
+          <i class="pi pi-sign-out"></i>
+          <span>{{ langService.t('ui.logout') }}</span>
+        </button>
+      </div>
+    </aside>
+
+    @if (mobileMenuOpen()) {
+      <div class="mobile-overlay" (click)="closeMenus()"></div>
     }
 
-    <div class="sidebar-footer">
-      <button
-        type="button"
-        class="sidebar-logout"
-        (click)="logout()"
-        [pTooltip]="langService.t('ui.logout')"
-        tooltipPosition="top"
-      >
-        <i class="pi pi-sign-out"></i>
-        @if (!effectivelyCollapsed()) {
-          <span>{{ langService.t('ui.logout') }}</span>
-        }
-      </button>
-    </div>
-  </aside>
-
-  @if (mobileMenuOpen()) {
-    <div class="mobile-overlay" (click)="closeMenus()"></div>
-  }
-
-  <!-- Main Content -->
-  <main class="main-content">
-    <bw-app-header
-      [mobileMenuOpen]="mobileMenuOpen()"
-      [onToggleMenu]="() => toggleSidebar()" />
-    <router-outlet></router-outlet>
-  </main>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </div>

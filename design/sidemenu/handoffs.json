@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "01-rail-hover-expand.html",
+  "handoffs": {
+    "01-rail-hover-expand.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-10T03:29:10.709Z",
+      "startedAt": "2026-11-10T03:30:11.140Z",
+      "implementedAt": "2026-11-10T04:32:18.311Z",
+      "note": "T1-T3 implementado: cabecera a todo el ancho, panel que empuja en desktop, drawer con scrim en mobile, nav original + mes + logout.",
+      "previewUrl": "http://localhost:4200/admin/calendar"
+    }
+  }
+}

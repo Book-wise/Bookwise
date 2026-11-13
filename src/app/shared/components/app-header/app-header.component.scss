@@ -1,32 +1,20 @@
+// La cabecera es la primera fila del layout: ocupa todo el ancho y NO se mueve
+// cuando el panel se abre (no tiene margen negativo ni depende del padding de
+// las páginas).
 .app-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--bw-space-md);
-  // Altura FIJA (border-box → incluye el padding): el header mide lo mismo en
-  // todas las resoluciones aunque cambien sus elementos internos (chip completo
-  // en desktop ↔ avatar compacto en mobile). Eso mantiene alineado el bloque del
-  // logo (sidebar-header = 67px) y un drawer/sidebar consistente.
-  height: 4.1875rem;
-  min-height: 4.1875rem;
+  gap: var(--bw-space-sm);
+  // Altura FIJA (border-box → incluye el padding) para que el panel mobile
+  // arranque justo debajo con el mismo token.
+  height: var(--bw-app-header-height);
+  min-height: var(--bw-app-header-height);
+  flex-shrink: 0;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--surface-border);
   background: var(--surface-card);
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: var(--z-topbar);
-  // Full-width y SIN margen arriba: el .main-content ya no tiene padding-top.
-  margin: 0 -1.25rem var(--bw-space-lg);
-
-  @media (max-width: 991px) {
-    margin: 0 -1rem var(--bw-space-md);
-  }
-  @media (max-width: 768px) {
-    // Full-width y flush al tope: contrarrestamos el `padding: 1rem` lateral
-    // del .main-content en mobile para que la barra se extienda de borde a borde
-    // (igual que en desktop) y NO quede como una "tarjeta" con margen.
-    margin: 0 -1rem var(--bw-space-md);
-  }
 
   // En mobile el picker de negocio se condensa al monograma (el menú completo
   // de empresas vive en el account-menu). Convive con la hamburguesa y el avatar.
@@ -54,36 +42,81 @@
 .app-header__left {
   display: flex;
   align-items: center;
-  gap: var(--bw-space-lg);
+  gap: var(--bw-space-md);
   min-width: 0;
 }
 
-// ── Botón hamburguesa (solo mobile) ───────────────────────────────────────────
-// La sidebar se abre/cierra desde acá, unificando en una sola barra superior.
+// ── Marca: solo el wordmark (S4) ──────────────────────────────────────────────
+
+.app-header__wordmark {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  // S13: `logo_side_transparente.png` es un PNG transparente con la tinta en
+  // navy, así que sobre --surface-card en `body.dark-theme` (#1e293b)
+  // desaparece. Se apoya en una placa clara (blanco al 88%, no sólido, para
+  // que no se lea como un parche duro), igual que el viejo `.logo-wrapper`.
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: var(--bw-radius-lg);
+  padding: 3px 10px;
+  box-shadow: 0 1px 2px rgba(1, 38, 99, 0.08);
+
+  img {
+    display: block;
+    height: 1.6875rem;
+    width: auto;
+    object-fit: contain;
+  }
+
+  @media (max-width: 991px) {
+    padding: 2px 6px;
+
+    img {
+      height: 1.375rem;
+    }
+  }
+
+  // En pantallas muy angostas cede el lugar al selector de negocio.
+  @media (max-width: 480px) {
+    display: none;
+  }
+}
+
+// ── Botón hamburguesa (a cualquier ancho) ────────────────────────────────────
+// Un único control abre y cierra el panel: default sin fondo ni borde, hover
+// con `--bw-surface-muted`, abierto con el navy del control original (S9).
 
 .app-header__menu-btn {
   width: 36px;
   height: 36px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface-card);
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
   color: var(--text-color);
-  border-radius: 8px;
+  border-radius: var(--bw-radius-pill);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 0.9375rem;
-  font-weight: 600;
-  transition: background var(--bw-transition-base), color var(--bw-transition-base);
-  display: none;
+  transition:
+    background var(--bw-transition-base) ease,
+    color var(--bw-transition-base) ease;
 
   &:hover {
-    background: var(--surface-hover);
-    color: var(--color-primary);
+    background: var(--bw-surface-muted);
+    color: var(--text-color);
   }
 
-  @media (max-width: 991px) {
-    display: inline-flex;
+  &--open {
+    background: var(--bw-700);
+    color: #fff;
+
+    &:hover {
+      background: var(--bw-600);
+      color: #fff;
+    }
   }
 }
 
@@ -146,6 +179,8 @@
   display: flex;
   align-items: center;
   gap: var(--bw-space-sm);
+  // Ocupa el resto de la fila: separa las preferencias del selector de negocio.
+  margin-left: auto;
 }
 
 // ── Selector de negocios (popover) ─────────────────────────────────────────
