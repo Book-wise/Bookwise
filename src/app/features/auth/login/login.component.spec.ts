@@ -61,6 +61,23 @@ describe('LoginComponent', () => {
       expect(note?.textContent).toContain('próximamente');
     });
 
+    it('keeps each provider button perceivable when it renders icon-only', async () => {
+      const fixture = await mount();
+      const el = fixture.nativeElement as HTMLElement;
+
+      const providers = Array.from(el.querySelectorAll<HTMLButtonElement>('.providers button'));
+
+      // Sin texto visible, la etiqueta accesible es lo único que queda: si alguien
+      // vuelve a los botones con texto, este test lo deja pasar, pero si los deja
+      // icon-only sin `aria-label` falla.
+      expect(providers.map((b) => b.getAttribute('aria-label'))).toEqual([
+        'Continuar con Google',
+        'Continuar con Apple',
+        'Continuar con Facebook',
+      ]);
+      expect(providers.every((b) => b.textContent?.trim() === '')).toBe(true);
+    });
+
     it('renders the passwordless entry disabled with its own pending note', async () => {
       const fixture = await mount();
       const el = fixture.nativeElement as HTMLElement;

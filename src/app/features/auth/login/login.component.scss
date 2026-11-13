@@ -96,14 +96,15 @@
 
 .providers {
   display: grid;
+  /* Icono solo, los tres en una línea: con etiqueta de texto ocupaban tres filas
+     y se comían el alto del formulario (pedido del usuario, S2). */
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.625rem;
 }
 
 .provider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
+  display: grid;
+  place-items: center;
   height: 48px;
   border-radius: 12px;
   border: 1px solid var(--surface-border, #e5e7eb);
