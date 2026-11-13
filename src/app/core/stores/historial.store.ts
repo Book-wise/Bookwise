@@ -8,7 +8,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap, map, catchError, of, forkJoin } from 'rxjs';
-import { Booking, Sale, ClientPaginatedResponse } from '@models';
+import { Booking, Sale, PaginatedResponse } from '@models';
 import { BookingsApiService } from '@services/api/bookings-api.service';
 import { SalesApiService } from '@services/api/sales-api.service';
 import { HttpErrorService } from '@services/http-error.service';
@@ -292,15 +292,16 @@ export const HistorialStore = signalStore(
 
       bookingsApi.getBookings({ client_id: clientId, page: PAGE, per_page: PER_PAGE }).pipe(
         map((res: any) => {
-          const response = res as ClientPaginatedResponse<Booking>;
+          const response = res as PaginatedResponse<Booking>;
+          const meta = response.meta;
           return {
             data: response.data ?? [],
             pagination: {
-              currentPage: response.current_page,
-              lastPage: response.last_page,
-              total: response.total,
-              perPage: response.per_page,
-              hasMore: response.current_page < response.last_page,
+              currentPage: meta.current_page,
+              lastPage: meta.last_page,
+              total: meta.total,
+              perPage: meta.per_page,
+              hasMore: meta.current_page < meta.last_page,
             },
           };
         }),
@@ -332,15 +333,16 @@ export const HistorialStore = signalStore(
 
       bookingsApi.getBookings({ client_id: clientId, page: nextPage, per_page: current.perPage }).pipe(
         map((res: any) => {
-          const response = res as ClientPaginatedResponse<Booking>;
+          const response = res as PaginatedResponse<Booking>;
+          const meta = response.meta;
           return {
             data: response.data ?? [],
             pagination: {
-              currentPage: response.current_page,
-              lastPage: response.last_page,
-              total: response.total,
-              perPage: response.per_page,
-              hasMore: response.current_page < response.last_page,
+              currentPage: meta.current_page,
+              lastPage: meta.last_page,
+              total: meta.total,
+              perPage: meta.per_page,
+              hasMore: meta.current_page < meta.last_page,
             },
           };
         }),
@@ -372,15 +374,16 @@ export const HistorialStore = signalStore(
 
       salesApi.getSales({ client_id: clientId, page: PAGE, per_page: PER_PAGE }).pipe(
         map((res: any) => {
-          const response = res as ClientPaginatedResponse<Sale>;
+          const response = res as PaginatedResponse<Sale>;
+          const meta = response.meta;
           return {
             data: response.data ?? [],
             pagination: {
-              currentPage: response.current_page,
-              lastPage: response.last_page,
-              total: response.total,
-              perPage: response.per_page,
-              hasMore: response.current_page < response.last_page,
+              currentPage: meta.current_page,
+              lastPage: meta.last_page,
+              total: meta.total,
+              perPage: meta.per_page,
+              hasMore: meta.current_page < meta.last_page,
             },
           };
         }),
@@ -412,15 +415,16 @@ export const HistorialStore = signalStore(
 
       salesApi.getSales({ client_id: clientId, page: nextPage, per_page: current.perPage }).pipe(
         map((res: any) => {
-          const response = res as ClientPaginatedResponse<Sale>;
+          const response = res as PaginatedResponse<Sale>;
+          const meta = response.meta;
           return {
             data: response.data ?? [],
             pagination: {
-              currentPage: response.current_page,
-              lastPage: response.last_page,
-              total: response.total,
-              perPage: response.per_page,
-              hasMore: response.current_page < response.last_page,
+              currentPage: meta.current_page,
+              lastPage: meta.last_page,
+              total: meta.total,
+              perPage: meta.per_page,
+              hasMore: meta.current_page < meta.last_page,
             },
           };
         }),
