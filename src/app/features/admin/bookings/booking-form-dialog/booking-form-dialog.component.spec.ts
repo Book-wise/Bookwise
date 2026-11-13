@@ -19,6 +19,21 @@ import { rutValidator } from '@shared/validators/rut.validator';
 import type { NgForm } from '@angular/forms';
 import type { Client, ClientPack, Provider } from '@models';
 
+// `bw-patient-card` lee `window.matchMedia` al construirse y jsdom no lo trae:
+// sin este stub el beforeEach revienta y el test muere por timeout, no por aserción.
+if (!window.matchMedia) {
+  Object.defineProperty(window, 'matchMedia', {
+    value: () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
+  });
+}
+
 describe('BookingFormDialogComponent', () => {
   let component: BookingFormDialogComponent;
   let fixture: ComponentFixture<BookingFormDialogComponent>;
