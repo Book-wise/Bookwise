@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "djqyszyd",
+      "file": "01-split-brand.html",
+      "selector": "body > main > section:nth-of-type(1)",
+      "excerpt": "Bookwise Tu clínica, ordenada de la agenda a la ficha. Agenda, fichas clínicas, packs de sesiones y ventas en un solo lugar. Sin planillas paralelas. Ficha clínica con imágenes y PDF firmado, lista para el paciente. Packs de sesiones que se descuentan solos al agendar. Permisos por rol: cada uno ve",
+      "comment": "me gusta el gradient que hiciste pero quedate con lo que ya teniamos en el costado izquierdo",
+      "createdAt": "2026-11-13T01:19:37.598Z",
+      "status": "resolved",
+      "sentAt": "2026-11-13T01:19:37.625Z",
+      "resolvedAt": "2026-11-13T01:21:48.233Z"
+    },
+    {
+      "id": "evnydp0w",
+      "file": "01-split-brand.html",
+      "selector": "body > main > section:nth-of-type(2)",
+      "excerpt": "Ingresa a tu cuenta Usa tu correo de la clínica o la cuenta con la que ya trabajas. Continuar con Google Continuar con Apple Continuar con Facebook o con tu correo Correo Contraseña Mantener sesión Olvidé mi contraseña Ingresar ¿Prefieres no usar contraseña? Enviarme un enlace de acceso Al ingresar",
+      "comment": "asegurate de que el contenido sea responsivo",
+      "createdAt": "2026-11-13T01:20:08.726Z",
+      "status": "resolved",
+      "sentAt": "2026-11-13T01:20:08.763Z",
+      "resolvedAt": "2026-11-13T01:22:40.889Z"
+    },
+    {
+      "id": "yditjvwg",
+      "file": "01-split-brand.html",
+      "selector": "body > main > section:nth-of-type(1)",
+      "excerpt": "Gestión de agenda y reservas Calendario inteligente Gestión de clientes Reservas en tiempo real",
+      "comment": "deja el color original, el gradient esta elegante, pero vuelve a nuestros azules institucionales puedes revisar la paleta que tiene el front.",
+      "createdAt": "2026-11-13T01:23:30.018Z",
+      "status": "resolved",
+      "sentAt": "2026-11-13T01:23:30.035Z",
+      "resolvedAt": "2026-11-13T01:24:54.392Z"
+    },
+    {
+      "id": "xsp1i3ai",
+      "file": "01-split-brand.html",
+      "selector": "body > main > section:nth-of-type(1) > div",
+      "excerpt": "Gestión de agenda y reservas Calendario inteligente Gestión de clientes Reservas en tiempo real",
+      "comment": "centra bien esto",
+      "createdAt": "2026-11-13T01:24:21.523Z",
+      "status": "resolved",
+      "sentAt": "2026-11-13T01:24:21.572Z",
+      "resolvedAt": "2026-11-13T01:25:31.880Z"
+    }
+  ]
+}

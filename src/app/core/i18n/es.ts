@@ -167,6 +167,15 @@ export const ES: Record<string, string> = {
   'auth.register_provisioning_failed': 'No se pudo completar el registro. Verifica tu conexión e inténtalo nuevamente.',
   'auth.login_verify_email': 'Debes verificar tu email antes de iniciar sesión.',
   'auth.login.forgot': '¿Olvidaste tu contraseña?',
+  'auth.login.heading': 'Ingresa a tu cuenta',
+  'auth.login.subheading': 'Usa tu correo de la clínica o la cuenta con la que ya trabajas.',
+  'auth.login.provider_google': 'Continuar con Google',
+  'auth.login.provider_apple': 'Continuar con Apple',
+  'auth.login.provider_facebook': 'Continuar con Facebook',
+  'auth.login.providers_pending': 'El ingreso con Google, Apple y Facebook estará disponible próximamente.',
+  'auth.login.divider': 'o con tu correo',
+  'auth.login.magic_link_pending': 'Acceso sin contraseña',
+  'auth.login.magic_link_note': 'Próximamente: entrar con un enlace enviado a tu correo, sin contraseña.',
 
   // Auth — forgot password (público)
   'auth.forgot.title': 'Restablecer contraseña',
