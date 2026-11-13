@@ -13,7 +13,10 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
   su color de marca de fondo, y los tres en **una línea**.
 - **S3 (contrato del API, ver `odd/tasks/email-automation.md`):** el front no envía correo. Magic link son
   `POST /auth/magic-link` (siempre 202, sin revelar si el correo existe) y `POST /auth/magic-link/consume`.
-  Los callbacks OAuth todavía no existen.
+  Los callbacks OAuth todavía no existen. **Fuente visual del flujo magic link** (sesión del API):
+  `design/login/02-magic-link-first.html` del repo del API, commit `b56db72` — incluye el estado «revisa tu
+  correo» con contador de reenvío de 30 s, proveedores como íconos y «prefiero usar mi contraseña» plegado.
+  La copia en este repo ya está sincronizada con ese commit.
 - **S4 (decisión vigente):** mientras los endpoints no existan, los caminos nuevos se renderizan
   **deshabilitados con su nota**, no se ofrecen botones que fallan.
 
@@ -26,7 +29,7 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
 | L3 | Traer `design/login/` a este repo y abrir el canvas acá | S1 | ✅ hecho |
 | L4 | **Diseño**: proveedores como icono solo con color de marca, los tres en una línea | S2 | ✅ hecho en `01-split-brand.html` (grid de 3 columnas, `aria-label` + `sr-only`) |
 | L5 | **Implementación (mañana)**: llevar L4 al `login.component.html` — botones icono-only en una fila, `aria-label` por proveedor, misma altura/ritmo que el artboard | S2 | ⏳ pendiente |
-| L6 | Habilitar magic link cuando el API lo exponga: consumir 202 y navegar al estado «revisa tu correo» (patrón ya existente en `/forgot-password`) + ruta de consumo del token | S3, S4 | ⏳ pendiente (bloqueado por el API) |
+| L6 | Habilitar magic link cuando el API lo exponga: consumir 202 y navegar al estado «revisa tu correo» **según `02-magic-link-first.html`** (contador de reenvío 30 s, «prefiero usar mi contraseña» plegado) + ruta de consumo del token | S3, S4 | ⏳ pendiente (bloqueado por el API) |
 | L7 | Habilitar los proveedores cuando existan los callbacks OAuth | S3, S4 | ⏳ pendiente (bloqueado por el API) |
 
 ## Log
@@ -43,3 +46,11 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
   viven en `Bookwise-API/design/login/` (`01-split-brand`, `02-magic-link-first`, `03-provider-first`) y
   el front tenía la implementación sin publicar en `feat/login-redesign`. El front no tenía ninguna
   carpeta `design/login`; se copió acá para que el canvas del front pueda mostrarla.
+
+- **L4 (2026-11-13, coordinación con la sesión del API):** el artboard `01-split-brand.html` **ya estaba
+  implementado** por esa sesión en la rama `feat/login-redesign` (commit `37be40a`, worktree aparte, nunca
+  publicada). Acá se recuperó con `cherry-pick -x` a `slice/07-login` → **PR #54**, así que no se duplica
+  trabajo. Acuerdo de no pisarse: los archivos `login.component.{html,scss}` y las claves `auth.login.*`
+  se tocan avisando antes; la sesión del API pidió que le avisemos si vamos a escribir las pantallas de
+  magic link. Estado de hoy: magic link **no** se implementa hasta que existan los endpoints (S4), y lo
+  que sigue en esos archivos es L5 (proveedores icono-only en una línea).
