@@ -1,0 +1,27 @@
+{
+  "title": "Login — ingreso con proveedores, correo y magic link",
+  "brief": "Rediseño de la pantalla de ingreso de Bookwise (SaaS de gestión de clínicas de kinesiología en Chile): Google, Apple, Facebook, correo con contraseña y magic link. La persona lo revisa y decide la dirección antes de implementar.",
+  "artboards": [
+    {
+      "file": "01-split-brand.html",
+      "title": "Split con panel de marca",
+      "tradeoff": "Máxima confianza para el dueño de la clínica: la marca y la prueba social hacen la venta en el mismo lugar donde entra. Cuesta peso visual y en pantallas chicas el panel se va arriba, empujando el formulario.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-magic-link-first.html",
+      "title": "Magic link primero",
+      "tradeoff": "La menor fricción posible: un campo y listo, con el estado «revisa tu correo» resuelto. Depende de la entregabilidad del correo y esconde a quien entra todos los días con contraseña.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-provider-first.html",
+      "title": "Proveedor primero, consola",
+      "tradeoff": "Lo más rápido para quien entra muchas veces al día (recepción, tablet): botones grandes de proveedor y correo como camino secundario, con el contexto de roles al costado. Se siente transaccional y más frío que el split.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}
