@@ -28,7 +28,7 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
 | L2 | Spec que fija los caminos pendientes deshabilitados y el submit de correo/contraseña intacto | S1, S4 | ✅ hecho (PR #54) |
 | L3 | Traer `design/login/` a este repo y abrir el canvas acá | S1 | ✅ hecho |
 | L4 | **Diseño**: proveedores como icono solo con color de marca, los tres en una línea | S2 | ✅ hecho en `01-split-brand.html` (grid de 3 columnas, `aria-label` + `sr-only`) |
-| L5 | **Implementación (mañana)**: llevar L4 al `login.component.html` — botones icono-only en una fila, `aria-label` por proveedor, misma altura/ritmo que el artboard | S2 | ⏳ pendiente |
+| L5 | Llevar L4 al `login.component.html`: botones icono-only en una fila (`grid-template-columns: repeat(3,1fr)`), `aria-label` + `title` por proveedor, Google blanco con borde, Apple negro, Facebook `#1877F2` | S2 | ✅ hecho |
 | L6 | Habilitar magic link cuando el API lo exponga: consumir 202 y navegar al estado «revisa tu correo» **según `02-magic-link-first.html`** (contador de reenvío 30 s, «prefiero usar mi contraseña» plegado) + ruta de consumo del token | S3, S4 | ⏳ pendiente (bloqueado por el API) |
 | L7 | Habilitar los proveedores cuando existan los callbacks OAuth | S3, S4 | ⏳ pendiente (bloqueado por el API) |
 
@@ -54,3 +54,10 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
   se tocan avisando antes; la sesión del API pidió que le avisemos si vamos a escribir las pantallas de
   magic link. Estado de hoy: magic link **no** se implementa hasta que existan los endpoints (S4), y lo
   que sigue en esos archivos es L5 (proveedores icono-only en una línea).
+
+- **L5 (2026-11-13, implementación del pedido de S2):** `login.component.html` y `.scss` pasan los tres
+  proveedores a **icono solo en una línea** (antes tres filas con etiqueta de texto, que comían el alto
+  del formulario). Los botones siguen **deshabilitados** por S4. La etiqueta accesible viaja en
+  `aria-label` + `title`; el spec nuevo lo fija: además de que los tres estén deshabilitados, verifica
+  que cada botón tenga su `aria-label` y que no quede texto visible adentro, que es justo lo que se
+  rompería si alguien los deja icon-only sin etiqueta.
