@@ -255,6 +255,17 @@
       "status": "resolved",
       "sentAt": "2026-11-10T03:27:01.646Z",
       "resolvedAt": "2026-11-10T03:27:30.963Z"
+    },
+    {
+      "id": "ckizrpgb",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3) > button",
+      "excerpt": "☰",
+      "comment": "quiero que se aplique efactivamente, ahora mismo cuando esta abierto aparece una x",
+      "createdAt": "2026-11-10T03:42:17.629Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:42:17.656Z",
+      "resolvedAt": "2026-11-10T03:42:39.713Z"
     }
   ]
 }
