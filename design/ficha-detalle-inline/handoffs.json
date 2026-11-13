@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-master-detalle.html",
+  "handoffs": {
+    "01-master-detalle.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-10T01:22:55.918Z",
+      "startedAt": "2026-11-10T01:23:20.209Z",
+      "implementedAt": null,
+      "feature": "odd/tasks/ficha.md"
+    }
+  }
+}

@@ -52,7 +52,12 @@ describe('RecordFormDialogComponent', () => {
     }).compileComponents();
 
     recordsStore = TestBed.inject(ClinicalRecordsStore);
-    patchState(unprotected(recordsStore), { records: [] });
+    patchState(unprotected(recordsStore), {
+      byClient: { 7: [] },
+      loadedClients: { 7: true },
+      loadingClients: {},
+      error: null,
+    });
 
     fixture = TestBed.createComponent(RecordFormDialogComponent);
     component = fixture.componentInstance;
@@ -170,8 +175,8 @@ describe('RecordFormDialogComponent', () => {
     expect(savedEmitted.length).toBe(1);
     expect(component.saving()).toBe(false);
 
-    expect(recordsStore.records().length).toBe(1);
-    const record = recordsStore.records()[0];
+    expect(recordsStore.recordsFor(7).length).toBe(1);
+    const record = recordsStore.recordsFor(7)[0];
     expect(record.id).toBe(123);
     expect(record.record_type_id).toBe(10);
     expect(record.title).toBe('Ficha clínica');
@@ -194,8 +199,43 @@ describe('RecordFormDialogComponent', () => {
 
     expect(savedEmitted.length).toBe(0);
     expect(component.saving()).toBe(false);
-    expect(recordsStore.records().length).toBe(0);
+    expect(recordsStore.recordsFor(7).length).toBe(0);
     expect(httpError.handle).toHaveBeenCalledTimes(1);
     expect(httpError.handle).toHaveBeenCalledWith(expect.any(Error), 'ficha.form.save');
+  });
+
+  describe('campo image (F10)', () => {
+    it('muestra la nota de «después de guardar» y no crea control ni clave en values', async () => {
+      recordsApi.createRecord.mockReturnValue(of(makeServerRecord({ values: { f_name: 'Ana' } })));
+      await setup(
+        makeType([
+          makeField({ key: 'f_name', label: 'Nombre', type: 'text' }),
+          makeField({ key: 'f_foto', label: 'Foto de la lesión', type: 'image', required: true }),
+        ]),
+      );
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('#rfd-f_foto')).toBeNull();
+      expect(component.form().controls['f_foto']).toBeUndefined();
+      expect(el.querySelector('[data-testid="image-after-save"]')?.textContent).toContain(
+        'ficha.form.image_after_save',
+      );
+      // `required` no se evalúa en un campo image: no hay asterisco ni control.
+      expect(el.querySelector('.rfd-required')).toBeNull();
+
+      component.form().controls['f_name'].setValue('Ana');
+      render();
+      buttonByText('ficha.form.save')!.click();
+      render();
+
+      expect(recordsApi.createRecord).toHaveBeenCalledTimes(1);
+      expect(recordsApi.createRecord).toHaveBeenCalledWith({
+        client_id: 7,
+        booking_id: 900,
+        record_type_id: 10,
+        values: { f_name: 'Ana' },
+      });
+      expect(recordsStore.recordsFor(7).length).toBe(1);
+    });
   });
 });

@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "1zi49r5d",
+      "file": "01-master-detalle.html",
+      "selector": "body > div > div",
+      "excerpt": "‹ Volver a las fichas EVALUACIÓN KINÉSICA 12/11/2026 · 10:30 am · Karla Muñoz Sesión 3 de 6 DIAGNÓSTICO Lumbalgia mecánica OBJETIVO Reducir el dolor lumbar y recuperar movilidad en flexión. DOLOR (EVA 0-10) 6 OBSERVACIONES Contractura en zona lumbar derecha. Se indica calor local + elongación de isq",
+      "comment": "esto seria la vista que ya esta dentro, y si aqui eista listo para volver, puedes añadir que tenga los botones arriba a la misma linea del volver?",
+      "createdAt": "2026-11-10T01:09:28.674Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:09:28.773Z",
+      "resolvedAt": "2026-11-10T01:10:41.845Z",
+      "screenshot": ".screenshots/1zi49r5d.png"
+    },
+    {
+      "id": "glhmn3gq",
+      "file": "01-master-detalle.html",
+      "selector": "body > div > div > div > div > button:nth-of-type(1)",
+      "excerpt": "Eliminar reserva",
+      "comment": "esto decia editar ficha",
+      "createdAt": "2026-11-10T01:13:11.928Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:13:11.951Z",
+      "resolvedAt": "2026-11-10T01:13:29.831Z"
+    },
+    {
+      "id": "4fqdvuqt",
+      "file": "01-master-detalle.html",
+      "selector": "body > div > div > div > div > button:nth-of-type(2)",
+      "excerpt": "Cerrar",
+      "comment": "imprimir ficha",
+      "createdAt": "2026-11-10T01:13:55.456Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:13:55.476Z",
+      "resolvedAt": "2026-11-10T01:14:00.518Z"
+    },
+    {
+      "id": "91dlh3jb",
+      "file": "01-master-detalle.html",
+      "selector": "body > div > div > div > div > button:nth-of-type(2)",
+      "excerpt": "Imprimir ficha",
+      "comment": "estandariza o usa botones estandar de la app",
+      "createdAt": "2026-11-10T01:14:29.146Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:14:29.185Z",
+      "resolvedAt": "2026-11-10T01:15:10.423Z"
+    },
+    {
+      "id": "um0nobnz",
+      "file": "01-master-detalle.html",
+      "selector": "body > div > div > div > div > button:nth-of-type(1)",
+      "excerpt": "Editar ficha",
+      "comment": "cuando le de a este boton debera presentar la misma ficha que esta abajo, pero esta vez con los campos editables los botones desaparecen y se queda el enlace de volver",
+      "createdAt": "2026-11-10T01:17:34.787Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:17:39.070Z",
+      "resolvedAt": "2026-11-10T01:18:38.300Z"
+    },
+    {
+      "id": "kipk8qcb",
+      "file": "01-master-detalle.html",
+      "selector": "body > div > div > div > button",
+      "excerpt": "‹ Volver a las fichas",
+      "comment": "haz que vuelva a la vista anterior",
+      "createdAt": "2026-11-10T01:20:16.236Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:20:43.951Z",
+      "resolvedAt": "2026-11-10T01:21:53.026Z"
+    },
+    {
+      "id": "tw1mmqm2",
+      "file": "01-master-detalle.html",
+      "selector": "#actions > button:nth-of-type(2)",
+      "excerpt": "Imprimir ficha",
+      "comment": "cuando le de click aqui deberia abrir en una nueva pestaña un pdf generado similar al que deje en /home/seba/codingProjects/Bookwise/ficha_de_eliminacion_de_tatuajes_con_laser_1794274088.pdf  puedes presentarme el diseño del pdf?",
+      "createdAt": "2026-11-10T01:33:27.889Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T01:33:27.908Z",
+      "resolvedAt": "2026-11-10T01:36:19.967Z"
+    }
+  ]
+}

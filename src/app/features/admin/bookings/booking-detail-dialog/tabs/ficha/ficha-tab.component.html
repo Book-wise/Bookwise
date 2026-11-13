@@ -5,109 +5,118 @@
     </div>
   }
 
-  <!-- ── Fichas asociadas a la reserva ─────────────────────────────────── -->
-  <div class="ficha__row">
-    <span class="ficha__section">{{ t('ficha.associated') }}</span>
+  @if (detailRecord(); as record) {
+    <!-- ── Detalle inline de la ficha (reemplaza la lista) ──────────────── -->
+    <bw-record-detail
+      [record]="record"
+      [type]="typeForRecord(record)"
+      (back)="selectedRecord.set(null)"
+    />
+  } @else {
+    <!-- ── Fichas asociadas a la reserva ───────────────────────────────── -->
+    <div class="ficha__row">
+      <span class="ficha__section">{{ t('ficha.associated') }}</span>
 
-    <div class="ficha__actions">
-      <p-menu #typeMenu [popup]="true" [model]="typeMenuItems()" appendTo="body" />
+      <div class="ficha__actions">
+        <p-menu #typeMenu [popup]="true" [model]="typeMenuItems()" appendTo="body" />
 
-      <button
-        type="button"
-        class="ficha__add"
-        data-testid="add-record"
-        aria-haspopup="true"
-        [disabled]="!hasTypes() || !clientId()"
-        (click)="typeMenu.toggle($event)"
-      >
-        {{ t('ficha.add') }} <span aria-hidden="true">▾</span>
-      </button>
-
-      @if (!hasTypes()) {
-        <span class="ficha__no-types" data-testid="no-types-hint">{{ t('ficha.no_types_hint') }}</span>
         <button
           type="button"
-          class="ficha__link"
-          data-testid="configure-types"
-          (click)="configureTypes.emit()"
+          class="ficha__add"
+          data-testid="add-record"
+          aria-haspopup="true"
+          [disabled]="!hasTypes() || !clientId()"
+          (click)="typeMenu.toggle($event)"
         >
-          {{ t('ficha.configure_types') }} ›
+          {{ t('ficha.add') }} <span aria-hidden="true">▾</span>
         </button>
-      }
-    </div>
-  </div>
 
-  @if (hasRecords()) {
-    <div class="ficha__list">
-      @for (record of associatedRecords(); track record.id) {
-        <article class="ficha__record" data-testid="associated-record">
-          <div class="ficha__record-body">
-            <h3 class="ficha__record-title">{{ record.title }}</h3>
-            <div class="ficha__record-meta">
-              <span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <rect x="3" y="5" width="18" height="16" rx="2" />
-                  <path d="M3 10h18M8 3v4M16 3v4" />
-                </svg>
-                {{ formatWhen(record.created_at) }}
-              </span>
-              @if (record.author_name) {
+        @if (!hasTypes()) {
+          <span class="ficha__no-types" data-testid="no-types-hint">{{ t('ficha.no_types_hint') }}</span>
+          <button
+            type="button"
+            class="ficha__link"
+            data-testid="configure-types"
+            (click)="configureTypes.emit()"
+          >
+            {{ t('ficha.configure_types') }} ›
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (hasRecords()) {
+      <div class="ficha__list">
+        @for (record of associatedRecords(); track record.id) {
+          <article class="ficha__record" data-testid="associated-record">
+            <div class="ficha__record-body">
+              <h3 class="ficha__record-title">{{ record.title }}</h3>
+              <div class="ficha__record-meta">
                 <span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path d="M3 10h18M8 3v4M16 3v4" />
                   </svg>
-                  {{ record.author_name }}
+                  {{ formatWhen(record.created_at) }}
                 </span>
-              }
+                @if (record.author_name) {
+                  <span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+                    </svg>
+                    {{ record.author_name }}
+                  </span>
+                }
+              </div>
             </div>
-          </div>
-          <button type="button" class="ficha__link" (click)="openRecord.emit(record.id)">
-            {{ t('ficha.view_details') }} ›
-          </button>
-        </article>
-      }
-    </div>
-  } @else {
-    <p class="ficha__empty" data-testid="associated-empty">{{ t('ficha.associated.empty') }}</p>
-  }
+            <button type="button" class="ficha__link" (click)="openRecordDetail(record)">
+              {{ t('ficha.view_details') }} ›
+            </button>
+          </article>
+        }
+      </div>
+    } @else {
+      <p class="ficha__empty" data-testid="associated-empty">{{ t('ficha.associated.empty') }}</p>
+    }
 
-  <!-- ── Historial de consultas anteriores ─────────────────────────────── -->
-  <span class="ficha__section">{{ t('ficha.history') }}</span>
+    <!-- ── Historial de consultas anteriores ───────────────────────────── -->
+    <span class="ficha__section">{{ t('ficha.history') }}</span>
 
-  @if (hasHistory()) {
-    <div class="ficha__list">
-      @for (record of history(); track record.id) {
-        <article class="ficha__record" data-testid="history-record">
-          <div class="ficha__record-body">
-            <h3 class="ficha__record-title">{{ record.title }}</h3>
-            <div class="ficha__record-meta">
-              <span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <rect x="3" y="5" width="18" height="16" rx="2" />
-                  <path d="M3 10h18M8 3v4M16 3v4" />
-                </svg>
-                {{ formatWhen(record.created_at) }}
-              </span>
-              @if (record.author_name) {
+    @if (hasHistory()) {
+      <div class="ficha__list">
+        @for (record of history(); track record.id) {
+          <article class="ficha__record" data-testid="history-record">
+            <div class="ficha__record-body">
+              <h3 class="ficha__record-title">{{ record.title }}</h3>
+              <div class="ficha__record-meta">
                 <span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path d="M3 10h18M8 3v4M16 3v4" />
                   </svg>
-                  {{ record.author_name }}
+                  {{ formatWhen(record.created_at) }}
                 </span>
-              }
+                @if (record.author_name) {
+                  <span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+                    </svg>
+                    {{ record.author_name }}
+                  </span>
+                }
+              </div>
             </div>
-          </div>
-          <button type="button" class="ficha__link" (click)="openRecord.emit(record.id)">
-            {{ t('ficha.view_details') }} ›
-          </button>
-        </article>
-      }
-    </div>
-  } @else {
-    <p class="ficha__empty" data-testid="history-empty">{{ t('ficha.history.empty') }}</p>
+            <button type="button" class="ficha__link" (click)="openRecordDetail(record)">
+              {{ t('ficha.view_details') }} ›
+            </button>
+          </article>
+        }
+      </div>
+    } @else {
+      <p class="ficha__empty" data-testid="history-empty">{{ t('ficha.history.empty') }}</p>
+    }
   }
 
   <!-- ── Diálogo de captura ────────────────────────────────────────────── -->

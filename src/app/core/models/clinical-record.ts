@@ -8,8 +8,22 @@
  * `@services/api/clinical-record-*.service.ts`).
  */
 
-/** Tipo de dato de un campo de ficha (mapea el desplegable del constructor). */
-export type ClinicalRecordFieldType = 'text' | 'longtext' | 'number' | 'select' | 'date';
+/**
+ * Tipo de dato de un campo de ficha (mapea el desplegable del constructor).
+ *
+ * `image` es especial (contrato F10, decisión L14): la imagen **no** viaja en
+ * `values` (el servidor responde `422 clinical_record_image_managed` si el
+ * cliente la manda); se sube después de crear la ficha con
+ * `POST /clinical-records/{id}/image` y su ruta se lee en `ClinicalRecord.images`.
+ * Por eso un campo `image` no lleva `options` y su `required` no se evalúa.
+ */
+export type ClinicalRecordFieldType =
+  | 'text'
+  | 'longtext'
+  | 'number'
+  | 'select'
+  | 'date'
+  | 'image';
 
 /** Un campo configurable de un tipo de ficha. */
 export interface ClinicalRecordField {
@@ -40,8 +54,18 @@ export interface ClinicalRecord {
   record_type_id: number;
   /** Nombre del tipo tal como se muestra (mayúsculas en la tarjeta). */
   title: string;
-  /** Valores capturados por campo (`key` → valor). */
+  /**
+   * Valores capturados por campo (`key` → valor). Nunca contiene las claves de
+   * los campos `image`: esas son gestionadas por el servidor.
+   */
   values: Record<string, unknown>;
+  /**
+   * Rutas API-relativas de las imágenes subidas (`key` del campo → ruta), o
+   * `null` si el campo todavía no tiene imagen. Solo viene en el **detalle**
+   * (`GET /clinical-records/{id}`), no en el listado. La ruta no es pública: se
+   * pide como blob con el interceptor de auth (`GET .../image/{key}`).
+   */
+  images?: Record<string, string | null> | null;
   /** ISO-8601 de creación del registro. */
   created_at: string;
   /** Quién firmó/registró la ficha. El backend lo sirve denormalizado (contrato L8). */

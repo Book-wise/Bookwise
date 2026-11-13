@@ -1,0 +1,28 @@
+{
+  "title": "Ficha clínica: detalle inline dentro del diálogo",
+  "brief": "F3: el detalle de una ficha clínica seleccionada se muestra DENTRO del diálogo de reserva (pestaña Ficha), sin abrir un segundo diálogo. Hoy «Ver más detalles» emite el id y el detalle vivía en un p-dialog aparte (record-detail-dialog). Se busca reemplazar ese segundo diálogo por un detalle inline en el mismo diálogo.",
+  "feature": "odd/tasks/ficha.md",
+  "artboards": [
+    {
+      "file": "01-master-detalle.html",
+      "title": "Maestro-detalle en la pestaña",
+      "tradeoff": "El detalle reemplaza la lista con un breadcrumb «volver»: lectura enfocada, pero se pierde el contexto de la lista hasta volver",
+      "width": 960,
+      "height": 880
+    },
+    {
+      "file": "02-acordeon-inline.html",
+      "title": "Acordeón en el lugar",
+      "tradeoff": "La ficha se expande dentro de su propia tarjeta y mantiene la lista a la vista, pero empuja hacia abajo el resto",
+      "width": 960,
+      "height": 880
+    },
+    {
+      "file": "03-panel-lateral.html",
+      "title": "Panel lateral dentro del diálogo",
+      "tradeoff": "Lista y detalle en dos columnas siempre visibles; el detalle nunca tapa la lista, pero exige más ancho de diálogo",
+      "width": 1080,
+      "height": 880
+    }
+  ]
+}

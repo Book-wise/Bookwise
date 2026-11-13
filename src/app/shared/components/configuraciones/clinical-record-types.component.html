@@ -185,14 +185,20 @@
                     [appendTo]="'body'"
                   />
                   <span class="ct-frow__req">
-                    <p-toggleswitch
-                      [ngModel]="field.required"
-                      (ngModelChange)="onFieldRequired(field, $event)"
-                      [attr.aria-label]="t('settings.clinical_types.fields.required')"
-                    />
-                    <span>
-                      {{ field.required ? t('settings.clinical_types.required.yes') : t('settings.clinical_types.required.no') }}
-                    </span>
+                    @if (isImageField(field)) {
+                      <span class="ct-frow__na">
+                        {{ t('settings.clinical_types.required.not_applicable') }}
+                      </span>
+                    } @else {
+                      <p-toggleswitch
+                        [ngModel]="field.required"
+                        (ngModelChange)="onFieldRequired(field, $event)"
+                        [attr.aria-label]="t('settings.clinical_types.fields.required')"
+                      />
+                      <span>
+                        {{ field.required ? t('settings.clinical_types.required.yes') : t('settings.clinical_types.required.no') }}
+                      </span>
+                    }
                   </span>
                   <button
                     type="button"
