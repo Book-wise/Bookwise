@@ -1,0 +1,28 @@
+{
+  "title": "Preferencias de notificaciones del cliente",
+  "brief": "Tarjeta de notificaciones dentro del detalle del cliente (Bookwise, clínicas de kinesiología en Chile). Contrato cerrado con el API: maestro `notifications_enabled` arriba y seis flags por canal — Email: nueva reserva, confirmación, cancelación, recordatorio; WhatsApp: recordatorio, cancelación exitosa. Apagado el maestro no sale nada al cliente salvo alertas de seguridad de su cuenta. Una sola superficie: la de la tarjeta del cliente.",
+  "feature": "odd/tasks/email-automation.md",
+  "artboards": [
+    {
+      "file": "01-maestro-y-canales.html",
+      "title": "Maestro arriba, un grupo por canal",
+      "tradeoff": "Espeja el contrato tal cual (maestro + dos canales) y deja la semántica del apagado a la vista; el maestro en banda propia suma altura y separa el control de lo que controla.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-lista-plana-con-chips.html",
+      "title": "Lista única, el canal va en cada fila",
+      "tradeoff": "Se lee por evento y no por canal: seis filas sin duplicar títulos como «Recordatorio de reserva», que aparece dos veces; el canal queda como chip y se pierde de un vistazo cuántos avisos tiene cada canal.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-acordeon-por-canal.html",
+      "title": "Acordeón por canal",
+      "tradeoff": "Aguanta un diálogo angosto y el contador del summary informa aunque el grupo esté cerrado; esconde controles detrás de un click y hace más difícil comparar los dos canales a la vez.",
+      "width": 760,
+      "height": 900
+    }
+  ]
+}
