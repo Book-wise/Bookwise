@@ -55,6 +55,17 @@
       "status": "resolved",
       "sentAt": "2026-11-13T22:47:55.449Z",
       "resolvedAt": "2026-11-13T22:49:17.012Z"
+    },
+    {
+      "id": "5od9xf2t",
+      "file": "01-split-brand.html",
+      "selector": "body > main > section:nth-of-type(2) > div",
+      "excerpt": "Ingresa a tu cuenta Usa tu correo de la clínica o la cuenta con la que ya trabajas. Continuar con Google Continuar con Apple Continuar con Facebook Continuar con el correo Correo Contraseña Mantener sesión Olvidé mi contraseña Ingresar ¿Prefieres no usar contraseña? Enviarme un enlace de acceso Al i",
+      "comment": "haz que el formulario se abra usando el espacio osea los botones de redes google etc quedan fuera temporalmente, y le pones un volver",
+      "createdAt": "2026-11-14T00:31:06.530Z",
+      "status": "resolved",
+      "sentAt": "2026-11-14T00:31:06.731Z",
+      "resolvedAt": "2026-11-14T00:47:25.991Z"
     }
   ]
 }
