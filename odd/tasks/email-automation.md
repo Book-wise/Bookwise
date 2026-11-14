@@ -117,8 +117,8 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | # | Tarea | Specs | Estado |
 |---|---|---|---|
 | T1 | Inventario verificado de disparadores, pantallas y preferencias (este documento) | S1, S2 | ✅ hecho |
-| T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ cerrado |
-| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado · ⏳ UI |
+| T2 | `email_reminder` como 6º flag, default `true` | S3 | ✅ contrato cerrado + UI entregada (T12) |
+| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado + UI entregada (T12) |
 | T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ⏳ pendiente (decisión tomada) |
 | T5 | Diseñar e implementar magic link (pantalla + estado «revisa tu correo» + consumo de token) | S4 | ⏳ pendiente (no existe) |
 | T6 | Diseñar e implementar login social Google/Apple/Facebook | S4 | ⏳ pendiente (no existe) |
@@ -126,7 +126,7 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | T8 | ~~Recordatorio de sesión de pack con `remaining_sessions`~~ — **descartada**: el correo lo renderiza el API (Blade) leyendo el `client_pack`; el front no participa ni recibe ese payload. Sólo aplica si algún día hay estado de recordatorio en pantalla | S6 | ⛔ descartada |
 | T9 | Cruzar este inventario con el del API y cerrar diferencias | S1 | ✅ cerrado (L3) |
 | T11 | Diseñar la tarjeta de preferencias: maestro + 6 flags por canal | S3 | ✅ `design/preferencias-cliente/` (3 direcciones) |
-| T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ⏳ pendiente (tras elegir dirección) |
+| T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ✅ hecho (PR #59) |
 | T13 | Quitar la card de `/admin/profile` | S3 | ⏳ pendiente |
 | T10 | Mapear el onboarding existente contra lo que el API espera de «cuenta completa» | S5 | ✅ inventariado acá |
 
@@ -170,3 +170,14 @@ público, así que ningún email al cliente se origina en una sesión de cliente
   Copy nuevo propuesto para el 6º flag: «Recordatorio de reserva» / «Email 24 h y 30 min antes de la
   reserva.» (el de WhatsApp ya existía y su tooltip ya decía «WhatsApp programado 24 h y 30 min»).
   Ninguna toca la card de `/admin/profile`: su eliminación es T13.
+
+- **L5 (2026-11-14, T12 entregada — PR #59):** la tarjeta del cliente implementa la dirección elegida
+  `design/preferencias-cliente/01-maestro-y-canales.html`: switch maestro «Recibir notificaciones» con
+  la nota de consentimiento, `email_reminder` como sexto flag del grupo Email (default `true`) y
+  contador «N de M activos» por canal. El maestro sólo PATCH-ea `notifications_enabled`; apagarlo
+  deshabilita y atenúa los seis canales **sin borrar su estado**, así al reencender vuelven como estaban.
+  Lee `notification_prefs.notifications_enabled` → `client.notifications_enabled` → `true`, así funciona
+  con el API aditivo y con el viejo. Los defaults se resuelven en la card, no en el store: el estado
+  guardado sigue 1:1 con el GET (y el spec del store no cambia). Verificación: 54/54 en
+  `patient-card.component.spec.ts`, 11/11 en `client-detail.store.spec.ts`, build AOT OK.
+  Queda **T13** (borrar la card de canales de `/admin/profile`).
