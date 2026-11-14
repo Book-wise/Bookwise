@@ -3,13 +3,12 @@
   "chosen": "01-split-brand.html",
   "handoffs": {
     "01-split-brand.html": {
-      "status": "implemented",
+      "status": "in_progress",
       "queued": true,
-      "sentAt": "2026-11-13T01:29:37.710Z",
-      "startedAt": "2026-11-13T01:35:05.031Z",
-      "implementedAt": "2026-11-13T01:38:02.424Z",
-      "note": "Implementado en el front Angular, rama feat/login-redesign (worktree propio, sin tocar el checkout del peer). Panel de marca del auth-layout tal cual el artboard (gradiente --bw-900→500→300, logo en caja blanca, tagline y 3 features, ocultos en mobile); pantalla de login con correo/contraseña funcionando por PrimeNG. Google/Apple/Facebook y el magic link quedan visibles pero deshabilitados: los endpoints no existen todavía en el API (fase 1 de odd/tasks/email-automation.md). Build AOT verde.",
-      "previewUrl": "http://127.0.0.1:4301/login"
+      "sentAt": "2026-11-14T00:51:57.917Z",
+      "startedAt": "2026-11-14T00:57:34.604Z",
+      "implementedAt": null,
+      "note": "Implementando el artboard en el stack real: fila «Mantener sesión» + «Olvidé mi contraseña», comportamiento real del remember (localStorage vs sessionStorage), línea de acceso sin contraseña y pie legal, sobre los tokens del design system. La estructura de accesos y el formulario que toma el panel ya están en PR #57."
     }
   }
 }
