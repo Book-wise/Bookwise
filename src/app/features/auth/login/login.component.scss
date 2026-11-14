@@ -96,15 +96,14 @@
 
 .providers {
   display: grid;
-  /* Icono solo, los tres en una línea: con etiqueta de texto ocupaban tres filas
-     y se comían el alto del formulario (pedido del usuario, S2). */
-  grid-template-columns: repeat(3, 1fr);
   gap: 0.625rem;
 }
 
 .provider {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
   height: 48px;
   border-radius: 12px;
   border: 1px solid var(--surface-border, #e5e7eb);
@@ -141,6 +140,46 @@
     background: #1877f2;
     border-color: #1877f2;
     color: #fff;
+  }
+
+  // Cuarto camino: el correo es el camino por defecto, así que lleva el CTA de
+  // marca y abre el formulario en el lugar.
+  &.email {
+    background: var(--bw-300, #046af4);
+    border-color: var(--bw-300, #046af4);
+    color: var(--bw-text-on-brand, #fff);
+
+    &:hover:not(:disabled) {
+      background: var(--bw-500, #0b3d95);
+      border-color: var(--bw-500, #0b3d95);
+    }
+  }
+}
+
+// El formulario nace plegado: aparece cuando se elige el camino del correo.
+.form-slot {
+  margin-top: 1.125rem;
+  animation: form-reveal 0.18s ease both;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+@keyframes form-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-slot {
+    animation: none;
   }
 }
 

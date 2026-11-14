@@ -8,15 +8,13 @@ import { AuthService } from '@services/auth.service';
 
 /**
  * Render-level tests for the login entry hierarchy taken from the artboard
- * `design/login/01-split-brand.html`. The identity providers and the
- * passwordless entry are rendered **disabled on purpose**: their endpoints
- * (`POST /auth/magic-link` and the OAuth callbacks) do not exist in the API
- * yet, and a button that fails is worse than one that says it is coming. These
- * tests pin that: if someone wires the endpoints they must also flip the
- * controls, and if someone removes the guard the note must go with it.
+ * `design/login/01-split-brand.html`: cuatro caminos de entrada — Google, Apple,
+ * Facebook y correo — y el formulario de correo **plegado** hasta que se elige
+ * ese camino.
  *
- * The email/password path is untouched by the redesign, so it keeps its own
- * guard here: submitting still calls POST /auth/login with the typed values.
+ * Los tres proveedores de identidad se renderizan deshabilitados a propósito:
+ * los endpoints OAuth no existen todavía en el API y un botón que falla es peor
+ * que uno que avisa. El camino del correo sí funciona y despliega el formulario.
  */
 describe('LoginComponent', () => {
   let authApi: { login: ReturnType<typeof vi.fn> };
@@ -44,50 +42,68 @@ describe('LoginComponent', () => {
     return fixture;
   };
 
+  const emailEntry = (el: HTMLElement) =>
+    el.querySelector<HTMLButtonElement>('.provider.email') as HTMLButtonElement;
+
+  const emailSlot = (el: HTMLElement) => el.querySelector<HTMLElement>('#email-form') as HTMLElement;
+
   beforeEach(() => {
     authApi = { login: vi.fn(() => of(authResponse)) };
   });
 
-  describe('pending entry paths', () => {
-    it('renders the three identity providers disabled with the pending note', async () => {
+  describe('entry paths', () => {
+    it('renders four full-width entries with visible text', async () => {
       const fixture = await mount();
       const el = fixture.nativeElement as HTMLElement;
 
       const providers = Array.from(el.querySelectorAll<HTMLButtonElement>('.providers button'));
-      expect(providers.length).toBe(3);
-      expect(providers.every((b) => b.disabled)).toBe(true);
-
-      const note = el.querySelector('#login-providers-pending');
-      expect(note?.textContent).toContain('próximamente');
-    });
-
-    it('keeps each provider button perceivable when it renders icon-only', async () => {
-      const fixture = await mount();
-      const el = fixture.nativeElement as HTMLElement;
-
-      const providers = Array.from(el.querySelectorAll<HTMLButtonElement>('.providers button'));
-
-      // Sin texto visible, la etiqueta accesible es lo único que queda: si alguien
-      // vuelve a los botones con texto, este test lo deja pasar, pero si los deja
-      // icon-only sin `aria-label` falla.
-      expect(providers.map((b) => b.getAttribute('aria-label'))).toEqual([
+      expect(providers.length).toBe(4);
+      expect(providers.map((b) => b.textContent?.trim())).toEqual([
         'Continuar con Google',
         'Continuar con Apple',
         'Continuar con Facebook',
+        'Continuar con el correo',
       ]);
-      expect(providers.every((b) => b.textContent?.trim() === '')).toBe(true);
     });
 
-    it('renders the passwordless entry disabled with its own pending note', async () => {
+    it('keeps the three OAuth providers disabled with the pending note', async () => {
       const fixture = await mount();
       const el = fixture.nativeElement as HTMLElement;
 
-      const magic = el.querySelector<HTMLButtonElement>('.magic-link');
-      expect(magic).toBeTruthy();
-      expect(magic!.disabled).toBe(true);
+      const oauth = Array.from(el.querySelectorAll<HTMLButtonElement>('.providers button')).slice(0, 3);
+      expect(oauth.every((b) => b.disabled)).toBe(true);
+      expect(el.querySelector('#login-providers-pending')?.textContent).toContain('próximamente');
+    });
 
-      const note = el.querySelector('#login-magic-pending');
-      expect(note?.textContent).toContain('sin contraseña');
+    it('leaves the email entry enabled because it does not depend on the API', async () => {
+      const fixture = await mount();
+      expect(emailEntry(fixture.nativeElement as HTMLElement).disabled).toBe(false);
+    });
+  });
+
+  describe('email form reveal', () => {
+    it('starts collapsed and opens when the email entry is chosen', async () => {
+      const fixture = await mount();
+      const el = fixture.nativeElement as HTMLElement;
+
+      expect(emailSlot(el).hidden).toBe(true);
+      expect(emailEntry(el).getAttribute('aria-expanded')).toBe('false');
+
+      emailEntry(el).click();
+      fixture.detectChanges();
+
+      expect(emailSlot(el).hidden).toBe(false);
+      expect(emailEntry(el).getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('moves the focus to the email field when it opens', async () => {
+      const fixture = await mount();
+      const el = fixture.nativeElement as HTMLElement;
+
+      emailEntry(el).click();
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(el.querySelector('#email'));
     });
   });
 
@@ -96,6 +112,7 @@ describe('LoginComponent', () => {
       const fixture = await mount();
       const component = fixture.componentInstance;
 
+      component.showEmailForm.set(true);
       component.credentials = { email: 'ana@test.com', password: 'secreto' };
       component.onLogin();
 
