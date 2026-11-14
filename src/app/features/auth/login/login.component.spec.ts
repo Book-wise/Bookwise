@@ -47,6 +47,8 @@ describe('LoginComponent', () => {
 
   const emailSlot = (el: HTMLElement) => el.querySelector<HTMLElement>('#email-form') as HTMLElement;
 
+  const providersView = (el: HTMLElement) => el.querySelector<HTMLElement>('.providers');
+
   beforeEach(() => {
     authApi = { login: vi.fn(() => of(authResponse)) };
   });
@@ -81,19 +83,40 @@ describe('LoginComponent', () => {
     });
   });
 
-  describe('email form reveal', () => {
-    it('starts collapsed and opens when the email entry is chosen', async () => {
+  describe('email form takes over the panel', () => {
+    it('starts collapsed, showing the entry paths only', async () => {
       const fixture = await mount();
       const el = fixture.nativeElement as HTMLElement;
 
       expect(emailSlot(el).hidden).toBe(true);
-      expect(emailEntry(el).getAttribute('aria-expanded')).toBe('false');
+      expect(providersView(el)).toBeTruthy();
+      expect(el.querySelector('.back')).toBeFalsy();
+    });
+
+    it('replaces the entry paths with the form when the email entry is chosen', async () => {
+      const fixture = await mount();
+      const el = fixture.nativeElement as HTMLElement;
 
       emailEntry(el).click();
       fixture.detectChanges();
 
+      // Los accesos se retiran para que el formulario ocupe ese espacio.
+      expect(providersView(el)).toBeFalsy();
       expect(emailSlot(el).hidden).toBe(false);
-      expect(emailEntry(el).getAttribute('aria-expanded')).toBe('true');
+      expect(el.querySelector('.back')?.textContent).toContain('Volver a los otros accesos');
+    });
+
+    it('returns to the entry paths from the back control', async () => {
+      const fixture = await mount();
+      const el = fixture.nativeElement as HTMLElement;
+
+      emailEntry(el).click();
+      fixture.detectChanges();
+      (el.querySelector('.back') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(providersView(el)).toBeTruthy();
+      expect(emailSlot(el).hidden).toBe(true);
     });
 
     it('moves the focus to the email field when it opens', async () => {
@@ -102,6 +125,7 @@ describe('LoginComponent', () => {
 
       emailEntry(el).click();
       fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(document.activeElement).toBe(el.querySelector('#email'));
     });
