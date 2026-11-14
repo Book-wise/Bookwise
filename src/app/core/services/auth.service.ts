@@ -51,12 +51,15 @@ export class AuthService {
     return this._token();
   }
 
-  /** Token persisted in `localStorage` — the cross-tab source of truth. The
-   *  interceptor compares it against the token a failed request actually used
-   *  to tell a rotated (stale) token apart from a genuinely expired session. */
+  /**
+   * Token persisted by the last login. `localStorage` when the user marked
+   * «Mantener sesión» (the cross-tab source of truth), `sessionStorage` when
+   * they did not — that keeps the session for the tab only. The interceptor
+   * compares it against the token a failed request actually used to tell a
+   * rotated (stale) token apart from a genuinely expired session.
+   */
   getStoredToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.readPersisted(this.TOKEN_KEY);
   }
 
   /** Re-syncs the in-memory token from `localStorage` after another tab rotated
@@ -66,28 +69,62 @@ export class AuthService {
   }
 
   private getStoredUser(): User | null {
-    if (typeof window === 'undefined') return null;
-    const stored = localStorage.getItem(this.USER_KEY);
+    const stored = this.readPersisted(this.USER_KEY);
     return stored ? JSON.parse(stored) : null;
   }
 
-  setToken(token: string): void {
+  /** `sessionStorage` first: a non-remembered login wins over a stale local one. */
+  private readPersisted(key: string): string | null {
+    if (typeof window === 'undefined') return null;
+    return sessionStorage.getItem(key) ?? localStorage.getItem(key);
+  }
+
+  /**
+   * Writes the value to the storage the session belongs to and clears the other
+   * one, so a login never leaves a second copy behind (logout, then a
+   * non-remembered login, would otherwise keep resurrecting the old token).
+   */
+  private writePersisted(key: string, value: string | null, remember: boolean): void {
+    if (typeof window === 'undefined') return;
+    const target = remember ? localStorage : sessionStorage;
+    const other = remember ? sessionStorage : localStorage;
+    other.removeItem(key);
+    if (value === null) {
+      target.removeItem(key);
+      return;
+    }
+    target.setItem(key, value);
+  }
+
+  /** A token living in `sessionStorage` means the user did not mark «Mantener sesión». */
+  private get rememberSession(): boolean {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem(this.TOKEN_KEY) === null;
+  }
+
+  setToken(token: string, remember: boolean = this.rememberSession): void {
     this._token.set(token);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.TOKEN_KEY, token);
-    }
+    this.writePersisted(this.TOKEN_KEY, token, remember);
   }
 
-  setUser(user: User): void {
+  setUser(user: User, remember: boolean = this.rememberSession): void {
     this._user.set(user);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    }
+    this.writePersisted(this.USER_KEY, JSON.stringify(user), remember);
   }
 
-  login(token: string, user: User, abilities?: string[], permissions?: string[]): void {
-    this.setToken(token);
-    this.setUser(user);
+  /**
+   * @param remember `false` keeps the session in `sessionStorage` (this tab only),
+   * which is what the unchecked «Mantener sesión» means on the login screen.
+   */
+  login(
+    token: string,
+    user: User,
+    abilities?: string[],
+    permissions?: string[],
+    remember = true,
+  ): void {
+    this.setToken(token, remember);
+    this.setUser(user, remember);
     this._abilities.set(abilities ?? []);
     this._permissions.set(permissions ?? []);
     this.navigateByRole(user.role);
@@ -210,8 +247,9 @@ export class AuthService {
     this._abilities.set([]);
     this._permissions.set([]);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
+      // Both storages: a non-remembered session lives in `sessionStorage`.
+      this.writePersisted(this.TOKEN_KEY, null, true);
+      this.writePersisted(this.USER_KEY, null, true);
     }
     // Limpia TODAS las preferencias tenant-scoped del usuario (sucursal +
     // profesional, incl. la clave legacy user-only) para que no queden restos

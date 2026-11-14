@@ -176,6 +176,14 @@ export const EN: Record<string, string> = {
   'auth.login.provider_email': 'Continue with email',
   'auth.login.providers_pending': 'Google, Apple and Facebook sign-in is coming soon.',
   'auth.login.magic_link_pending': 'Passwordless sign-in',
+  'auth.login.remember': 'Keep me signed in',
+  'auth.login.passwordless_ask': 'Rather not use a password?',
+  'auth.login.passwordless_cta': 'Email me a sign-in link',
+  'auth.login.legal_accept': 'By signing in you accept the',
+  'auth.login.legal_terms': 'Terms of service',
+  'auth.login.legal_and': 'and the',
+  'auth.login.legal_privacy': 'Privacy policy',
+  'auth.login.legal_help': "Can't get in? Write to",
   'auth.login.magic_link_note': 'Coming soon: sign in with a link sent to your email, no password.',
 
   // Auth — forgot password (public)
