@@ -18,6 +18,7 @@ import { AuthService } from '@services/auth.service';
  */
 describe('LoginComponent', () => {
   let authApi: { login: ReturnType<typeof vi.fn> };
+  let auth: { login: ReturnType<typeof vi.fn> };
 
   const authResponse = {
     token: 'tok_123',
@@ -33,7 +34,7 @@ describe('LoginComponent', () => {
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: AuthApiService, useValue: authApi },
-        { provide: AuthService, useValue: { login: vi.fn() } },
+        { provide: AuthService, useValue: auth },
       ],
     }).compileComponents();
 
@@ -51,6 +52,7 @@ describe('LoginComponent', () => {
 
   beforeEach(() => {
     authApi = { login: vi.fn(() => of(authResponse)) };
+    auth = { login: vi.fn() };
   });
 
   describe('entry paths', () => {
@@ -142,6 +144,50 @@ describe('LoginComponent', () => {
 
       expect(authApi.login).toHaveBeenCalledTimes(1);
       expect(authApi.login).toHaveBeenCalledWith({ email: 'ana@test.com', password: 'secreto' });
+      // «Mantener sesión» viene marcado por defecto (artboard): la sesión persiste.
+      expect(auth.login).toHaveBeenCalledWith('tok_123', authResponse.user, [], [], true);
+    });
+
+    it('forwards an unchecked «Mantener sesión» so the session stays tab-only', async () => {
+      const fixture = await mount();
+      const component = fixture.componentInstance;
+
+      component.showEmailForm.set(true);
+      component.remember = false;
+      component.credentials = { email: 'ana@test.com', password: 'secreto' };
+      component.onLogin();
+
+      expect(auth.login).toHaveBeenCalledWith('tok_123', authResponse.user, [], [], false);
+    });
+  });
+
+  describe('artboard form details', () => {
+    it('keeps «Mantener sesión» and «Olvidé mi contraseña» in the same row inside the form', async () => {
+      const fixture = await mount();
+      const component = fixture.componentInstance;
+      component.showEmailForm.set(true);
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const row = el.querySelector('.form-row');
+      expect(row).toBeTruthy();
+      expect(row!.textContent).toContain('Mantener sesión');
+      expect(row!.querySelector('a')?.getAttribute('href')).toBe('/forgot-password');
+      expect(component.remember).toBe(true);
+    });
+
+    it('renders the passwordless line and the legal footer outside the form', async () => {
+      const fixture = await mount();
+      const el = fixture.nativeElement as HTMLElement;
+
+      expect(el.querySelector('.passwordless')?.textContent).toContain('enlace de acceso');
+      const legal = el.querySelector('.legal');
+      expect(legal).toBeTruthy();
+      expect(legal!.textContent).toContain('Términos del servicio');
+      expect(legal!.textContent).toContain('Política de privacidad');
+      expect(legal!.querySelector('a[href^="mailto:"]')?.getAttribute('href')).toBe(
+        'mailto:soporte@bookwise.cl',
+      );
     });
   });
 });

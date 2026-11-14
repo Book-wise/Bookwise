@@ -175,7 +175,14 @@ export const ES: Record<string, string> = {
   'auth.login.back': 'Volver a los otros accesos',
   'auth.login.provider_email': 'Continuar con el correo',
   'auth.login.providers_pending': 'El ingreso con Google, Apple y Facebook estará disponible próximamente.',
-  'auth.login.magic_link_pending': 'Acceso sin contraseña',
+  'auth.login.remember': 'Mantener sesión',
+  'auth.login.passwordless_ask': '¿Prefieres no usar contraseña?',
+  'auth.login.passwordless_cta': 'Enviarme un enlace de acceso',
+  'auth.login.legal_accept': 'Al ingresar aceptas los',
+  'auth.login.legal_terms': 'Términos del servicio',
+  'auth.login.legal_and': 'y la',
+  'auth.login.legal_privacy': 'Política de privacidad',
+  'auth.login.legal_help': '¿No puedes entrar? Escríbenos a',
   'auth.login.magic_link_note': 'Próximamente: entrar con un enlace enviado a tu correo, sin contraseña.',
 
   // Auth — forgot password (público)
