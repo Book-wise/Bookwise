@@ -62,8 +62,8 @@
   .card h2{margin:0 0 6px;font-size:26px;letter-spacing:-.4px;font-weight:600}
   .card .sub{margin:0 0 26px;color:var(--muted);font-size:15px}
 
-  .providers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .provider{display:grid;place-items:center;height:48px;
+  .providers{display:grid;gap:10px}
+  .provider{display:flex;align-items:center;justify-content:center;gap:10px;height:48px;
             border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);
             font:inherit;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;
             transition:background .16s ease, border-color .16s ease, transform .16s ease}
@@ -74,6 +74,18 @@
   .provider.apple:hover{background:#111}
   .provider.facebook{background:#1877F2;border-color:#1877F2;color:#fff}
   .provider.facebook:hover{background:#166FE5;border-color:#166FE5}
+  /* Entrada por correo: es el camino por defecto, así que lleva el CTA de marca
+     y revela el formulario en el lugar (no navega a otra pantalla). */
+  .provider.email{background:var(--bw-300);border-color:var(--bw-300);color:var(--bw-text-on-brand)}
+  .provider.email:hover{background:var(--bw-500);border-color:var(--bw-500)}
+  .provider.email svg{stroke:currentColor}
+  .provider .chev{transition:transform .16s ease;margin-left:auto}
+  .provider[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .form-slot{margin-top:18px}
+  .form-slot[hidden]{display:none}
+  .form-slot{animation:reveal .18s ease both}
+  @keyframes reveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.form-slot{animation:none}.provider .chev{transition:none}}
   /* Etiqueta accesible: el botón es sólo icono (los tres caen en una línea). */
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
            clip-path:inset(50%);white-space:nowrap;border:0}
@@ -170,32 +182,39 @@
       <p class="sub">Usa tu correo de la clínica o la cuenta con la que ya trabajas.</p>
 
       <div class="providers">
-        <button class="provider" type="button" aria-label="Continuar con Google" title="Continuar con Google">
+        <button class="provider" type="button">
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
             <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
           </svg>
-          <span class="sr-only">Continuar con Google</span>
+          Continuar con Google
         </button>
-        <button class="provider apple" type="button" aria-label="Continuar con Apple" title="Continuar con Apple">
+        <button class="provider apple" type="button">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
             <path d="M16.36 12.72c-.02-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.79-3.33-1.81-1.42-.14-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79-1.55.02-2.98.9-3.78 2.28-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.35 2.88 2.31 1.16-.05 1.6-.75 3-.75s1.79.75 3.01.73c1.24-.02 2.03-1.13 2.79-2.25.88-1.29 1.24-2.54 1.26-2.6-.03-.01-2.42-.93-2.44-3.7zM14.1 5.98c.64-.77 1.07-1.85.95-2.92-.95.04-2.1.63-2.76 1.4-.61.7-1.12 1.79-.98 2.85 1.06.08 2.15-.54 2.79-1.33z"/>
           </svg>
-          <span class="sr-only">Continuar con Apple</span>
+          Continuar con Apple
         </button>
-        <button class="provider facebook" type="button" aria-label="Continuar con Facebook" title="Continuar con Facebook">
+        <button class="provider facebook" type="button">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
             <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.03 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.27h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07z"/>
           </svg>
-          <span class="sr-only">Continuar con Facebook</span>
+          Continuar con Facebook
+        </button>
+        <!-- Cuarto camino: abre el formulario de correo en el lugar. -->
+        <button class="provider email" type="button" id="email-entry" aria-expanded="false" aria-controls="email-form">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+          </svg>
+          Continuar con el correo
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
       </div>
 
-      <div class="divider">o con tu correo</div>
-
-      <form action="#" method="post">
+      <div class="form-slot" id="email-form" hidden>
+        <form action="#" method="post">
         <div class="field">
           <label for="email">Correo</label>
           <input class="control" id="email" name="email" type="email" autocomplete="email"
@@ -211,7 +230,8 @@
           <a href="#">Olvidé mi contraseña</a>
         </div>
         <button class="btn" type="submit">Ingresar</button>
-      </form>
+        </form>
+      </div>
 
       <p class="alt">¿Prefieres no usar contraseña? <a href="#">Enviarme un enlace de acceso</a></p>
       <p class="legal">Al ingresar aceptas los <a href="#">Términos del servicio</a> y la <a href="#">Política de privacidad</a>.<br>
@@ -219,5 +239,20 @@
     </div>
   </section>
 </main>
+<script>
+  // Cuarto camino: «Continuar con el correo» revela el formulario en el lugar.
+  const entry = document.getElementById('email-entry');
+  const slot = document.getElementById('email-form');
+
+  entry.addEventListener('click', () => {
+    const open = entry.getAttribute('aria-expanded') === 'true';
+    entry.setAttribute('aria-expanded', String(!open));
+    slot.hidden = open;
+    if (!open) {
+      const input = slot.querySelector('#email');
+      if (input) input.focus();
+    }
+  });
+</script>
 </body>
 </html>
