@@ -73,16 +73,31 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   readonly notifOpen = signal(false);
 
-  /** Backend flags grouped by channel — the 5-key contract, 1:1. */
+  /** Backend flags grouped by channel — the 6-flag contract plus the master switch, 1:1. */
   readonly emailNotificationFlags: (keyof NotificationValues)[] = [
     'email_new_booking',
     'email_booking_confirmation',
     'email_booking_cancellation',
+    'email_reminder',
   ];
   readonly whatsappNotificationFlags: (keyof NotificationValues)[] = [
     'whatsapp_reminder',
     'whatsapp_cancellation_confirmation',
   ];
+
+  /** Flags the API may omit that default to ON (T2 contract: `email_reminder`). */
+  private static readonly DEFAULT_ON_FLAGS: readonly (keyof NotificationValues)[] = ['email_reminder'];
+
+  /**
+   * Master switch: `notification_prefs.notifications_enabled` first, then the client-level
+   * `notifications_enabled`, then `true` — so an API that has not shipped the additive key yet
+   * keeps sending notifications.
+   */
+  readonly masterEnabled = computed(() => {
+    const prefs = this.detailStore.notifications();
+    if (prefs.notifications_enabled !== undefined) return prefs.notifications_enabled;
+    return this.client().notifications_enabled ?? true;
+  });
 
   // ── Computed: identity ────────────────────────────────────────────────────────
 
@@ -220,11 +235,29 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   }
 
   notificationValue(key: keyof NotificationValues): boolean {
-    return this.detailStore.notifications()[key];
+    const stored = this.detailStore.notifications()[key];
+    return stored ?? PatientCardComponent.DEFAULT_ON_FLAGS.includes(key);
   }
 
   setNotification(key: keyof NotificationValues, value: boolean): void {
     this.detailStore.setNotification(key, value);
+  }
+
+  /**
+   * Master switch: only `notifications_enabled` travels to the API. Turning it off never rewrites
+   * the six channel flags, so their state survives a power cycle (S3).
+   */
+  setMaster(value: boolean): void {
+    this.detailStore.setNotification('notifications_enabled', value);
+  }
+
+  /** «N de M activos» counter for a channel group, counting stored + defaulted flags. */
+  groupActiveCount(flags: (keyof NotificationValues)[]): string {
+    const active = flags.filter(flag => this.notificationValue(flag)).length;
+    return this.lang.t('patient_card.notif.count', {
+      active: String(active),
+      total: String(flags.length),
+    });
   }
 
   formatBookingTime(iso: string): string {

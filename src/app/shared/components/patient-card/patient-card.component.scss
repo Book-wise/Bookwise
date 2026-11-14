@@ -166,7 +166,50 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+
+  /* Master off: the six flags stay readable but disabled — their state is never cleared. */
+  &--off {
+    opacity: 0.55;
+  }
 }
+
+.bw-pc__notif-master {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 1rem 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--bw-50, var(--surface-50, #fafafa));
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-md, 8px);
+}
+
+.bw-pc__notif-master-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.bw-pc__notif-master-label {
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-color);
+}
+
+.bw-pc__notif-master-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--text-color-secondary);
+
+  strong {
+    color: var(--text-color);
+    font-weight: var(--bw-weight-medium);
+  }
+}
+
 
 .bw-pc__notif-group {
   display: flex;
@@ -175,12 +218,26 @@
 }
 
 .bw-pc__notif-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.7rem;
   font-weight: var(--bw-weight-semibold);
   color: var(--text-color-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding-bottom: 0.125rem;
+}
+
+.bw-pc__notif-group-count {
+  font-size: 0.7rem;
+  font-weight: var(--bw-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-color-secondary);
+  padding: 1px 0.375rem;
+  background: var(--surface-100, #f1f5f9);
+  border-radius: 999px;
 }
 
 .bw-pc__notif-flag {
@@ -196,11 +253,23 @@
   }
 }
 
+.bw-pc__notif-flag-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
 .bw-pc__notif-flag-label {
   font-size: var(--bw-font-table);
   color: var(--text-color);
-  flex: 1;
-  min-width: 0;
+}
+
+.bw-pc__notif-flag-hint {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--text-color-secondary);
 }
 
 .bw-pc__notif-flag-actions {

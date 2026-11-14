@@ -133,15 +133,23 @@ export interface ServicePack {
 }
 
 /**
- * Per-client notification preferences — 1:1 with the backend contract (5 flags).
+ * Per-client notification preferences — 1:1 with the backend contract.
  * Sending is handled by the backend (carlitox + cron); the frontend only reads/writes.
+ *
+ * `notifications_enabled` is the master switch (T3): additive on the API, falls back to
+ * `Client.notifications_enabled` when absent. `email_reminder` is the 6th flag (T2): additive too,
+ * defaults to `true` so existing behaviour does not change.
  */
 export interface NotificationPrefs {
   email_new_booking: boolean;
   email_booking_confirmation: boolean;
   email_booking_cancellation: boolean;
+  /** Email reminder 24 h and 30 min before the booking. Defaults to `true`. */
+  email_reminder?: boolean;
   whatsapp_reminder: boolean;
   whatsapp_cancellation_confirmation: boolean;
+  /** Master switch. When `false` nothing is sent except account security notices. */
+  notifications_enabled?: boolean;
 }
 
 export interface Client {
