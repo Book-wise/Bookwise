@@ -117,14 +117,17 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | # | Tarea | Specs | Estado |
 |---|---|---|---|
 | T1 | Inventario verificado de disparadores, pantallas y preferencias (este documento) | S1, S2 | ✅ hecho |
-| T2 | Modelo de preferencia de recordatorios: **`email_reminder` como 6º flag, default `true`** (decidido) | S3 | ✅ decidido, falta contrato publicado |
-| T3 | Switch maestro **visible**: `notifications_enabled` pasa a `notification_prefs`, apagado no sale nada salvo alertas de seguridad; los 6 flags sólo aplican encendido | S3 | ⏳ pendiente (contrato + UI) |
-| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile` (decisión del mantenedor): una sola superficie, la tarjeta del cliente | S3 | ⏳ pendiente (decisión tomada) |
+| T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ cerrado |
+| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado · ⏳ UI |
+| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ⏳ pendiente (decisión tomada) |
 | T5 | Diseñar e implementar magic link (pantalla + estado «revisa tu correo» + consumo de token) | S4 | ⏳ pendiente (no existe) |
 | T6 | Diseñar e implementar login social Google/Apple/Facebook | S4 | ⏳ pendiente (no existe) |
 | T7 | Botón «reenviar verificación»: el endpoint lo hace el API (`POST /auth/verify-email/resend`, S9/T20, rate limit por usuario); el front espera que exista | S1 | ⏳ bloqueado por el API (no diseñar a ciegas) |
 | T8 | ~~Recordatorio de sesión de pack con `remaining_sessions`~~ — **descartada**: el correo lo renderiza el API (Blade) leyendo el `client_pack`; el front no participa ni recibe ese payload. Sólo aplica si algún día hay estado de recordatorio en pantalla | S6 | ⛔ descartada |
-| T9 | Cruzar este inventario con el del API y cerrar diferencias | S1 | ⏳ pendiente |
+| T9 | Cruzar este inventario con el del API y cerrar diferencias | S1 | ✅ cerrado (L3) |
+| T11 | Diseñar la tarjeta de preferencias: maestro + 6 flags por canal | S3 | ✅ `design/preferencias-cliente/` (3 direcciones) |
+| T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ⏳ pendiente (tras elegir dirección) |
+| T13 | Quitar la card de `/admin/profile` | S3 | ⏳ pendiente |
 | T10 | Mapear el onboarding existente contra lo que el API espera de «cuenta completa» | S5 | ✅ inventariado acá |
 
 ## Log
@@ -157,3 +160,13 @@ público, así que ningún email al cliente se origina en una sesión de cliente
   `POST /auth/verify-email/resend` con rate limit) y el front no lo diseña a ciegas. Magic link: fuente
   visual = `design/login/02-magic-link-first.html` del repo del API (commit `b56db72`), con estado
   «revisa tu correo» y contador de reenvío de 30 s.
+
+- **L4 (2026-11-13, diseño de la tarjeta de preferencias):** con el contrato cerrado se diseñaron tres
+  direcciones en `design/preferencias-cliente/`: `01-maestro-y-canales.html` (maestro arriba y un grupo
+  por canal: Email con los 4 flags, WhatsApp con los 2), `02-lista-plana-con-chips.html` (lista única de
+  seis filas con el canal como chip) y `03-acordeon-por-canal.html` (acordeones con contador por canal,
+  para diálogo angosto). Las tres implementan la semántica del maestro: apagado deshabilita los seis
+  flags sin borrar su estado y la nota dice que los avisos de seguridad de la cuenta se envían igual.
+  Copy nuevo propuesto para el 6º flag: «Recordatorio de reserva» / «Email 24 h y 30 min antes de la
+  reserva.» (el de WhatsApp ya existía y su tooltip ya decía «WhatsApp programado 24 h y 30 min»).
+  Ninguna toca la card de `/admin/profile`: su eliminación es T13.

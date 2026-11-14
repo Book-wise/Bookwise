@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preferencias del cliente — maestro y canales</title>
+<style>
+  :root{
+    /* Paleta y superficies (src/styles/_tokens.scss) */
+    --bw-50:#f0f6ff; --bw-100:#dbeafe; --bw-200:#60a7f0; --bw-300:#046af4;
+    --bw-500:#0b3d95; --bw-700:#0a2862; --bw-900:#012663;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-success:#22c55e; --bw-status-cancelado:#E3E7ED;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51;
+    /* Tipografía */
+    --font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem;
+    --bw-text-base:1rem; --bw-text-lg:1.125rem; --bw-text-xl:1.25rem;
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    /* Espaciado, radio, sombras, movimiento */
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-transition-fast:.15s; --bw-transition-base:.2s;
+    --bw-control-height:2.5rem;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:var(--bw-space-xl);background:var(--surface-ground);color:var(--text-color);
+       font-family:var(--font-family);font-size:var(--bw-text-base);line-height:1.5}
+  .stage{max-width:1120px;margin:0 auto}
+  .caption{font-size:var(--bw-text-xs);color:var(--text-color-secondary);margin:0 0 var(--bw-space-md);
+           text-transform:uppercase;letter-spacing:var(--bw-tracking-overline);font-weight:var(--bw-weight-semibold)}
+
+  /* Shell del diálogo «Detalle del cliente» */
+  .dialog{background:var(--surface-card);border:1px solid var(--surface-border);border-radius:var(--bw-radius-lg);
+          box-shadow:var(--bw-shadow-popover);overflow:hidden}
+  .dialog__head{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-lg);
+                border-bottom:1px solid var(--surface-border)}
+  .avatar{width:52px;height:52px;border-radius:var(--bw-radius-pill);display:grid;place-items:center;
+          background:var(--bw-100);color:var(--bw-700);font-weight:var(--bw-weight-semibold);font-size:var(--bw-text-lg)}
+  .who h1{margin:0;font-size:var(--bw-text-xl);font-weight:var(--bw-weight-semibold);letter-spacing:var(--bw-tracking-tight)}
+  .who p{margin:2px 0 0;font-size:var(--bw-text-sm);color:var(--text-color-secondary)}
+  .head__meta{margin-left:auto;display:flex;gap:var(--bw-space-sm);align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:var(--bw-space-xs);font-size:var(--bw-text-sm);
+        font-weight:var(--bw-weight-medium);padding:.15rem .55rem;border-radius:var(--bw-radius-pill);
+        color:var(--bw-chip-text,var(--bw-700));background:color-mix(in srgb,var(--bw-chip-color,var(--bw-100)) 18%,transparent)}
+  .tabs{display:flex;gap:var(--bw-space-lg);padding:0 var(--bw-space-lg);border-bottom:1px solid var(--surface-border)}
+  .tab{padding:var(--bw-space-md) 0;font-size:var(--bw-text-sm);color:var(--text-color-secondary);
+       border-bottom:2px solid transparent}
+  .tab[aria-selected="true"]{color:var(--bw-500);border-color:var(--bw-300);font-weight:var(--bw-weight-semibold)}
+  .dialog__body{padding:var(--bw-space-lg)}
+
+  /* Tarjeta de notificaciones (el objeto del diseño) */
+  .card{border:1px solid var(--surface-border);border-radius:var(--bw-radius-md);box-shadow:var(--bw-shadow-card);
+        background:var(--surface-card)}
+  .card__head{display:flex;gap:var(--bw-space-md);align-items:flex-start;padding:var(--bw-space-md) var(--bw-space-lg);
+              border-bottom:1px solid var(--surface-border)}
+  .card__title{margin:0;font-size:var(--bw-text-lg);font-weight:var(--bw-weight-semibold)}
+  .card__sub{margin:2px 0 0;font-size:var(--bw-text-sm);color:var(--text-color-secondary)}
+  .card__body{padding:var(--bw-space-lg)}
+
+  /* Maestro */
+  .master{display:flex;gap:var(--bw-space-md);align-items:flex-start;padding:var(--bw-space-md);
+          background:var(--bw-50);border:1px solid var(--bw-100);border-radius:var(--bw-radius-md)}
+  .master__text{flex:1;min-width:0}
+  .master__label{font-weight:var(--bw-weight-semibold);font-size:var(--bw-text-base)}
+  .master__note{margin:2px 0 0;font-size:var(--bw-text-sm);color:var(--text-color-secondary)}
+  .master__note strong{color:var(--text-label);font-weight:var(--bw-weight-medium)}
+
+  /* Switch accesible */
+  .switch{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;cursor:pointer}
+  .switch input{position:absolute;opacity:0;width:44px;height:24px;margin:0;cursor:pointer}
+  .switch .track{width:44px;height:24px;border-radius:var(--bw-radius-pill);background:#cbd5e1;
+                 transition:background var(--bw-transition-base);position:relative}
+  .switch .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+                        background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform var(--bw-transition-base)}
+  .switch input:checked + .track{background:var(--bw-300)}
+  .switch input:checked + .track::after{transform:translateX(20px)}
+  .switch input:focus-visible + .track{outline:2px solid var(--bw-500);outline-offset:2px}
+  .switch input:disabled + .track{opacity:.45}
+
+  /* Grupos por canal */
+  .groups{display:grid;gap:var(--bw-space-lg);margin-top:var(--bw-space-lg)}
+  .group__title{display:flex;align-items:center;gap:var(--bw-space-sm);margin:0 0 var(--bw-space-sm);
+                font-size:var(--bw-text-2xs);letter-spacing:var(--bw-tracking-overline);
+                text-transform:uppercase;color:var(--text-color-secondary);font-weight:var(--bw-weight-semibold)}
+  .group__title .count{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:var(--bw-weight-regular);
+                       color:var(--text-color-secondary)}
+  .rows{border:1px solid var(--surface-border);border-radius:var(--bw-radius-md);overflow:hidden}
+  .row{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-sm) var(--bw-space-md);
+       background:var(--surface-card)}
+  .row + .row{border-top:1px solid var(--surface-border)}
+  .row__text{flex:1;min-width:0}
+  .row__label{display:block;font-size:var(--bw-text-sm);font-weight:var(--bw-weight-medium);color:var(--text-label)}
+  .row__hint{display:block;font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+  .row:hover{background:var(--bw-surface-muted)}
+  .off .row__label,.off .row__hint{opacity:.55}
+
+  /* Nota de seguridad / pie */
+  .foot{display:flex;gap:var(--bw-space-sm);align-items:flex-start;margin-top:var(--bw-space-lg);
+        padding:var(--bw-space-sm) var(--bw-space-md);border-radius:var(--bw-radius-md);
+        background:var(--bw-surface-muted);font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+  .foot svg{flex:0 0 auto;margin-top:1px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <p class="caption">Dirección 01 — maestro arriba, un grupo por canal</p>
+
+  <div class="dialog">
+    <div class="dialog__head">
+      <div class="avatar" aria-hidden="true">CR</div>
+      <div class="who">
+        <h1>Camila Rojas Fuentes</h1>
+        <p>14.582.301-7 · camila.rojas@gmail.com · +56 9 8871 4410</p>
+      </div>
+      <div class="head__meta">
+        <span class="chip" style="--bw-chip-color:var(--bw-status-confirmado)">12 reservas</span>
+        <span class="chip" style="--bw-chip-color:var(--bw-status-reservado)">Activa</span>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Secciones del cliente">
+      <span class="tab" role="tab" aria-selected="false">Resumen</span>
+      <span class="tab" role="tab" aria-selected="false">Reservas</span>
+      <span class="tab" role="tab" aria-selected="false">Fichas clínicas</span>
+      <span class="tab" role="tab" aria-selected="true">Notificaciones</span>
+    </div>
+
+    <div class="dialog__body">
+      <section class="card" aria-labelledby="notif-title">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title" id="notif-title">Notificaciones automáticas de cita y recordatorios</h2>
+            <p class="card__sub">Vía Email y WhatsApp. Se aplican a las reservas de Camila.</p>
+          </div>
+        </div>
+
+        <div class="card__body">
+          <!-- Maestro -->
+          <div class="master">
+            <div class="master__text">
+              <span class="master__label" id="master-label">Recibir notificaciones</span>
+              <p class="master__note">
+                Apagado, Camila no recibe nada sobre sus reservas.
+                <strong>Siempre se envían los avisos de seguridad de su cuenta.</strong>
+              </p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" role="switch" checked aria-labelledby="master-label">
+              <span class="track" aria-hidden="true"></span>
+            </label>
+          </div>
+
+          <div class="groups" id="groups">
+            <div class="group">
+              <p class="group__title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+                Email <span class="count">4 de 4 activos</span>
+              </p>
+              <div class="rows">
+                <div class="row">
+                  <span class="row__text">
+                    <label class="row__label" for="em-new">Nueva reserva</label>
+                    <span class="row__hint">Aviso inmediato cuando agenda una hora.</span>
+                  </span>
+                  <label class="switch"><input id="em-new" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+                </div>
+                <div class="row">
+                  <span class="row__text">
+                    <label class="row__label" for="em-conf">Confirmación de reserva</label>
+                    <span class="row__hint">Cuando la clínica confirma la hora.</span>
+                  </span>
+                  <label class="switch"><input id="em-conf" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+                </div>
+                <div class="row">
+                  <span class="row__text">
+                    <label class="row__label" for="em-cancel">Cancelación de reserva</label>
+                    <span class="row__hint">Si la reserva se cancela.</span>
+                  </span>
+                  <label class="switch"><input id="em-cancel" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+                </div>
+                <div class="row">
+                  <span class="row__text">
+                    <label class="row__label" for="em-reminder">Recordatorio de reserva</label>
+                    <span class="row__hint">Email 24 h y 30 min antes de la reserva.</span>
+                  </span>
+                  <label class="switch"><input id="em-reminder" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="group">
+              <p class="group__title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.5-.6-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6 0-1.2.6-1.8.9-2.1.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.3 0 .5l-.4.5c-.1.1-.3.3-.1.6.2.3.7 1.1 1.5 1.8 1 .9 1.6 1.1 1.9 1.2.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.5-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1.4Z"/></svg>
+                WhatsApp <span class="count">2 de 2 activos</span>
+              </p>
+              <div class="rows">
+                <div class="row">
+                  <span class="row__text">
+                    <label class="row__label" for="wa-reminder">Recordatorio de reserva</label>
+                    <span class="row__hint">WhatsApp 24 h y 30 min antes de la reserva.</span>
+                  </span>
+                  <label class="switch"><input id="wa-reminder" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+                </div>
+                <div class="row">
+                  <span class="row__text">
+                    <label class="row__label" for="wa-cancel">Cancelación exitosa</label>
+                    <span class="row__hint">Confirmación por WhatsApp al cancelar.</span>
+                  </span>
+                  <label class="switch"><input id="wa-cancel" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="foot">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg>
+            Los cambios se guardan por cliente y se aplican a las próximas reservas. Los recordatorios salen 24 h y 30 min antes.
+          </p>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+  // El maestro apaga los seis flags sin borrar su estado: al volver a encender,
+  // cada cliente recupera lo que tenía tildado.
+  const master = document.querySelector('.master input');
+  const groups = document.getElementById('groups');
+  const flags = [...groups.querySelectorAll('input[type=checkbox]')];
+  const snapshot = flags.map((f) => f.checked);
+
+  master.addEventListener('change', () => {
+    groups.classList.toggle('off', !master.checked);
+    flags.forEach((f, i) => {
+      f.disabled = !master.checked;
+      if (master.checked) f.checked = snapshot[i];
+    });
+  });
+
+  // Contadores por canal.
+  groups.querySelectorAll('.group').forEach((g) => {
+    const inputs = [...g.querySelectorAll('input[type=checkbox]')];
+    const count = g.querySelector('.count');
+    const update = () => {
+      const on = inputs.filter((i) => i.checked).length;
+      count.textContent = `${on} de ${inputs.length} activos`;
+    };
+    inputs.forEach((i) => i.addEventListener('change', update));
+    update();
+  });
+</script>
+</body>
+</html>

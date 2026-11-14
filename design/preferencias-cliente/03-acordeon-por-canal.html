@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preferencias del cliente — acordeón por canal</title>
+<style>
+  :root{
+    --bw-50:#f0f6ff; --bw-100:#dbeafe; --bw-200:#60a7f0; --bw-300:#046af4;
+    --bw-500:#0b3d95; --bw-700:#0a2862; --bw-900:#012663;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-label:#374151;
+    --bw-status-pendiente:#FD8991; --bw-status-confirmado:#ECBE51;
+    --font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem;
+    --bw-text-base:1rem; --bw-text-lg:1.125rem; --bw-text-xl:1.25rem;
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-transition-base:.2s;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:var(--bw-space-xl);background:var(--surface-ground);color:var(--text-color);
+       font-family:var(--font-family);font-size:var(--bw-text-base);line-height:1.5}
+  .stage{max-width:760px;margin:0 auto}
+  .caption{font-size:var(--bw-text-xs);color:var(--text-color-secondary);margin:0 0 var(--bw-space-md);
+           text-transform:uppercase;letter-spacing:var(--bw-tracking-overline);font-weight:var(--bw-weight-semibold)}
+  .dialog{background:var(--surface-card);border:1px solid var(--surface-border);border-radius:var(--bw-radius-lg);
+          box-shadow:var(--bw-shadow-popover);overflow:hidden}
+  .dialog__head{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-lg);
+                border-bottom:1px solid var(--surface-border)}
+  .avatar{width:44px;height:44px;border-radius:var(--bw-radius-pill);display:grid;place-items:center;
+          background:var(--bw-100);color:var(--bw-700);font-weight:var(--bw-weight-semibold)}
+  .who h1{margin:0;font-size:var(--bw-text-lg);font-weight:var(--bw-weight-semibold);letter-spacing:var(--bw-tracking-tight)}
+  .who p{margin:2px 0 0;font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+  .dialog__body{padding:var(--bw-space-lg)}
+
+  .master{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-md);
+          border:1px solid var(--bw-100);background:var(--bw-50);border-radius:var(--bw-radius-md)}
+  .master__text{flex:1;min-width:0}
+  .master__label{font-weight:var(--bw-weight-semibold);font-size:var(--bw-text-sm)}
+  .master__note{margin:2px 0 0;font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+
+  .acc{margin-top:var(--bw-space-md);display:grid;gap:var(--bw-space-sm)}
+  details{border:1px solid var(--surface-border);border-radius:var(--bw-radius-md);background:var(--surface-card);
+          box-shadow:var(--bw-shadow-card);overflow:hidden}
+  summary{display:flex;align-items:center;gap:var(--bw-space-sm);padding:var(--bw-space-sm) var(--bw-space-md);
+          cursor:pointer;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary:hover{background:var(--bw-surface-muted)}
+  summary:focus-visible{outline:2px solid var(--bw-500);outline-offset:-2px}
+  .ch{display:flex;align-items:center;gap:var(--bw-space-sm);font-size:var(--bw-text-sm);
+      font-weight:var(--bw-weight-medium);color:var(--text-label)}
+  .pill{margin-left:auto;font-size:var(--bw-text-2xs);font-weight:var(--bw-weight-semibold);
+        padding:.2rem .5rem;border-radius:var(--bw-radius-pill);background:var(--bw-50);color:var(--bw-700);
+        border:1px solid var(--bw-100)}
+  .pill[data-empty="true"]{background:#f3f4f6;color:var(--text-color-secondary);border-color:var(--surface-border)}
+  .chev{transition:transform var(--bw-transition-base);color:var(--text-color-secondary)}
+  details[open] .chev{transform:rotate(90deg)}
+  .rows{border-top:1px solid var(--surface-border)}
+  .row{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-sm) var(--bw-space-md)}
+  .row + .row{border-top:1px solid var(--surface-border)}
+  .row:hover{background:var(--bw-surface-muted)}
+  .row__text{flex:1;min-width:0}
+  .row__label{display:block;font-size:var(--bw-text-sm);color:var(--text-label);font-weight:var(--bw-weight-medium)}
+  .row__hint{display:block;font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+
+  .switch{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;cursor:pointer}
+  .switch input{position:absolute;opacity:0;width:44px;height:24px;margin:0;cursor:pointer}
+  .switch .track{width:44px;height:24px;border-radius:var(--bw-radius-pill);background:#cbd5e1;
+                 transition:background var(--bw-transition-base);position:relative}
+  .switch .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+                        background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform var(--bw-transition-base)}
+  .switch input:checked + .track{background:var(--bw-300)}
+  .switch input:checked + .track::after{transform:translateX(20px)}
+  .switch input:focus-visible + .track{outline:2px solid var(--bw-500);outline-offset:2px}
+  .switch input:disabled + .track{opacity:.4}
+  .off .row__label,.off .row__hint{opacity:.5}
+  .foot{margin:var(--bw-space-md) 0 0;font-size:var(--bw-text-2xs);color:var(--text-color-secondary)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <p class="caption">Dirección 03 — acordeón por canal (pensada para diálogo angosto)</p>
+
+  <div class="dialog">
+    <div class="dialog__head">
+      <div class="avatar" aria-hidden="true">CR</div>
+      <div class="who">
+        <h1>Camila Rojas Fuentes</h1>
+        <p>camila.rojas@gmail.com · 12 reservas</p>
+      </div>
+    </div>
+
+    <div class="dialog__body">
+      <div class="master">
+        <div class="master__text">
+          <span class="master__label" id="m3">Recibir notificaciones</span>
+          <p class="master__note">Apagado no sale nada sobre sus reservas. Las alertas de seguridad de la cuenta se envían siempre.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" role="switch" checked aria-labelledby="m3">
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <div class="acc" id="a3">
+        <details open>
+          <summary>
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="ch">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+              Email
+            </span>
+            <span class="pill" data-group="email">4 de 4</span>
+          </summary>
+          <div class="rows">
+            <div class="row">
+              <span class="row__text">
+                <label class="row__label" for="a-em1">Nueva reserva</label>
+                <span class="row__hint">Aviso inmediato al agendar.</span>
+              </span>
+              <label class="switch"><input id="a-em1" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+            </div>
+            <div class="row">
+              <span class="row__text">
+                <label class="row__label" for="a-em2">Confirmación de reserva</label>
+                <span class="row__hint">Cuando la clínica confirma.</span>
+              </span>
+              <label class="switch"><input id="a-em2" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+            </div>
+            <div class="row">
+              <span class="row__text">
+                <label class="row__label" for="a-em3">Cancelación de reserva</label>
+                <span class="row__hint">Si la reserva se cancela.</span>
+              </span>
+              <label class="switch"><input id="a-em3" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+            </div>
+            <div class="row">
+              <span class="row__text">
+                <label class="row__label" for="a-em4">Recordatorio de reserva</label>
+                <span class="row__hint">Email 24 h y 30 min antes.</span>
+              </span>
+              <label class="switch"><input id="a-em4" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="ch">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.5-.6-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6 0-1.2.6-1.8.9-2.1.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.3 0 .5l-.4.5c-.1.1-.3.3-.1.6.2.3.7 1.1 1.5 1.8 1 .9 1.6 1.1 1.9 1.2.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.5-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1.4Z"/></svg>
+              WhatsApp
+            </span>
+            <span class="pill" data-group="wa">2 de 2</span>
+          </summary>
+          <div class="rows">
+            <div class="row">
+              <span class="row__text">
+                <label class="row__label" for="a-wa1">Recordatorio de reserva</label>
+                <span class="row__hint">WhatsApp 24 h y 30 min antes.</span>
+              </span>
+              <label class="switch"><input id="a-wa1" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+            </div>
+            <div class="row">
+              <span class="row__text">
+                <label class="row__label" for="a-wa2">Cancelación exitosa</label>
+                <span class="row__hint">Confirmación por WhatsApp al cancelar.</span>
+              </span>
+              <label class="switch"><input id="a-wa2" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <p class="foot">Los cambios se guardan por cliente y se aplican a las próximas reservas.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const master = document.querySelector('.master input');
+  const acc = document.getElementById('a3');
+  const flags = [...acc.querySelectorAll('input[type=checkbox]')];
+  const snapshot = flags.map((f) => f.checked);
+
+  master.addEventListener('change', () => {
+    acc.classList.toggle('off', !master.checked);
+    flags.forEach((f, i) => { f.disabled = !master.checked; if (master.checked) f.checked = snapshot[i]; });
+    refresh();
+  });
+
+  // El contador del summary avisa cuántos quedan activos aunque el grupo esté cerrado.
+  function refresh() {
+    acc.querySelectorAll('details').forEach((d) => {
+      const inputs = [...d.querySelectorAll('input[type=checkbox]')];
+      const pill = d.querySelector('.pill');
+      const on = inputs.filter((i) => i.checked).length;
+      pill.textContent = `${on} de ${inputs.length}`;
+      pill.dataset.empty = String(on === 0);
+    });
+  }
+  flags.forEach((f) => f.addEventListener('change', refresh));
+  refresh();
+</script>
+</body>
+</html>
