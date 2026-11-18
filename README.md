@@ -356,16 +356,9 @@ Requiere la API Laravel corriendo en `http://127.0.0.1:9999`.
 
 ## Despliegue de desarrollo
 
-El CI se ejecuta en cada push o pull request a `develop`. Un despliegue a
-`https://dev.bookwise.cl` sólo se solicita cuando el mensaje del commit que
-queda en la punta de `develop` contiene esta línea exacta e independiente:
-
-```text
-Deploy-Dev: true
-```
-
-El job de deploy además exige CI verde y aprobación del Environment protegido
-`development`; un push ordinario nunca publica. La operación crea una release
-inmutable bajo `/srv/bookwise/development/frontend/releases` y conmuta el
-symlink `current`. Configuración y rollback: documentación operativa externa
-del workspace en `docs/bookwise/deployment/`.
+La guía de operación para agentes está en
+[docs/deployment/dev-cicd.md](docs/deployment/dev-cicd.md). El workflow valida
+pull requests a `develop`, construye un artefacto identificado por SHA y sólo
+despliega desde `develop` si el commit final lleva `Deploy-Dev: true`. La
+configuración real del Environment y sus secretos debe verificarse en GitHub;
+`environment: development` en YAML no prueba que haya reviewers configurados.

@@ -63,6 +63,7 @@ jobs:
           archive="bookwise-frontend-${GITHUB_SHA}.tar.gz"
           tar -C dist/bookwise/browser -czf "$archive" .
           sha256sum "$archive" > "$archive.sha256"
+          sha256sum --check "$archive.sha256"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -89,6 +90,16 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: bookwise-frontend-${{ github.sha }}
+      - name: Confirm this commit is still the tip of develop
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin develop
+          current_tip=$(git rev-parse FETCH_HEAD)
+          if [[ "$current_tip" != "$GITHUB_SHA" ]]; then
+            echo "Refusing to deploy stale commit $GITHUB_SHA; develop is at $current_tip" >&2
+            exit 1
+          fi
       - name: Configure SSH
         env:
           DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
