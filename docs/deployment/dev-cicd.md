@@ -12,23 +12,18 @@ Environments, secretos o branch rules. No es documentación de producción.
 - Script remoto: [`scripts/deploy-dev.sh`](../../scripts/deploy-dev.sh).
 - Entrada breve: [README.md](../../README.md#despliegue-de-desarrollo).
 
-El workflow escucha `push` y `pull_request` hacia `develop`. Un push normal y
-cualquier PR ejecutan CI; ninguno despliega por sí mismo. Para desplegar, el
-mensaje del **commit final en la punta de `develop`** debe contener esta línea
-exacta, en su propia línea:
+El workflow escucha `push` y `pull_request` hacia `develop`. Los PR desde
+feature ejecutan tests y build, pero no despliegan. Cada push a `develop`
+despliega automáticamente si tests y build pasan. No hace falta una línea
+especial en el mensaje del commit.
 
-```text
-Deploy-Dev: true
-```
-
-El job de deploy exige `push`, señal exacta, tests y build verdes, y comprueba
-que el SHA todavía sea la punta actual de `develop`. Si hay un push más nuevo,
-rechaza el SHA atrasado. Los PR desde feature sólo validan; el deploy ocurre
-después de integrar a `develop` y preservar la señal en el commit resultante.
+Si un solo push contiene varios commits, el workflow construye y despliega el
+SHA final de ese push, no un release por cada commit intermedio. El job valida
+que ese SHA aún sea la punta actual de `develop`; una ejecución atrasada falla
+antes de configurar SSH. La concurrencia serializa el trabajo de despliegue.
 
 | Job | Función |
 |---|---|
-| `deploy-signal` | Lee el mensaje del commit checkout y expone si hay señal exacta. |
 | `tests` | Node 22, `npm ci`, `npm test -- --no-watch`. |
 | `package-release` | Build Angular de producción; verifica que exista `index.html` y que el bundle no tenga la URL local `127.0.0.1:9999`; genera tar y SHA-256. El artefacto se conserva 14 días. |
 | `deploy-development` | Revalida SHA, descarga el artefacto, configura SSH desde secretos del Environment y ejecuta el script de deploy. |
@@ -52,7 +47,8 @@ Guardar sólo nombres aquí; nunca copiar valores, claves ni líneas de
 releases/incoming de frontend. El nombre del Environment en el YAML no prueba
 que exista ni que tenga secretos, reviewers o protección configurados. Estas
 opciones deben verificarse por una persona con permisos de administración; la
-disponibilidad de reviewers depende del plan/visibilidad del repo.
+disponibilidad de reviewers depende del plan/visibilidad del repo. Si hay
+reviewers requeridos, el deploy queda en espera hasta que aprueben.
 
 ## Qué hace el deploy
 
@@ -79,8 +75,8 @@ coordinada de pareja de SHAs.
 
 1. Verificar en GitHub el workflow activo en `develop`, runs, Environment,
    secretos presentes por nombre, branch restrictions y approvals disponibles.
-2. Integrar esta feature a `develop` mediante el flujo acordado y confirmar que
-   el PR/commit final conserva la señal sólo cuando se quiera desplegar.
+2. Integrar esta feature a `develop` mediante el flujo acordado. Después,
+   cualquier push aprobado a `develop` desplegará frontend al pasar CI.
 3. Antes de solicitar deploy, revisar el SHA API compatible y coordinar ambos
    repositorios si el cambio requiere un contrato nuevo.
 4. No configurar producción desde este workflow. Producción requiere workflow,

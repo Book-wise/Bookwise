@@ -10,24 +10,6 @@ permissions:
   contents: read
 
 jobs:
-  deploy-signal:
-    name: Detect explicit dev deploy signal
-    runs-on: ubuntu-latest
-    outputs:
-      requested: ${{ steps.signal.outputs.requested }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-      - id: signal
-        shell: bash
-        run: |
-          if git log -1 --pretty=%B | grep -Fxq 'Deploy-Dev: true'; then
-            echo 'requested=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'requested=false' >> "$GITHUB_OUTPUT"
-          fi
-
   tests:
     runs-on: ubuntu-latest
     steps:
@@ -76,8 +58,8 @@ jobs:
 
   deploy-development:
     name: Deploy frontend to dev.bookwise.cl
-    if: github.event_name == 'push' && needs.deploy-signal.outputs.requested == 'true'
-    needs: [deploy-signal, tests, package-release]
+    if: github.event_name == 'push'
+    needs: [tests, package-release]
     runs-on: ubuntu-latest
     environment:
       name: development
