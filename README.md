@@ -353,3 +353,13 @@ ng serve
 ```
 
 Requiere la API Laravel corriendo en `http://127.0.0.1:9999`.
+
+## Despliegue de desarrollo
+
+La guía de operación para agentes está en
+[docs/deployment/dev-cicd.md](docs/deployment/dev-cicd.md). El workflow valida
+pull requests a `develop`, construye un artefacto identificado por SHA y sólo
+despliega automáticamente en cada push a `develop` cuando tests y build pasan.
+Los pull requests validan, pero no despliegan. La configuración real del
+Environment y sus secretos debe verificarse en GitHub; `environment:
+development` en YAML no prueba que haya reviewers configurados.
