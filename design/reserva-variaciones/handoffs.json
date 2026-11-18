@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "01-reserva-variacion.html",
+  "handoffs": {
+    "01-reserva-variacion.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-03T16:08:37.405Z",
+      "startedAt": "2026-11-03T16:08:54.900Z",
+      "implementedAt": "2026-11-03T16:23:13.359Z",
+      "feature": "odd/tasks/services-packs-variations.md",
+      "note": "Paso servicio → variación implementado en el diálogo de reserva: variaciones desde service_packs con precio por sesión y badge −% vs 1 sesión, más resumen read-only del pack del paciente. La selección de sesión N de M sigue bloqueada por contrato.",
+      "previewUrl": "http://localhost:4200/admin/calendar"
+    }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "lo8fb5i6",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div",
+      "excerpt": "‹ Configuraciones Tipos de ficha Cada tipo define los campos que se piden al profesional en la pestaña Ficha de la reserva. Reordenar Nuevo tipo TIPOS 5 · 4 activos Evaluación kinésica inicial Activo 6 campos · usada en 24 fichas Sesión de seguimiento Activo 4 campos · usada en 58 fichas Informe de",
+      "comment": "mira esa lista mas simple y jerarquica",
+      "createdAt": "2026-11-04T15:11:03.414Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T15:14:00.993Z",
+      "resolvedAt": "2026-11-04T15:15:04.682Z",
+      "screenshot": ".screenshots/lo8fb5i6.png"
+    },
+    {
+      "id": "mnp5deoh",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > div:nth-of-type(2) > section:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "Usada en 24 fichas",
+      "comment": "me gusta este elemento, me deja saber donde se esta usando la ficha en question",
+      "createdAt": "2026-11-04T15:11:27.771Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T15:14:00.993Z",
+      "resolvedAt": "2026-11-04T15:15:04.682Z"
+    },
+    {
+      "id": "i2n3uhph",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > div:nth-of-type(2)",
+      "excerpt": "TIPOS 5 · 4 activos Evaluación kinésica inicial Activo 6 campos · usada en 24 fichas Sesión de seguimiento Activo 4 campos · usada en 58 fichas Informe de alta Activo 5 campos · usada en 6 fichas Evaluación respiratoria Activo 3 campos · sin usar todavía Ficha deportiva Inactivo 5 campos · oculta en",
+      "comment": "si me gusta el campo tipos que las liste y que el segundo card muestre los valores contenidos, asi no lo hacemos identico a la imagen de referencia, lo de vista previa me parece que no es necesario si el segundo card ya muestra el contenido, el acciones seria un borrar campo en la segunda tarjeta",
+      "createdAt": "2026-11-04T15:13:57.998Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T15:14:00.993Z",
+      "resolvedAt": "2026-11-04T15:15:04.682Z",
+      "screenshot": ".screenshots/i2n3uhph.png"
+    },
+    {
+      "id": "htbxpoxc",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)",
+      "excerpt": "Reordenar",
+      "comment": "quita ese boton",
+      "createdAt": "2026-11-04T18:43:17.225Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T18:44:57.245Z",
+      "resolvedAt": "2026-11-04T18:45:19.185Z"
+    },
+    {
+      "id": "2gzysnbi",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > a",
+      "excerpt": "‹ Configuraciones",
+      "comment": "fichas medicas",
+      "createdAt": "2026-11-04T18:43:52.436Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T18:44:57.245Z",
+      "resolvedAt": "2026-11-04T18:45:19.185Z"
+    },
+    {
+      "id": "j6uceynk",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > div:nth-of-type(2) > section:nth-of-type(2) > div:nth-of-type(3)",
+      "excerpt": "Cambios sin guardar Descartar Guardar cambios",
+      "comment": "quiza deberiamos subir erstos para que sean siempre visibles",
+      "createdAt": "2026-11-04T18:44:51.218Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T18:44:57.245Z",
+      "resolvedAt": "2026-11-04T18:45:19.185Z"
+    },
+    {
+      "id": "7vl2ss1c",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > div:nth-of-type(2) > section:nth-of-type(2) > div:nth-of-type(3)",
+      "excerpt": "Cambios sin guardar Descartar Guardar cambios",
+      "comment": "sube lo de cambios sin guardar descartar y guardar cambios par arriba del card o como primera linea de este justo abajo del nombre o titulo del card",
+      "createdAt": "2026-11-04T18:47:08.137Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T18:47:23.007Z",
+      "resolvedAt": "2026-11-04T18:47:47.370Z"
+    },
+    {
+      "id": "3fdzlxaf",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "#tf2-editor-title",
+      "excerpt": "Evaluación kinésica inicial",
+      "comment": "dale un boton de editar al nombre justo al lado",
+      "createdAt": "2026-11-04T18:47:21.284Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T18:47:23.007Z",
+      "resolvedAt": "2026-11-04T18:47:47.370Z"
+    },
+    {
+      "id": "237oannr",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div > div:nth-of-type(2) > section:nth-of-type(2) > div:nth-of-type(2)",
+      "excerpt": "Cambios sin guardar Descartar Guardar cambios",
+      "comment": "dejalo como parte del card, osea que  este dentro con el mismo fondo",
+      "createdAt": "2026-11-04T18:48:16.961Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T18:48:19.178Z",
+      "resolvedAt": "2026-11-04T18:48:26.440Z"
+    },
+    {
+      "id": "314wvlac",
+      "file": "02-maestro-detalle-builder.html",
+      "selector": "body > main > div",
+      "excerpt": "‹ Configuraciones Fichas médicas Los tipos de ficha de tu negocio. Cada uno define los campos que se piden en la pestaña Ficha de la reserva. Nuevo tipo TIPOS 5 · 4 activos Evaluación kinésica inicial 6 campos · usada en 24 fichas Activa Sesión de seguimiento 4 campos · usada en 58 fichas Activa Inf",
+      "comment": "ok, entonces todo este contenido lo estamos diseñando para configurar las fichas medicas, y deberia estar dentro de el componente que vive en en la ruta admin/configuraciones, de cualquier manera, esa pagina ya tienen algunos elementos que viven en cards ahora, quiza podemos darle un menu para accederlos por pestañas? revisa el codigo del componente. y muestrame como quedaria",
+      "createdAt": "2026-11-07T16:11:25.434Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T16:11:28.148Z",
+      "resolvedAt": "2026-11-07T16:13:13.163Z"
+    }
+  ]
+}

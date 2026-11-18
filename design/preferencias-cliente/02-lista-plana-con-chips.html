@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preferencias del cliente — lista plana con canal</title>
+<style>
+  :root{
+    --bw-50:#f0f6ff; --bw-100:#dbeafe; --bw-200:#60a7f0; --bw-300:#046af4;
+    --bw-500:#0b3d95; --bw-700:#0a2862; --bw-900:#012663;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-label:#374151;
+    --bw-success:#22c55e; --bw-status-confirmado:#ECBE51;
+    --font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem;
+    --bw-text-base:1rem; --bw-text-lg:1.125rem; --bw-text-xl:1.25rem;
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-transition-base:.2s;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:var(--bw-space-xl);background:var(--surface-ground);color:var(--text-color);
+       font-family:var(--font-family);font-size:var(--bw-text-base);line-height:1.5}
+  .stage{max-width:1120px;margin:0 auto}
+  .caption{font-size:var(--bw-text-xs);color:var(--text-color-secondary);margin:0 0 var(--bw-space-md);
+           text-transform:uppercase;letter-spacing:var(--bw-tracking-overline);font-weight:var(--bw-weight-semibold)}
+  .dialog{background:var(--surface-card);border:1px solid var(--surface-border);border-radius:var(--bw-radius-lg);
+          box-shadow:var(--bw-shadow-popover);overflow:hidden}
+  .dialog__head{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-lg);
+                border-bottom:1px solid var(--surface-border)}
+  .avatar{width:52px;height:52px;border-radius:var(--bw-radius-pill);display:grid;place-items:center;
+          background:var(--bw-100);color:var(--bw-700);font-weight:var(--bw-weight-semibold);font-size:var(--bw-text-lg)}
+  .who h1{margin:0;font-size:var(--bw-text-xl);font-weight:var(--bw-weight-semibold);letter-spacing:var(--bw-tracking-tight)}
+  .who p{margin:2px 0 0;font-size:var(--bw-text-sm);color:var(--text-color-secondary)}
+  .head__meta{margin-left:auto}
+  .chip{display:inline-flex;align-items:center;gap:var(--bw-space-xs);font-size:var(--bw-text-sm);
+        font-weight:var(--bw-weight-medium);padding:.15rem .55rem;border-radius:var(--bw-radius-pill);
+        color:var(--chip-fg,var(--bw-700));background:color-mix(in srgb,var(--chip-bg,var(--bw-100)) 18%,transparent)}
+  .dialog__body{padding:var(--bw-space-lg)}
+
+  /* Maestro como banda superior, no como fila de lista */
+  .banner{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-md) var(--bw-space-lg);
+          border-radius:var(--bw-radius-md);background:linear-gradient(90deg,var(--bw-900),var(--bw-500));
+          color:#fff}
+  .banner__text{flex:1;min-width:0}
+  .banner__label{font-weight:var(--bw-weight-semibold)}
+  .banner__note{margin:0;font-size:var(--bw-text-sm);opacity:.85}
+  .banner .switch .track{background:rgba(255,255,255,.35)}
+  .banner .switch input:checked + .track{background:var(--bw-300)}
+
+  .list{list-style:none;margin:var(--bw-space-lg) 0 0;padding:0;border:1px solid var(--surface-border);
+        border-radius:var(--bw-radius-md);overflow:hidden}
+  .item{display:flex;align-items:center;gap:var(--bw-space-md);padding:var(--bw-space-sm) var(--bw-space-md);
+        background:var(--surface-card)}
+  .item + .item{border-top:1px solid var(--surface-border)}
+  .item:hover{background:var(--bw-surface-muted)}
+  .item__text{flex:1;min-width:0}
+  .item__label{display:block;font-size:var(--bw-text-sm);font-weight:var(--bw-weight-medium);color:var(--text-label)}
+  .item__hint{display:block;font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+  .chan{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:var(--bw-text-2xs);
+        text-transform:uppercase;letter-spacing:var(--bw-tracking-overline);font-weight:var(--bw-weight-semibold);
+        padding:.15rem .4rem;border-radius:var(--bw-radius-sm);border:1px solid var(--surface-border);
+        color:var(--text-color-secondary);background:var(--bw-surface-muted)}
+  .chan--wa{color:#0b6b3a;background:#e7f8ee;border-color:#b7e6c9}
+  .off .item__label,.off .item__hint,.off .chan{opacity:.5}
+
+  .switch{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;cursor:pointer}
+  .switch input{position:absolute;opacity:0;width:44px;height:24px;margin:0;cursor:pointer}
+  .switch .track{width:44px;height:24px;border-radius:var(--bw-radius-pill);background:#cbd5e1;
+                 transition:background var(--bw-transition-base);position:relative}
+  .switch .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+                        background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform var(--bw-transition-base)}
+  .switch input:checked + .track{background:var(--bw-300)}
+  .switch input:checked + .track::after{transform:translateX(20px)}
+  .switch input:focus-visible + .track{outline:2px solid var(--bw-500);outline-offset:2px}
+  .switch input:disabled + .track{opacity:.4}
+  .legend{margin:var(--bw-space-md) 0 0;font-size:var(--bw-text-xs);color:var(--text-color-secondary)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <p class="caption">Dirección 02 — lista única, el canal va en cada fila</p>
+
+  <div class="dialog">
+    <div class="dialog__head">
+      <div class="avatar" aria-hidden="true">CR</div>
+      <div class="who">
+        <h1>Camila Rojas Fuentes</h1>
+        <p>14.582.301-7 · camila.rojas@gmail.com · +56 9 8871 4410</p>
+      </div>
+      <div class="head__meta"><span class="chip" style="--chip-bg:var(--bw-status-confirmado)">12 reservas</span></div>
+    </div>
+
+    <div class="dialog__body">
+      <div class="banner">
+        <div class="banner__text">
+          <span class="banner__label" id="m2">Notificaciones de Camila</span>
+          <p class="banner__note">Apagado no sale nada sobre sus reservas; los avisos de seguridad de la cuenta se envían igual.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" role="switch" checked aria-labelledby="m2">
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <ul class="list" id="l2">
+        <li class="item">
+          <span class="item__text">
+            <label class="item__label" for="i1">Nueva reserva</label>
+            <span class="item__hint">Aviso inmediato cuando agenda una hora.</span>
+          </span>
+          <span class="chan">Email</span>
+          <label class="switch"><input id="i1" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+        </li>
+        <li class="item">
+          <span class="item__text">
+            <label class="item__label" for="i2">Confirmación de reserva</label>
+            <span class="item__hint">Cuando la clínica confirma la hora.</span>
+          </span>
+          <span class="chan">Email</span>
+          <label class="switch"><input id="i2" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+        </li>
+        <li class="item">
+          <span class="item__text">
+            <label class="item__label" for="i3">Cancelación de reserva</label>
+            <span class="item__hint">Si la reserva se cancela.</span>
+          </span>
+          <span class="chan">Email</span>
+          <label class="switch"><input id="i3" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+        </li>
+        <li class="item">
+          <span class="item__text">
+            <label class="item__label" for="i4">Recordatorio de reserva</label>
+            <span class="item__hint">24 h y 30 min antes de la reserva.</span>
+          </span>
+          <span class="chan">Email</span>
+          <label class="switch"><input id="i4" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+        </li>
+        <li class="item">
+          <span class="item__text">
+            <label class="item__label" for="i5">Recordatorio de reserva</label>
+            <span class="item__hint">24 h y 30 min antes de la reserva.</span>
+          </span>
+          <span class="chan chan--wa">WhatsApp</span>
+          <label class="switch"><input id="i5" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+        </li>
+        <li class="item">
+          <span class="item__text">
+            <label class="item__label" for="i6">Cancelación exitosa</label>
+            <span class="item__hint">Confirmación por WhatsApp al cancelar.</span>
+          </span>
+          <span class="chan chan--wa">WhatsApp</span>
+          <label class="switch"><input id="i6" type="checkbox" checked><span class="track" aria-hidden="true"></span></label>
+        </li>
+      </ul>
+      <p class="legend">Seis avisos, dos canales. Los cambios se guardan por cliente.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const master = document.querySelector('.banner input');
+  const list = document.getElementById('l2');
+  const flags = [...list.querySelectorAll('input[type=checkbox]')];
+  const snapshot = flags.map((f) => f.checked);
+  master.addEventListener('change', () => {
+    list.classList.toggle('off', !master.checked);
+    flags.forEach((f, i) => { f.disabled = !master.checked; if (master.checked) f.checked = snapshot[i]; });
+  });
+</script>
+</body>
+</html>

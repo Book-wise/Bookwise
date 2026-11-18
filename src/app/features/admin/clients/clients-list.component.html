@@ -1,74 +1,258 @@
-<p-card header="Clientes">
-  <div class="mb-3">
-    <p-iconfield>
+<p-card [header]="lang.t('clients.title')">
+  <div class="clients-toolbar">
+    <p-iconfield class="clients-toolbar__search">
       <p-inputicon class="pi pi-search" />
       <input
         type="text"
-        type="text"
         pInputText
-        placeholder="Buscar cliente..."
+        [placeholder]="lang.t('clients.search_placeholder')"
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event); onSearch()"
       />
     </p-iconfield>
+    <p-button
+      *bwIfAbility="ABILITIES.clientsCreate"
+      icon="pi pi-plus"
+      [label]="lang.t('clients.new')"
+      (onClick)="openCreateClient()" />
+  </div>
+
+  <div class="cfl">
+    <button type="button" class="cfl__toggle" (click)="toggleFilters()">
+      <i class="pi pi-filter"></i>
+      <span>{{ lang.t('clients.filter.title') }}</span>
+      @if (activeFilterCount() > 0) {
+        <span class="cfl__badge">{{ activeFilterCount() }}</span>
+      }
+      <i class="pi" [class.pi-chevron-down]="!filtersOpen()" [class.pi-chevron-up]="filtersOpen()"></i>
+    </button>
+
+    @if (filtersOpen()) {
+      <div class="cfl__panel">
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.location') }}</span>
+          <p-select
+            [options]="locationOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fLocationId()"
+            (ngModelChange)="fLocationId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.provider') }}</span>
+          <p-select
+            [options]="providerOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="true"
+            [showClear]="true"
+            [ngModel]="fProviderId()"
+            (ngModelChange)="fProviderId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.service') }}</span>
+          <p-select
+            [options]="serviceOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fServiceId()"
+            (ngModelChange)="fServiceId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.booking_status') }}</span>
+          <p-select
+            [options]="statusOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fBookingStatusId()"
+            (ngModelChange)="fBookingStatusId.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.has_booked') }}</span>
+          <p-select
+            [options]="hasBookedOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="fHasBooked()"
+            (ngModelChange)="fHasBooked.set($event)" />
+        </label>
+
+        <label class="cfl__field">
+          <span class="cfl__label">{{ lang.t('clients.filter.gender') }}</span>
+          <input pInputText [ngModel]="fGender()" (ngModelChange)="fGender.set($event)" />
+        </label>
+
+        <div class="cfl__field cfl__field--wide">
+          <span class="cfl__label">{{ lang.t('clients.filter.created') }}</span>
+          <div class="cfl__range">
+            <input pInputText type="date" [ngModel]="fCreatedFrom()" (ngModelChange)="fCreatedFrom.set($event)" />
+            <input pInputText type="date" [ngModel]="fCreatedTo()" (ngModelChange)="fCreatedTo.set($event)" />
+          </div>
+        </div>
+
+        <div class="cfl__actions">
+          <p-button [label]="lang.t('clients.filter.reset')" severity="secondary" [outlined]="true" (onClick)="resetFilters()" />
+          <p-button [label]="lang.t('clients.filter.apply')" icon="pi pi-search" (onClick)="applyFilters()" />
+        </div>
+      </div>
+    }
   </div>
 
   @if (loading()) {
     <div class="list-skeleton">
       @for (row of [1,2,3,4,5]; track row) {
         <div class="list-sk-row bw-sk-card">
-          <p-skeleton width="40px"  height="1rem" borderRadius="4px" />
-          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="22%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="14%"   height="1rem" borderRadius="4px" />
-          <p-skeleton width="10%"   height="1.5rem" borderRadius="12px" />
-          <p-skeleton width="70px"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="80px" height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="22%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="14%"  height="1rem" borderRadius="4px" />
+          <p-skeleton width="10%"  height="1.5rem" borderRadius="12px" />
+          <p-skeleton width="70px" height="1rem" borderRadius="4px" />
         </div>
       }
     </div>
   } @else {
-  <p-table
-    [value]="clients()"
-    [tableStyle]="{ 'min-width': '50rem' }"
-    [paginator]="true"
-    [rows]="10"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Email</th>
-        <th>Teléfono</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-client>
-      <tr>
-        <td>{{ client.id }}</td>
-        <td>{{ client.first_name }} {{ client.last_name }}</td>
-        <td>{{ client.email }}</td>
-        <td>{{ client.phone }}</td>
-        <td>
-          <span class="bw-chip" [class]="client.active ? 'bw-chip--success' : 'bw-chip--danger'">
-            {{ client.active ? 'Activo' : 'Inactivo' }}
-          </span>
-        </td>
-        <td>
-          <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver"></p-button>
-          <p-button
-            icon="pi pi-shopping-cart"
-            class="p-button-text"
-            pTooltip="Ver Packs"
-          ></p-button>
-        </td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="6" class="text-center">No se encontraron clientes</td>
-      </tr>
-    </ng-template>
-  </p-table>
+    <p-table [value]="clients()" [tableStyle]="{ 'min-width': '50rem' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="bw-th-sort" (click)="toggleSort('rut')">
+            {{ lang.t('clients.col.rut') }}
+            @if (isSorted('rut')) {
+              <i class="pi" [class]="isSortedAsc('rut') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th class="bw-th-sort" (click)="toggleSort('name')">
+            {{ lang.t('clients.col.name') }}
+            @if (isSorted('name')) {
+              <i class="pi" [class]="isSortedAsc('name') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th class="bw-th-sort" (click)="toggleSort('email')">
+            {{ lang.t('clients.col.email') }}
+            @if (isSorted('email')) {
+              <i class="pi" [class]="isSortedAsc('email') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th class="bw-th-sort" (click)="toggleSort('phone')">
+            {{ lang.t('clients.col.phone') }}
+            @if (isSorted('phone')) {
+              <i class="pi" [class]="isSortedAsc('phone') ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down-alt'"></i>
+            }
+          </th>
+          <th>{{ lang.t('clients.col.status') }}</th>
+          <th>{{ lang.t('clients.col.actions') }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-client>
+        <tr>
+          <td>{{ client.rut || '—' }}</td>
+          <td>{{ client.first_name }} {{ client.last_name }}</td>
+          <td>{{ client.email }}</td>
+          <td>{{ client.phone || '—' }}</td>
+          <td>
+            <span class="bw-chip" [class]="client.active ? 'bw-chip--success' : 'bw-chip--danger'">
+              {{ client.active ? lang.t('clients.status.active') : lang.t('clients.status.inactive') }}
+            </span>
+          </td>
+          <td>
+            <p-button icon="pi pi-eye" class="p-button-text" [pTooltip]="lang.t('clients.action.view')" (onClick)="openView(client)"></p-button>
+            <p-button icon="pi pi-shopping-cart" class="p-button-text" [pTooltip]="lang.t('clients.action.packs')" (onClick)="openPacks(client)"></p-button>
+            @if (client.active) {
+              <p-button
+                *bwIfAbility="ABILITIES.clientsUpdate"
+                icon="pi pi-ban"
+                severity="danger"
+                class="p-button-text"
+                [pTooltip]="lang.t('clients.action.deactivate')"
+                [loading]="deactivatingId() === client.id"
+                (onClick)="deactivateClient(client)" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">{{ lang.t('clients.empty') }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="list-footer">
+      <span class="list-footer__count">
+        {{
+          lang.t('clients.showing', {
+            from: rangeFrom().toString(),
+            to: rangeTo().toString(),
+            total: totalRecords().toString(),
+          })
+        }}
+      </span>
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
+    </div>
   }
 </p-card>
+
+<bw-client-detail-dialog
+  [visible]="detailVisible()"
+  [client]="selectedClient()"
+  [initialTab]="detailInitialTab()"
+  (closed)="detailVisible.set(false)"
+  (editRequested)="onEditClient($event)" />
+
+<bw-client-form-dialog
+  [visible]="formVisible()"
+  [client]="formClient()"
+  (closed)="formVisible.set(false)"
+  (saved)="onFormSaved()" />
+
+<p-dialog
+  [visible]="deactivateDialogVisible()"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '560px' }">
+  <ng-template pTemplate="header">
+    <span>{{ lang.t('clients.deactivate.title') }}</span>
+  </ng-template>
+
+  @if (deactivateAffects(); as affects) {
+    <div class="cdlg">
+      <p class="cdlg__message">{{ lang.t('clients.deactivate.message') }}</p>
+
+      @if (affects.bookings.length > 0) {
+        <p class="cdlg__section">{{ lang.t('clients.deactivate.bookings') }}</p>
+        <ul class="cdlg__list">
+          @for (b of affects.bookings; track b.id) {
+            <li>{{ bookingLabel(b) }}</li>
+          }
+        </ul>
+      }
+
+      @if (affects.packs.length > 0) {
+        <p class="cdlg__section">{{ lang.t('clients.deactivate.packs') }}</p>
+        <ul class="cdlg__list">
+          @for (p of affects.packs; track p.id) {
+            <li>{{ packLabel(p) }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="lang.t('common.cancel')" severity="secondary" [outlined]="true" (onClick)="cancelDeactivate()" />
+    <p-button [label]="lang.t('clients.deactivate.confirm')" severity="danger" (onClick)="confirmDeactivate()" />
+  </ng-template>
+</p-dialog>

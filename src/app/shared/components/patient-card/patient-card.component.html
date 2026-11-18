@@ -245,21 +245,21 @@
               <p-skeleton height="3.5rem" />
               <p-skeleton height="3.5rem" />
             </div>
-          } @else if (activePacks().length === 0) {
+          } @else if (packs().length === 0) {
             <div class="bw-pc__empty">
               <i class="pi pi-box bw-pc__empty-icon"></i>
-              <span>Sin planes activos</span>
+              <span>Sin planes</span>
             </div>
           } @else {
             <ul class="bw-pc__pack-list">
-              @for (pack of activePacks(); track pack.id) {
+              @for (pack of packs(); track pack.id) {
+                @let chip = packStatusChip(pack);
                 <li class="bw-pc__pack-item">
                   <div class="bw-pc__pack-name">{{ pack.service_pack?.name ?? 'Plan' }}</div>
                   <div class="bw-pc__pack-progress">
                     <span>{{ pack.used_sessions }} / {{ pack.total_sessions }} sesiones</span>
-                    <span class="bw-pc__pack-remaining">{{ pack.remaining_sessions }} restantes</span>
                   </div>
-                  <span class="bw-chip bw-chip--success">Activo</span>
+                  <span [class]="chip.cls">{{ chip.label }}</span>
                 </li>
               }
             </ul>

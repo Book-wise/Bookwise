@@ -8,6 +8,8 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
   ![PrimeNG](https://img.shields.io/badge/PrimeNG-21+-6366F1)
   ![FullCalendar](https://img.shields.io/badge/FullCalendar-6.x-4A90D9)
+
+  [![Built with Gentle-AI](https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/docs/assets/brand/built-with-gentle-ai.png)](https://github.com/Gentleman-Programming/gentle-ai)
 </div>
 <!-- markdownlint-enable MD033 -->
 

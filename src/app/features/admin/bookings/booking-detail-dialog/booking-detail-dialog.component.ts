@@ -21,6 +21,10 @@ import { BOOKING_STATUSES } from '../constants/booking-statuses';
 import { PaymentTabComponent } from './tabs/payment/payment-tab.component';
 import { ReservaTabComponent } from './tabs/reserva/reserva-tab.component';
 import { HistorialTabComponent } from './tabs/historial/historial-tab.component';
+import { FichaTabComponent } from './tabs/ficha/ficha-tab.component';
+import { ClinicalRecordsStore } from '@core/stores/clinical-records.store';
+import { ClinicalRecordTypesStore } from '@core/stores/clinical-record-types.store';
+import { Router } from '@angular/router';
 
 export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'ficha' | 'historial';
 
@@ -38,6 +42,7 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     PaymentTabComponent,
     ReservaTabComponent,
     HistorialTabComponent,
+    FichaTabComponent,
     PatientDetailContentComponent,
   ],
   providers: [ClientDetailStore, BookingDialogStore],
@@ -53,6 +58,8 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   readonly store = inject(BookingStore);
   readonly detailStore = inject(ClientDetailStore);
   readonly dialogStore = inject(BookingDialogStore);
+  readonly recordsStore = inject(ClinicalRecordsStore);
+  readonly typesStore = inject(ClinicalRecordTypesStore);
 
   visible = signal(false);
   activeTab = signal<BookingTab>('pago');
@@ -104,6 +111,21 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
 
   readonly booking = this.dialogStore.booking;
 
+  private readonly router = inject(Router);
+
+  /** Sin tipos de ficha configurados, la pestaña Ficha ofrece configurarlos. */
+  goToRecordTypesSettings(): void {
+    this.router.navigate(['/admin/configuraciones']);
+  }
+
+  readonly fichaServiceLabel = computed(() => {
+    const booking = this.booking();
+    if (!booking) return '';
+    const label = booking.service?.name ?? '';
+    const sessions = booking.pack_session?.session_number;
+    return sessions ? `${label} · sesión ${sessions}` : label;
+  });
+
   /** Narrowed patient tab currently filling the content area (safe when `activeView() !== 'reserva'`). */
   readonly activeDetailTab = computed<PatientTab>(() => {
     const view = this.detailStore.activeView();
@@ -113,7 +135,9 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   open(booking: Booking, tab: BookingTab = 'pago', scrollToTxn = false): void {
     this.store.selectBooking(booking);
     this.dialogStore.open(booking);
+    this.typesStore.load();
     if (booking.client?.id) {
+      this.recordsStore.loadByClient(booking.client.id);
       // Enrich the dialog copy with the full client (list payloads may carry a
       // partial `client` without email/phone), then load fresh detail data.
       this.clientsApi.getClient(booking.client.id).subscribe({

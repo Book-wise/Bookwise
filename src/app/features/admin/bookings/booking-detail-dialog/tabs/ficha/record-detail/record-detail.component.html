@@ -1,0 +1,224 @@
+<div class="detail" data-testid="record-detail">
+  <div class="detail__topbar">
+    <button type="button" class="detail__crumb" data-testid="detail-back" (click)="onBack()">
+      <span aria-hidden="true">‹</span> {{ t('ficha.detail.back') }}
+    </button>
+
+    @if (mode() === 'read') {
+      <div class="detail__actions">
+        <p-button
+          [label]="t('ficha.detail.edit')"
+          icon="pi pi-pencil"
+          size="small"
+          [disabled]="!type()"
+          (onClick)="enterEdit()"
+        />
+        <p-button
+          [label]="t('ficha.detail.print')"
+          icon="pi pi-print"
+          severity="secondary"
+          size="small"
+          [outlined]="true"
+          (onClick)="onPrint()"
+        />
+      </div>
+    }
+  </div>
+
+  @if (mode() === 'read') {
+    <article class="detail__card">
+      <header class="detail__head">
+        <h2 class="detail__title">{{ record().title || type()?.name }}</h2>
+        <div class="detail__meta">
+          <span>{{ formatWhen(record().created_at) }}</span>
+          @if (record().author_name) {
+            <span class="detail__dot" aria-hidden="true">·</span>
+            <span>{{ record().author_name }}</span>
+          }
+        </div>
+      </header>
+
+      <dl class="detail__fields">
+        @for (field of visibleFields(); track field.key) {
+          <div class="detail__field">
+            <dt class="detail__label">{{ field.label }}</dt>
+            <dd class="detail__value">{{ formatValue(field) }}</dd>
+          </div>
+        } @empty {
+          <p class="detail__empty" data-testid="detail-no-values">{{ t('ficha.detail.no_values') }}</p>
+        }
+      </dl>
+
+      <!-- ── Campos image (F10): la ruta no es pública, se pinta un blob ── -->
+      @if (imageFields().length) {
+        <div class="detail__images">
+          @for (field of imageFields(); track field.key) {
+            <div class="detail__image" data-testid="record-image">
+              <span class="detail__label">{{ field.label }}</span>
+
+              @if (imageFor(field.key); as image) {
+                <div class="detail__image-body">
+                  <img
+                    class="detail__thumb"
+                    data-testid="image-thumb"
+                    [src]="image.url"
+                    [alt]="field.label"
+                  />
+                  <div class="detail__image-actions">
+                    <p-button
+                      [label]="t('ficha.detail.image_view')"
+                      icon="pi pi-external-link"
+                      size="small"
+                      [outlined]="true"
+                      (onClick)="onViewImage(field)"
+                    />
+                    <p-button
+                      [label]="t('ficha.detail.image_download')"
+                      icon="pi pi-download"
+                      size="small"
+                      [outlined]="true"
+                      (onClick)="onDownloadImage(field)"
+                    />
+                  </div>
+                </div>
+              } @else if (isImagePending(field)) {
+                <span class="detail__thumb detail__thumb--loading" aria-hidden="true"></span>
+              } @else {
+                <span class="detail__image-empty" data-testid="image-empty">
+                  {{ t('ficha.detail.image_none') }}
+                </span>
+              }
+            </div>
+          }
+        </div>
+      }
+    </article>
+  } @else {
+    <article class="detail__card">
+      <header class="detail__head">
+        <h2 class="detail__title">{{ record().title || type()?.name }}</h2>
+        <div class="detail__meta">
+          <span>{{ formatWhen(record().created_at) }}</span>
+          @if (record().author_name) {
+            <span class="detail__dot" aria-hidden="true">·</span>
+            <span>{{ record().author_name }}</span>
+          }
+        </div>
+      </header>
+
+      <form [formGroup]="form()" class="detail__fields" novalidate>
+        @for (field of editFields(); track field.key) {
+          <div class="detail__field">
+            <dt class="detail__label">
+              <label [for]="'rd-' + field.key">
+                {{ field.label }}
+                @if (field.required && field.type !== 'image') {
+                  <span class="detail__required" aria-hidden="true">*</span>
+                }
+              </label>
+            </dt>
+            <dd class="detail__value">
+              <div class="detail__control">
+                @switch (field.type) {
+                  @case ('text') {
+                    <input
+                      pInputText
+                      type="text"
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('longtext') {
+                    <textarea
+                      pInputTextarea
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                      rows="3"
+                    ></textarea>
+                  }
+                  @case ('number') {
+                    <input
+                      pInputText
+                      type="number"
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('select') {
+                    <p-select
+                      [inputId]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [options]="selectOptions(field)"
+                      optionLabel="label"
+                      optionValue="value"
+                      [appendTo]="'body'"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('date') {
+                    <input
+                      pInputText
+                      type="date"
+                      [id]="'rd-' + field.key"
+                      [formControlName]="field.key"
+                      [attr.aria-required]="field.required ? 'true' : null"
+                      class="detail__input"
+                    />
+                  }
+                  @case ('image') {
+                    <!-- La imagen se sube al elegir el archivo, no al guardar. -->
+                    @if (imageFor(field.key); as image) {
+                      <img
+                        class="detail__thumb"
+                        data-testid="image-thumb"
+                        [src]="image.url"
+                        [alt]="field.label"
+                      />
+                    }
+                    <input
+                      type="file"
+                      [id]="'rd-' + field.key"
+                      class="detail__file"
+                      data-testid="image-upload"
+                      [accept]="acceptedImageTypes"
+                      (change)="onImageSelected(field, $event)"
+                    />
+                    @if (imageErrors()[field.key]; as error) {
+                      <small class="detail__error" role="alert">{{ error }}</small>
+                    }
+                  }
+                }
+
+                @if (errorMessage(field); as error) {
+                  <small class="detail__error" role="alert">{{ error }}</small>
+                }
+              </div>
+            </dd>
+          </div>
+        }
+      </form>
+
+      <footer class="detail__footer">
+        <p-button
+          [label]="t('ficha.detail.save')"
+          [disabled]="saving()"
+          [loading]="saving()"
+          (onClick)="onSave()"
+        />
+        <p-button
+          [label]="t('ficha.detail.cancel')"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="onCancel()"
+        />
+      </footer>
+    </article>
+  }
+</div>

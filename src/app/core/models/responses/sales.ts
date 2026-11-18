@@ -31,9 +31,21 @@ export interface SaleClient {
 }
 
 export interface SaleBookingPackSessionItem {
+  id: number;
   session_number: number;
   status: 'attended' | 'scheduled' | 'pending';
-  booking: { start_time: string } | null;
+  price: number | null;
+  effective_price: number;
+  attended_at: string | null;
+  booking: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    price: Amount;
+    provider: { id: number; first_name: string; last_name: string };
+    location: { id: number; name: string };
+    status: { id: number; name: string; color: string; is_cancellation?: boolean };
+  } | null;
 }
 
 export interface SaleBookingPackSession {

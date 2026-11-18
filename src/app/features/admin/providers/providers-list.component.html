@@ -1,3 +1,18 @@
+<div class="providers-toolbar">
+  <p-button
+    *bwIfAbility="ABILITIES.providersManage"
+    icon="pi pi-plus"
+    label="{{ lang.t('providers.new') }}"
+    (onClick)="openCreate()" />
+</div>
+
+@if (capacityError()) {
+  <div class="bw-capacity-cta">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ lang.t('biz.tenant_professional_limit_reached.detail') }}</span>
+    <p-button [label]="lang.t('biz.upgrade_cta')" [text]="true" size="small" icon="pi pi-arrow-right" (onClick)="goToBilling()" />
+  </div>
+}
 @if (loading()) {
   <p-card header="Profesionales">
     <!-- ── Desktop skeleton ── -->
@@ -55,7 +70,7 @@
           type="text"
           pInputText
           [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event)"
+          (ngModelChange)="onSearchChange($event)"
           placeholder="Buscar profesional…"
           class="p-inputtext-sm"
         />
@@ -103,7 +118,7 @@
           [options]="roleOptions()"
           optionLabel="label"
           optionValue="value"
-          [ngModel]="selectedRoleNames()"
+          [ngModel]="selectedRoleSlugs()"
           (ngModelChange)="onRoleFilterChange($event)"
           [placeholder]="lang.t('providers.filter_roles')"
           display="chip"
@@ -129,7 +144,7 @@
 
     <!-- ── Desktop table ── -->
     <div class="providers-table-view">
-      <p-table [value]="sortedProviders()" [tableStyle]="{ 'min-width': '50rem' }">
+      <p-table [value]="pagedProviders()" [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template pTemplate="header">
           <tr>
             <th>Nombre</th>
@@ -160,10 +175,10 @@
             <td>
               @if (providerRoles(provider).length > 0) {
                 <div class="table-roles">
-                  @for (role of providerRoles(provider); track role.name) {
-                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
-                      <span class="bw-chip__dot" [style.background]="roleMeta(role.name).color"></span>
-                      {{ roleLabel(role.name) }}
+                  @for (role of providerRoles(provider); track role.slug) {
+                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.slug).color">
+                      <span class="bw-chip__dot" [style.background]="roleMeta(role.slug).color"></span>
+                      {{ roleLabel(role) }}
                     </span>
                   }
                 </div>
@@ -177,6 +192,7 @@
                   {{ provider.active ? 'Activo' : 'Inactivo' }}
                 </span>
                 <p-toggleswitch
+                  *bwIfAbility="ABILITIES.providersManage"
                   [ngModel]="provider.active"
                   (ngModelChange)="toggleActive(provider)"
                   [disabled]="toggling().has(provider.id)"
@@ -186,7 +202,9 @@
             </td>
             <td>
               <p-button icon="pi pi-eye" class="p-button-text" pTooltip="Ver detalle" (onClick)="openView(provider)" />
-              <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
+              @if (canEditProvider()) {
+                <p-button icon="pi pi-pencil" class="p-button-text" pTooltip="Editar" (onClick)="openEdit(provider)" />
+              }
               <p-button icon="pi pi-calendar" class="p-button-text" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
             </td>
           </tr>
@@ -197,11 +215,17 @@
           </tr>
         </ng-template>
       </p-table>
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
     </div>
 
     <!-- ── Mobile cards ── -->
     <div class="providers-cards-view">
-      @for (provider of sortedProviders(); track provider.id) {
+      @for (provider of pagedProviders(); track provider.id) {
         <div
           class="bw-card bw-card--elevated prov-card"
           [style.border-left]="'4px solid ' + (locationColorMap().get(provider.location?.id) ?? 'var(--surface-border)')"
@@ -236,10 +260,10 @@
               <span class="prov-card__label">Roles</span>
               @if (providerRoles(provider).length > 0) {
                 <div class="table-roles">
-                  @for (role of providerRoles(provider); track role.name) {
-                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.name).color">
-                      <span class="bw-chip__dot" [style.background]="roleMeta(role.name).color"></span>
-                      {{ roleLabel(role.name) }}
+                  @for (role of providerRoles(provider); track role.slug) {
+                    <span class="bw-chip role-chip" [style.--chip-color]="roleMeta(role.slug).color">
+                      <span class="bw-chip__dot" [style.background]="roleMeta(role.slug).color"></span>
+                      {{ roleLabel(role) }}
                     </span>
                   }
                 </div>
@@ -255,6 +279,7 @@
                   {{ provider.active ? 'Activo' : 'Inactivo' }}
                 </span>
                 <p-toggleswitch
+                  *bwIfAbility="ABILITIES.providersManage"
                   [ngModel]="provider.active"
                   (ngModelChange)="toggleActive(provider)"
                   [disabled]="toggling().has(provider.id)"
@@ -266,13 +291,21 @@
 
           <div class="prov-card__actions">
             <p-button icon="pi pi-eye" label="Ver" severity="secondary" [outlined]="true" size="small" (onClick)="openView(provider)" />
-            <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
+            @if (canEditProvider()) {
+              <p-button icon="pi pi-pencil" label="Editar" size="small" (onClick)="openEdit(provider)" />
+            }
             <p-button icon="pi pi-calendar" label="Agenda" severity="secondary" [outlined]="true" size="small" (onClick)="goToAgenda(provider)" [disabled]="!provider.location" [pTooltip]="!provider.location ? 'Sin sucursal asignada' : 'Ver Agenda'" />
           </div>
         </div>
       } @empty {
         <div class="text-center">No se encontraron profesionales</div>
       }
+      <p-paginator
+        [first]="(page() - 1) * pageSize"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords()"
+        (onPageChange)="onPageChange($event)"
+      />
     </div>
   </p-card>
 }
@@ -341,3 +374,10 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<bw-capacity-limit-dialog
+  [visible]="capacityDialogVisible()"
+  titleKey="biz.tenant_professional_limit_reached"
+  detailKey="biz.tenant_professional_limit_reached.detail"
+  [quota]="activeBusinessProfessionalsQuota()"
+  (closed)="capacityDialogVisible.set(false)" />

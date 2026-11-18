@@ -2,13 +2,11 @@
 // FullCalendar — Admin (component-specific styles)
 // ============================================
 // Shared FullCalendar styles (layout chrome, .fc base, toolbar/media, dark
-// block, tooltips, blocked/now/preview, hover-mirror) live once in
+// block, tooltips, blocked/now/preview, highlight) live once in
 // `src/styles/_calendar.scss`. This file keeps only rules that differ between
 // the admin and provider calendars:
 //   • .cal-* skeletons (admin layout)
 //   • .calendar-loading radius/padding override (common core is global)
-//   • .event-details (grid variant)
-//   • .session-badge + detail helpers
 //   • .slot-menu (admin variant)
 
 .full-calendar-container {
@@ -131,76 +129,6 @@
   }
 }
 
-.event-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-
-  .detail-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    &--full {
-      grid-column: 1 / -1;
-    }
-
-    .label {
-      font-weight: 600;
-      color: var(--text-color-secondary);
-      font-size: 0.875rem;
-    }
-
-    .value {
-      color: var(--text-color);
-      font-size: 1rem;
-    }
-  }
-}
-
-.session-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  background: var(--green-50, #f0fdf4);
-  color: var(--green-800, #166534);
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.25rem 0.625rem;
-  border-radius: 999px;
-  width: fit-content;
-
-  &__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green-500, #22c55e);
-    flex-shrink: 0;
-  }
-}
-
-.detail-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.detail-sep {
-  color: var(--text-color-secondary);
-  font-size: 0.875rem;
-}
-
-.detail-rut {
-  font-size: 0.875rem !important;
-  color: var(--text-color-secondary) !important;
-}
-
-.whatsapp-link {
-  text-decoration: none;
-  display: inline-flex;
-}
-
 // ── Slot menu (admin variant) ─────────────────────────────────────────────────
 
 .slot-menu {
@@ -250,4 +178,12 @@
       background: rgba(220, 38, 38, 0.06) !important;
     }
   }
+}
+
+// ── Card spacing ─────────────────────────────────────────────────────────────
+// El menú lateral consume ancho útil. Recortamos el padding interno de la card
+// del calendario (Aura: 1.25rem) para que la grilla gane espacio. Scoped a este
+// componente: el calendario del profesional conserva el suyo.
+:host ::ng-deep .p-card .p-card-body {
+  padding: 0.75rem;
 }

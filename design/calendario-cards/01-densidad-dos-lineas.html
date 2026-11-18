@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Cards del calendario — 01 · La card real, con hora y contexto</title>
+<style>
+  /* Tokens reales del proyecto (src/styles/_tokens.scss y styles.scss). */
+  :root {
+    --bw-900:#012663; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    /* El badge de pago del calendario NO usa --bw-payment-partial: _calendar.scss:250
+       pinta el parcial con #65a30d (verde lima). Se replica el valor real. */
+    --ev-pay-partial:#65a30d;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --bw-surface-muted:#f3f4f6; --text-color:#1a2744; --text-color-secondary:#6b7280;
+    --text-heading:#111827; --text-label:#374151; --bw-tab-color:#0b3d95;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-2xl:1.5rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm);
+    --bw-weight-regular:400; --bw-weight-medium:500; --bw-weight-semibold:600; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em;
+    --bw-space-xs:0.25rem; --bw-space-sm:0.5rem; --bw-radius-sm:4px; --bw-radius-md:6px;
+    --bw-radius-lg:8px; --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    width:1440px; min-height:900px; padding:1.5rem 2rem 2.5rem;
+    font-family:var(--font-family); font-size:16px; line-height:1.5; color:var(--text-color);
+    background:var(--surface-ground); -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3 { margin:0; font-weight:var(--bw-weight-medium); }
+  code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.92em; }
+  .board { display:grid; gap:1.25rem; }
+
+  .board__head { display:flex; align-items:flex-start; gap:1rem; }
+  .board__head h1 { font-size:var(--bw-text-2xl); font-weight:var(--bw-weight-semibold); color:var(--text-heading); }
+  .board__head p { margin:.25rem 0 0; font-size:var(--bw-font-table); color:var(--text-color-secondary); max-width:64rem; }
+  .board__tag {
+    margin-left:auto; flex-shrink:0; padding:.25rem .625rem; border-radius:var(--bw-radius-sm);
+    border:1px solid color-mix(in srgb, var(--bw-300) 35%, transparent);
+    background:color-mix(in srgb, var(--bw-300) 10%, transparent);
+    color:var(--bw-tab-color); font-size:var(--bw-font-caption); font-weight:var(--bw-weight-medium);
+  }
+
+  .constraint {
+    display:flex; gap:.625rem; padding:.75rem 1rem; font-size:var(--bw-font-caption);
+    color:var(--text-color-secondary); background:var(--surface-card);
+    border:1px solid var(--surface-border); border-left:3px solid var(--bw-200);
+    border-radius:var(--bw-radius-md);
+  }
+  .constraint strong { color:var(--text-color); font-weight:var(--bw-weight-semibold); }
+
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.25rem; align-items:start; }
+  .panel {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden;
+  }
+  .panel__head {
+    display:flex; align-items:baseline; gap:.5rem; padding:.625rem .875rem;
+    border-bottom:1px solid var(--surface-border);
+  }
+  .panel__head h2 { font-size:var(--bw-font-table); font-weight:var(--bw-weight-semibold); }
+  .panel__head small { margin-left:auto; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .panel__body { padding:.75rem; display:grid; gap:.375rem; background:var(--surface-ground); }
+
+  /* ══ CARD ACTUAL (reproducida del calendario real) ══════════════════
+     Bloque a todo el ancho, relleno saturado por estado, avatar cuadrado
+     con la inicial y una sola línea «Nombre · Servicio» que se corta. */
+  .ev {
+    position:relative; display:flex; align-items:center; gap:.375rem;
+    height:48px; padding:.25rem .4375rem; overflow:hidden;
+    border-radius:var(--bw-radius-sm); background:var(--st);
+    color:var(--text-color); cursor:pointer;
+  }
+  .ev__avatar {
+    flex-shrink:0; width:20px; height:20px; border-radius:var(--bw-radius-sm);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:var(--bw-text-2xs); font-weight:var(--bw-weight-bold);
+    background:var(--av, var(--bw-900)); color:var(--av-text, #fff);
+  }
+  .ev__single {
+    min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-regular);
+  }
+  .ev__check {
+    position:absolute; top:.1875rem; right:.1875rem; width:14px; height:14px;
+    border-radius:3px; background:var(--bw-success); color:#fff;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.5rem; font-weight:var(--bw-weight-bold);
+  }
+
+  /* estados: el relleno viene de booking.status.color (acá, tokens de referencia) */
+  .st-reservado  { --st:var(--bw-status-reservado); --av:var(--bw-900); --av-text:#fff; }
+  .st-confirmado { --st:var(--bw-status-confirmado); --av:#2f6b3a; --av-text:#fff; }
+  .st-pendiente  { --st:var(--bw-status-pendiente); --av:#8a4a44; --av-text:#fff; }
+  .st-asiste     { --st:var(--bw-status-asiste); --av:#1b4d3a; --av-text:#fff; }
+
+  /* ══ PROPUESTA: misma card, con hora y contexto ═════════════════════
+     Se mantiene el relleno por estado y el avatar. La línea única pasa a
+     dos líneas reales: hora + paciente arriba, servicio + marcas abajo. */
+  .ev--prop { height:48px; padding:0 .4375rem 0 0; align-items:stretch; gap:0; }
+  /* El badge de pago va primero y OCUPA EL ALTO COMPLETO: banda vertical en el borde
+     izquierdo, como en la pantalla real. Sin padding lateral para que llegue al borde. */
+  .ev--prop .ev__pay {
+    align-self:stretch; width:20px; height:auto; border-radius:0;
+    /* Glifo legible de un vistazo: 14px bold en vez de 11px. */
+    font-size:var(--bw-text-sm); font-weight:var(--bw-weight-bold);
+    flex-shrink:0;
+    /* Sin borde: la banda de pago llega exactamente a la orilla izquierda de la card. */
+  }
+  /* Sin pago: no se reserva la banda, la info arranca al borde de la card. */
+  .ev--prop .ev__pay--none { display:none; }
+  .ev--prop .ev__main {
+    padding:.0625rem 0 0 .4375rem; min-height:0; overflow:hidden;
+    justify-content:flex-start;   /* la fila 1 va arriba, no al centro */
+  }
+  /* El alto NO se asume fijo: si la card es baja, se recorta y la fila 1 queda. */
+  .ev--prop { overflow:hidden; }
+  .ev--prop .ev__row1 { flex:0 0 auto; }
+  /* Nombre primero, hora después: la hora nunca se corta. */
+  .ev--prop .ev__time { margin-left:.25rem; }
+  .ev__main { min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:0; }
+  .ev__row1 { display:flex; align-items:baseline; gap:.3125rem; min-width:0; }
+  .ev__time {
+    flex-shrink:0; font-size:var(--bw-text-2xs); font-weight:var(--bw-weight-bold);
+    font-variant-numeric:tabular-nums; letter-spacing:.01em;
+  }
+  .ev__name {
+    min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium);
+  }
+  .ev__row2 { display:flex; align-items:center; gap:.3125rem; min-width:0; }
+  .ev__ctx {
+    min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:var(--bw-text-2xs); color:color-mix(in srgb, var(--text-color) 72%, transparent);
+  }
+  .ev__marks { margin-left:auto; display:flex; align-items:center; gap:.1875rem; flex-shrink:0; }
+  /* las marcas de la fila 2 se quedan solo con la píldora de sesiones */
+  .ev__sessions {
+    font-size:var(--bw-text-2xs); font-weight:var(--bw-weight-bold); font-variant-numeric:tabular-nums;
+    padding:0 .1875rem; border-radius:3px; background:color-mix(in srgb, var(--text-color) 16%, transparent);
+  }
+  .ev__pay {
+    width:13px; height:13px; border-radius:3px; display:inline-flex; align-items:center;
+    justify-content:center; font-size:.5rem; font-weight:var(--bw-weight-bold); color:#fff;
+  }
+  .ev__pay--paid { background:var(--bw-payment-paid); }
+  .ev__pay--partial { background:var(--ev-pay-partial); }
+
+  /* variante compacta: eventos cortos (< 30 min) */
+  .ev--short { height:24px; }
+  .ev--short .ev__row2 { display:none; }
+  .ev--short .ev__avatar { width:16px; height:16px; font-size:.5rem; }
+
+  /* bloqueado: rayas, sin avatar */
+  .ev--blocked {
+    --st:transparent;
+    background:repeating-linear-gradient(45deg, var(--bw-surface-muted) 0 8px, var(--surface-card) 8px 16px);
+    border:1px dashed var(--surface-border); color:var(--text-color-secondary);
+  }
+  .ev--blocked .ev__name { font-weight:var(--bw-weight-regular); color:var(--text-color-secondary); }
+
+  .legend { display:flex; flex-wrap:wrap; gap:.75rem; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .legend span { display:inline-flex; align-items:center; gap:.3125rem; }
+  .dot { width:10px; height:10px; border-radius:3px; }
+
+  .notes { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:1.25rem; }
+  .note {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); padding:1rem 1.125rem;
+  }
+  .note h3 { font-size:var(--bw-font-table); font-weight:var(--bw-weight-semibold); margin-bottom:.5rem; }
+  .note ul { margin:0; padding-left:1.125rem; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .note li { margin-bottom:.375rem; }
+  .note li b { color:var(--text-color); font-weight:var(--bw-weight-medium); }
+  .sizes-note { margin:.375rem 0 0; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .sizes-note b { color:var(--text-color); font-weight:var(--bw-weight-medium); }
+  .tradeoff {
+    border-left:3px solid var(--bw-warning); background:color-mix(in srgb, var(--bw-warning) 8%, transparent);
+    border-radius:var(--bw-radius-md); padding:.75rem 1rem; font-size:var(--bw-font-caption);
+  }
+  .tradeoff strong { color:var(--bw-chip-text-warning); }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <div class="board__head">
+    <div>
+      <h1>Cards del calendario · 01 — la card real, con hora y contexto</h1>
+      <p>Sobre el bloque de color que ya existe: se mantiene el relleno por estado y el badge de pago a la
+        izquierda, se quita el avatar, y la línea única «Nombre · Servicio» pasa a dos líneas reales.
+        Entra <strong>la hora</strong>, el servicio deja de cortarse y aparece la sesión del pack.</p>
+    </div>
+    <span class="board__tag">Corregido sobre la pantalla real</span>
+  </div>
+
+  <div class="constraint">
+    <span aria-hidden="true">ⓘ</span>
+    <span>
+      <strong>La dibuja FullCalendar (librería), no Angular.</strong> Se genera en
+      <code>buildEventContent()</code> como string HTML y se estiliza con CSS global en
+      <code>src/styles/_calendar.scss</code>. Sin bindings ni PrimeNG adentro: los datos van
+      interpolados y el texto se escapa a mano. El alto lo fija la librería (evento de 30 min ≈ 48 px;
+      cortos caen a <code>eventShortHeight</code>).
+    </span>
+  </div>
+
+  <div class="cols">
+
+    <!-- ── HOY ──────────────────────────────────────────────────────── -->
+    <section class="panel" aria-labelledby="hoy">
+      <div class="panel__head">
+        <h2 id="hoy">Hoy</h2>
+        <small>relleno por estado · avatar · una línea</small>
+      </div>
+      <div class="panel__body">
+        <div class="ev st-reservado">
+          <span class="ev__avatar" aria-hidden="true">M</span>
+          <span class="ev__single">Matias Díaz · Kinesiología</span>
+        </div>
+        <div class="ev st-confirmado">
+          <span class="ev__avatar" aria-hidden="true">I</span>
+          <span class="ev__single">Isadora Muñoz · Masaje Deportivo</span>
+        </div>
+        <div class="ev st-pendiente">
+          <span class="ev__avatar" aria-hidden="true">F</span>
+          <span class="ev__single">Felipe Castro · Kinesiología</span>
+        </div>
+        <div class="ev st-reservado">
+          <span class="ev__avatar" aria-hidden="true">C</span>
+          <span class="ev__single">Camila Torres · Masaje D…</span>
+          <span class="ev__check" aria-label="confirmada">✓</span>
+        </div>
+        <div class="ev st-confirmado">
+          <span class="ev__avatar" aria-hidden="true">S</span>
+          <span class="ev__single">Sofia Herrera · Masaje Dep…</span>
+        </div>
+      </div>
+      <div class="panel__body" style="padding-top:0;background:transparent">
+        <p style="margin:0;font-size:var(--bw-font-caption);color:var(--text-color-secondary)">
+          <strong>Sin la hora no se puede escanear el día de un vistazo</strong>: el nombre consume el
+          ancho disponible y el servicio queda cortado a media palabra. La sesión del pack y el estado
+          de pago no aparecen en ningún lado, aunque el dato ya está en el evento.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── PROPUESTA ───────────────────────────────────────────────── -->
+    <section class="panel" aria-labelledby="prop">
+      <div class="panel__head">
+        <h2 id="prop">Propuesta</h2>
+        <small>mismo alto · hora + contexto</small>
+      </div>
+      <div class="panel__body">
+        <div class="ev ev--prop st-reservado">
+          <span class="ev__pay ev__pay--none" aria-hidden="true"></span>
+          <span class="ev__main">
+            <span class="ev__row1">
+              <span class="ev__name">Matias Díaz</span>
+              <span class="ev__time">09:00</span>
+            </span>
+            <span class="ev__row2">
+              <span class="ev__ctx">Kinesiología general</span>
+            </span>
+          </span>
+        </div>
+
+        <div class="ev ev--prop st-confirmado">
+          <span class="ev__pay ev__pay--paid" aria-label="pagado">$</span>
+          <span class="ev__main">
+            <span class="ev__row1">
+              <span class="ev__name">Isadora Muñoz</span>
+              <span class="ev__time">10:00</span>
+            </span>
+            <span class="ev__row2">
+              <span class="ev__ctx">Masaje deportivo</span>
+            </span>
+          </span>
+        </div>
+
+        <div class="ev ev--prop st-pendiente">
+          <span class="ev__pay ev__pay--partial" aria-label="pago parcial">A</span>
+          <span class="ev__main">
+            <span class="ev__row1">
+              <span class="ev__name">Felipe Castro</span>
+              <span class="ev__time">11:30</span>
+            </span>
+            <span class="ev__row2">
+              <span class="ev__ctx">Kinesiología general</span>
+            </span>
+          </span>
+        </div>
+
+        <div class="ev ev--prop st-reservado">
+          <span class="ev__pay ev__pay--none" aria-hidden="true"></span>
+          <span class="ev__main">
+            <span class="ev__row1">
+              <span class="ev__name">Camila Torres</span>
+              <span class="ev__time">12:00</span>
+            </span>
+            <span class="ev__row2">
+              <span class="ev__ctx">Pack · sesión 3/6</span><span class="ev__marks"><span class="ev__sessions">3/6</span></span>
+            </span>
+          </span>
+          <span class="ev__check" aria-label="confirmada">✓</span>
+        </div>
+
+
+
+        <div class="ev ev--prop ev--short st-asiste">
+          <span class="ev__pay ev__pay--paid" aria-label="pagado">$</span>
+          <span class="ev__main">
+            <span class="ev__row1">
+              <span class="ev__name">Sofia Herrera</span>
+              <span class="ev__time">12:15</span>
+            </span>
+          </span>
+        </div>
+
+        <div class="ev ev--blocked" style="height:48px">
+          <span class="ev__main">
+            <span class="ev__row1">
+              <span class="ev__name">Bloqueado · almuerzo</span>
+              <span class="ev__time">13:00–14:00</span>
+            </span>
+          </span>
+        </div>
+      </div>
+      <div class="legend" style="padding:0 .875rem .75rem">
+        <span><i class="dot" style="background:var(--bw-status-reservado)"></i>reservado</span>
+        <span><i class="dot" style="background:var(--bw-status-confirmado)"></i>confirmado</span>
+        <span><i class="dot" style="background:var(--bw-status-pendiente)"></i>pendiente</span>
+        <span><i class="dot" style="background:var(--bw-status-asiste)"></i>asistió</span>
+        <span>· los rellenos reales vienen de <code>booking.status.color</code></span>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Altos: la primera línea siempre gana ────────────────────────── -->
+  <section class="panel" aria-labelledby="altos">
+    <div class="panel__head">
+      <h2 id="altos">El alto no se asume: la primera línea siempre se ve</h2>
+      <small>recorte en el eje Y · sin tamaños fijos</small>
+    </div>
+    <div class="panel__body" style="grid-template-columns:repeat(3, minmax(0,1fr)); display:grid; gap:.75rem">
+      <div>
+        <div class="ev ev--prop st-reservado" style="height:22px">
+          <span class="ev__pay ev__pay--paid" aria-label="pagado">$</span>
+          <span class="ev__main">
+            <span class="ev__row1"><span class="ev__name">Matias Díaz</span><span class="ev__time">09:00</span></span>
+            <span class="ev__row2"><span class="ev__ctx">Kinesiología general</span></span>
+          </span>
+        </div>
+        <p class="sizes-note"><b>22 px</b> (evento de 30 min): se ve la fila 1; la fila 2 se recorta.</p>
+      </div>
+      <div>
+        <div class="ev ev--prop st-confirmado" style="height:48px">
+          <span class="ev__pay ev__pay--partial" aria-label="pago parcial">A</span>
+          <span class="ev__main">
+            <span class="ev__row1"><span class="ev__name">Isadora Muñoz</span><span class="ev__time">10:00</span></span>
+            <span class="ev__row2"><span class="ev__ctx">Masaje deportivo</span></span>
+          </span>
+        </div>
+        <p class="sizes-note"><b>48 px</b> (evento de 60 min): entran las dos líneas.</p>
+      </div>
+      <div>
+        <div class="ev ev--prop st-pendiente" style="height:48px">
+          <span class="ev__pay ev__pay--none" aria-hidden="true"></span>
+          <span class="ev__main">
+            <span class="ev__row1"><span class="ev__name">Felipe Castro</span><span class="ev__time">11:30</span></span>
+            <span class="ev__row2"><span class="ev__ctx">Kinesiología general</span></span>
+          </span>
+        </div>
+        <p class="sizes-note"><b>Sin pago</b>: no se reserva la banda, el texto arranca al borde.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Notas ──────────────────────────────────────────────────────── -->
+  <div class="notes">
+    <section class="note">
+      <h3>Qué entra y de dónde sale</h3>
+      <ul>
+        <li><b>Nombre y después hora</b> — el paciente va primero y la hora lo sigue, con
+          <code>font-variant-numeric: tabular-nums</code> y <code>flex-shrink:0</code> para que nunca
+          se corte.</li>
+        <li><b>Paciente</b> — <code>booking.client</code>; deja de compartir línea con el servicio, así
+          no se corta a media palabra.</li>
+        <li><b>Servicio</b> — <code>booking.service.name</code>, segunda línea con elipsis.</li>
+        <li><b>Pack</b> — si hay <code>booking.pack_session</code> → «Pack · sesión 3/6» + píldora
+          <b>3/6</b> a la derecha.</li>
+        <li><b>Pago</b> — <code>booking.payment_status</code>: <code>$</code> pagado,
+          <code>A</code> parcial; impago deja la banda vacía. Ojo: el parcial va en
+          <code>#65a30d</code> como en <code>_calendar.scss</code>, no en el token
+          <code>--bw-payment-partial</code>.</li>
+        <li><b>Sin avatar</b> — el cuadro con la inicial se saca. Su lugar lo ocupa el
+          <b>badge de pago a alto completo</b>: banda vertical de 20 px con el símbolo centrado a 14 px
+          (<code>$</code> pagado <code>#1FB27C</code>, <code>A</code> parcial <code>#65a30d</code>,
+          vacía si impago). La banda llega <b>exactamente a la orilla</b>, sin borde propio: el color
+          del estado ya lo comunica el relleno de la card.</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <h3>Qué cuesta implementarlo</h3>
+      <ul>
+        <li><code>buildEventContent()</code>: se agregan <code>ev__time</code>, <code>ev__row2</code> y
+          las marcas; se mantiene el relleno por estado y el avatar actuales.</li>
+        <li><code>_calendar.scss</code>: sólo se suman reglas <code>.fc .ev__*</code>; no hay que
+          reemplazar las existentes, así que el riesgo es bajo.</li>
+        <li>El alto de 48 px <b>ya existe</b>: no se toca <code>slotDuration</code> ni
+          <code>eventMinHeight</code>.</li>
+        <li>El recorte es <code>overflow: hidden</code> en <code>.ev</code> y
+          <code>justify-content: flex-start</code> en <code>.ev__main</code>: la fila 1 se ancla arriba y
+          lo que no entra se recorta, sin asumir alturas fijas.</li>
+        <li><code>displayEventTime: false</code> en FullCalendar: la hora la pinta la card, si no la
+          librería dibuja la suya encima.</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <h3>Riesgo de contraste</h3>
+      <p style="margin:0 0 .5rem;font-size:var(--bw-font-caption);color:var(--text-color-secondary)">
+        El relleno saturado con texto oscuro ya está ajustado. Al sumar la segunda línea y las marcas hay
+        que mantener el texto principal en <code>--text-color</code> y el secundario al
+        <b>72 % de opacidad</b> (no en <code>--text-color-secondary</code>, que sobre salmón o ámbar
+        pierde AA).
+      </p>
+      <div class="tradeoff">
+        <strong>Tradeoff:</strong> dos líneas en 48 px dejan tipografía de 12–14 px; en un evento de 30
+        minutos se lee bien, pero en una pantalla compartida o proyector sigue siendo chico. La
+        alternativa es agrandar el slot, que cambia la densidad del día entero.
+      </div>
+    </section>
+  </div>
+
+</div>
+</body>
+</html>

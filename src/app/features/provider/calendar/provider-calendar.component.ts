@@ -26,10 +26,18 @@ import { MessageService } from 'primeng/api';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
 import { AuthService } from '@services/auth.service';
+import { ReferenceStore } from '@core/stores/reference.store';
+import { HolidaysApiService } from '@services/api/holidays-api.service';
+import { dayClosedKind, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
 import { Booking, BlockedSlot } from '@models';
 import { BookingFormDialogComponent } from '@features/admin/bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '@features/admin/bookings/block-time-dialog/block-time-dialog.component';
-import { BOOKING_STATUSES, bookingStatusChipClass } from '@features/admin/bookings/constants/booking-statuses';
+import {
+  BOOKING_STATUSES,
+  bookingStatusChipClass,
+  bookingStatusChipTextClass,
+} from '@features/admin/bookings/constants/booking-statuses';
+import { formatSpanishLongDate, personInitials } from '@core/utils/booking-sheet.util';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { BookingStore } from '@core/stores/booking.store';
@@ -69,6 +77,8 @@ import luxonPlugin from '@fullcalendar/luxon';
 export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private blockedSlotsApi = inject(BlockedSlotsApiService);
   private auth           = inject(AuthService);
+  private readonly referenceStore = inject(ReferenceStore);
+  private readonly holidaysApi    = inject(HolidaysApiService);
   private messageService = inject(MessageService);
   private ngZone         = inject(NgZone);
   readonly lang          = inject(LanguageService);
@@ -76,6 +86,14 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   private httpError      = inject(HttpErrorService);
   private tzService      = inject(TimezoneService);
   private route          = inject(ActivatedRoute);
+
+  /** Feriados cargados por fecha (`YYYY-MM-DD` → nombre). */
+  private readonly holidaysByDate = signal<HolidayMap>(new Map());
+  private readonly loadedHolidayYears = new Set<number>();
+  /** Bloqueo global de feriados, leído del bootstrap de sesión (/auth/me). */
+  private readonly blockHolidays = computed(
+    () => this.auth.me()?.business?.block_bookings_on_holidays ?? true,
+  );
   private calendar: Calendar | null = null;
   private nowLabelInterval: ReturnType<typeof setInterval> | null = null;
   private refreshScheduled = false;
@@ -125,17 +143,30 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   showSlotMenu = signal(false);
   slotMenuPosition = { x: 0, y: 0 };
+  slotMenuAbove = signal(false);
   private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
+  private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  // Ephemeral hover preview (timeGrid): the day + time are resolved from the
+  // pointer, then FullCalendar paints the highlight through select(). No state.
+  private hoverEl: HTMLElement | null = null;
+  private hoverBoundMove: (e: Event) => void = () => {};
+  private hoverBoundLeave: (e: Event) => void = () => {};
+  private lastHoverKey = '';
 
   isMobile = signal(false);
+
+  /** Mobile + tablet: header del día angosto → feriado compacto + tap. */
+  isCompactHeader = signal(false);
 
   showEventDialog = signal(false);
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin, luxonPlugin],
     initialView: 'timeGridWeek',
-    slotMinTime: '09:00:00',
-    slotMaxTime: '21:00:00',
+    slotMinTime: '00:00:00',
+    slotMaxTime: '24:00:00',
+    scrollTime: '08:00:00',
     locale: this.lang.lang() === 'en' ? 'en' : esLocale,
     // Timezone desde servicio centralizado
     timeZone: this.tzService.activeTimezone(),
@@ -155,6 +186,8 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     editable: true,
     selectable: true,
     selectMirror: true,
+    unselectAuto: false,
+    allDaySlot: false,
     dayMaxEvents: true,
     weekends: true,
     longPressDelay: 300,
@@ -175,9 +208,10 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       hour12: false,
     },
     slotDuration: '00:30:00',
-    // Snapping del drag & drop independiente de la grilla visual
-    snapDuration: '00:15:00',
     contentHeight: this.getContentHeight(),
+    dayCellClassNames: (arg) => this.dayCellClassNames(arg),
+    dayHeaderContent: (arg) => this.holidayHeader(arg),
+    dayHeaderDidMount: (arg) => this.decorateHolidayHeader(arg),
   };
 
   constructor() {
@@ -192,6 +226,13 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       if (this.calendar) {
         this.ngZone.runOutsideAngular(() => this.calendar!.setOption('timeZone', tz));
       }
+    });
+
+    // Re-render day cells when the locations list loads/changes so the
+    // working_days shading appears once the (async) locations arrive.
+    effect(() => {
+      this.referenceStore.locations();
+      this.rerenderDays();
     });
 
     // Watch store state to manage loading visual and refresh calendar
@@ -241,10 +282,12 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnInit(): void {
     this.checkViewport();
+    this.loadHolidays();
   }
 
   ngAfterViewInit(): void {
     this.initCalendar();
+    this.setupHolidayTap();
     this.watchDateQueryParam();
   }
 
@@ -261,6 +304,118 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     return window.innerHeight - 250;
   }
 
+  private loadHolidays(): void {
+    const year = new Date().getFullYear();
+    [year - 1, year, year + 1].forEach((y) => this.loadHolidayYear(y));
+  }
+
+  private loadHolidayYear(year: number): void {
+    if (this.loadedHolidayYears.has(year)) return;
+    this.loadedHolidayYears.add(year);
+    this.holidaysApi.getHolidays({ year }).subscribe({
+      next: (list) => {
+        const map = new Map(this.holidaysByDate());
+        list.forEach((h) => map.set(h.date, h.name));
+        this.holidaysByDate.set(map);
+        this.rerenderDays();
+      },
+      error: () => this.loadedHolidayYears.delete(year),
+    });
+  }
+
+  /** Re-renderiza las celdas-día para reflejar feriados/bloqueo, preservando el scroll vertical. */
+  private rerenderDays(): void {
+    if (!this.calendar) return;
+    const host = this.calendarContainer.nativeElement as HTMLElement;
+    const scrollTop = (host.querySelector('.fc-scroller') as HTMLElement | null)?.scrollTop ?? 0;
+    this.ngZone.runOutsideAngular(() => {
+      this.calendar!.render();
+      if (scrollTop > 0) {
+        const after = host.querySelector('.fc-scroller') as HTMLElement | null;
+        if (after) after.scrollTop = scrollTop;
+      }
+    });
+  }
+
+  private providerWorkingDays(): readonly number[] | undefined {
+    return this.referenceStore
+      .locations()
+      .find((l) => l.id === this.lockedLocationId)?.working_days;
+  }
+
+  private dayCellClassNames(arg: { date: Date }): string[] {
+    const kind = dayClosedKind(
+      arg.date,
+      this.providerWorkingDays(),
+      this.holidaysByDate(),
+      this.blockHolidays(),
+    );
+    return kind ? [`fc-day-${kind}`] : []; // 'fc-day-holiday' | 'fc-day-closed'
+  }
+
+  private holidayHeader(arg: { date: Date; text: string; view: { type: string } }): { html: string } {
+    // En la vista mes el header son nombres de weekday, no fechas: no aplica.
+    if (!arg.view.type.startsWith('timeGrid')) return { html: arg.text };
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (!name) return { html: arg.text };
+    const safe = name.replace(
+      /[&<>"']/g,
+      (c: string) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+    );
+    if (this.isCompactHeader()) {
+      return {
+        html: `${arg.text}<span class="fc-holiday-badge" title="${safe}" aria-label="${safe}">●</span>`,
+      };
+    }
+    return { html: `${arg.text}<span class="fc-holiday-label" title="${safe}">${safe}</span>` };
+  }
+
+  /** Nombre del feriado como tooltip del header del día (hover en desktop). */
+  private decorateHolidayHeader(arg: {
+    date: Date;
+    el: HTMLElement;
+    view: { type: string };
+  }): void {
+    if (!arg.view.type.startsWith('timeGrid')) {
+      arg.el.removeAttribute('title');
+      return;
+    }
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (name) arg.el.title = name;
+    else arg.el.removeAttribute('title');
+  }
+
+  /**
+   * En mobile/tablet el `title` no se abre en touch: un tap en el header de un día
+   * feriado muestra el nombre en un toast. Delegado en el contenedor para sobrevivir
+   * a los re-render (los headers se montan antes de que carguen los feriados).
+   */
+  private setupHolidayTap(): void {
+    const host = this.calendarContainer.nativeElement as HTMLElement;
+    host.addEventListener('click', (e) => this.onHolidayHeaderTap(e));
+  }
+
+  private onHolidayHeaderTap(e: Event): void {
+    if (!this.isCompactHeader()) return;
+    if (!this.calendar?.view.type.startsWith('timeGrid')) return;
+    const cell = (e.target as HTMLElement | null)?.closest(
+      '.fc-col-header-cell',
+    ) as HTMLElement | null;
+    const dateStr = cell?.getAttribute('data-date');
+    const holidayName = dateStr ? this.holidaysByDate().get(dateStr) : undefined;
+    if (!holidayName) return;
+    this.ngZone.run(() =>
+      this.messageService.add({
+        severity: 'info',
+        summary: this.lang.t('cal.legend.holiday'),
+        detail: holidayName,
+        life: 4000,
+        key: 'global',
+      }),
+    );
+  }
+
   /** Reacciona al `?date=` del widget de navegación (incluso si ya está montado). */
   private watchDateQueryParam(): void {
     this.route.queryParamMap.subscribe((params) => {
@@ -275,6 +430,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   private checkViewport(): void {
     this.isMobile.set(window.innerWidth < 768);
+    this.isCompactHeader.set(window.innerWidth < 1024);
   }
 
   private initCalendar(): void {
@@ -288,6 +444,10 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
           if (info.event.extendedProps['isBlocked']) return;
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
+          // Month view only: events listed inside FullCalendar's day popover
+          // ("+N más") must not raise our hover tooltip on top of that popover.
+          // That popover only exists in dayGrid/month, so this is month-scoped.
+          if (info.el.closest('.fc-popover')) return;
           this.ngZone.run(() => {
             this.hoveredBooking.set(booking);
             this.eventTooltip?.show(info.jsEvent, info.el);
@@ -314,6 +474,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
           const isTimeGrid = (this.calendar?.view.type ?? '').startsWith('timeGrid');
           if (!isTimeGrid) {
             this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
+            this.slotMenuAbove.set(window.innerHeight - info.jsEvent.clientY < 200);
             this.showSlotMenu.set(true);
             return;
           }
@@ -329,17 +490,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
             requestAnimationFrame(() => {
               this.ngZone.run(() => {
-                const el = this.calendarContainer.nativeElement
-                  .querySelector('.bw-slot-preview');
-                if (el) {
-                  const rect = el.getBoundingClientRect();
-                  this.slotMenuPosition = {
-                    x: rect.left + rect.width / 2,
-                    y: rect.top,
-                  };
-                } else {
-                  this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
-                }
+                this.positionSlotMenu(info.jsEvent.clientX, info.jsEvent.clientY);
                 this.showSlotMenu.set(true);
               });
             });
@@ -360,6 +511,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
       });
       this.calendar.render();
       this.startNowLabel();
+      this.setupHoverSelect();
 
       // Salto por URL (`?date=YYYY-MM-DD`) desde el widget de navegación del sidebar.
       const qDate = this.route.snapshot.queryParamMap.get('date');
@@ -371,6 +523,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnDestroy(): void {
     if (this.nowLabelInterval) clearInterval(this.nowLabelInterval);
+    this.destroyHoverSelect();
     if (this.calendar) this.calendar.destroy();
   }
 
@@ -444,10 +597,11 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     return this.tzService.formatTime(iso);
   }
 
+  /** Preview duration for the slot click preview — follows the slot density. */
   private getPreviewDuration(): number {
     const raw = (this.calendarOptions.slotDuration as string) ?? '00:30:00';
     const [h, m] = raw.split(':').map(Number);
-    return (h * 60 + m) * 60 * 1000 * 2;
+    return (h * 60 + m) * 60 * 1000;
   }
 
   private removeSlotPreview(): void {
@@ -458,7 +612,113 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   dismissSlotMenu(): void {
     this.showSlotMenu.set(false);
+    this.clearHoverSelect();
     this.removeSlotPreview();
+  }
+
+  // ── Hover preview (timeGrid) ──────────────────────────────────────────────
+  // FullCalendar renders ONE full-width slat lane per time row and separate
+  // per-day column overlays, so a pure-CSS row hover cannot isolate a day. The
+  // day is read from the column header cell and the time from the slat lane,
+  // then select() paints the exact day+time cell as `.fc-highlight`.
+
+  private setupHoverSelect(): void {
+    this.hoverEl = this.calendarContainer?.nativeElement ?? null;
+    if (!this.hoverEl) return;
+    // On touch devices the compatibility mouse events fight with tap-to-select.
+    if (this.isTouchDevice) return;
+
+    this.hoverBoundMove = (e: Event) => this.onHoverMove(e as MouseEvent);
+    this.hoverBoundLeave = () => this.clearHoverSelect();
+
+    this.ngZone.runOutsideAngular(() => {
+      this.hoverEl!.addEventListener('mousemove', this.hoverBoundMove);
+      this.hoverEl!.addEventListener('mouseleave', this.hoverBoundLeave);
+    });
+  }
+
+  private destroyHoverSelect(): void {
+    if (!this.hoverEl) return;
+    this.hoverEl.removeEventListener('mousemove', this.hoverBoundMove);
+    this.hoverEl.removeEventListener('mouseleave', this.hoverBoundLeave);
+    this.hoverEl = null;
+  }
+
+  private onHoverMove(event: MouseEvent): void {
+    if (!this.calendar) return;
+    if (!this.calendar.view.type.startsWith('timeGrid')) return;
+    if (this.showSlotMenu()) return; // menu owns the highlight while open
+    if (event.buttons !== 0) return; // do not fight an in-progress drag-select
+
+    const target = event.target as HTMLElement;
+    if (target.closest('.fc-event') || target.closest('.fc-more-link')) {
+      this.clearHoverSelect();
+      return;
+    }
+
+    const dateStr = this.resolveHoverDate(event.clientX);
+    const timeStr = this.resolveHoverTime(event.clientY);
+    if (!dateStr || !timeStr) {
+      this.clearHoverSelect();
+      return;
+    }
+
+    const start = this.tzService.parseDate(`${dateStr}T${timeStr}`);
+    const key = `${start.getTime()}`;
+    if (key === this.lastHoverKey) return;
+    this.lastHoverKey = key;
+
+    const end = new Date(start.getTime() + this.getPreviewDuration());
+    this.ngZone.runOutsideAngular(() => this.calendar!.select(start, end));
+
+    // Ghost state until a click pins it (Bookwise border); the menu-close path
+    // removes the class and the selection together.
+    this.calendarContainer?.nativeElement?.classList.add('bw-slot-hovering');
+    this.markHighlightTime(timeStr);
+  }
+
+  /** Stamp the hour onto FullCalendar's highlight node (rendered after select()). */
+  private markHighlightTime(timeStr: string): void {
+    const label = timeStr.slice(0, 5);
+    requestAnimationFrame(() => {
+      const hl = this.calendarContainer?.nativeElement?.querySelector('.fc-highlight');
+      if (hl) (hl as HTMLElement).setAttribute('data-bw-time', label);
+    });
+  }
+
+  /** Day (YYYY-MM-DD) of the column under the pointer, from the header cell. */
+  private resolveHoverDate(clientX: number): string | null {
+    const root = this.calendarContainer.nativeElement as HTMLElement;
+    const cells = root.querySelectorAll<HTMLElement>('.fc-col-header-cell[data-date]');
+    for (const cell of cells) {
+      const rect = cell.getBoundingClientRect();
+      if (clientX >= rect.left && clientX <= rect.right) {
+        return cell.getAttribute('data-date');
+      }
+    }
+    return null;
+  }
+
+  /** Slot time (HH:mm:ss) of the slat row under the pointer. */
+  private resolveHoverTime(clientY: number): string | null {
+    const root = this.calendarContainer.nativeElement as HTMLElement;
+    const lanes = root.querySelectorAll<HTMLElement>('.fc-timegrid-slot-lane[data-time]');
+    for (const lane of lanes) {
+      const rect = lane.getBoundingClientRect();
+      if (clientY >= rect.top && clientY <= rect.bottom) {
+        return lane.getAttribute('data-time');
+      }
+    }
+    return null;
+  }
+
+  private clearHoverSelect(): void {
+    this.calendarContainer?.nativeElement?.classList.remove('bw-slot-hovering');
+    this.lastHoverKey = '';
+    // Keep the pinned block while the slot menu is open (a click persists it).
+    if (this.calendar && !this.showSlotMenu()) {
+      this.ngZone.runOutsideAngular(() => this.calendar!.unselect());
+    }
   }
 
   private buildEventContent(info: EventContentArg): { html: string } {
@@ -583,17 +843,51 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
+  /**
+   * Anchor the slot menu just below the marked cell, flipping above it when
+   * there is not enough room under the viewport. Uses `.fc-highlight` (which
+   * persists) instead of the transient selection mirror.
+   */
+  private positionSlotMenu(fallbackX: number, fallbackY: number): void {
+    const root = this.calendarContainer.nativeElement as HTMLElement;
+    const cell =
+      (root.querySelector('.fc-highlight') as HTMLElement | null) ??
+      (root.querySelector('.bw-slot-preview') as HTMLElement | null);
+    if (!cell) {
+      this.slotMenuPosition = { x: fallbackX, y: fallbackY };
+      return;
+    }
+    const rect = cell.getBoundingClientRect();
+    const MENU_HEIGHT_ESTIMATE = 150;
+    if (window.innerHeight - rect.bottom < MENU_HEIGHT_ESTIMATE) {
+      this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.top };
+      this.slotMenuAbove.set(true);
+    } else {
+      this.slotMenuPosition = { x: rect.left + rect.width / 2, y: rect.bottom };
+      this.slotMenuAbove.set(false);
+    }
+  }
+
   private handleDateSelect(selectInfo: DateSelectArg): void {
     this.selectedDate = this.tzService.parseDate(selectInfo.startStr);
     this.selectedEndDate = selectInfo.endStr ? this.tzService.parseDate(selectInfo.endStr) : null;
-    if (selectInfo.jsEvent) {
-      this.slotMenuPosition = { x: selectInfo.jsEvent.clientX, y: selectInfo.jsEvent.clientY };
-      this.showSlotMenu.set(true);
-    }
+    const jsEvent = selectInfo.jsEvent;
+    if (!jsEvent) return;
+    // A click pins the block: drop the ghost class (Bookwise border) and keep
+    // the hour stamped on the highlight.
+    this.calendarContainer?.nativeElement?.classList.remove('bw-slot-hovering');
+    this.markHighlightTime(this.fmt(selectInfo.startStr));
+    requestAnimationFrame(() => {
+      this.ngZone.run(() => {
+        this.positionSlotMenu(jsEvent.clientX, jsEvent.clientY);
+        this.showSlotMenu.set(true);
+      });
+    });
   }
 
   openNewBooking(): void {
     this.showSlotMenu.set(false);
+    this.clearHoverSelect();
     this.removeSlotPreview();
     const dateToUse = this.selectedDate || new Date();
     this.newBookingDialog.openNew(undefined, dateToUse, this.lockedLocationId);
@@ -601,6 +895,7 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
 
   openBlockTime(): void {
     this.showSlotMenu.set(false);
+    this.clearHoverSelect();
     this.removeSlotPreview();
     this.blockTimeDialog.open(
       this.selectedDate || new Date(),
@@ -618,4 +913,20 @@ export class ProviderCalendarComponent implements OnInit, OnDestroy, AfterViewIn
   getStatusChipClass(statusName?: string, statusId?: number): string {
     return bookingStatusChipClass(statusName, statusId);
   }
+
+  /** Texto AA del chip de estado — el acento solo no es legible sobre su tinte. */
+  getStatusChipTextClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipTextClass(statusName, statusId);
+  }
+
+  /** Iniciales del avatar en la ficha de la cita. */
+  readonly sheetInitials = computed(() => {
+    const client = this.store.selectedBooking()?.client;
+    return personInitials(client?.first_name, client?.last_name);
+  });
+
+  /** «viernes 14 de noviembre»: el día del bloque de sesión. */
+  readonly sheetLongDate = computed(() =>
+    formatSpanishLongDate(this.store.selectedBooking()?.start_time),
+  );
 }

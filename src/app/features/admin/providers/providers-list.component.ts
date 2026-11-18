@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -14,15 +15,20 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { RolesApiService } from '@services/api/roles-api.service';
-import { HttpErrorService } from '@services/http-error.service';
+import { HttpErrorService, isCapacityLimitError } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { LanguageService } from '@services/language.service';
 import { ReferenceStore } from '@core/stores/reference.store';
-import { Location, Provider, Role } from '@models';
+import { SubscriptionStore } from '@core/stores/subscription.store';
+import { Location, Provider, Role, Quota } from '@models';
 import { roleMeta } from '../roles/role-meta';
 import { locationColor } from '@shared/utils/location-palette.util';
 import { BOOKING_STATUSES } from '../bookings/constants/booking-statuses';
 import { ProviderDialogComponent, DialogMode } from './provider-dialog/provider-dialog.component';
+import { ABILITIES } from '@shared/config/abilities.config';
+import { BwIfAbilityDirective } from '@shared/directives/bw-if-ability.directive';
+import { CapacityLimitDialogComponent } from '@shared/components/capacity-limit-dialog/capacity-limit-dialog.component';
+import { AuthService } from '@services/auth.service';
 
 // ── Color palette for location grouping ────────────────────────────────
 // Los colores de sucursal se resuelven en shared/utils/location-palette.util
@@ -49,10 +55,10 @@ interface ConflictData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CardModule,
+    CommonModule, FormsModule, TableModule, PaginatorModule, ButtonModule, CardModule,
     SkeletonModule, InputTextModule, CheckboxModule, TooltipModule, MultiSelectModule,
     ToggleSwitchModule, DialogModule,
-    ProviderDialogComponent,
+    ProviderDialogComponent, BwIfAbilityDirective, CapacityLimitDialogComponent,
   ],
   templateUrl: './providers-list.component.html',
   styleUrls: ['./providers-list.component.scss'],
@@ -63,11 +69,25 @@ export class ProvidersListComponent implements OnInit {
   private router = inject(Router);
   private calNav = inject(CalendarNavigationService);
   private messageService = inject(MessageService);
+  private auth = inject(AuthService);
+  private subscriptionStore = inject(SubscriptionStore);
   protected refStore = inject(ReferenceStore);
   protected readonly lang = inject(LanguageService);
 
   /** Resuelve color/icono de un rol (fallback gris + pi-user). */
   protected readonly roleMeta = roleMeta;
+
+  /** Catálogo de permission keys (nunca literales, S5 de `fase-b-rbac-cierre`). */
+  protected readonly ABILITIES = ABILITIES;
+
+  /**
+   * Editar se abre con `providers.manage` (datos) **o** `providers.roles`
+   * (reasignar roles): `admin_location` tiene solo la segunda. Cada bloque del
+   * diálogo se habilita por separado.
+   */
+  protected readonly canEditProvider = computed(() =>
+    this.auth.hasAnyPermission(ABILITIES.providersManage, ABILITIES.providersRoles),
+  );
 
   // ── Data ────────────────────────────────────────────────────────────────
   // Los providers se leen de ReferenceStore (fuente canónica; U3 cierra el
@@ -80,11 +100,54 @@ export class ProvidersListComponent implements OnInit {
   // ── Filters ─────────────────────────────────────────────────────────────
   searchQuery = signal('');
   selectedLocationIds = signal<Set<number>>(new Set());
-  selectedRoleNames = signal<string[]>([]);
+  selectedRoleSlugs = signal<string[]>([]);
+
+  // ── Paginación ──────────────────────────────────────────────────────────
+  // La paginación es de cliente: `ReferenceStore` publica la lista completa
+  // (los services agregan todas las páginas del backend) y acá se muestra de a
+  // `pageSize` para que la pantalla no trunque ni cargue cientos de filas.
+  readonly pageSize = 10;
+  /** Página visible, 1-based. */
+  readonly page = signal(1);
+
+  readonly totalRecords = computed(() => this.sortedProviders().length);
+
+  /** Última página válida para el total actual (mínimo 1). */
+  private readonly maxPage = computed(() =>
+    Math.max(1, Math.ceil(this.totalRecords() / this.pageSize)),
+  );
+
+  readonly pagedProviders = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.sortedProviders().slice(start, start + this.pageSize);
+  });
+
+  constructor() {
+    // Si el total baja (p. ej. un filtro o una recarga trae menos filas), la
+    // página actual puede quedar fuera de rango y mostrar una página vacía: se
+    // la clampa a la última página válida.
+    effect(() => {
+      const max = this.maxPage();
+      if (this.page() > max) {
+        this.page.set(max);
+      }
+    });
+  }
+
+  /** `p-paginator` entrega la página 0-based. */
+  onPageChange(event: { page?: number }): void {
+    this.page.set((event.page ?? 0) + 1);
+  }
+
+  /** Cualquier cambio de filtro invalida la página actual. */
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.page.set(1);
+  }
 
   /** Roles del catálogo mapeados a opciones `{ label, value }` para el p-multiselect. */
   readonly roleOptions = computed(() =>
-    this.roles().map((r) => ({ label: this.roleLabel(r.name), value: r.name })),
+    this.roles().map((r) => ({ label: this.roleLabel(r), value: r.slug })),
   );
 
   /** Unique active locations from ReferenceStore + any from loaded providers */
@@ -133,7 +196,7 @@ export class ProvidersListComponent implements OnInit {
     let result = this.providers();
     const query = this.searchQuery().toLowerCase().trim();
     const locIds = this.selectedLocationIds();
-    const roleNames = this.selectedRoleNames() ?? [];
+    const roleSlugs = this.selectedRoleSlugs() ?? [];
 
     // Location filter
     if (locIds.size > 0) {
@@ -155,8 +218,8 @@ export class ProvidersListComponent implements OnInit {
     }
 
     // Role filter: keep providers that have at least one selected role.
-    if (roleNames.length > 0) {
-      result = result.filter((p) => p.roles?.some((r) => roleNames.includes(r.name)));
+    if (roleSlugs.length > 0) {
+      result = result.filter((p) => p.roles?.some((r) => roleSlugs.includes(r.slug)));
     }
     return result;
   });
@@ -185,6 +248,7 @@ export class ProvidersListComponent implements OnInit {
   // ── Lifecycle ────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadRoles();
+    this.subscriptionStore.loadUsage();
   }
 
   loadRoles(): void {
@@ -194,9 +258,10 @@ export class ProvidersListComponent implements OnInit {
     });
   }
 
-  roleLabel(name: string): string {
-    const key = `roles.role.${name}`;
-    return this.lang.has(key) ? this.lang.t(key) : name;
+  /** Resolves the display label: i18n key by slug, falling back to the backend `name`. */
+  roleLabel(role: Pick<Role, 'slug' | 'name'>): string {
+    const key = `roles.role.${role.slug}`;
+    return this.lang.has(key) ? this.lang.t(key) : role.name;
   }
 
   /** Tipado seguro: `provider.roles` puede ser undefined. */
@@ -222,10 +287,17 @@ export class ProvidersListComponent implements OnInit {
     this.refStore.toggleProviderActive(id, newActive).subscribe({
       next: (res) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
+        // El CTA de cuota pertenece al intento anterior: una acción que sale
+        // bien prueba que el cupo ya no está agotado.
+        this.capacityError.set(false);
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
       },
       error: (err) => {
         this.toggling.update((set) => { const s = new Set(set); s.delete(id); return s; });
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         // A2: gate 409 SOLO en desactivación; reactivación nunca gatea.
         if (!newActive && err.status === 409 && err.error?.requires_confirmation) {
           this.showConflictDialog(provider, err.error);
@@ -250,10 +322,38 @@ export class ProvidersListComponent implements OnInit {
     this.pendingToggleProvider.set(null);
   }
 
+  goToBilling(): void {
+    this.router.navigate(['/admin/facturacion']);
+  }
+
   // ── Dialog ────────────────────────────────────────────────────────────────
+  readonly capacityError = signal(false);
   dialogVisible = signal(false);
   dialogMode = signal<DialogMode>('create');
   selectedProvider = signal<Provider | null>(null);
+  /** Bloqueo proactivo de creación (#12): diálogo de cuota llena. */
+  readonly capacityDialogVisible = signal(false);
+  /** Cuota de profesionales del negocio activo; null si no hay uso ni tenant. */
+  readonly activeBusinessProfessionalsQuota = computed<Quota | null>(() => {
+    const usage = this.subscriptionStore.usage();
+    const tenantId = this.auth.me()?.tenant_id;
+    if (!usage || tenantId == null) return null;
+    return usage.businesses.find((b) => b.tenant_id === tenantId)?.professionals ?? null;
+  });
+
+  /** Alta de profesional. Requiere `providers.manage` (gateado en el template). */
+  openCreate(): void {
+    const quota = this.activeBusinessProfessionalsQuota();
+    if (quota && quota.current >= quota.limit) {
+      this.capacityDialogVisible.set(true);
+      return;
+    }
+    this.dialogMode.set('create');
+    this.selectedProvider.set(null);
+    this.dialogVisible.set(true);
+    // Abrir el alta es un intento nuevo: no arrastrar el CTA del rechazo previo.
+    this.capacityError.set(false);
+  }
 
   openEdit(provider: Provider): void {
     this.dialogMode.set('edit');
@@ -300,14 +400,16 @@ export class ProvidersListComponent implements OnInit {
       else next.add(id);
       return next;
     });
+    this.page.set(1);
   }
 
   /**
    * Handler del multiselect de roles. PrimeNG emite `null` al usar su botón de
    * limpiar (clear), lo que rompería el computed `filteredProviders` que lee
-   * `roleNames.length` — coercer a array para que el filtro quede vacío.
+   * `roleSlugs.length` — coercer a array para que el filtro quede vacío.
    */
   onRoleFilterChange(value: string[] | null): void {
-    this.selectedRoleNames.set(Array.isArray(value) ? value : []);
+    this.selectedRoleSlugs.set(Array.isArray(value) ? value : []);
+    this.page.set(1);
   }
 }

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 · Textarea: una opción por línea</title>
+<style>
+  :root{
+    --bw-900:#012663;--bw-700:#0a2862;--bw-500:#0b3d95;--bw-300:#046af4;--bw-100:#dbeafe;--bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff;--surface-card:#ffffff;--surface-border:#e5e7eb;--surface-muted:#f3f4f6;
+    --text:#1a2744;--text-2:#6b7280;--heading:#111827;--danger:#ef4444;
+    --radius-md:6px;--radius-lg:8px;--radius-pill:999px;
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--surface-ground);color:var(--text);padding:28px;font-size:14px}
+  h1{font-size:19px;color:var(--heading);margin-bottom:4px}
+  .lead{font-size:13px;color:var(--text-2);margin-bottom:20px;max-width:80ch;line-height:1.5}
+
+  .shell{display:flex;border:1px solid var(--surface-border);border-radius:10px;overflow:hidden;
+         background:var(--surface-card);box-shadow:0 8px 24px rgba(1,38,99,.08);max-width:1080px}
+  .col-list{width:250px;border-right:1px solid var(--surface-border);padding:12px}
+  .col-list h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:8px}
+  .li{padding:8px 10px;border-radius:var(--radius-lg);font-size:13px;color:var(--text)}
+  .li.on{background:rgba(4,106,244,.1);color:#0b3d95;font-weight:600;box-shadow:inset 3px 0 0 var(--bw-300)}
+  .li small{display:block;font-size:10px;color:var(--text-2);font-weight:400}
+
+  .col-editor{flex:1;padding:16px 18px 22px;min-width:0}
+  .ed-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .ed-title{font-size:15px;font-weight:600;color:var(--heading)}
+  .ed-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+  .btn{border-radius:var(--radius-md);padding:7px 14px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer}
+  .btn--primary{background:var(--bw-300);color:#fff;border:1px solid var(--bw-300)}
+  .btn--sec{background:var(--surface-card);color:var(--text);border:1px solid var(--surface-border)}
+
+  .grid-head,.frow{display:grid;grid-template-columns:24px 1.4fr 1fr 110px 32px;gap:8px;align-items:center}
+  .grid-head{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);
+             padding:0 0 6px;border-bottom:1px solid var(--surface-border)}
+  .frow{padding:8px 0;border-bottom:1px solid var(--surface-border)}
+  .inp{border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:6px 9px;
+       font-family:inherit;font-size:12px;color:var(--text);background:var(--surface-card);width:100%}
+  .handle{color:#9ca3af;font-size:11px;text-align:center}
+  .del{width:26px;height:26px;border:1px solid var(--surface-border);border-radius:var(--radius-md);
+       background:var(--surface-card);color:var(--text-2);cursor:pointer;font-size:11px}
+  .req{font-size:11px;color:var(--text-2);text-align:center}
+
+  /* ── lo nuevo: textarea una por línea ── */
+  .fextra{grid-column:1 / -1;padding:2px 0 12px 32px;border-bottom:1px solid var(--surface-border)}
+  .fextra textarea{border:1px solid var(--surface-border);border-radius:var(--radius-md);
+                   padding:8px 10px;font-family:var(--font);font-size:12px;color:var(--text);
+                   width:100%;max-width:420px;resize:vertical;line-height:1.7}
+  .fextra label{display:block;font-size:11px;color:var(--text-2);margin-bottom:4px}
+  .meta{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:11px;color:var(--text-2)}
+  .ok{color:#166534;font-weight:600}
+  .warn{color:#92400e;font-weight:600}
+  .frow--expanded{border-bottom:none;padding-bottom:2px}
+
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#991b1b;
+       border-radius:var(--radius-md);padding:8px 12px;font-size:12px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<h1>02 · Textarea: una opción por línea</h1>
+<p class="lead">La fila crece igual, pero el capturador es un <b>textarea con una opción por línea</b>. El control más barato de construir: no hay agregar/quitar por ítem y se puede pegar una lista entera. Debajo, un resumen que valida en vivo (cantidad, vacías, repetidas).</p>
+
+<div class="err">Error de validación — Guardar cambios: <b>Un campo select requiere opciones.</b></div>
+
+<div class="shell">
+  <div class="col-list">
+    <h2>Tipos</h2>
+    <div class="li">Preparación física<small>2 campos · 4 fichas</small></div>
+    <div class="li on">Evaluación kinésica<small>3 campos · 12 fichas</small></div>
+    <div class="li">Ficha láser<small>4 campos · 3 fichas</small></div>
+  </div>
+
+  <div class="col-editor">
+    <div class="ed-head">
+      <div>
+        <div class="ed-title">Evaluación kinésica</div>
+        <div class="ed-sub">3 campos · usada en 12 fichas</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn--sec">Descartar</button>
+        <button class="btn btn--primary">Guardar cambios</button>
+      </div>
+    </div>
+
+    <div class="grid-head">
+      <span></span><span>Campo</span><span>Tipo</span><span>Obligatorio</span><span></span>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Diagnóstico">
+      <select class="inp"><option>Texto</option></select>
+      <span class="req">Sí</span>
+      <button class="del">✕</button>
+    </div>
+
+    <div class="frow frow--expanded">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Zona tratada">
+      <select class="inp"><option>Select</option></select>
+      <span class="req">Sí</span>
+      <button class="del">✕</button>
+    </div>
+    <div class="fextra">
+      <label for="opts">Opciones · una por línea</label>
+      <textarea id="opts" rows="4">Lumbar
+Cervical
+Hombro
+Rodilla</textarea>
+      <div class="meta">
+        <span class="ok">4 opciones válidas</span>
+        <span>·</span>
+        <span>máx. 50 caracteres por opción</span>
+      </div>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Lesión">
+      <select class="inp"><option>Imagen</option></select>
+      <span class="req">No aplica</span>
+      <button class="del">✕</button>
+    </div>
+
+    <div class="frow">
+      <span class="handle">⠿</span>
+      <input class="inp" value="Evolución">
+      <select class="inp"><option>Select</option></select>
+      <span class="req">No</span>
+      <button class="del">✕</button>
+    </div>
+    <div class="fextra">
+      <label for="opts2">Opciones · una por línea</label>
+      <textarea id="opts2" rows="4">Mejor
+
+Mejor
+Sin cambios
+Igual</textarea>
+      <div class="meta">
+        <span class="warn">3 opciones válidas · 1 vacía (se ignora) · 1 repetida (se unifica)</span>
+      </div>
+    </div>
+
+    <div style="margin-top:12px"><button class="btn btn--sec">+ Agregar campo</button></div>
+  </div>
+</div>
+
+</body>
+</html>

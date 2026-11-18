@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Datos de facturación · formulario con vista previa fiscal</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b;
+    --bw-chip-text-secondary:#374151; --bw-chip-text-primary:#0b3d95;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --surface-100:#f5f5f5; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --sidebar-bg-from:var(--bw-900); --sidebar-bg-to:var(--bw-600);
+    --sidebar-text:rgba(255,255,255,0.68); --sidebar-text-active:#ffffff;
+    --sidebar-hover-bg:rgba(255,255,255,0.08); --sidebar-active-bg:rgba(255,255,255,0.14);
+    --sidebar-active-border:var(--bw-300); --sidebar-divider:rgba(255,255,255,0.1);
+    --sidebar-text-hover:#ffffff;
+    --bw-700:#0a2862;
+    --bw-shadow-sidebar-tab:0 2px 8px rgba(1,38,99,0.45);
+    --bw-shadow-sidebar-tab-hover:0 3px 12px rgba(4,106,244,0.5);
+    --bw-transition-base:0.2s;
+    --bw-weight-semibold:600;
+    --color-primary:var(--bw-500); --color-primary-cta:var(--bw-300);
+    --surface-50:#fafafa; --surface-hover:#f3f4f6;
+    --z-drawer:400; --z-topbar:500;
+    --bw-space-xs:0.25rem;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem; --bw-text-2xl:1.5rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm); --bw-font-title:var(--bw-text-lg); --bw-font-amount:var(--bw-text-xl);
+    --bw-weight-medium:500; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-sm:0.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-transition-fast:0.15s;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    width:1440px; min-height:900px; display:flex;
+    font-family:var(--font-family); font-size:16px; line-height:1.5;
+    color:var(--text-color); background:var(--surface-ground); -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3 { margin:0; font-weight:var(--bw-weight-medium); }
+  button { font-family:inherit; cursor:pointer; }
+  .overline {
+    font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold); text-transform:uppercase;
+    letter-spacing:var(--bw-tracking-overline); color:var(--text-color-secondary);
+  }
+
+  /* ── App shell (copia fiel de admin-layout / app-header) ─────────
+     Es contexto visual: NO es parte del diseño a implementar porque
+     ya existe en la app. PrimeIcons no es embebible: los íconos se
+     aproximan con SVG inline (stroke, currentColor). ─────────────── */
+  .layout { display:flex; height:100%; min-height:900px; overflow:hidden; background:var(--surface-ground); }
+
+  .sidebar {
+    width:220px; flex-shrink:0; display:flex; flex-direction:column;
+    background:linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+    position:relative; z-index:var(--z-drawer); overflow:hidden;
+  }
+  .sidebar::before {
+    content:''; position:absolute; top:-60px; right:-60px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle, rgba(96,167,240,0.18) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .sidebar::after {
+    content:''; position:absolute; bottom:-60px; left:-40px; width:160px; height:160px;
+    border-radius:50%; background:radial-gradient(circle, rgba(4,106,244,0.12) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  .sidebar-header {
+    height:4.1875rem; min-height:4.1875rem; padding:0.375rem 0.625rem;
+    border-bottom:1px solid var(--sidebar-divider); background:rgba(255,255,255,0.22);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    position:relative; z-index:1;
+  }
+  .logo-wrapper {
+    background:rgba(255,255,255,0.7); border-radius:10px; padding:0.25rem 0.625rem;
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+  }
+  .sidebar-icon { width:32px; height:30px; flex-shrink:0; display:block; }
+  .sidebar-wordmark { color:var(--bw-900); font-size:1.125rem; font-weight:var(--bw-weight-semibold); letter-spacing:-0.01em; line-height:1; white-space:nowrap; }
+
+  .sidebar-collapse-btn {
+    display:flex; align-items:center; justify-content:space-between; gap:0.625rem;
+    padding:0.625rem 0.75rem; margin:0; border-radius:0; color:var(--sidebar-text);
+    background:none; border:none; border-bottom:1px solid var(--sidebar-divider);
+    width:100%; font-size:0.875rem; font-family:var(--font-family); cursor:pointer;
+    text-align:left; transition:all 0.18s ease;
+  }
+  .sidebar-collapse-btn:hover { background:var(--sidebar-hover-bg); color:var(--sidebar-text-hover); }
+  .sidebar-collapse-btn__label { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sidebar-collapse-btn__icon {
+    width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,0.25);
+    background:var(--bw-700); box-shadow:var(--bw-shadow-sidebar-tab); color:rgba(255,255,255,0.85);
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .sidebar-collapse-btn__icon svg { width:14px; height:14px; }
+
+  .sidebar-nav { flex:1; padding:0.625rem 0.5rem; display:flex; flex-direction:column; gap:0.125rem; overflow-y:auto; position:relative; z-index:1; }
+  .nav-item {
+    display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.75rem;
+    border-radius:var(--bw-radius-lg); color:var(--sidebar-text); text-decoration:none;
+    transition:all 0.18s ease; cursor:pointer; border:none; background:none; width:100%;
+    font-size:0.875rem; font-family:var(--font-family); text-align:left;
+  }
+  .nav-item svg { width:20px; height:20px; flex-shrink:0; }
+  .nav-item:hover { background:var(--sidebar-hover-bg); color:var(--sidebar-text-hover); }
+  .nav-item.active {
+    background:var(--sidebar-active-bg); color:var(--sidebar-text-active); font-weight:500;
+    border-left:3px solid var(--bw-300); padding-left:calc(0.75rem - 3px);
+  }
+
+  .sidebar-widget { padding:0.625rem 0.5rem 0.75rem; position:relative; z-index:1; }
+  .navigator {
+    display:flex; flex-direction:column; gap:0.625rem; padding:0.75rem;
+    border-radius:10px; background:rgba(255,255,255,0.94); border:1px solid rgba(255,255,255,0.25);
+    color:#1a2744;
+  }
+  .navigator__nav { display:flex; align-items:center; gap:0.125rem; height:38px; }
+  .navigator__arrow {
+    width:22px; height:22px; border:none; border-radius:6px; background:transparent; color:#6b7280;
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .navigator__arrow:hover { background:rgba(4,106,244,0.08); color:#046af4; }
+  .navigator__arrow svg { width:14px; height:14px; }
+  .navigator__label { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1px; line-height:1.1; text-transform:capitalize; color:#1a2744; overflow:hidden; }
+  .navigator__year { font-size:0.625rem; font-weight:500; color:#6b7280; text-transform:none; white-space:nowrap; }
+  .navigator__month { font-size:0.8125rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .navigator__today {
+    border:none; background:transparent; color:#046af4; font-family:var(--font-family);
+    font-size:0.6875rem; font-weight:600; padding:0.1875rem 0.3125rem; border-radius:6px;
+    cursor:pointer; flex-shrink:0;
+  }
+  .navigator__today:hover { background:rgba(4,106,244,0.08); }
+  .navigator__grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .navigator__header { text-align:center; font-size:0.625rem; font-weight:600; color:#9ca3af; text-transform:uppercase; padding:2px 0; }
+  .navigator__day {
+    height:26px; border:none; border-radius:6px; background:transparent; color:#1a2744;
+    font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .navigator__day:hover { background:rgba(4,106,244,0.1); color:#046af4; }
+  .navigator__day--today { background:#046af4; color:#fff; font-weight:600; }
+  .navigator__day--selected { background:rgba(4,106,244,0.28); color:#046af4; font-weight:700; box-shadow:inset 0 0 0 2px #046af4; }
+  .navigator__day--empty { background:transparent; cursor:default; }
+
+  .sidebar-footer {
+    padding:0.5rem; border-top:1px solid var(--sidebar-divider); flex-shrink:0;
+    display:flex; flex-direction:column; gap:0.375rem; position:relative; z-index:1;
+  }
+  .sidebar-logout {
+    display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.75rem;
+    border-radius:var(--bw-radius-lg); color:rgba(252,165,165,0.85); background:none; border:none;
+    width:100%; font-size:0.875rem; font-family:var(--font-family); cursor:pointer; text-align:left;
+    transition:all 0.18s ease;
+  }
+  .sidebar-logout:hover { background:rgba(239,68,68,0.12); color:#fca5a5; }
+  .sidebar-logout svg { width:20px; height:20px; flex-shrink:0; }
+  .sidebar-logout span { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .main-content {
+    flex:1; min-width:0; overflow-y:auto; padding:0 1.25rem 1.25rem;
+    background:var(--surface-ground); display:grid; gap:var(--bw-space-md); align-content:start;
+  }
+
+  .app-header {
+    display:flex; align-items:center; justify-content:space-between; gap:var(--bw-space-md);
+    height:4.1875rem; min-height:4.1875rem; padding:0.5rem 1rem;
+    border-bottom:1px solid var(--surface-border); background:var(--surface-card);
+    position:sticky; top:0; z-index:var(--z-topbar); margin:0 -1.25rem;
+  }
+  .app-header__left { display:flex; align-items:center; gap:var(--bw-space-lg); min-width:0; }
+  .app-header__right { display:flex; align-items:center; gap:var(--bw-space-sm); }
+  .app-header__menu-btn {
+    width:36px; height:36px; border:1px solid var(--surface-border); background:var(--surface-card);
+    color:var(--text-color); border-radius:8px; cursor:pointer; display:none;
+    align-items:center; justify-content:center; flex-shrink:0;
+    transition:background var(--bw-transition-base), color var(--bw-transition-base);
+  }
+  .app-header__menu-btn:hover { background:var(--surface-hover); color:var(--color-primary); }
+  .app-header__menu-btn svg { width:18px; height:18px; }
+  @media (max-width:991px) { .app-header__menu-btn { display:inline-flex; } }
+
+  .app-header__business {
+    display:inline-flex; align-items:center; gap:0.5rem; padding:0.25rem 0.625rem;
+    border:1px solid var(--surface-border); border-radius:8px; background:var(--surface-50);
+    font-family:var(--font-family); color:var(--text-color); cursor:default; text-align:left;
+  }
+  .app-header__monogram {
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:36px; height:36px; border-radius:0.625rem; background:var(--bw-200); color:#fff;
+    font-weight:var(--bw-weight-semibold); font-size:var(--bw-font-table); user-select:none;
+  }
+  .app-header__business-info { display:flex; flex-direction:column; min-width:0; line-height:1.1; }
+  .app-header__business-name { font-weight:var(--bw-weight-semibold); font-size:0.875rem; color:var(--text-color); white-space:nowrap; }
+  .app-header__business-rut { font-size:0.6875rem; color:var(--text-color-secondary); }
+  .app-header__chevron { display:inline-flex; color:var(--text-color-secondary); }
+  .app-header__chevron svg { width:12px; height:12px; }
+
+  .app-header__actions { display:flex; align-items:center; gap:var(--bw-space-xs); }
+  .app-header__theme {
+    display:inline-flex; align-items:center; gap:0.5rem; height:36px; min-width:7.25rem;
+    padding:0 0.625rem; border:1px solid var(--surface-border); border-radius:8px;
+    background:var(--surface-card); color:var(--text-color); font-family:var(--font-family);
+    font-size:0.8125rem; cursor:pointer; text-align:left;
+  }
+  .app-header__theme svg { width:12px; height:12px; color:var(--text-color-secondary); margin-left:auto; }
+
+  .account-chip {
+    display:flex; align-items:center; gap:0.625rem; padding:0.375rem 0.625rem;
+    border:1px solid var(--surface-border); border-radius:8px; background:var(--surface-50);
+    cursor:pointer; transition:background var(--bw-transition-base); text-align:left;
+  }
+  .account-chip:hover { background:var(--surface-hover); }
+  .account-chip__avatar {
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:36px; height:36px; border-radius:50%; background:var(--bw-200); color:#fff;
+    font-weight:var(--bw-weight-semibold); font-size:var(--bw-font-table); user-select:none;
+  }
+  .account-chip__name { font-size:0.875rem; font-weight:var(--bw-weight-semibold); color:var(--text-color); white-space:nowrap; }
+  .account-chip__chevron { display:inline-flex; color:var(--text-color-secondary); flex-shrink:0; }
+  .account-chip__chevron svg { width:12px; height:12px; }
+
+
+  /* ══ Tokens extra usados acá (existen en _tokens.scss) ══════════ */
+  :root {
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,0.15);
+    --bw-text-on-brand:#ffffff;
+    --bw-transition-slow:0.3s;
+  }
+  .sr-only {
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+
+  /* ══ Área de cuenta: sidebar agrupado Pago / Plan (as-shell) ═════
+     Copia fiel de account-settings-shell + account-settings-nav. */
+  .as-shell {
+    display:grid; grid-template-columns:15rem minmax(0,1fr); gap:var(--bw-space-lg);
+    align-items:start;
+  }
+  .as-nav {
+    display:flex; flex-direction:column; gap:1.75rem; padding:1.25rem 1rem;
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:0.75rem; min-width:15rem; position:sticky; top:1rem;
+  }
+  .as-nav__group { display:flex; flex-direction:column; gap:0.5rem; }
+  .as-nav__title {
+    margin:0 0 .25rem; padding:0 .75rem; font-size:0.8125rem; font-weight:600;
+    letter-spacing:.02em; text-transform:uppercase; color:var(--text-color-secondary);
+  }
+  .as-nav__list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.125rem; }
+  .as-nav__item {
+    display:flex; align-items:center; gap:.75rem; padding:.625rem .75rem; border-radius:.5rem;
+    font-size:.9375rem; color:var(--text-color); text-decoration:none;
+    transition:background-color .15s ease, color .15s ease;
+  }
+  .as-nav__item svg { width:16px; height:16px; flex-shrink:0; color:var(--text-color-secondary); }
+  .as-nav__item:hover { background:var(--surface-hover); }
+  .as-nav__item:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .as-nav__item--active {
+    background:color-mix(in srgb, var(--bw-300) 10%, transparent);
+    color:var(--bw-300); font-weight:600;
+  }
+  .as-nav__item--active svg { color:var(--bw-300); }
+
+  /* ══ Título de página ══════════════════════════════════════════ */
+  .page-head { display:flex; align-items:flex-start; gap:var(--bw-space-md); }
+  .page-head__text { min-width:0; }
+  .page-head h1 { font-size:var(--bw-text-2xl); color:var(--text-heading); letter-spacing:var(--bw-tracking-tight); }
+  .page-head p { margin:.125rem 0 0; font-size:var(--bw-font-table); color:var(--text-color-secondary); }
+  .page-head__actions { margin-left:auto; display:flex; align-items:center; gap:var(--bw-space-sm); }
+
+  /* ══ Botones (PrimeNG + variantes del repo) ════════════════════ */
+  .btn {
+    height:var(--bw-control-height); padding:0 1rem; border-radius:var(--bw-radius-md);
+    border:1px solid transparent; display:inline-flex; align-items:center; gap:.5rem;
+    font-family:inherit; font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium);
+    white-space:nowrap; transition:background-color var(--bw-transition-fast), color var(--bw-transition-fast);
+  }
+  .btn svg { width:16px; height:16px; flex-shrink:0; }
+  .btn--primary { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .btn--primary:hover { background:var(--bw-500); }
+  .btn--outlined { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn--outlined:hover { background:var(--surface-hover); border-color:var(--bw-200); }
+  .btn--ghost { background:transparent; color:var(--bw-500); padding:0 .5rem; }
+  .btn--ghost:hover { background:var(--bw-50); }
+  .btn--sm { height:2rem; font-size:var(--bw-font-caption); padding:0 .75rem; }
+  .btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .btn[aria-disabled="true"], .btn:disabled { opacity:.55; cursor:not-allowed; }
+
+  /* ══ Chip de estado (.bw-chip del repo) ════════════════════════ */
+  .bw-chip {
+    display:inline-flex; align-items:center; gap:.25rem;
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium);
+    color:var(--chip-text-color, var(--chip-color));
+    background:color-mix(in srgb, var(--chip-color) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+    border-radius:var(--bw-radius-sm); padding:.1rem .5rem; line-height:1.4; white-space:nowrap;
+  }
+  .bw-chip__dot { width:8px; height:8px; border-radius:50%; background:var(--chip-color); flex-shrink:0; }
+  .bw-chip--warning { --chip-color:var(--bw-warning); --chip-text-color:var(--bw-chip-text-warning); }
+  .bw-chip--success { --chip-color:var(--bw-success); --chip-text-color:var(--bw-chip-text-success); }
+  .bw-chip--primary { --chip-color:var(--bw-500); --chip-text-color:var(--bw-chip-text-primary); }
+  .bw-chip--secondary { --chip-color:var(--text-color-secondary); --chip-text-color:var(--bw-chip-text-secondary); }
+
+  /* ══ Panel / card ══════════════════════════════════════════════ */
+  .panel {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card);
+  }
+  .panel__head {
+    display:flex; align-items:center; gap:.625rem; padding:.875rem 1.25rem;
+    border-bottom:1px solid var(--surface-border);
+  }
+  .panel__head h2 {
+    font-size:var(--bw-font-title); color:var(--text-heading);
+    font-weight:var(--bw-weight-semibold);
+  }
+  .panel__body { padding:1.25rem; }
+
+  /* ══ Campos de formulario (Lara + --bw-control-height) ═════════ */
+  .field { display:flex; flex-direction:column; gap:.375rem; min-width:0; }
+  .field--full { grid-column:1 / -1; }
+  .field > label, .field__label {
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium); color:var(--text-label);
+  }
+  .field__req { color:var(--bw-status-pendiente, #fd8991); }
+  .input, .select {
+    height:var(--bw-control-height); width:100%; padding:0 .75rem;
+    font-family:inherit; font-size:var(--bw-font-table); color:var(--text-color);
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-md); transition:border-color var(--bw-transition-fast);
+  }
+  .input::placeholder { color:var(--text-color-secondary); }
+  .input:hover, .select:hover { border-color:var(--bw-200); }
+  .input:focus-visible, .select:focus-visible { outline:2px solid var(--bw-300); outline-offset:-1px; border-color:var(--bw-300); }
+  .field__hint { font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .field__error { font-size:var(--bw-font-caption); color:var(--bw-status-pendiente, #fd8991); display:flex; align-items:center; gap:.25rem; }
+  .field__addon {
+    display:flex; align-items:center; height:var(--bw-control-height);
+    border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden;
+    background:var(--surface-card);
+  }
+  .field__addon-prefix {
+    display:inline-flex; align-items:center; gap:.375rem; height:100%; padding:0 .5rem;
+    background:var(--bw-surface-muted); border-right:1px solid var(--surface-border);
+    font-size:var(--bw-font-table); color:var(--text-color);
+  }
+  .field__addon .input { border:none; height:100%; }
+  .field__addon .input:focus-visible { outline:2px solid var(--bw-300); outline-offset:-2px; }
+
+  /* radios */
+  .radio-row { display:flex; gap:1.5rem; align-items:center; min-height:var(--bw-control-height); flex-wrap:wrap; }
+  .radio {
+    display:inline-flex; align-items:center; gap:.5rem; font-size:var(--bw-font-table);
+    color:var(--text-color); cursor:pointer;
+  }
+  .radio input {
+    appearance:none; width:1.125rem; height:1.125rem; margin:0; border-radius:50%;
+    border:2px solid var(--surface-border); background:var(--surface-card); flex-shrink:0;
+    transition:border-color var(--bw-transition-fast), box-shadow var(--bw-transition-fast);
+  }
+  .radio input:checked { border-color:var(--bw-300); box-shadow:inset 0 0 0 3px var(--surface-card); background:var(--bw-300); }
+  .radio input:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+
+  /* toggle de estado para demos */
+  .demo-toggle {
+    display:inline-flex; align-items:center; gap:.5rem; font-size:var(--bw-font-caption);
+    color:var(--text-color-secondary); background:var(--surface-card);
+    border:1px dashed var(--surface-border); border-radius:var(--bw-radius-pill);
+    padding:.25rem .625rem;
+  }
+  .demo-toggle input { accent-color:var(--bw-300); }
+
+  /* ══ Avisos ════════════════════════════════════════════════════ */
+  .notice {
+    display:flex; align-items:flex-start; gap:.5rem; margin:0;
+    padding:.75rem 1rem; border-radius:.5rem; font-size:var(--bw-font-table);
+  }
+  .notice svg { width:16px; height:16px; flex-shrink:0; margin-top:.125rem; }
+  .notice--info {
+    background:color-mix(in srgb, var(--bw-300) 8%, transparent); color:var(--text-color);
+  }
+  .notice--info svg { color:var(--bw-300); }
+  .notice--lock { background:var(--bw-surface-muted); color:var(--text-color-secondary); font-size:var(--bw-font-caption); }
+  .notice--lock svg { color:var(--text-color-secondary); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition:none !important; animation:none !important; }
+  }
+
+  /* ══ 01 · Dos columnas: formulario + vista previa fiscal ═══════ */
+  .page-wrap { display:grid; gap:var(--bw-space-md); }
+
+  /* Barra de guardado fija bajo el título de página */
+  .savebar {
+    position:sticky; top:4.1875rem; z-index:10; margin:0 -1.25rem;
+    display:flex; align-items:center; gap:var(--bw-space-md);
+    padding:.625rem 1.25rem; background:var(--surface-card);
+    border-bottom:1px solid var(--surface-border); box-shadow:var(--bw-dialog-header-shadow);
+  }
+  .savebar__state { display:flex; align-items:center; gap:.5rem; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .savebar__state svg { width:14px; height:14px; color:var(--bw-success); }
+  .savebar__actions { margin-left:auto; display:flex; align-items:center; gap:.5rem; }
+
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) 20rem; gap:var(--bw-space-lg); align-items:start; }
+
+  /* Formulario: una sola tarjeta con tres bloques separados por hairlines */
+  .form-card__block { padding:1.25rem; border-bottom:1px solid var(--surface-border); }
+  .form-card__block:last-of-type { border-bottom:none; }
+  .block-head { display:flex; align-items:center; gap:.625rem; margin-bottom:1rem; }
+  .block-head h2 { font-size:var(--bw-font-title); color:var(--text-heading); font-weight:var(--bw-weight-semibold); }
+  .block-head__num {
+    width:1.5rem; height:1.5rem; border-radius:50%; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:var(--bw-50); color:var(--bw-500); border:1px solid var(--bw-100);
+    font-size:var(--bw-font-caption); font-weight:var(--bw-weight-bold);
+  }
+  .block-head__state { margin-left:auto; }
+  .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--bw-space-md); }
+
+  /* Campo que falta: mismo vocabulario de chip que el estado de la sección,
+     más el borde ámbar del control para que se vea sin leer. */
+  .field__label-row { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+  .field__label-row .bw-chip { font-size:var(--bw-font-caption); font-weight:var(--bw-weight-medium); }
+  .field--missing .input,
+  .field--missing .field__addon {
+    border-color:color-mix(in srgb, var(--bw-warning) 60%, var(--surface-border));
+    background:color-mix(in srgb, var(--bw-warning) 4%, var(--surface-card));
+  }
+  .field--missing .field__addon .input { border:none; background:transparent; }
+  .field--missing .field__addon-prefix {
+    background:color-mix(in srgb, var(--bw-warning) 10%, var(--surface-card));
+    border-right-color:color-mix(in srgb, var(--bw-warning) 40%, var(--surface-border));
+  }
+  @media (max-width:1279px) { .form-grid { grid-template-columns:minmax(0,1fr); } }
+
+  /* Vista previa de la factura */
+  .preview { display:grid; gap:var(--bw-space-md); position:sticky; top:1rem; }
+  .dte { overflow:hidden; }
+  .dte__head {
+    padding:.875rem 1rem; background:var(--bw-50); border-bottom:1px solid var(--bw-100);
+    border-left:3px solid var(--bw-300); display:flex; align-items:center; gap:.5rem;
+  }
+  .dte__head h2 { font-size:var(--bw-font-table); font-weight:var(--bw-weight-semibold); color:var(--text-heading); }
+  .dte__head .overline { margin-left:auto; }
+  .dte__meta { padding:.875rem 1rem; border-bottom:1px solid var(--surface-border); font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .dte__meta strong { display:block; color:var(--text-color); font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium); }
+  .dte__rows { padding:.5rem 1rem 1rem; margin:0; }
+  .dte__row { display:grid; grid-template-columns:6.5rem minmax(0,1fr); gap:.5rem; padding:.5rem 0; border-bottom:1px dashed var(--surface-border); }
+  .dte__row:last-child { border-bottom:none; }
+  .dte__row dt { font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold); text-transform:uppercase; letter-spacing:var(--bw-tracking-overline); color:var(--text-color-secondary); padding-top:.15rem; }
+  .dte__row dd { margin:0; font-size:var(--bw-font-table); color:var(--text-color); overflow-wrap:anywhere; }
+  .dte__row dd .dte__chip { font-size:var(--bw-font-caption); }
+  .dte__foot { padding:.75rem 1rem; background:var(--bw-surface-muted); font-size:var(--bw-font-caption); color:var(--text-color-secondary); border-top:1px solid var(--surface-border); }
+
+  .missing__list { list-style:none; margin:.75rem 0 0; padding:0; display:grid; gap:.5rem; }
+  .missing__item { display:flex; align-items:center; gap:.5rem; font-size:var(--bw-font-table); }
+  .missing__item svg { width:14px; height:14px; color:var(--bw-warning); flex-shrink:0; }
+  .missing__item .btn--ghost { margin-left:auto; }
+
+  /* Estado de solo lectura (bug real: los campos no se deshabilitaban) */
+  body.is-readonly .form-card .input,
+  body.is-readonly .form-card .select,
+  body.is-readonly .form-card .radio input,
+  body.is-readonly .form-card .btn { pointer-events:none; }
+  body.is-readonly .form-card .input,
+  body.is-readonly .form-card .select,
+  body.is-readonly .form-card .field__addon { background:var(--bw-surface-muted); color:var(--text-color-secondary); border-color:var(--surface-border); }
+  body.is-readonly .form-card .radio { color:var(--text-color-secondary); }
+  body.is-readonly .savebar { background:var(--bw-surface-muted); }
+  body.is-readonly .savebar__actions { display:none; }
+  .lock-notice { display:none; }
+  body.is-readonly .lock-notice { display:flex; }
+  body.is-readonly .savebar__state--saved { display:none; }
+
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <!-- El logo expandido real es assets/images/logo_side_transparente.png (146 KB):
+           en la app el lockup es solo esa imagen; acá el ícono va inline para que el
+           artboard sea autocontenido. -->
+      <div class="logo-wrapper">
+        <svg class="sidebar-icon" viewBox="0 0 375 352" width="32" height="30" fill-rule="evenodd" clip-rule="evenodd" aria-hidden="true" focusable="false">
+          <path fill="#0b3d95" d="M 180.5,21.5 C 202.322,22.752 221.322,30.5853 237.5,45C 240.5,45.6667 243.5,45.6667 246.5,45C 253.044,43.319 259.377,41.1524 265.5,38.5C 264.877,48.7455 261.21,57.7455 254.5,65.5C 259.985,75.4256 263.319,86.0922 264.5,97.5C 264.762,98.9778 264.429,100.311 263.5,101.5C 256.852,106.98 250.352,112.647 244,118.5C 249.921,100.743 245.754,85.9095 231.5,74C 213.381,64.7568 197.881,67.9235 185,83.5C 183.211,86.741 181.711,90.0743 180.5,93.5C 179.182,69.6275 179.182,45.6275 180.5,21.5 Z"/>
+          <path fill="#f6f8f8" d="M 180.5,93.5 C 181.711,90.0743 183.211,86.741 185,83.5C 197.881,67.9235 213.381,64.7568 231.5,74C 245.754,85.9095 249.921,100.743 244,118.5C 250.352,112.647 256.852,106.98 263.5,101.5C 264.429,100.311 264.762,98.9778 264.5,97.5C 265.434,98.5676 265.768,99.901 265.5,101.5C 268.495,101.294 271.162,101.96 273.5,103.5C 274.626,104.858 274.626,106.192 273.5,107.5C 249.148,127.018 227.315,149.018 208,173.5C 198.242,186.68 188.242,199.68 178,212.5C 168.349,201.682 158.182,191.349 147.5,181.5C 140.985,186.259 134.652,191.259 128.5,196.5C 146.451,215.124 163.451,234.457 179.5,254.5C 202.985,220.179 227.819,186.845 254,154.5C 258.731,149.938 263.231,145.271 267.5,140.5C 267.833,143.167 268.167,145.833 268.5,148.5C 267.866,152.373 266.866,156.039 265.5,159.5C 254.832,170.345 244.999,182.012 236,194.5C 217.245,220.353 198.745,246.353 180.5,272.5C 178.983,272.489 177.816,271.823 177,270.5C 157.741,243.895 136.241,219.062 112.5,196C 124.056,186.107 135.889,176.607 148,167.5C 157.973,176.638 167.806,185.971 177.5,195.5C 178.425,194.643 179.092,193.643 179.5,192.5C 190.067,178.588 201.067,164.921 212.5,151.5C 212.167,151.167 211.833,150.833 211.5,150.5C 201.347,155.131 190.681,157.464 179.5,157.5C 149.739,157.215 128.239,143.882 115,117.5C 109.164,99.9971 113.33,85.4971 127.5,74C 145.593,64.8743 161.093,68.041 174,83.5C 176.455,87.531 178.121,91.8644 179,96.5C 180.039,95.7562 180.539,94.7562 180.5,93.5 Z"/>
+          <path fill="#042661" d="M 141.5,85.5 C 156.826,84.9914 163.66,92.3247 162,107.5C 156.069,119.194 147.236,122.027 135.5,116C 128.978,110.096 127.478,103.263 131,95.5C 137.018,102.506 141.851,101.673 145.5,93C 144.327,90.3505 142.994,87.8505 141.5,85.5 Z"/>
+          <path fill="#0a2862" d="M 210.5,91.5 C 218.624,91.3104 224.79,94.6437 229,101.5C 230.526,108.459 228.692,109.292 223.5,104C 214.449,99.9834 206.116,101.15 198.5,107.5C 197.551,103.824 198.385,100.491 201,97.5C 203.843,94.8373 207.009,92.8373 210.5,91.5 Z"/>
+          <path fill="#0e3b8b" d="M 178.5,113.5 C 180.716,114.203 182.549,115.536 184,117.5C 185.848,120.011 187.681,122.511 189.5,125C 186.383,130.952 183.05,136.785 179.5,142.5C 175.78,136.895 172.447,131.062 169.5,125C 171.937,120.729 174.937,116.896 178.5,113.5 Z"/>
+          <path fill="#012663" d="M 180.5,21.5 C 179.182,45.6275 179.182,69.6275 180.5,93.5C 180.539,94.7562 180.039,95.7562 179,96.5C 178.121,91.8644 176.455,87.531 174,83.5C 161.093,68.041 145.593,64.8743 127.5,74C 113.33,85.4971 109.164,99.9971 115,117.5C 128.239,143.882 149.739,157.215 179.5,157.5C 179.5,169.167 179.5,180.833 179.5,192.5C 179.092,193.643 178.425,194.643 177.5,195.5C 167.806,185.971 157.973,176.638 148,167.5C 135.889,176.607 124.056,186.107 112.5,196C 136.241,219.062 157.741,243.895 177,270.5C 177.816,271.823 178.983,272.489 180.5,272.5C 180.5,273.167 180.5,273.833 180.5,274.5C 157.717,289.733 135.051,305.233 112.5,321C 103.442,323.533 97.2757,320.366 94,311.5C 93.3333,240.5 93.3333,169.5 94,98.5C 95.491,86.8723 98.991,75.8723 104.5,65.5C 97.8082,57.7765 94.1415,48.7765 93.5,38.5C 99.6227,41.1524 105.956,43.319 112.5,45C 115.5,45.6667 118.5,45.6667 121.5,45C 138.212,30.0344 157.879,22.2011 180.5,21.5 Z"/>
+          <path fill="#60a7f0" d="M 271.5,137.5 C 270.036,141.019 269.036,144.686 268.5,148.5C 268.167,145.833 267.833,143.167 267.5,140.5C 268.048,138.468 269.381,137.468 271.5,137.5 Z"/>
+          <path fill="#0d3e94" d="M 179.5,192.5 C 179.5,180.833 179.5,169.167 179.5,157.5C 190.681,157.464 201.347,155.131 211.5,150.5C 211.833,150.833 212.167,151.167 212.5,151.5C 201.067,164.921 190.067,178.588 179.5,192.5 Z"/>
+          <path fill="#046af4" d="M 271.5,137.5 C 269.381,137.468 268.048,138.468 267.5,140.5C 263.231,145.271 258.731,149.938 254,154.5C 227.819,186.845 202.985,220.179 179.5,254.5C 163.451,234.457 146.451,215.124 128.5,196.5C 134.652,191.259 140.985,186.259 147.5,181.5C 158.182,191.349 168.349,201.682 178,212.5C 188.242,199.68 198.242,186.68 208,173.5C 227.315,149.018 249.148,127.018 273.5,107.5C 274.626,106.192 274.626,104.858 273.5,103.5C 274.583,103.539 275.583,103.873 276.5,104.5C 287.587,96.4794 299.92,92.9794 313.5,94C 316,94.8854 318.333,96.0521 320.5,97.5C 301.825,107.829 285.492,121.163 271.5,137.5 Z"/>
+          <path fill="#083d96" d="M 265.5,159.5 C 265.987,211.226 265.487,262.893 264,314.5C 259.697,321.043 253.864,323.21 246.5,321C 224.258,305.724 202.258,290.224 180.5,274.5C 180.5,273.833 180.5,273.167 180.5,272.5C 198.745,246.353 217.245,220.353 236,194.5C 244.999,182.012 254.832,170.345 265.5,159.5 Z"/>
+        </svg>
+        <span class="sidebar-wordmark">bookwise</span>
+      </div>
+    </div>
+
+    <button type="button" class="sidebar-collapse-btn" aria-label="Colapsar menú">
+      <span class="sidebar-collapse-btn__label">Colapsar menú</span>
+      <span class="sidebar-collapse-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+      </span>
+    </button>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.2 12 3.5l9 7.7"/><path d="M5.5 10v9.5h13V10"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" title="Ubicaciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M4 21V10h16v11"/><path d="M2 10h20"/><path d="M6 7V4h12v3"/><path d="M6 7 4 10M18 7l2 3"/><path d="M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
+        <span class="nav-label">Ubicaciones</span>
+      </a>
+      <a href="#" class="nav-item" title="Profesionales">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M15.5 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 14.8c1.6.7 2.9 2.3 3 4.7"/></svg>
+        <span class="nav-label">Profesionales</span>
+      </a>
+      <a href="#" class="nav-item" title="Agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>
+        <span class="nav-label">Agenda</span>
+      </a>
+      <a href="#" class="nav-item" title="Clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>
+        <span class="nav-label">Clientes</span>
+      </a>
+      <a href="#" class="nav-item" title="Servicios y packs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8.5 12 3.5 3 8.5v7L12 20.5l9-5v-7z"/><path d="M3 8.5l9 5 9-5"/><path d="M12 13.5v7"/></svg>
+        <span class="nav-label">Servicios y packs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-widget">
+      <div class="navigator">
+        <div class="navigator__nav">
+          <button type="button" class="navigator__arrow" aria-label="Mes anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+          </button>
+          <span class="navigator__label">
+            <span class="navigator__year">2026</span>
+            <span class="navigator__month">noviembre</span>
+          </span>
+          <button type="button" class="navigator__arrow" aria-label="Mes siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>
+          </button>
+          <button type="button" class="navigator__today">Hoy</button>
+        </div>
+        <div class="navigator__grid">
+          <div class="navigator__header">Do</div>
+          <div class="navigator__header">Lu</div>
+          <div class="navigator__header">Ma</div>
+          <div class="navigator__header">Mi</div>
+          <div class="navigator__header">Ju</div>
+          <div class="navigator__header">Vi</div>
+          <div class="navigator__header">Sa</div>
+          <button type="button" class="navigator__day">1</button>
+          <button type="button" class="navigator__day">2</button>
+          <button type="button" class="navigator__day navigator__day--today navigator__day--selected">3</button>
+          <button type="button" class="navigator__day">4</button>
+          <button type="button" class="navigator__day">5</button>
+          <button type="button" class="navigator__day">6</button>
+          <button type="button" class="navigator__day">7</button>
+          <button type="button" class="navigator__day">8</button>
+          <button type="button" class="navigator__day">9</button>
+          <button type="button" class="navigator__day">10</button>
+          <button type="button" class="navigator__day">11</button>
+          <button type="button" class="navigator__day">12</button>
+          <button type="button" class="navigator__day">13</button>
+          <button type="button" class="navigator__day">14</button>
+          <button type="button" class="navigator__day">15</button>
+          <button type="button" class="navigator__day">16</button>
+          <button type="button" class="navigator__day">17</button>
+          <button type="button" class="navigator__day">18</button>
+          <button type="button" class="navigator__day">19</button>
+          <button type="button" class="navigator__day">20</button>
+          <button type="button" class="navigator__day">21</button>
+          <button type="button" class="navigator__day">22</button>
+          <button type="button" class="navigator__day">23</button>
+          <button type="button" class="navigator__day">24</button>
+          <button type="button" class="navigator__day">25</button>
+          <button type="button" class="navigator__day">26</button>
+          <button type="button" class="navigator__day">27</button>
+          <button type="button" class="navigator__day">28</button>
+          <button type="button" class="navigator__day">29</button>
+          <button type="button" class="navigator__day">30</button>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button type="button" class="sidebar-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></svg>
+        <span>Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="app-header">
+      <div class="app-header__left">
+        <button type="button" class="app-header__menu-btn" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="app-header__business">
+          <span class="app-header__monogram" aria-hidden="true">K</span>
+          <div class="app-header__business-info">
+            <span class="app-header__business-name">Kinesilk</span>
+            <span class="app-header__business-rut">RUT: 76.123.456-7</span>
+          </div>
+          <span class="app-header__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="app-header__right">
+        <div class="app-header__actions">
+          <button type="button" class="app-header__theme" aria-label="Modo de apariencia">
+            <span>Claro</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="account-chip" role="button" tabindex="0" aria-label="Menú de cuenta">
+          <span class="account-chip__avatar" aria-hidden="true">R</span>
+          <span class="account-chip__name">Rosa Kinesilk</span>
+          <span class="account-chip__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="as-shell">
+      <nav class="as-nav" aria-label="Secciones de la cuenta">
+        <div class="as-nav__group">
+          <p class="as-nav__title">Pago</p>
+          <ul class="as-nav__list">
+            <li><a class="as-nav__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19"/></svg>Estado de cuenta</a></li>
+            <li><a class="as-nav__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></svg>Historial de pagos</a></li>
+            <li><a class="as-nav__item as-nav__item--active" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>Datos de facturación</a></li>
+          </ul>
+        </div>
+        <div class="as-nav__group">
+          <p class="as-nav__title">Plan</p>
+          <ul class="as-nav__list">
+            <li><a class="as-nav__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/></svg>Mi plan</a></li>
+            <li><a class="as-nav__item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M4.7 7.5l1.7 1M17.6 15.5l1.7 1M4.7 16.5l1.7-1M17.6 8.5l1.7-1"/></svg>Administrar mi plan</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="as-shell__content">
+        <div class="page-wrap">
+
+          <div class="page-head">
+            <div class="page-head__text">
+              <h1>Datos de facturación</h1>
+              <p>Datos fiscales con los que facturamos tu suscripción</p>
+            </div>
+            <div class="page-head__actions">
+              <label class="demo-toggle">
+                <input type="checkbox" id="readonly-toggle" />
+                Ver como rol sin permiso
+              </label>
+              <span class="bw-chip bw-chip--warning"><span class="bw-chip__dot"></span>Faltan 2 de 9 datos</span>
+            </div>
+          </div>
+
+          <div class="savebar">
+            <p class="savebar__state savebar__state--saved">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 8"/></svg>
+              Guardado el 12 oct 2026, 09:41
+            </p>
+            <p class="savebar__state lock-notice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--text-color-secondary)"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>
+              Solo lectura: solo el dueño de la cuenta o un miembro con rol de facturación puede editar estos datos.
+            </p>
+            <div class="savebar__actions">
+              <button type="button" class="btn btn--outlined">Descartar</button>
+              <button type="button" class="btn btn--primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 8"/></svg>
+                Guardar datos de facturación
+              </button>
+            </div>
+          </div>
+
+          <div class="cols">
+
+            <form class="panel form-card" novalidate>
+              <fieldset class="form-card__block" style="border:0;margin:0">
+                <div class="block-head">
+                  <span class="block-head__num" aria-hidden="true">1</span>
+                  <h2>Información básica</h2>
+                  <span class="block-head__state bw-chip bw-chip--warning"><span class="bw-chip__dot"></span>Falta el giro</span>
+                </div>
+                <div class="form-grid">
+                  <div class="field field--full">
+                    <span class="field__label" id="taxpayer-label">Tipo de contribuyente</span>
+                    <div class="radio-row" role="radiogroup" aria-labelledby="taxpayer-label">
+                      <label class="radio"><input type="radio" name="taxpayer" value="company" checked />Empresa</label>
+                      <label class="radio"><input type="radio" name="taxpayer" value="individual" />Persona natural</label>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="rut">RUT</label>
+                    <input class="input" id="rut" type="text" value="77.456.123-9" autocomplete="off" data-preview="rut" />
+                    <small class="field__hint">Se valida con módulo 11; el servidor es la autoridad.</small>
+                  </div>
+                  <div class="field">
+                    <label for="legal_name">Razón social</label>
+                    <input class="input" id="legal_name" type="text" value="Kinesilk SpA" data-preview="legal_name" />
+                  </div>
+                  <div class="field field--full field--missing">
+                    <div class="field__label-row">
+                      <label for="giro">Giro (sector económico)</label>
+                      <span class="bw-chip bw-chip--warning"><span class="bw-chip__dot"></span>Falta</span>
+                    </div>
+                    <input class="input" id="giro" type="text" placeholder="Busca por código o descripción" aria-describedby="giro-hint" aria-invalid="true" data-preview="giro" />
+                    <small class="field__hint" id="giro-hint">Es obligatorio para emitir factura. Ejemplo: 96020 · Actividades de centros de estética y otros tratamientos de belleza.</small>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-card__block" style="border:0;margin:0">
+                <div class="block-head">
+                  <span class="block-head__num" aria-hidden="true">2</span>
+                  <h2>Dirección de facturación</h2>
+                  <span class="block-head__state bw-chip bw-chip--success"><span class="bw-chip__dot"></span>Completo</span>
+                </div>
+                <div class="form-grid">
+                  <div class="field field--full">
+                    <label for="address">Dirección</label>
+                    <input class="input" id="address" type="text" value="Av. Providencia 1234, oficina 502" data-preview="address" />
+                  </div>
+                  <div class="field">
+                    <label for="region">Región</label>
+                    <select class="select" id="region">
+                      <option selected>Región Metropolitana de Santiago</option>
+                      <option>Región de Valparaíso</option>
+                      <option>Región del Biobío</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="comuna">Comuna</label>
+                    <select class="select" id="comuna">
+                      <option>Providencia</option>
+                      <option>Ñuñoa</option>
+                      <option>Las Condes</option>
+                    </select>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-card__block" style="border:0;margin:0">
+                <div class="block-head">
+                  <span class="block-head__num" aria-hidden="true">3</span>
+                  <h2>Datos de contacto</h2>
+                  <span class="block-head__state bw-chip bw-chip--warning"><span class="bw-chip__dot"></span>Falta el teléfono</span>
+                </div>
+                <div class="form-grid">
+                  <div class="field field--missing">
+                    <div class="field__label-row">
+                      <label for="phone">Teléfono</label>
+                      <span class="bw-chip bw-chip--warning"><span class="bw-chip__dot"></span>Falta</span>
+                    </div>
+                    <div class="field__addon">
+                      <span class="field__addon-prefix" aria-hidden="true">🇨🇱 +56</span>
+                      <input class="input" id="phone" type="tel" placeholder="9 8765 4321" aria-describedby="phone-hint" />
+                    </div>
+                    <small class="field__hint" id="phone-hint">Sin teléfono la factura se emite, pero no queda un contacto para reclamos por el documento.</small>
+                  </div>
+                  <div class="field">
+                    <label for="email">Email</label>
+                    <input class="input" id="email" type="email" value="pagos@kinesilk.cl" data-preview="email" />
+                    <small class="field__hint">Ahí llega cada factura y su comprobante.</small>
+                  </div>
+                </div>
+              </fieldset>
+            </form>
+
+            <aside class="preview" aria-label="Vista previa y pendientes">
+
+              <section class="panel dte">
+                <div class="dte__head">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:16px;height:16px;color:var(--bw-300)"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M9 13h6M9 16.5h4"/></svg>
+                  <h2>Así se verá tu factura</h2>
+                  <span class="overline">Vista previa</span>
+                </div>
+                <div class="dte__meta">
+                  <strong>Bookwise SpA · RUT 76.543.210-K</strong>
+                  Factura electrónica · suscripción mensual · noviembre 2026
+                </div>
+                <dl class="dte__rows">
+                  <div class="dte__row"><dt>Razón social</dt><dd data-preview-out="legal_name">Kinesilk SpA</dd></div>
+                  <div class="dte__row"><dt>RUT</dt><dd data-preview-out="rut">77.456.123-9</dd></div>
+                  <div class="dte__row"><dt>Giro</dt><dd data-preview-out="giro"><span class="bw-chip bw-chip--warning dte__chip"><span class="bw-chip__dot"></span>Sin completar</span></dd></div>
+                  <div class="dte__row"><dt>Dirección</dt><dd><span data-preview-out="address">Av. Providencia 1234, of. 502</span><br />Providencia, Región Metropolitana</dd></div>
+                  <div class="dte__row"><dt>Email</dt><dd data-preview-out="email">pagos@kinesilk.cl</dd></div>
+                </dl>
+                <p class="dte__foot">El giro y la dirección salen impresos en el documento tributario. Si falta el giro, no podemos emitir la factura.</p>
+              </section>
+
+              <section class="panel">
+                <div class="panel__body">
+                  <p class="overline" style="margin:0 0 .25rem">Qué falta</p>
+                  <p style="margin:0;font-size:var(--bw-font-caption);color:var(--text-color-secondary)">Tu suscripción sigue activa; solo se frena la emisión de la factura.</p>
+                  <ul class="missing__list">
+                    <li class="missing__item">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5M12 16h.01"/></svg>
+                      Giro (sector económico)
+                      <button type="button" class="btn btn--ghost btn--sm">Completar</button>
+                    </li>
+                    <li class="missing__item">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5M12 16h.01"/></svg>
+                      Teléfono de contacto
+                      <button type="button" class="btn btn--ghost btn--sm">Completar</button>
+                    </li>
+                  </ul>
+                </div>
+              </section>
+
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const toggle = document.getElementById('readonly-toggle');
+      toggle.addEventListener('change', () => {
+        document.body.classList.toggle('is-readonly', toggle.checked);
+      });
+
+      // La vista previa del documento sigue a los campos que la alimentan.
+      const emptyGiro = '<span class="bw-chip bw-chip--warning dte__chip"><span class="bw-chip__dot"></span>Sin completar</span>';
+      document.querySelectorAll('[data-preview]').forEach((input) => {
+        const out = document.querySelector(`[data-preview-out="${input.dataset.preview}"]`);
+        if (!out) return;
+        input.addEventListener('input', () => {
+          const value = input.value.trim();
+          if (input.dataset.preview === 'giro') {
+            if (value) out.textContent = value;
+            else out.innerHTML = emptyGiro;
+            return;
+          }
+          out.textContent = value || '—';
+        });
+      });
+    </script>
+
+</main>
+</div>
+</body>
+</html>

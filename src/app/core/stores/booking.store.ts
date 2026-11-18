@@ -3,7 +3,6 @@ import {
   withState,
   withComputed,
   withMethods,
-  withHooks,
   patchState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
@@ -17,7 +16,7 @@ import { BookingsApiService } from '@services/api/bookings-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { AuthService } from '@services/auth.service';
 import {
-  Booking, BlockedSlot, CreateBooking, UpdateBooking, CreateBlockedSlot, User,
+  Booking, BlockedSlot, CreateBooking, UpdateBooking, CreateBlockedSlot,
 } from '@models';
 import { STATUS_COLOR_MAP } from '@features/admin/bookings/constants/booking-statuses';
 
@@ -42,7 +41,6 @@ interface FilterState {
   selectedLocationId: number | null;
   selectedProviderId: number | null;
   selectedStatusIds: number[];
-  scopeProviderId: number | null;   // set once at init — non-null = provider role
 }
 
 interface BookingStoreState {
@@ -106,7 +104,6 @@ const initialFilters: FilterState = {
   selectedLocationId: null,
   selectedProviderId: null,
   selectedStatusIds: [],
-  scopeProviderId: null,
 };
 
 const initialState: BookingStoreState = {
@@ -131,64 +128,82 @@ export const BookingStore = signalStore(
   withState(initialState),
 
   // ── Computed signals ───────────────────────────────────────────
-  withComputed((store) => ({
-    filteredBookings: computed(() => {
-      const ids = store.filters().selectedStatusIds;
-      if (ids.length === 0) return store.bookings();
-      return store.bookings().filter((b) => ids.includes(b.status_id));
-    }),
+  withComputed((store) => {
+    // Tenant/role scope derives from the authenticated identity, so replacing
+    // `user()` on a tenant switch re-scopes the agenda without re-initializing
+    // the store. `inject` runs while the store feature is constructed.
+    const auth = inject(AuthService);
+    const scopeProviderId = computed(() =>
+      auth.user()?.role === 'provider' ? (auth.user()?.provider_id ?? null) : null,
+    );
 
-    eventsForCalendar: computed<CalendarEvent[]>(() => {
-      const events: CalendarEvent[] = [];
-      const statusIds = store.filters().selectedStatusIds;
-      const visibleBookings = statusIds.length > 0
-        ? store.bookings().filter((b) => statusIds.includes(b.status_id))
-        : store.bookings();
+    return {
+      filteredBookings: computed(() => {
+        const ids = store.filters().selectedStatusIds;
+        if (ids.length === 0) return store.bookings();
+        return store.bookings().filter((b) => ids.includes(b.status_id));
+      }),
 
-      for (const b of visibleBookings) {
-        events.push({
-          id: String(b.id),
-          title: `${b.client?.first_name ?? ''} ${b.client?.last_name ?? ''} · ${b.service?.name ?? ''}`.trim(),
-          start: b.start_time,
-          end: b.end_time,
-          backgroundColor: b.status?.color ?? STATUS_COLOR_MAP[b.status_id] ?? '#ccc',
-          borderColor: b.status?.color ?? STATUS_COLOR_MAP[b.status_id] ?? '#ccc',
-          textColor: '#000',
-          extendedProps: { booking: b },
-        });
-      }
+      eventsForCalendar: computed<CalendarEvent[]>(() => {
+        const events: CalendarEvent[] = [];
+        const statusIds = store.filters().selectedStatusIds;
+        const visibleBookings = statusIds.length > 0
+          ? store.bookings().filter((b) => statusIds.includes(b.status_id))
+          : store.bookings();
 
-      for (const s of store.blockedSlots()) {
-        events.push({
-          id: `blocked-${s.id}`,
-          title: s.reason || 'Bloqueado',
-          start: s.start_time,
-          end: s.end_time,
-          classNames: ['fc-blocked-slot'],
-          extendedProps: { isBlocked: true, blockedSlot: s },
-        });
-      }
+        for (const b of visibleBookings) {
+          events.push({
+            id: String(b.id),
+            title: `${b.client?.first_name ?? ''} ${b.client?.last_name ?? ''} · ${b.service?.name ?? ''}`.trim(),
+            start: b.start_time,
+            end: b.end_time,
+            backgroundColor: b.status?.color ?? STATUS_COLOR_MAP[b.status_id] ?? '#ccc',
+            borderColor: b.status?.color ?? STATUS_COLOR_MAP[b.status_id] ?? '#ccc',
+            textColor: '#000',
+            extendedProps: { booking: b },
+          });
+        }
 
-      return events;
-    }),
+        for (const s of store.blockedSlots()) {
+          events.push({
+            id: `blocked-${s.id}`,
+            title: s.reason || 'Bloqueado',
+            start: s.start_time,
+            end: s.end_time,
+            classNames: ['fc-blocked-slot'],
+            extendedProps: { isBlocked: true, blockedSlot: s },
+          });
+        }
 
-    anyLoading: computed(() =>
-      store.loading().bookings || store.loading().blockedSlots || store.loading().mutation,
-    ),
+        return events;
+      }),
 
-    isProviderRole: computed(() => store.filters().scopeProviderId !== null),
+      anyLoading: computed(() =>
+        store.loading().bookings || store.loading().blockedSlots || store.loading().mutation,
+      ),
 
-    selectedBooking: computed(() => {
-      const id = store.selectedBookingId();
-      if (id === null) return null;
-      return store.bookings().find(b => b.id === id) ?? null;
-    }),
-  })),
+      scopeProviderId,
+      isProviderRole: computed(() => scopeProviderId() !== null),
+
+      selectedBooking: computed(() => {
+        const id = store.selectedBookingId();
+        if (id === null) return null;
+        return store.bookings().find(b => b.id === id) ?? null;
+      }),
+    };
+  }),
 
   // ── Methods ────────────────────────────────────────────────────
   withMethods((store, bookingsApi = inject(BookingsApiService), blockedSlotsApi = inject(BlockedSlotsApiService), destroyRef = inject(DestroyRef)) => {
     // ── Internal subject for debounced re-fetch after filter change ─
     const refetchTrigger$ = new Subject<void>();
+
+    // ── Resolve provider scope ──────────────────────────────────
+    // The derived role scope (from the authenticated user) overrides the
+    // provider picked in the UI. A non-provider identity has a null scope.
+    function resolveProviderId(): number | null {
+      return store.scopeProviderId() ?? store.filters().selectedProviderId;
+    }
 
     // ── Build API params from current state ─────────────────────
     function buildBookingParams(dateFrom: string, dateTo: string) {
@@ -198,12 +213,23 @@ export const BookingStore = signalStore(
         provider_id?: number; location_id?: number;
       } = { date_from: dateFrom, date_to: dateTo, per_page: 500 };
 
-      // Role scope overrides user selection
-      const providerId = filters.scopeProviderId ?? filters.selectedProviderId;
+      const providerId = resolveProviderId();
       if (providerId != null) params.provider_id = providerId;
       if (filters.selectedLocationId != null) params.location_id = filters.selectedLocationId;
 
       return params;
+    }
+
+    // ── Build blocked-slot query params ─────────────────────────
+    function buildBlockedSlotParams(dateFrom: string, dateTo: string) {
+      const providerId = resolveProviderId();
+      const locationId = store.filters().selectedLocationId;
+      return {
+        date_from: dateFrom,
+        date_to: dateTo,
+        ...(providerId != null ? { provider_id: providerId } : {}),
+        ...(locationId != null ? { location_id: locationId } : {}),
+      };
     }
 
     // ── loadEvents: fetch bookings + blockedSlots ───────────────
@@ -220,16 +246,7 @@ export const BookingStore = signalStore(
         switchMap(({ dateFrom, dateTo }) =>
           forkJoin({
             bookingsRes: bookingsApi.getBookings(buildBookingParams(dateFrom, dateTo)),
-            blockedSlotsRes: blockedSlotsApi.getBlockedSlots({
-              date_from: dateFrom,
-              date_to: dateTo,
-              ...(store.filters().scopeProviderId ?? store.filters().selectedProviderId
-                ? { provider_id: store.filters().scopeProviderId ?? store.filters().selectedProviderId! }
-                : {}),
-              ...(store.filters().selectedLocationId
-                ? { location_id: store.filters().selectedLocationId! }
-                : {}),
-            }),
+            blockedSlotsRes: blockedSlotsApi.getBlockedSlots(buildBlockedSlotParams(dateFrom, dateTo)),
           }).pipe(
             tap({
               next: ({ bookingsRes, blockedSlotsRes }) => {
@@ -413,15 +430,7 @@ export const BookingStore = signalStore(
                 patchState(store, { loading: { ...store.loading(), mutation: false } });
                 return of(undefined);
               }
-              return blockedSlotsApi.getBlockedSlots({
-                date_from: df, date_to: dt,
-                ...(store.filters().scopeProviderId ?? store.filters().selectedProviderId
-                  ? { provider_id: store.filters().scopeProviderId ?? store.filters().selectedProviderId! }
-                  : {}),
-                ...(store.filters().selectedLocationId
-                  ? { location_id: store.filters().selectedLocationId! }
-                  : {}),
-              }).pipe(
+              return blockedSlotsApi.getBlockedSlots(buildBlockedSlotParams(df, dt)).pipe(
                 tap({
                   next: (res) =>
                     patchState(store, {
@@ -512,11 +521,23 @@ export const BookingStore = signalStore(
       // Loaders
       loadEvents,
 
-      // Filters — apply synchronously, trigger debounced re-fetch
+      // Filters — apply synchronously, trigger debounced re-fetch.
+      // `scopeProviderId` is not a filter: it derives from the authenticated user.
       setFilters(partial: Partial<FilterState>) {
-        const { scopeProviderId: _, ...safe } = partial;
-        patchState(store, { filters: { ...store.filters(), ...safe } });
+        patchState(store, { filters: { ...store.filters(), ...partial } });
         refetchTrigger$.next();
+      },
+
+      // Tenant switch — drop the previous tenant's data and selection. The
+      // agenda skips a reload when range and selection are unchanged, so stale
+      // same-numeric-id rows would otherwise be rendered for the new tenant.
+      resetTenantState(): void {
+        patchState(store, {
+          bookings: [],
+          blockedSlots: [],
+          selectedBookingId: null,
+          filters: initialFilters,
+        });
       },
 
       // Selection
@@ -542,14 +563,5 @@ export const BookingStore = signalStore(
       // Refresh
       refreshBooking,
     };
-  }),
-
-  // ── Lifecycle hooks ────────────────────────────────────────────
-  withHooks({
-    onInit(store, auth = inject(AuthService)) {
-      const user = auth.user();
-      const scopeProviderId = user?.role === 'provider' ? (user.provider_id ?? null) : null;
-      patchState(store, { filters: { ...store.filters(), scopeProviderId } });
-    },
   }),
 );

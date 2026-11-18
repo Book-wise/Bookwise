@@ -1,0 +1,179 @@
+import { TestBed } from '@angular/core/testing';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { MessageService } from 'primeng/api';
+import { BusinessesListComponent } from './businesses-list.component';
+import { AuthService } from '@services/auth.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
+import { SubscriptionStore } from '@core/stores/subscription.store';
+import type { AuthMeData, Business, UsageData, User } from '@models';
+
+const business: Business = {
+  id: 1,
+  name: 'Kinesilk Centro',
+  rut: '11111111-1',
+  email: 'negocio@test.com',
+  address: 'Av. Providencia 123',
+  phone: '+56912345678',
+  plan: 'starter',
+};
+const otherBusiness: Business = { ...business, id: 2, name: 'Kinesilk Norte' };
+
+function makeMe(): AuthMeData {
+  return {
+    id: 7,
+    name: 'Admin',
+    email: 'admin@test.com',
+    phone: '+56912345678',
+    role: 'admin',
+    tenant_id: 1,
+    email_verified_at: '2026-09-01T16:00:00Z',
+    onboarding_complete: true,
+    business,
+    businesses: [business, otherBusiness],
+    is_admin_general: true,
+  } as AuthMeData;
+}
+
+function makeUser(): User {
+  return { id: 7, email: 'admin@test.com', name: 'Admin', role: 'admin' };
+}
+
+function makeUsage(tenants: { limit: number; current: number }): UsageData {
+  return {
+    account_id: 1,
+    plan: { slug: 'pro', billing_interval: 'monthly' },
+    tenants,
+    users: { limit: 10, current: 1 },
+    businesses: [],
+    confirmations: {
+      email: { limit: 0, consumed: 0, remaining: 0, period_start: '', period_end: '', pack_credit: 0, by_tenant: [] },
+      whatsapp: { limit: 0, consumed: 0, remaining: 0, period_start: '', period_end: '', pack_credit: 0, by_tenant: [] },
+    },
+  } as UsageData;
+}
+
+/**
+ * Thin delegation spec: the businesses list no longer reloads the reference
+ * store itself — it hands the switch to the coordinator and keeps its toasts.
+ */
+describe('BusinessesListComponent — tenant switch delegation', () => {
+  let tenantSwitch: { switchTenant: ReturnType<typeof vi.fn>; lastSwitch: ReturnType<typeof signal<unknown>> };
+  let toast: { add: ReturnType<typeof vi.fn> };
+  let loadSubscription: ReturnType<typeof vi.fn>;
+  let usageSignal: ReturnType<typeof signal<UsageData | null>>;
+  let router: { navigate: ReturnType<typeof vi.fn> };
+  let component: BusinessesListComponent;
+
+  beforeEach(async () => {
+    tenantSwitch = { switchTenant: vi.fn(() => of(void 0)), lastSwitch: signal(null) };
+    toast = { add: vi.fn() };
+    loadSubscription = vi.fn();
+    router = { navigate: vi.fn() };
+
+    usageSignal = signal<UsageData | null>(null);
+    const fakeStore = {
+      subscription: signal(null),
+      usage: usageSignal,
+      loading: signal({ subscription: false, usage: false, plans: false }),
+      error: signal({ subscription: null, usage: null, plans: null }),
+      loadSubscription,
+      loadUsage: vi.fn(),
+      loadPlans: vi.fn(),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [BusinessesListComponent],
+      providers: [
+        provideZonelessChangeDetection(),
+        {
+          provide: AuthService,
+          useValue: {
+            me: signal(makeMe()),
+            user: signal(makeUser()),
+            isAdminGeneral: () => true,
+          },
+        },
+        { provide: TenantSwitchService, useValue: tenantSwitch },
+        { provide: MessageService, useValue: toast },
+        { provide: Router, useValue: router },
+        { provide: SubscriptionStore, useValue: fakeStore },
+      ],
+    }).compileComponents();
+
+    component = TestBed.createComponent(BusinessesListComponent).componentInstance;
+  });
+
+  it('delegates to the coordinator and keeps the success toast', () => {
+    component.switchTo(otherBusiness);
+
+    expect(tenantSwitch.switchTenant).toHaveBeenCalledWith(2);
+    expect(toast.add).toHaveBeenCalledTimes(1);
+    const config = toast.add.mock.calls[0][0] as {
+      key: string;
+      severity: string;
+      summary: string;
+      detail?: string;
+    };
+    expect(config.key).toBe('global');
+    expect(config.severity).toBe('success');
+    expect(config.summary).toBe(component.lang.t('biz.switched_to', { name: 'Kinesilk Norte' }));
+    expect(config.summary).toContain('Kinesilk Norte');
+    expect(config.detail).toBeUndefined();
+  });
+
+  it('maps a switch error to the tenant error key with a global error toast', () => {
+    tenantSwitch.switchTenant.mockReturnValue(throwError(() => ({ status: 403 })));
+
+    component.switchTo(otherBusiness);
+
+    const config = toast.add.mock.calls[0][0] as {
+      key: string;
+      severity: string;
+      detail: string;
+    };
+    expect(config.key).toBe('global');
+    expect(config.severity).toBe('error');
+    expect(config.detail).toBe(component.lang.t('auth.switch_tenant_forbidden'));
+  });
+
+  it('does not switch when the business is already active', () => {
+    component.switchTo(business);
+
+    expect(tenantSwitch.switchTenant).not.toHaveBeenCalled();
+  });
+
+  // ── Bloqueo proactivo de creación (#12) ──────────────────────────
+
+  describe('proactive creation limit', () => {
+    beforeEach(() => {
+      usageSignal.set(makeUsage({ limit: 2, current: 2 }));
+    });
+
+    it('bloquea newBusiness() cuando la cuota de negocios de la cuenta está llena', () => {
+      component.newBusiness();
+
+      expect(component.capacityDialogVisible()).toBe(true);
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('navega a la creación cuando la cuota no está llena', () => {
+      usageSignal.set(makeUsage({ limit: 2, current: 1 }));
+
+      component.newBusiness();
+
+      expect(component.capacityDialogVisible()).toBe(false);
+      expect(router.navigate).toHaveBeenCalledWith(['/admin/negocios/nuevo']);
+    });
+
+    it('no bloquea (fail-open) cuando el uso no cargó', () => {
+      usageSignal.set(null);
+
+      component.newBusiness();
+
+      expect(component.capacityDialogVisible()).toBe(false);
+      expect(router.navigate).toHaveBeenCalledWith(['/admin/negocios/nuevo']);
+    });
+  });
+});

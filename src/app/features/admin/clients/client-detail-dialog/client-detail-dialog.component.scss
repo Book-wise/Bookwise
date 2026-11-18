@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+// El p-dialog maneja el ancho; el patient-card y el detalle ocupan el 100%.
+:host ::ng-deep .p-dialog-content {
+  padding-top: 0.5rem;
+}

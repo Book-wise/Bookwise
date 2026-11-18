@@ -2,9 +2,18 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '@services/auth.service';
+import { SubscriptionStatusService } from '@services/subscription-status.service';
+
+/** Extracts the raw token from a `Bearer <token>` Authorization header. */
+function bearerToken(header: string | null): string | null {
+  if (!header) return null;
+  const [scheme, value] = header.split(' ');
+  return scheme?.toLowerCase() === 'bearer' && value ? value : null;
+}
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const subscriptionStatus = inject(SubscriptionStatusService);
   const token = authService.getToken();
 
   if (token) {
@@ -18,7 +27,29 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        authService.logout();
+        // The backend ROTATES the token on every switch and revokes the old
+        // one, so an in-flight request can still be carrying a token that was
+        // already replaced — by this tab's own switch or by another tab.
+        // Compare the token the request actually used against the PERSISTED
+        // token, never the in-memory signal: with two tabs open, tab B's signal
+        // still holds the old token while `localStorage` already holds the new
+        // one, and comparing against the signal would log the user out.
+        const requestToken = bearerToken(req.headers.get('Authorization'));
+        const persistedToken = authService.getStoredToken();
+        const isStaleToken =
+          requestToken !== null && persistedToken !== null && requestToken !== persistedToken;
+
+        if (isStaleToken) {
+          // Recover instead of logging out: adopt the persisted (rotated) token
+          // so subsequent requests use it. The failed request is not retried.
+          authService.syncTokenFromStorage();
+        } else {
+          authService.logout();
+        }
+      }
+      if (error.status === 402 && error.error?.error === 'subscription_inactive') {
+        // Account-level inactive: mark the session so the global dialog shows.
+        subscriptionStatus.markInactive();
       }
       return throwError(() => error);
     })

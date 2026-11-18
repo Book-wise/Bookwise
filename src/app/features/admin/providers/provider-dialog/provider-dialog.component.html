@@ -15,25 +15,32 @@
   </ng-template>
 
   <div class="provider-form" [formGroup]="form">
+    @if (capacityError()) {
+      <div class="bw-capacity-cta">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ lang.t('biz.tenant_professional_limit_reached.detail') }}</span>
+        <p-button [label]="lang.t('biz.upgrade_cta')" [text]="true" size="small" icon="pi pi-arrow-right" (onClick)="goToBilling()" />
+      </div>
+    }
     <div class="field-row">
       <div class="field">
         <label>Nombre *</label>
-        <input pInputText formControlName="firstName" [disabled]="isView()" placeholder="Juan" class="w-full" />
+        <input pInputText formControlName="firstName" [disabled]="basicsDisabled()" placeholder="Juan" class="w-full" />
       </div>
       <div class="field">
         <label>Apellido *</label>
-        <input pInputText formControlName="lastName" [disabled]="isView()" placeholder="Pérez" class="w-full" />
+        <input pInputText formControlName="lastName" [disabled]="basicsDisabled()" placeholder="Pérez" class="w-full" />
       </div>
     </div>
 
     <div class="field">
       <label>Email *</label>
-      <input pInputText formControlName="email" [disabled]="isView()" placeholder="juan@correo.com" class="w-full" />
+      <input pInputText formControlName="email" [disabled]="basicsDisabled()" placeholder="juan@correo.com" class="w-full" />
     </div>
 
     <div class="field">
       <label>Teléfono</label>
-      <input pInputText formControlName="phone" [disabled]="isView()" placeholder="+56 9 1234 5678" class="w-full" />
+      <input pInputText formControlName="phone" [disabled]="basicsDisabled()" placeholder="+56 9 1234 5678" class="w-full" />
     </div>
 
     <div class="field">
@@ -41,7 +48,7 @@
       <p-select
         formControlName="locationId"
         [options]="locationOptions()"
-        [disabled]="isView()"
+        [disabled]="basicsDisabled()"
         placeholder="Seleccionar sucursal..."
         [appendTo]="'body'"
         class="w-full"
@@ -52,7 +59,7 @@
     <div class="field">
       <label>Activo</label>
       <div class="toggle-row">
-        <p-toggleswitch formControlName="active" [disabled]="isView()" />
+        <p-toggleswitch formControlName="active" [disabled]="basicsDisabled()" />
         <span class="toggle-label" [class.active]="form.controls.active.value">
           {{ form.controls.active.value ? 'Sí, está activo' : 'No, está inactivo' }}
         </span>
@@ -63,12 +70,12 @@
       <div class="field">
         <label>{{ lang.t('providers.dialog.roles') }}</label>
         <p-multiselect
-          formControlName="roleNames"
+          formControlName="roleSlugs"
           [options]="roleOptions()"
           optionLabel="label"
           optionValue="value"
           optionDisabled="disabled"
-          [disabled]="isView()"
+          [disabled]="rolesDisabled()"
           [placeholder]="lang.t('providers.dialog.roles_hint')"
           display="chip"
           [showClear]="false"
@@ -80,6 +87,9 @@
             <div class="dialog-role-option">
               <span class="dialog-role-option__dot" [style.background]="roleMeta(item.value).color"></span>
               <span class="dialog-role-option__label">{{ item.label }}</span>
+              @if (item.professional) {
+                <span class="dialog-role-option__tag">{{ lang.t('providers.dialog.role_professional') }}</span>
+              }
               @if (isRoleOptionLocked(item)) {
                 <i class="pi pi-lock dialog-role-option__lock" pTooltip="{{ lang.t('roles.admin_general_locked') }}" tooltipPosition="left"></i>
               }
@@ -88,6 +98,9 @@
         </p-multiselect>
         @if (showRolesEmptyError()) {
           <small class="field-error">{{ lang.t('roles.empty_error') }}</small>
+        }
+        @if (showNoProfessionalRoleWarning()) {
+          <small class="field-warning">{{ lang.t('providers.dialog.no_professional_role') }}</small>
         }
         <small class="field-hint">{{ lang.t('providers.dialog.roles_hint') }}</small>
       </div>

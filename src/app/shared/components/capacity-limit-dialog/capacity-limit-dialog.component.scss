@@ -1,0 +1,25 @@
+.capacity-limit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.capacity-limit__icon {
+  font-size: 1.5rem;
+  color: var(--p-warning-color, #f59e0b);
+}
+
+.capacity-limit__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.capacity-limit__detail {
+  margin: 0;
+}
+
+.capacity-limit__usage {
+  margin: 0;
+  color: var(--p-text-muted-color, #6b7280);
+}

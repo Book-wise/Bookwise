@@ -8,28 +8,26 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject, computed } from '@angular/core';
-import { pipe, switchMap, tap, catchError, of, map, throwError } from 'rxjs';
+import { Observable, defer, finalize, forkJoin, pipe, shareReplay, switchMap, tap, catchError, of, map, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
-import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { RolesApiService } from '@services/api/roles-api.service';
-import { Client, Location, Provider, Service, ServicePack, Region, LocationComuna } from '@models';
+import { Client, Location, Provider, Region, LocationComuna } from '@models';
+import { ServicesStore } from './services.store';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type EntityName = 'clients' | 'locations' | 'providers' | 'services' | 'packs' | 'regions';
+type EntityName = 'clients' | 'locations' | 'providers' | 'regions';
 
 interface ReferenceState {
   // Entity arrays (read-only cache)
   clients: Client[];
   locations: Location[];
   providers: Provider[];
-  services: Service[];
-  packs: ServicePack[];
   regions: Region[];
   comunasByRegion: Record<number, LocationComuna[]>;
   // Meta-state
@@ -46,24 +44,18 @@ const initialLoading: Record<EntityName, boolean> = {
   clients: false,
   locations: false,
   providers: false,
-  services: false,
-  packs: false,
   regions: false,
 };
 const initialLoaded: Record<EntityName, boolean> = {
   clients: false,
   locations: false,
   providers: false,
-  services: false,
-  packs: false,
   regions: false,
 };
 const initialError: Record<EntityName, string | null> = {
   clients: null,
   locations: null,
   providers: null,
-  services: null,
-  packs: null,
   regions: null,
 };
 
@@ -71,8 +63,6 @@ const initialState: ReferenceState = {
   clients: [],
   locations: [],
   providers: [],
-  services: [],
-  packs: [],
   regions: [],
   comunasByRegion: {},
   loading: initialLoading,
@@ -97,120 +87,70 @@ export const ReferenceStore = signalStore(
   })),
 
   // ── Methods (load + invalidation + mutations en un solo bloque, usando closures) ──
-  withMethods((store, locationsApi = inject(LocationsApiService), providersApi = inject(ProvidersApiService), servicesApi = inject(ServicesApiService), clientsApi = inject(ClientsApiService), rolesApi = inject(RolesApiService)) => {
+  withMethods((store, locationsApi = inject(LocationsApiService), providersApi = inject(ProvidersApiService), clientsApi = inject(ClientsApiService), rolesApi = inject(RolesApiService), servicesStore = inject(ServicesStore)) => {
     // Los rxMethods se definen como variables locales para que los métodos de
     // invalidación puedan referenciarlos por closure (evita type issues entre
     // withMethods encadenados)
-    const loadLocations = rxMethod<void>(
-      pipe(
-        tap(() =>
-          patchState(store, {
-            loading: { ...store.loading(), locations: true },
-            error: { ...store.error(), locations: null },
-          }),
-        ),
-        switchMap(() =>
-          locationsApi.getLocations().pipe(
-            tap({
-              next: (locations) =>
-                patchState(store, { locations, loading: { ...store.loading(), locations: false }, loaded: { ...store.loaded(), locations: true } }),
-              error: (err) =>
-                patchState(store, { loading: { ...store.loading(), locations: false }, error: { ...store.error(), locations: err.message ?? 'Error al cargar ubicaciones' } }),
-            }),
-            catchError(() => of(undefined)),
-          ),
-        ),
-      ),
-    );
+    // Observable-returning loaders. Each one owns its loading/error bookkeeping
+    // and never emits an error (per-entity catchError), so they can be composed
+    // with forkJoin by reloadAll() while the rxMethod wrappers below keep the
+    // existing trigger semantics for loadAll()/invalidate*().
+    const fetchLocations = (): Observable<void> => {
+      patchState(store, {
+        loading: { ...store.loading(), locations: true },
+        error: { ...store.error(), locations: null },
+      });
+      return locationsApi.getLocations().pipe(
+        tap({
+          next: (locations) =>
+            patchState(store, { locations, loading: { ...store.loading(), locations: false }, loaded: { ...store.loaded(), locations: true } }),
+          error: (err) =>
+            patchState(store, { loading: { ...store.loading(), locations: false }, error: { ...store.error(), locations: err.message ?? 'Error al cargar ubicaciones' } }),
+        }),
+        catchError(() => of(undefined)),
+        map((): void => undefined),
+      );
+    };
 
-    const loadProviders = rxMethod<void>(
-      pipe(
-        tap(() =>
-          patchState(store, {
-            loading: { ...store.loading(), providers: true },
-            error: { ...store.error(), providers: null },
-          }),
-        ),
-        switchMap(() =>
-          providersApi.getProviders().pipe(
-            tap({
-              next: (providers) =>
-                patchState(store, { providers, loading: { ...store.loading(), providers: false }, loaded: { ...store.loaded(), providers: true } }),
-              error: (err) =>
-                patchState(store, { loading: { ...store.loading(), providers: false }, error: { ...store.error(), providers: err.message ?? 'Error al cargar proveedores' } }),
-            }),
-            catchError(() => of(undefined)),
-          ),
-        ),
-      ),
-    );
+    const loadLocations = rxMethod<void>(pipe(switchMap(() => fetchLocations())));
 
-    const loadServices = rxMethod<void>(
-      pipe(
-        tap(() =>
-          patchState(store, {
-            loading: { ...store.loading(), services: true },
-            error: { ...store.error(), services: null },
-          }),
-        ),
-        switchMap(() =>
-          servicesApi.getServices().pipe(
-            tap({
-              next: (services) =>
-                patchState(store, { services, loading: { ...store.loading(), services: false }, loaded: { ...store.loaded(), services: true } }),
-              error: (err) =>
-                patchState(store, { loading: { ...store.loading(), services: false }, error: { ...store.error(), services: err.message ?? 'Error al cargar servicios' } }),
-            }),
-            catchError(() => of(undefined)),
-          ),
-        ),
-      ),
-    );
+    const fetchProviders = (): Observable<void> => {
+      patchState(store, {
+        loading: { ...store.loading(), providers: true },
+        error: { ...store.error(), providers: null },
+      });
+      return providersApi.getProviders().pipe(
+        tap({
+          next: (providers) =>
+            patchState(store, { providers, loading: { ...store.loading(), providers: false }, loaded: { ...store.loaded(), providers: true } }),
+          error: (err) =>
+            patchState(store, { loading: { ...store.loading(), providers: false }, error: { ...store.error(), providers: err.message ?? 'Error al cargar proveedores' } }),
+        }),
+        catchError(() => of(undefined)),
+        map((): void => undefined),
+      );
+    };
 
-    const loadClients = rxMethod<void>(
-      pipe(
-        tap(() =>
-          patchState(store, {
-            loading: { ...store.loading(), clients: true },
-            error: { ...store.error(), clients: null },
-          }),
-        ),
-        switchMap(() =>
-          clientsApi.getClients().pipe(
-            tap({
-              next: (clients) =>
-                patchState(store, { clients, loading: { ...store.loading(), clients: false }, loaded: { ...store.loaded(), clients: true } }),
-              error: (err) =>
-                patchState(store, { loading: { ...store.loading(), clients: false }, error: { ...store.error(), clients: err.message ?? 'Error al cargar clientes' } }),
-            }),
-            catchError(() => of(undefined)),
-          ),
-        ),
-      ),
-    );
+    const loadProviders = rxMethod<void>(pipe(switchMap(() => fetchProviders())));
 
-    const loadPacks = rxMethod<void>(
-      pipe(
-        tap(() =>
-          patchState(store, {
-            loading: { ...store.loading(), packs: true },
-            error: { ...store.error(), packs: null },
-          }),
-        ),
-        switchMap(() =>
-          servicesApi.getPacks().pipe(
-            map((res) => res.data),
-            tap({
-              next: (packs) =>
-                patchState(store, { packs, loading: { ...store.loading(), packs: false }, loaded: { ...store.loaded(), packs: true } }),
-              error: (err) =>
-                patchState(store, { loading: { ...store.loading(), packs: false }, error: { ...store.error(), packs: err.message ?? 'Error al cargar paquetes' } }),
-            }),
-            catchError(() => of(undefined)),
-          ),
-        ),
-      ),
-    );
+    const fetchClients = (): Observable<void> => {
+      patchState(store, {
+        loading: { ...store.loading(), clients: true },
+        error: { ...store.error(), clients: null },
+      });
+      return clientsApi.getClients().pipe(
+        tap({
+          next: (clients) =>
+            patchState(store, { clients, loading: { ...store.loading(), clients: false }, loaded: { ...store.loaded(), clients: true } }),
+          error: (err) =>
+            patchState(store, { loading: { ...store.loading(), clients: false }, error: { ...store.error(), clients: err.message ?? 'Error al cargar clientes' } }),
+        }),
+        catchError(() => of(undefined)),
+        map((): void => undefined),
+      );
+    };
+
+    const loadClients = rxMethod<void>(pipe(switchMap(() => fetchClients())));
 
     const loadRegions = rxMethod<void>(
       pipe(
@@ -253,14 +193,66 @@ export const ReferenceStore = signalStore(
       });
     }
 
+    // ── Switch-path reload (R3; D6) ─────────────────────────────────────
+    // Memoized in-flight round-trip. Cleared on completion/teardown so the
+    // next switch starts fresh.
+    let reloadInFlight$: Observable<void> | null = null;
+
+    /**
+     * Reloads the five tenant lists (locations, providers, services, clients,
+     * packs) for the active tenant. Geography (regions/comunas) is excluded —
+     * it is tenant-independent.
+     *
+     * `services`/`packs` viven en `ServicesStore`, así que su limpieza y
+     * recarga se delegan a `servicesStore.reloadAll()`. Las tres listas propias
+     * se limpian PRIMERO (para que una carga fallida no filtre datos del tenant
+     * anterior) y se unen con `forkJoin`. El resultado se memoiza con
+     * `shareReplay(1)` + `finalize` reset, de modo que callers concurrentes
+     * comparten UN round-trip en vuelo. Los `catchError` por entidad mantienen
+     * los fallos no fatales: el observable devuelto siempre completa.
+     */
+    const reloadAll = (): Observable<void> => {
+      if (reloadInFlight$) {
+        return reloadInFlight$;
+      }
+
+      patchState(store, {
+        locations: [],
+        providers: [],
+        clients: [],
+        loading: { ...store.loading(), locations: true, providers: true, clients: true },
+        loaded: { ...store.loaded(), locations: false, providers: false, clients: false },
+        error: { ...store.error(), locations: null, providers: null, clients: null },
+      });
+
+      const servicesReload$ = servicesStore.reloadAll();
+
+      reloadInFlight$ = defer(() =>
+        forkJoin([
+          fetchLocations(),
+          fetchProviders(),
+          fetchClients(),
+          servicesReload$,
+        ]),
+      ).pipe(
+        map((): void => undefined),
+        shareReplay({ bufferSize: 1, refCount: false }),
+        finalize(() => {
+          reloadInFlight$ = null;
+        }),
+      );
+
+      return reloadInFlight$;
+    };
+
     const loadAll = rxMethod<void>(
       pipe(
         tap(() => {
           loadLocations();
           loadProviders();
-          loadServices();
+          servicesStore.loadServices();
           loadClients();
-          loadPacks();
+          servicesStore.loadPacks();
           loadRegions();
         }),
       ),
@@ -383,11 +375,10 @@ export const ReferenceStore = signalStore(
       // Load individual
       loadLocations,
       loadProviders,
-      loadServices,
       loadClients,
-      loadPacks,
       loadRegions,
       loadAll,
+      reloadAll,
 
       // Invalidation (usa las closures, no store.method)
       invalidateLocations(): void {
@@ -398,17 +389,9 @@ export const ReferenceStore = signalStore(
         patchState(store, { loaded: { ...store.loaded(), providers: false } });
         loadProviders();
       },
-      invalidateServices(): void {
-        patchState(store, { loaded: { ...store.loaded(), services: false } });
-        loadServices();
-      },
       invalidateClients(): void {
         patchState(store, { loaded: { ...store.loaded(), clients: false } });
         loadClients();
-      },
-      invalidatePacks(): void {
-        patchState(store, { loaded: { ...store.loaded(), packs: false } });
-        loadPacks();
       },
       invalidateRegions(): void {
         patchState(store, { loaded: { ...store.loaded(), regions: false } });

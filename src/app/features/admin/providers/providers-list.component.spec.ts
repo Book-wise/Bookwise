@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,7 +13,10 @@ import { LocationsApiService } from '@services/api/locations-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { ReferenceStore } from '@core/stores/reference.store';
+import { SubscriptionStore } from '@core/stores/subscription.store';
+import { AuthService } from '@services/auth.service';
 import { Provider, Role } from '@models';
+import type { AuthMeData, UsageData } from '@models';
 
 describe('ProvidersListComponent', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<ProvidersListComponent>>;
@@ -35,6 +38,24 @@ describe('ProvidersListComponent', () => {
   let mockClientsApi: { getClients: ReturnType<typeof vi.fn> };
   let mockHttpError: { handle: ReturnType<typeof vi.fn> };
   let messageAdd: ReturnType<typeof vi.fn>;
+  let authMock: { me: ReturnType<typeof signal<AuthMeData | null>>; hasPermission: ReturnType<typeof vi.fn>; hasAllPermissions: ReturnType<typeof vi.fn>; hasAnyPermission: ReturnType<typeof vi.fn> };
+  let fakeSubscriptionStore: { usage: ReturnType<typeof signal<UsageData | null>>; loadUsage: ReturnType<typeof vi.fn> };
+
+  const makeMe = (tenantId = 1): AuthMeData =>
+    ({ id: 7, name: 'Admin', email: 'a@b.c', role: 'admin', tenant_id: tenantId } as AuthMeData);
+
+  const makeUsage = (professionals: { limit: number; current: number }): UsageData =>
+    ({
+      account_id: 1,
+      plan: { slug: 'pro', billing_interval: 'monthly' },
+      tenants: { limit: 5, current: 1 },
+      users: { limit: 10, current: 1 },
+      businesses: [{ tenant_id: 1, professionals, locations: { limit: 10, current: 1 } }],
+      confirmations: {
+        email: { limit: 0, consumed: 0, remaining: 0, period_start: '', period_end: '', pack_credit: 0, by_tenant: [] },
+        whatsapp: { limit: 0, consumed: 0, remaining: 0, period_start: '', period_end: '', pack_credit: 0, by_tenant: [] },
+      },
+    } as UsageData);
 
   const baseProvider = (overrides: Partial<Provider> = {}): Provider => ({
     id: 1,
@@ -49,9 +70,9 @@ describe('ProvidersListComponent', () => {
 
   beforeEach(async () => {
     const allRoles: Role[] = [
-      { id: 1, name: 'admin_local', label: 'Admin Local' },
-      { id: 2, name: 'recepcionista', label: 'Recepcionista' },
-      { id: 3, name: 'staff', label: 'Staff' },
+      { id: 1, slug: 'admin_local', name: 'Admin Local', permissions: [] },
+      { id: 2, slug: 'recepcionista', name: 'Recepcionista', permissions: [] },
+      { id: 3, slug: 'staff', name: 'Staff', permissions: [] },
     ];
 
     mockRouter = { navigate: vi.fn() };
@@ -70,6 +91,8 @@ describe('ProvidersListComponent', () => {
     mockClientsApi = { getClients: vi.fn(() => of([])) };
     mockHttpError = { handle: vi.fn() };
     messageAdd = vi.fn();
+    authMock = { me: signal<AuthMeData | null>(null), hasPermission: vi.fn(() => false), hasAllPermissions: vi.fn(() => false), hasAnyPermission: vi.fn(() => false) };
+    fakeSubscriptionStore = { usage: signal<UsageData | null>(null), loadUsage: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ProvidersListComponent],
@@ -84,6 +107,8 @@ describe('ProvidersListComponent', () => {
         { provide: ClientsApiService, useValue: mockClientsApi },
         { provide: HttpErrorService, useValue: mockHttpError },
         { provide: MessageService, useValue: { add: messageAdd } },
+        { provide: AuthService, useValue: authMock },
+        { provide: SubscriptionStore, useValue: fakeSubscriptionStore },
       ],
     }).compileComponents();
 
@@ -146,8 +171,8 @@ describe('ProvidersListComponent', () => {
   // ── Role filter (computed over store providers) ─────────────────
 
   describe('role filter', () => {
-    const r1 = { id: 1, name: 'admin_local', label: 'Admin Local' };
-    const r2 = { id: 2, name: 'recepcionista', label: 'Recepcionista' };
+    const r1: Role = { id: 1, slug: 'admin_local', name: 'Admin Local', permissions: [] };
+    const r2: Role = { id: 2, slug: 'recepcionista', name: 'Recepcionista', permissions: [] };
 
     it('keeps only providers that have at least one selected role', () => {
       seedProviders([
@@ -157,7 +182,7 @@ describe('ProvidersListComponent', () => {
         baseProvider({ id: 4, roles: undefined }),
       ]);
 
-      component.selectedRoleNames.set(['admin_local']);
+      component.selectedRoleSlugs.set(['admin_local']);
 
       const names = component['filteredProviders']().map((p) => p.id);
       expect(names).toEqual([1]);
@@ -169,7 +194,7 @@ describe('ProvidersListComponent', () => {
         baseProvider({ id: 2, roles: [r2] }),
       ]);
 
-      component.selectedRoleNames.set(['admin_local']);
+      component.selectedRoleSlugs.set(['admin_local']);
 
       const names = component['filteredProviders']().map((p) => p.id);
       expect(names).not.toContain(2);
@@ -182,7 +207,7 @@ describe('ProvidersListComponent', () => {
         baseProvider({ id: 2, roles: [] }),
       ]);
 
-      component.selectedRoleNames.set([]);
+      component.selectedRoleSlugs.set([]);
 
       expect(component['filteredProviders']().length).toBe(2);
     });
@@ -371,6 +396,148 @@ describe('ProvidersListComponent', () => {
       expect(component.conflictDialogVisible()).toBe(false);
       expect(component.conflictData()).toBeNull();
       expect(mockHttpError.handle).toHaveBeenCalled();
+    });
+  });
+
+  // ── Paginación (S6: la lista no trunca) ──────────────────────────
+
+  describe('paginación', () => {
+    /** 12 profesionales: más de una página de 10. */
+    function seedMany(): void {
+      seedProviders(
+        Array.from({ length: 12 }, (_, i) =>
+          baseProvider({ id: i + 1, email: `p${i + 1}@test.com` }),
+        ),
+      );
+      fixture.detectChanges();
+      fixture.detectChanges();
+    }
+
+    it('muestra como máximo 10 profesionales por página y conoce el total', () => {
+      seedMany();
+
+      expect(component.totalRecords()).toBe(12);
+      expect(component.pagedProviders()).toHaveLength(10);
+    });
+
+    it('la segunda página trae el resto sin repetir registros', () => {
+      seedMany();
+      const firstPageIds = component.pagedProviders().map((p) => p.id);
+
+      component.onPageChange({ page: 1 });
+
+      expect(component.pagedProviders()).toHaveLength(2);
+      expect(component.pagedProviders().map((p) => p.id)).not.toEqual(
+        expect.arrayContaining(firstPageIds),
+      );
+    });
+
+    it('vuelve a la primera página al cambiar la búsqueda', () => {
+      seedMany();
+      component.onPageChange({ page: 1 });
+      expect(component.page()).toBe(2);
+
+      component.onSearchChange('zzz');
+
+      expect(component.page()).toBe(1);
+    });
+
+    it('clampa la página cuando el total baja y deja de quedar vacía', () => {
+      seedMany();
+      component.onPageChange({ page: 1 });
+      expect(component.page()).toBe(2);
+      expect(component.pagedProviders()).toHaveLength(2);
+
+      // El total baja a 5 (una sola página): la página 2 ya no existe.
+      seedProviders(
+        Array.from({ length: 5 }, (_, i) => baseProvider({ id: i + 1, email: `p${i + 1}@test.com` })),
+      );
+      fixture.detectChanges();
+      fixture.detectChanges();
+
+      expect(component.page()).toBe(1);
+      expect(component.pagedProviders()).toHaveLength(5);
+    });
+  });
+
+  // ── Cuota agotada: el CTA de upgrade no queda pegado ────────────────
+
+  describe('capacity limit CTA', () => {
+    const quotaError = () =>
+      new HttpErrorResponse({
+        status: 403,
+        error: { error: 'tenant_professional_limit_reached', detail: 'sin cupo' },
+      });
+
+    it('renders the upgrade CTA and clears it after a successful retry', () => {
+      seedProviders([baseProvider({ active: false })]);
+      fixture.detectChanges();
+      const nativeEl = fixture.nativeElement as HTMLElement;
+      expect(nativeEl.querySelector('.bw-capacity-cta')).toBeFalsy();
+
+      mockProvidersApi.updateProvider.mockReturnValue(throwError(() => quotaError()));
+      component.toggleActive(store.providers()[0]);
+      fixture.detectChanges();
+      expect(nativeEl.querySelector('.bw-capacity-cta')).toBeTruthy();
+
+      mockProvidersApi.updateProvider.mockReturnValue(
+        of({ message: 'ok', data: baseProvider({ active: true }) }),
+      );
+      component.toggleActive(store.providers()[0]);
+      fixture.detectChanges();
+      expect(nativeEl.querySelector('.bw-capacity-cta')).toBeFalsy();
+    });
+
+    it('clears the CTA when the creation dialog is opened', () => {
+      seedProviders([baseProvider({ active: false })]);
+      fixture.detectChanges();
+      const nativeEl = fixture.nativeElement as HTMLElement;
+
+      mockProvidersApi.updateProvider.mockReturnValue(throwError(() => quotaError()));
+      component.toggleActive(store.providers()[0]);
+      fixture.detectChanges();
+      expect(nativeEl.querySelector('.bw-capacity-cta')).toBeTruthy();
+
+      component.openCreate();
+      fixture.detectChanges();
+      expect(nativeEl.querySelector('.bw-capacity-cta')).toBeFalsy();
+    });
+  });
+
+  // ── Bloqueo proactivo de creación (#12) ──────────────────────────
+
+  describe('proactive creation limit', () => {
+    beforeEach(() => {
+      authMock.me.set(makeMe());
+      fakeSubscriptionStore.usage.set(makeUsage({ limit: 2, current: 2 }));
+      fixture.detectChanges();
+    });
+
+    it('bloquea openCreate() cuando la cuota de profesionales del negocio está llena', () => {
+      component.openCreate();
+
+      expect(component.capacityDialogVisible()).toBe(true);
+      expect(component.dialogVisible()).toBe(false);
+    });
+
+    it('abre el diálogo de alta cuando la cuota no está llena', () => {
+      fakeSubscriptionStore.usage.set(makeUsage({ limit: 2, current: 1 }));
+      fixture.detectChanges();
+
+      component.openCreate();
+
+      expect(component.capacityDialogVisible()).toBe(false);
+      expect(component.dialogVisible()).toBe(true);
+    });
+
+    it('no bloquea (fail-open) cuando el uso no cargó', () => {
+      fakeSubscriptionStore.usage.set(null);
+      fixture.detectChanges();
+
+      component.openCreate();
+
+      expect(component.capacityDialogVisible()).toBe(false);
+      expect(component.dialogVisible()).toBe(true);
     });
   });
 });

@@ -3,14 +3,20 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import { Location, Region, LocationComuna } from '@models';
+import { collectPaginatedPages } from './collect-paginated';
 
 @Injectable({ providedIn: 'root' })
 export class LocationsApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
+  /**
+   * Listado completo: agrega todas las páginas del envelope paginado (ver
+   * `collectPaginatedPages`). `ReferenceStore` publica este array como fuente
+   * canónica y lo comparten agenda, reservas y dashboard.
+   */
   getLocations(): Observable<Location[]> {
-    return this.http.get<Location[]>(`${this.baseUrl}/locations`);
+    return collectPaginatedPages<Location>(this.http, `${this.baseUrl}/locations`);
   }
 
   getLocation(id: number): Observable<Location> {

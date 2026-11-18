@@ -1,0 +1,116 @@
+<div class="permissions-wrap">
+  <p-message
+    severity="warn"
+    class="permissions-warning"
+    [text]="lang.t('roles.permissions.warning')"
+  />
+
+  @if (catalogLoading()) {
+    <div class="loading-state"><i class="pi pi-spin pi-spinner"></i></div>
+  } @else if (catalogError() || !catalogReady()) {
+    <div class="catalog-state">
+      <i class="pi pi-exclamation-circle catalog-state__icon"></i>
+      <p class="catalog-state__text">
+        {{
+          lang.t(
+            catalogError() ? 'roles.permissions.catalog_error' : 'roles.permissions.catalog_empty'
+          )
+        }}
+      </p>
+      <p-button
+        [label]="lang.t('roles.permissions.retry')"
+        icon="pi pi-refresh"
+        (onClick)="retryCatalog()"
+      />
+    </div>
+  } @else {
+    <div class="matrix">
+      <div class="role-select-field">
+        <label class="role-select-field__label" for="role-select">
+          {{ lang.t('roles.permissions.role_select_label') }}
+        </label>
+        <p-select
+          inputId="role-select"
+          class="role-select"
+          [options]="roleOptions()"
+          optionLabel="label"
+          optionValue="slug"
+          [ngModel]="selectedRole()?.slug"
+          (ngModelChange)="selectRoleBySlug($event)"
+        >
+          <ng-template pTemplate="item" let-opt>
+            <div class="role-option">
+              <bw-role-badge [slug]="opt.slug" />
+              <span>{{ opt.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="selectedItem" let-opt>
+            <div class="role-option">
+              <bw-role-badge [slug]="opt.slug" />
+              <span>{{ opt.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <aside class="role-list">
+        @for (role of roles(); track role.slug) {
+          <button
+            type="button"
+            class="role-list__item"
+            [class.active]="selectedRole()?.slug === role.slug"
+            (click)="selectRole(role)"
+          >
+            <bw-role-badge [slug]="role.slug" />
+            <span class="role-list__label">{{ roleLabel(role) }}</span>
+          </button>
+        }
+      </aside>
+
+      <section class="matrix-detail">
+        @if (selectedRole(); as role) {
+          @if (isAdminGeneralLocked()) {
+            <div class="permissions-lock">
+              <i class="pi pi-lock permissions-lock__icon"></i>
+              <span class="permissions-lock__text">
+                {{ lang.t('roles.permissions.admin_general_locked') }}
+              </span>
+            </div>
+          }
+
+          @for (group of catalog(); track group.group) {
+            <div class="permission-group">
+              <h3 class="permission-group__title">{{ permissionGroupLabel(group.group) }}</h3>
+              <div class="permission-group__items">
+                @for (item of group.items; track item.key) {
+                  <label class="permission-item">
+                    <p-checkbox
+                      [ngModel]="isSelected(item.key)"
+                      (ngModelChange)="togglePermission(item.key, $event)"
+                      [binary]="true"
+                      [disabled]="isAdminGeneralLocked()"
+                    />
+                    <span class="permission-item__label">{{ permissionLabel(item) }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+          }
+
+          <p-button
+            class="save-btn"
+            [label]="lang.t('roles.permissions.save')"
+            icon="pi pi-save"
+            [loading]="saving()"
+            [disabled]="isAdminGeneralLocked()"
+            (onClick)="save()"
+          />
+        } @else {
+          <p class="empty-state">{{ lang.t('roles.permissions.select_role') }}</p>
+        }
+      </section>
+    </div>
+  }
+</div>
+
+<p-confirmDialog styleClass="bw-delete-confirm" />

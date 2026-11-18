@@ -29,6 +29,9 @@ yarn-error.log
 !.vscode/mcp.json
 .history/*
 
+# Git worktrees kept inside the repo
+.worktrees/
+
 # Miscellaneous
 /.angular/cache
 .sass-cache/

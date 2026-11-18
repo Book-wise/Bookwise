@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Tipos de ficha — tarjetas expandibles</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b;
+    --bw-chip-text-secondary:#374151; --bw-chip-text-primary:#0b3d95;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --surface-100:#f5f5f5; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --sidebar-bg-from:var(--bw-900); --sidebar-bg-to:var(--bw-600);
+    --sidebar-text:rgba(255,255,255,0.68); --sidebar-text-active:#ffffff;
+    --sidebar-hover-bg:rgba(255,255,255,0.08); --sidebar-active-bg:rgba(255,255,255,0.14);
+    --sidebar-active-border:var(--bw-300); --sidebar-divider:rgba(255,255,255,0.1);
+    --sidebar-text-hover:#ffffff;
+    --bw-700:#0a2862;
+    --bw-shadow-sidebar-tab:0 2px 8px rgba(1,38,99,0.45);
+    --bw-shadow-sidebar-tab-hover:0 3px 12px rgba(4,106,244,0.5);
+    --bw-transition-base:0.2s;
+    --bw-weight-semibold:600;
+    --color-primary:var(--bw-500); --color-primary-cta:var(--bw-300);
+    --surface-50:#fafafa; --surface-hover:#f3f4f6;
+    --z-drawer:400; --z-topbar:500;
+    --bw-space-xs:0.25rem;
+    --font-family:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-text-2xs:0.6875rem; --bw-text-xs:0.75rem; --bw-text-sm:0.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem; --bw-text-2xl:1.5rem;
+    --bw-font-overline:var(--bw-text-2xs); --bw-font-caption:var(--bw-text-xs);
+    --bw-font-table:var(--bw-text-sm); --bw-font-title:var(--bw-text-lg); --bw-font-amount:var(--bw-text-xl);
+    --bw-weight-medium:500; --bw-weight-bold:700;
+    --bw-tracking-overline:0.06em; --bw-tracking-tight:-0.01em;
+    --bw-space-sm:0.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-transition-fast:0.15s;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,0.15);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    width:1440px; min-height:900px; display:flex;
+    font-family:var(--font-family); font-size:16px; line-height:1.5;
+    color:var(--text-color); background:var(--surface-ground); -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4 { margin:0; font-weight:var(--bw-weight-medium); }
+  button { font-family:inherit; cursor:pointer; }
+  input, select, textarea { font-family:inherit; }
+  :focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .overline {
+    font-size:var(--bw-font-overline); font-weight:var(--bw-weight-bold); text-transform:uppercase;
+    letter-spacing:var(--bw-tracking-overline); color:var(--text-color-secondary);
+  }
+  .muted { color:var(--text-color-secondary); }
+  .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* ── App shell (copia fiel de admin-layout / app-header) ─────────
+     Es contexto visual: NO es parte del diseño a implementar porque
+     ya existe en la app. PrimeIcons no es embebible: los íconos se
+     aproximan con SVG inline (stroke, currentColor). ─────────────── */
+  .sidebar {
+    width:220px; flex-shrink:0; display:flex; flex-direction:column;
+    background:linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+    position:relative; z-index:var(--z-drawer); overflow:hidden;
+  }
+  .sidebar::before {
+    content:''; position:absolute; top:-60px; right:-60px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle, rgba(96,167,240,0.18) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .sidebar::after {
+    content:''; position:absolute; bottom:-60px; left:-40px; width:160px; height:160px;
+    border-radius:50%; background:radial-gradient(circle, rgba(4,106,244,0.12) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .sidebar-header {
+    height:4.1875rem; min-height:4.1875rem; padding:0.375rem 0.625rem;
+    border-bottom:1px solid var(--sidebar-divider); background:rgba(255,255,255,0.22);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    position:relative; z-index:1;
+  }
+  .logo-wrapper {
+    background:rgba(255,255,255,0.7); border-radius:10px; padding:0.25rem 0.625rem;
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+  }
+  .sidebar-icon { width:32px; height:30px; flex-shrink:0; display:block; }
+  .sidebar-wordmark { color:var(--bw-900); font-size:1.125rem; font-weight:var(--bw-weight-semibold); letter-spacing:-0.01em; line-height:1; white-space:nowrap; }
+
+  .sidebar-collapse-btn {
+    display:flex; align-items:center; justify-content:space-between; gap:0.625rem;
+    padding:0.625rem 0.75rem; margin:0; border-radius:0; color:var(--sidebar-text);
+    background:none; border:none; border-bottom:1px solid var(--sidebar-divider);
+    width:100%; font-size:0.875rem; font-family:var(--font-family); cursor:pointer;
+    text-align:left; transition:all 0.18s ease;
+  }
+  .sidebar-collapse-btn:hover { background:var(--sidebar-hover-bg); color:var(--sidebar-text-hover); }
+  .sidebar-collapse-btn__label { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sidebar-collapse-btn__icon {
+    width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,0.25);
+    background:var(--bw-700); box-shadow:var(--bw-shadow-sidebar-tab); color:rgba(255,255,255,0.85);
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .sidebar-collapse-btn__icon svg { width:14px; height:14px; }
+
+  .sidebar-nav { flex:1; padding:0.625rem 0.5rem; display:flex; flex-direction:column; gap:0.125rem; overflow-y:auto; position:relative; z-index:1; }
+  .nav-item {
+    display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.75rem;
+    border-radius:var(--bw-radius-lg); color:var(--sidebar-text); text-decoration:none;
+    transition:all 0.18s ease; cursor:pointer; border:none; background:none; width:100%;
+    font-size:0.875rem; font-family:var(--font-family); text-align:left;
+  }
+  .nav-item svg { width:20px; height:20px; flex-shrink:0; }
+  .nav-item:hover { background:var(--sidebar-hover-bg); color:var(--sidebar-text-hover); }
+  .nav-item.active {
+    background:var(--sidebar-active-bg); color:var(--sidebar-text-active); font-weight:500;
+    border-left:3px solid var(--bw-300); padding-left:calc(0.75rem - 3px);
+  }
+
+  .sidebar-widget { padding:0.625rem 0.5rem 0.75rem; position:relative; z-index:1; }
+  .navigator {
+    display:flex; flex-direction:column; gap:0.625rem; padding:0.75rem;
+    border-radius:10px; background:rgba(255,255,255,0.94); border:1px solid rgba(255,255,255,0.25);
+    color:#1a2744;
+  }
+  .navigator__nav { display:flex; align-items:center; gap:0.125rem; height:38px; }
+  .navigator__arrow {
+    width:22px; height:22px; border:none; border-radius:6px; background:transparent; color:#6b7280;
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .navigator__arrow:hover { background:rgba(4,106,244,0.08); color:#046af4; }
+  .navigator__arrow svg { width:14px; height:14px; }
+  .navigator__label { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1px; line-height:1.1; text-transform:capitalize; color:#1a2744; overflow:hidden; }
+  .navigator__year { font-size:0.625rem; font-weight:500; color:#6b7280; text-transform:none; white-space:nowrap; }
+  .navigator__month { font-size:0.8125rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .navigator__today {
+    border:none; background:transparent; color:#046af4; font-family:var(--font-family);
+    font-size:0.6875rem; font-weight:600; padding:0.1875rem 0.3125rem; border-radius:6px;
+    cursor:pointer; flex-shrink:0;
+  }
+  .navigator__today:hover { background:rgba(4,106,244,0.08); }
+  .navigator__grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .navigator__header { text-align:center; font-size:0.625rem; font-weight:600; color:#9ca3af; text-transform:uppercase; padding:2px 0; }
+  .navigator__day {
+    height:26px; border:none; border-radius:6px; background:transparent; color:#1a2744;
+    font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .navigator__day:hover { background:rgba(4,106,244,0.1); color:#046af4; }
+  .navigator__day--today { background:#046af4; color:#fff; font-weight:600; }
+  .navigator__day--selected { background:rgba(4,106,244,0.28); color:#046af4; font-weight:700; box-shadow:inset 0 0 0 2px #046af4; }
+  .navigator__day--empty { background:transparent; cursor:default; }
+
+  .sidebar-footer {
+    padding:0.5rem; border-top:1px solid var(--sidebar-divider); flex-shrink:0;
+    display:flex; flex-direction:column; gap:0.375rem; position:relative; z-index:1;
+  }
+  .sidebar-logout {
+    display:flex; align-items:center; gap:0.625rem; padding:0.625rem 0.75rem;
+    border-radius:var(--bw-radius-lg); color:rgba(252,165,165,0.85); background:none; border:none;
+    width:100%; font-size:0.875rem; font-family:var(--font-family); cursor:pointer; text-align:left;
+    transition:all 0.18s ease;
+  }
+  .sidebar-logout:hover { background:rgba(239,68,68,0.12); color:#fca5a5; }
+  .sidebar-logout svg { width:20px; height:20px; flex-shrink:0; }
+  .sidebar-logout span { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .main {
+    flex:1; min-width:0; overflow-y:auto; padding:0 1.25rem 1.25rem;
+    background:var(--surface-ground); display:grid; gap:var(--bw-space-md); align-content:start;
+  }
+
+  .app-header {
+    display:flex; align-items:center; justify-content:space-between; gap:var(--bw-space-md);
+    height:4.1875rem; min-height:4.1875rem; padding:0.5rem 1rem;
+    border-bottom:1px solid var(--surface-border); background:var(--surface-card);
+    position:sticky; top:0; z-index:var(--z-topbar); margin:0 -1.25rem;
+  }
+  .app-header__left { display:flex; align-items:center; gap:var(--bw-space-lg); min-width:0; }
+  .app-header__right { display:flex; align-items:center; gap:var(--bw-space-sm); }
+  .app-header__menu-btn {
+    width:36px; height:36px; border:1px solid var(--surface-border); background:var(--surface-card);
+    color:var(--text-color); border-radius:8px; cursor:pointer; display:none;
+    align-items:center; justify-content:center; flex-shrink:0;
+    transition:background var(--bw-transition-base), color var(--bw-transition-base);
+  }
+  .app-header__menu-btn:hover { background:var(--surface-hover); color:var(--color-primary); }
+  .app-header__menu-btn svg { width:18px; height:18px; }
+
+  .app-header__business {
+    display:inline-flex; align-items:center; gap:0.5rem; padding:0.25rem 0.625rem;
+    border:1px solid var(--surface-border); border-radius:8px; background:var(--surface-50);
+    font-family:var(--font-family); color:var(--text-color); cursor:default; text-align:left;
+  }
+  .app-header__monogram {
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:36px; height:36px; border-radius:0.625rem; background:var(--bw-200); color:#fff;
+    font-weight:var(--bw-weight-semibold); font-size:var(--bw-font-table); user-select:none;
+  }
+  .app-header__business-info { display:flex; flex-direction:column; min-width:0; line-height:1.1; }
+  .app-header__business-name { font-weight:var(--bw-weight-semibold); font-size:0.875rem; color:var(--text-color); white-space:nowrap; }
+  .app-header__business-rut { font-size:0.6875rem; color:var(--text-color-secondary); }
+  .app-header__chevron { display:inline-flex; color:var(--text-color-secondary); }
+  .app-header__chevron svg { width:12px; height:12px; }
+
+  .app-header__actions { display:flex; align-items:center; gap:var(--bw-space-xs); }
+  .app-header__theme {
+    display:inline-flex; align-items:center; gap:0.5rem; height:36px; min-width:7.25rem;
+    padding:0 0.625rem; border:1px solid var(--surface-border); border-radius:8px;
+    background:var(--surface-card); color:var(--text-color); font-family:var(--font-family);
+    font-size:0.8125rem; cursor:pointer; text-align:left;
+  }
+  .app-header__theme svg { width:12px; height:12px; color:var(--text-color-secondary); margin-left:auto; }
+
+  .account-chip {
+    display:flex; align-items:center; gap:0.625rem; padding:0.375rem 0.625rem;
+    border:1px solid var(--surface-border); border-radius:8px; background:var(--surface-50);
+    cursor:pointer; transition:background var(--bw-transition-base); text-align:left;
+  }
+  .account-chip:hover { background:var(--surface-hover); }
+  .account-chip__avatar {
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:36px; height:36px; border-radius:50%; background:var(--bw-200); color:#fff;
+    font-weight:var(--bw-weight-semibold); font-size:var(--bw-font-table); user-select:none;
+  }
+  .account-chip__name { font-size:0.875rem; font-weight:var(--bw-weight-semibold); color:var(--text-color); white-space:nowrap; }
+  .account-chip__chevron { display:inline-flex; color:var(--text-color-secondary); flex-shrink:0; }
+  .account-chip__chevron svg { width:12px; height:12px; }
+
+  /* ── Primitivas de la app que sí se reusan en el diseño ───────── */
+  .btn {
+    height:var(--bw-control-height); padding:0 1rem; border-radius:var(--bw-radius-md);
+    border:1px solid transparent; font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium);
+    display:inline-flex; align-items:center; gap:.5rem; background:none;
+  }
+  .btn--cta { background:var(--bw-300); color:#fff; }
+  .btn--cta:hover { background:var(--bw-500); }
+  .btn--outlined { background:transparent; border-color:var(--bw-300); color:var(--bw-300); }
+  .btn--outlined:hover { background:var(--bw-50); }
+  .btn--ghost { background:transparent; color:var(--text-color-secondary); }
+  .btn--ghost:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .btn--sm { height:2rem; padding:0 .75rem; font-size:var(--bw-font-caption); }
+  .btn--icon {
+    width:2rem; height:2rem; padding:0; justify-content:center; border-radius:var(--bw-radius-pill);
+    color:var(--text-color-secondary);
+  }
+  .btn--icon:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .btn--icon svg { width:16px; height:16px; }
+
+  .card {
+    background:var(--surface-card); border:1px solid var(--surface-border);
+    border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card);
+  }
+  .card__head {
+    display:flex; align-items:flex-start; gap:var(--bw-space-md);
+    padding:var(--bw-space-md) var(--bw-space-lg); border-bottom:1px solid var(--surface-border);
+  }
+  .card__head h2 { font-size:var(--bw-font-title); font-weight:var(--bw-weight-semibold); color:var(--text-color); }
+  .card__head p { margin:.125rem 0 0; font-size:var(--bw-font-caption); color:var(--text-color-secondary); }
+  .card__head .card__actions { margin-left:auto; display:flex; align-items:center; gap:var(--bw-space-sm); }
+  .card__body { padding:var(--bw-space-lg); }
+
+  /* chip de estado — misma forma que `.bw-chip` de _badges.scss */
+  .bw-chip {
+    display:inline-flex; align-items:center; gap:.25rem;
+    font-size:var(--bw-font-table); font-weight:var(--bw-weight-medium);
+    color:var(--chip-text-color, var(--chip-color));
+    background:color-mix(in srgb, var(--chip-color) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+    border-radius:var(--bw-radius-sm); padding:.1rem .5rem; line-height:1.4; white-space:nowrap;
+  }
+  .bw-chip--success { --chip-color:var(--bw-success); --chip-text-color:var(--bw-chip-text-success); }
+  .bw-chip--warning { --chip-color:var(--bw-warning); --chip-text-color:var(--bw-chip-text-warning); }
+  .bw-chip--secondary { --chip-color:var(--text-color-secondary); --chip-text-color:var(--bw-chip-text-secondary); }
+  .bw-chip__dot { width:8px; height:8px; border-radius:50%; background:var(--chip-color); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition:none !important; animation:none !important; }
+  }
+
+  /* ── Zona diseñada en este artboard ──────────────────────────── */
+  /* ── Artboard 03: tipos de ficha como tarjetas expandibles ── */
+  .tf3-wrap { max-width:960px; margin:0 auto; display:grid; gap:var(--bw-space-lg); padding:.5rem 0 2rem; }
+  .tf3-head h1 { font-size:var(--bw-text-2xl); font-weight:var(--bw-weight-semibold); color:var(--text-color); }
+  .tf3-head p { margin:.25rem 0 0; font-size:var(--bw-text-sm); color:var(--text-color-secondary); }
+  .tf3-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:var(--bw-space-lg); }
+
+  .tf3-pcard { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; }
+  .tf3-pcard__title { padding:.625rem 1rem; font-size:var(--bw-text-sm); font-weight:var(--bw-weight-semibold); border-bottom:1px solid var(--surface-border); }
+  .tf3-pcard__body { padding:.75rem 1rem; display:flex; flex-direction:column; gap:.5rem; }
+
+  .tf3-row { display:flex; align-items:center; gap:.75rem; }
+  .tf3-row__label { display:flex; flex-direction:column; min-width:0; font-size:var(--bw-text-sm); }
+  .tf3-row__label small { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .tf3-row > .tf3-select, .tf3-row > .tf3-switch { margin-left:auto; flex-shrink:0; }
+  .tf3-select {
+    height:2rem; min-width:8rem; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md);
+    padding:0 1.75rem 0 .625rem; background:var(--surface-card); font-size:var(--bw-text-xs);
+    color:var(--text-color); appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right .625rem center;
+  }
+  .tf3-switch { width:2.25rem; height:1.25rem; border-radius:var(--bw-radius-pill); background:var(--bw-300); border:none; position:relative; flex-shrink:0; }
+  .tf3-switch::after { content:''; position:absolute; top:2px; left:calc(100% - 18px); width:16px; height:16px; border-radius:50%; background:#fff; }
+  .tf3-switch[aria-checked="false"] { background:var(--surface-border); }
+  .tf3-switch[aria-checked="false"]::after { left:2px; }
+
+  .tf3-avatar { width:36px; height:36px; border-radius:50%; background:var(--bw-200); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:var(--bw-text-sm); font-weight:var(--bw-weight-semibold); flex-shrink:0; }
+  .tf3-profile { display:flex; align-items:center; gap:.625rem; font-size:var(--bw-text-sm); }
+  .tf3-profile small { display:block; font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .tf3-biz { display:flex; align-items:center; gap:.5rem; font-size:var(--bw-text-sm); }
+  .tf3-biz__mono { width:32px; height:32px; border-radius:.5rem; background:var(--bw-100); color:var(--bw-500); display:inline-flex; align-items:center; justify-content:center; font-weight:var(--bw-weight-bold); font-size:var(--bw-text-xs); }
+  .tf3-meta { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .tf3-hint { margin:0; font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+
+  /* tarjeta ancha del catálogo */
+  .tf3-card { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .tf3-card__head { display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; }
+  .tf3-card__head h2 { font-size:var(--bw-text-base); font-weight:var(--bw-weight-semibold); }
+  .tf3-card__head .tf3-count { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .tf3-card__head .tf3-actions { margin-left:auto; display:flex; gap:.5rem; }
+  .tf3-note { display:flex; align-items:center; gap:.5rem; margin:0 1rem .5rem; padding:.375rem .625rem; border-radius:var(--bw-radius-sm); background:var(--bw-50); border:1px solid var(--bw-100); font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .tf3-note a { color:var(--bw-500); font-weight:var(--bw-weight-medium); text-decoration:none; margin-left:auto; white-space:nowrap; }
+  .tf3-note a:hover { text-decoration:underline; }
+
+  .tf3-list { display:flex; flex-direction:column; }
+  .tf3-item { border-top:1px solid var(--surface-border); }
+  .tf3-item:first-child { border-top:none; }
+  .tf3-item__head {
+    display:grid; grid-template-columns:1.25rem 1fr auto; align-items:center; gap:.625rem;
+    width:100%; padding:.5rem 1rem; background:none; border:none; text-align:left;
+  }
+  .tf3-item__head:hover { background:var(--bw-surface-muted); }
+  .tf3-item.is-open .tf3-item__head { background:var(--bw-50); }
+  .tf3-item__name { font-size:var(--bw-text-sm); font-weight:var(--bw-weight-medium); color:var(--text-color); }
+  .tf3-item__meta { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .tf3-item__side { display:flex; align-items:center; gap:.5rem; }
+  .tf3-item__handle { color:var(--text-color-secondary); display:inline-flex; cursor:grab; }
+  .tf3-item__handle svg { width:12px; height:12px; }
+  .tf3-chevron { color:var(--text-color-secondary); display:inline-flex; transition:transform var(--bw-transition-fast); }
+  .tf3-chevron svg { width:14px; height:14px; }
+  .tf3-item.is-open .tf3-chevron { transform:rotate(180deg); color:var(--bw-500); }
+
+  .tf3-panel { padding:0 1rem .75rem 2.625rem; display:grid; gap:.5rem; }
+  .tf3-fields { border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; }
+  .tf3-frow { display:grid; grid-template-columns:1.125rem 1fr 7.5rem 3.75rem 2rem; gap:.5rem; align-items:center; padding:.25rem .5rem; border-top:1px solid var(--surface-border); }
+  .tf3-frow:first-child { border-top:none; }
+  .tf3-frow__label { font-size:var(--bw-text-xs); color:var(--text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tf3-frow__handle { color:var(--text-color-secondary); display:inline-flex; cursor:grab; }
+  .tf3-frow__handle svg { width:11px; height:11px; }
+  .tf3-select--xs { height:1.625rem; font-size:var(--bw-text-2xs); padding:0 1.25rem 0 .375rem; background-position:right .375rem center; }
+  .tf3-check { display:inline-flex; align-items:center; gap:.25rem; font-size:var(--bw-text-2xs); color:var(--text-label); }
+  .tf3-check input { width:13px; height:13px; accent-color:var(--bw-300); }
+  .tf3-i { width:1.625rem; height:1.625rem; border-radius:var(--bw-radius-pill); border:none; background:transparent; color:var(--text-color-secondary); display:inline-flex; align-items:center; justify-content:center; }
+  .tf3-i:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .tf3-i svg { width:13px; height:13px; }
+
+  .tf3-add { height:1.875rem; border:1px dashed var(--surface-border); border-radius:var(--bw-radius-md); background:transparent; color:var(--bw-500); font-size:var(--bw-text-xs); font-weight:var(--bw-weight-medium); display:inline-flex; align-items:center; justify-content:center; gap:.375rem; }
+  .tf3-add:hover { background:var(--bw-50); border-color:var(--bw-200); }
+  .tf3-save { display:flex; align-items:center; gap:.5rem; }
+  .tf3-dirty { display:inline-flex; align-items:center; gap:.375rem; font-size:var(--bw-text-xs); color:var(--bw-chip-text-warning); }
+  .tf3-dirty::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--bw-warning); }
+  .tf3-save .tf3-save__btns { margin-left:auto; display:flex; gap:.375rem; }
+  .tf3-btn { height:1.875rem; padding:0 .75rem; border-radius:var(--bw-radius-md); border:1px solid transparent; font-size:var(--bw-text-xs); font-weight:var(--bw-weight-medium); display:inline-flex; align-items:center; gap:.375rem; }
+  .tf3-btn--ghost { background:transparent; color:var(--text-color-secondary); }
+  .tf3-btn--ghost:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .tf3-btn--cta { background:var(--bw-300); color:#fff; }
+  .tf3-btn--outlined { background:transparent; border-color:var(--bw-300); color:var(--bw-300); }
+</style>
+</head>
+
+
+
+<body>
+<aside class="sidebar">
+    <div class="sidebar-header">
+      <!-- El logo expandido real es assets/images/logo_side_transparente.png (146 KB):
+           en la app el lockup es solo esa imagen; acá el ícono va inline para que el
+           artboard sea autocontenido. -->
+      <div class="logo-wrapper">
+        <svg class="sidebar-icon" viewBox="0 0 375 352" width="32" height="30" fill-rule="evenodd" clip-rule="evenodd" aria-hidden="true" focusable="false">
+          <path fill="#0b3d95" d="M 180.5,21.5 C 202.322,22.752 221.322,30.5853 237.5,45C 240.5,45.6667 243.5,45.6667 246.5,45C 253.044,43.319 259.377,41.1524 265.5,38.5C 264.877,48.7455 261.21,57.7455 254.5,65.5C 259.985,75.4256 263.319,86.0922 264.5,97.5C 264.762,98.9778 264.429,100.311 263.5,101.5C 256.852,106.98 250.352,112.647 244,118.5C 249.921,100.743 245.754,85.9095 231.5,74C 213.381,64.7568 197.881,67.9235 185,83.5C 183.211,86.741 181.711,90.0743 180.5,93.5C 179.182,69.6275 179.182,45.6275 180.5,21.5 Z"/>
+          <path fill="#f6f8f8" d="M 180.5,93.5 C 181.711,90.0743 183.211,86.741 185,83.5C 197.881,67.9235 213.381,64.7568 231.5,74C 245.754,85.9095 249.921,100.743 244,118.5C 250.352,112.647 256.852,106.98 263.5,101.5C 264.429,100.311 264.762,98.9778 264.5,97.5C 265.434,98.5676 265.768,99.901 265.5,101.5C 268.495,101.294 271.162,101.96 273.5,103.5C 274.626,104.858 274.626,106.192 273.5,107.5C 249.148,127.018 227.315,149.018 208,173.5C 198.242,186.68 188.242,199.68 178,212.5C 168.349,201.682 158.182,191.349 147.5,181.5C 140.985,186.259 134.652,191.259 128.5,196.5C 146.451,215.124 163.451,234.457 179.5,254.5C 202.985,220.179 227.819,186.845 254,154.5C 258.731,149.938 263.231,145.271 267.5,140.5C 267.833,143.167 268.167,145.833 268.5,148.5C 267.866,152.373 266.866,156.039 265.5,159.5C 254.832,170.345 244.999,182.012 236,194.5C 217.245,220.353 198.745,246.353 180.5,272.5C 178.983,272.489 177.816,271.823 177,270.5C 157.741,243.895 136.241,219.062 112.5,196C 124.056,186.107 135.889,176.607 148,167.5C 157.973,176.638 167.806,185.971 177.5,195.5C 178.425,194.643 179.092,193.643 179.5,192.5C 190.067,178.588 201.067,164.921 212.5,151.5C 212.167,151.167 211.833,150.833 211.5,150.5C 201.347,155.131 190.681,157.464 179.5,157.5C 149.739,157.215 128.239,143.882 115,117.5C 109.164,99.9971 113.33,85.4971 127.5,74C 145.593,64.8743 161.093,68.041 174,83.5C 176.455,87.531 178.121,91.8644 179,96.5C 180.039,95.7562 180.539,94.7562 180.5,93.5 Z"/>
+          <path fill="#042661" d="M 141.5,85.5 C 156.826,84.9914 163.66,92.3247 162,107.5C 156.069,119.194 147.236,122.027 135.5,116C 128.978,110.096 127.478,103.263 131,95.5C 137.018,102.506 141.851,101.673 145.5,93C 144.327,90.3505 142.994,87.8505 141.5,85.5 Z"/>
+          <path fill="#0a2862" d="M 210.5,91.5 C 218.624,91.3104 224.79,94.6437 229,101.5C 230.526,108.459 228.692,109.292 223.5,104C 214.449,99.9834 206.116,101.15 198.5,107.5C 197.551,103.824 198.385,100.491 201,97.5C 203.843,94.8373 207.009,92.8373 210.5,91.5 Z"/>
+          <path fill="#0e3b8b" d="M 178.5,113.5 C 180.716,114.203 182.549,115.536 184,117.5C 185.848,120.011 187.681,122.511 189.5,125C 186.383,130.952 183.05,136.785 179.5,142.5C 175.78,136.895 172.447,131.062 169.5,125C 171.937,120.729 174.937,116.896 178.5,113.5 Z"/>
+          <path fill="#012663" d="M 180.5,21.5 C 179.182,45.6275 179.182,69.6275 180.5,93.5C 180.539,94.7562 180.039,95.7562 179,96.5C 178.121,91.8644 176.455,87.531 174,83.5C 161.093,68.041 145.593,64.8743 127.5,74C 113.33,85.4971 109.164,99.9971 115,117.5C 128.239,143.882 149.739,157.215 179.5,157.5C 179.5,169.167 179.5,180.833 179.5,192.5C 179.092,193.643 178.425,194.643 177.5,195.5C 167.806,185.971 157.973,176.638 148,167.5C 135.889,176.607 124.056,186.107 112.5,196C 136.241,219.062 157.741,243.895 177,270.5C 177.816,271.823 178.983,272.489 180.5,272.5C 180.5,273.167 180.5,273.833 180.5,274.5C 157.717,289.733 135.051,305.233 112.5,321C 103.442,323.533 97.2757,320.366 94,311.5C 93.3333,240.5 93.3333,169.5 94,98.5C 95.491,86.8723 98.991,75.8723 104.5,65.5C 97.8082,57.7765 94.1415,48.7765 93.5,38.5C 99.6227,41.1524 105.956,43.319 112.5,45C 115.5,45.6667 118.5,45.6667 121.5,45C 138.212,30.0344 157.879,22.2011 180.5,21.5 Z"/>
+          <path fill="#60a7f0" d="M 271.5,137.5 C 270.036,141.019 269.036,144.686 268.5,148.5C 268.167,145.833 267.833,143.167 267.5,140.5C 268.048,138.468 269.381,137.468 271.5,137.5 Z"/>
+          <path fill="#0d3e94" d="M 179.5,192.5 C 179.5,180.833 179.5,169.167 179.5,157.5C 190.681,157.464 201.347,155.131 211.5,150.5C 211.833,150.833 212.167,151.167 212.5,151.5C 201.067,164.921 190.067,178.588 179.5,192.5 Z"/>
+          <path fill="#046af4" d="M 271.5,137.5 C 269.381,137.468 268.048,138.468 267.5,140.5C 263.231,145.271 258.731,149.938 254,154.5C 227.819,186.845 202.985,220.179 179.5,254.5C 163.451,234.457 146.451,215.124 128.5,196.5C 134.652,191.259 140.985,186.259 147.5,181.5C 158.182,191.349 168.349,201.682 178,212.5C 188.242,199.68 198.242,186.68 208,173.5C 227.315,149.018 249.148,127.018 273.5,107.5C 274.626,106.192 274.626,104.858 273.5,103.5C 274.583,103.539 275.583,103.873 276.5,104.5C 287.587,96.4794 299.92,92.9794 313.5,94C 316,94.8854 318.333,96.0521 320.5,97.5C 301.825,107.829 285.492,121.163 271.5,137.5 Z"/>
+          <path fill="#083d96" d="M 265.5,159.5 C 265.987,211.226 265.487,262.893 264,314.5C 259.697,321.043 253.864,323.21 246.5,321C 224.258,305.724 202.258,290.224 180.5,274.5C 180.5,273.833 180.5,273.167 180.5,272.5C 198.745,246.353 217.245,220.353 236,194.5C 244.999,182.012 254.832,170.345 265.5,159.5 Z"/>
+        </svg>
+        <span class="sidebar-wordmark">bookwise</span>
+      </div>
+    </div>
+
+    <button type="button" class="sidebar-collapse-btn" aria-label="Colapsar menú">
+      <span class="sidebar-collapse-btn__label">Colapsar menú</span>
+      <span class="sidebar-collapse-btn__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+      </span>
+    </button>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" title="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.2 12 3.5l9 7.7"/><path d="M5.5 10v9.5h13V10"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" title="Ubicaciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M4 21V10h16v11"/><path d="M2 10h20"/><path d="M6 7V4h12v3"/><path d="M6 7 4 10M18 7l2 3"/><path d="M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
+        <span class="nav-label">Ubicaciones</span>
+      </a>
+      <a href="#" class="nav-item" title="Profesionales">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M15.5 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 14.8c1.6.7 2.9 2.3 3 4.7"/></svg>
+        <span class="nav-label">Profesionales</span>
+      </a>
+      <a href="#" class="nav-item" title="Agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>
+        <span class="nav-label">Agenda</span>
+      </a>
+      <a href="#" class="nav-item" title="Clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>
+        <span class="nav-label">Clientes</span>
+      </a>
+      <!-- Única desviación intencional del shell actual: nav.packs dice "Packs" y acá
+           dice "Servicios y packs" (acordado 2026-11-03). El resto del shell es copia exacta. -->
+      <a href="#" class="nav-item" title="Servicios y packs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8.5 12 3.5 3 8.5v7L12 20.5l9-5v-7z"/><path d="M3 8.5l9 5 9-5"/><path d="M12 13.5v7"/></svg>
+        <span class="nav-label">Servicios y packs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-widget">
+      <div class="navigator">
+        <div class="navigator__nav">
+          <button type="button" class="navigator__arrow" aria-label="Mes anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+          </button>
+          <span class="navigator__label">
+            <span class="navigator__year">2026</span>
+            <span class="navigator__month">noviembre</span>
+          </span>
+          <button type="button" class="navigator__arrow" aria-label="Mes siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>
+          </button>
+          <button type="button" class="navigator__today">Hoy</button>
+        </div>
+        <div class="navigator__grid">
+          <div class="navigator__header">Do</div>
+          <div class="navigator__header">Lu</div>
+          <div class="navigator__header">Ma</div>
+          <div class="navigator__header">Mi</div>
+          <div class="navigator__header">Ju</div>
+          <div class="navigator__header">Vi</div>
+          <div class="navigator__header">Sa</div>
+          <button type="button" class="navigator__day">1</button>
+          <button type="button" class="navigator__day">2</button>
+          <button type="button" class="navigator__day navigator__day--today navigator__day--selected">3</button>
+          <button type="button" class="navigator__day">4</button>
+          <button type="button" class="navigator__day">5</button>
+          <button type="button" class="navigator__day">6</button>
+          <button type="button" class="navigator__day">7</button>
+          <button type="button" class="navigator__day">8</button>
+          <button type="button" class="navigator__day">9</button>
+          <button type="button" class="navigator__day">10</button>
+          <button type="button" class="navigator__day">11</button>
+          <button type="button" class="navigator__day">12</button>
+          <button type="button" class="navigator__day">13</button>
+          <button type="button" class="navigator__day">14</button>
+          <button type="button" class="navigator__day">15</button>
+          <button type="button" class="navigator__day">16</button>
+          <button type="button" class="navigator__day">17</button>
+          <button type="button" class="navigator__day">18</button>
+          <button type="button" class="navigator__day">19</button>
+          <button type="button" class="navigator__day">20</button>
+          <button type="button" class="navigator__day">21</button>
+          <button type="button" class="navigator__day">22</button>
+          <button type="button" class="navigator__day">23</button>
+          <button type="button" class="navigator__day">24</button>
+          <button type="button" class="navigator__day">25</button>
+          <button type="button" class="navigator__day">26</button>
+          <button type="button" class="navigator__day">27</button>
+          <button type="button" class="navigator__day">28</button>
+          <button type="button" class="navigator__day">29</button>
+          <button type="button" class="navigator__day">30</button>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+          <div class="navigator__day navigator__day--empty"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button type="button" class="sidebar-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></svg>
+        <span>Salir</span>
+      </button>
+    </div>
+  </aside>
+<main class="main">
+<header class="app-header">
+      <div class="app-header__left">
+        <button type="button" class="app-header__menu-btn" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="app-header__business">
+          <span class="app-header__monogram" aria-hidden="true">K</span>
+          <div class="app-header__business-info">
+            <span class="app-header__business-name">Kinesilk</span>
+            <span class="app-header__business-rut">RUT: 76.123.456-7</span>
+          </div>
+          <span class="app-header__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+      <div class="app-header__right">
+        <div class="app-header__actions">
+          <button type="button" class="app-header__theme" aria-label="Modo de apariencia">
+            <span>Claro</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="account-chip" role="button" tabindex="0" aria-label="Menú de cuenta">
+          <span class="account-chip__avatar" aria-hidden="true">R</span>
+          <span class="account-chip__name">Rosa Kinesilk</span>
+          <span class="account-chip__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+    </header>
+  <div class="tf3-wrap">
+    <div class="tf3-head">
+      <h1>Configuraciones</h1>
+      <p>Ajusta tu cuenta, la apariencia y tu negocio</p>
+    </div>
+
+    <div class="tf3-grid">
+      <section class="tf3-pcard" aria-labelledby="tf3-profile-title">
+        <h2 class="tf3-pcard__title" id="tf3-profile-title">Perfil</h2>
+        <div class="tf3-pcard__body">
+          <div class="tf3-profile">
+            <span class="tf3-avatar" aria-hidden="true">R</span>
+            <span>Rosa Kinesilk<small>rosa@kinesilk.cl · Administradora</small></span>
+          </div>
+          <div><button type="button" class="tf3-btn tf3-btn--outlined">Editar perfil</button></div>
+        </div>
+      </section>
+
+      <section class="tf3-pcard" aria-labelledby="tf3-appearance-title">
+        <h2 class="tf3-pcard__title" id="tf3-appearance-title">Apariencia</h2>
+        <div class="tf3-pcard__body">
+          <div class="tf3-row">
+            <span class="tf3-row__label">Modo<small>Elige el aspecto de la interfaz</small></span>
+            <select class="tf3-select" aria-label="Modo"><option>Claro</option><option>Oscuro</option><option>Kinesilk</option></select>
+          </div>
+          <div class="tf3-row">
+            <span class="tf3-row__label">Tema<small>Estilo visual de la interfaz</small></span>
+            <select class="tf3-select" aria-label="Tema"><option>Bookwise</option><option>Kinesilk</option></select>
+          </div>
+          <div class="tf3-row">
+            <span class="tf3-row__label">Idioma<small>Idioma de la aplicación</small></span>
+            <select class="tf3-select" aria-label="Idioma"><option>Español</option><option>English</option></select>
+          </div>
+        </div>
+      </section>
+
+      <section class="tf3-pcard" aria-labelledby="tf3-biz-title">
+        <h2 class="tf3-pcard__title" id="tf3-biz-title">Negocio principal</h2>
+        <div class="tf3-pcard__body">
+          <div class="tf3-biz">
+            <span class="tf3-biz__mono" aria-hidden="true">K</span>
+            <span>Kinesilk<span class="tf3-meta">RUT: 76.123.456-7 · Plan Clínica</span></span>
+          </div>
+          <div><button type="button" class="tf3-btn tf3-btn--outlined">Ver detalle</button></div>
+          <p class="tf3-hint">A futuro podrás alternar entre varios negocios (multi-tenant).</p>
+        </div>
+      </section>
+
+      <section class="tf3-pcard" aria-labelledby="tf3-holidays-title">
+        <h2 class="tf3-pcard__title" id="tf3-holidays-title">Feriados</h2>
+        <div class="tf3-pcard__body">
+          <div class="tf3-row">
+            <span class="tf3-row__label">Bloquear reservas en feriados<small>Los feriados nacionales cierran la agenda en todas las sucursales.</small></span>
+            <button type="button" class="tf3-switch" role="switch" aria-checked="true" aria-label="Bloquear reservas en feriados"></button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Catálogo como tarjetas expandibles -->
+    <section class="tf3-card" aria-labelledby="tf3-types-title">
+      <div class="tf3-card__head">
+        <h2 id="tf3-types-title">Tipos de ficha</h2>
+        <span class="tf3-count">5 tipos · 4 activos</span>
+        <span class="tf3-actions">
+          <button type="button" class="tf3-btn tf3-btn--outlined">Reordenar</button>
+          <button type="button" class="tf3-btn tf3-btn--cta">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo tipo de ficha
+          </button>
+        </span>
+      </div>
+
+      <p class="tf3-note">
+        <span aria-hidden="true">ⓘ</span>
+        Estos tipos alimentan el desplegable «Agregar tipo de registro/ficha» de la pestaña Ficha.
+        <a href="#">Ver en la agenda ›</a>
+      </p>
+
+      <div class="tf3-list">
+        <!-- Tipo expandido -->
+        <div class="tf3-item is-open">
+          <button type="button" class="tf3-item__head" aria-expanded="true" aria-controls="tf3-panel-1">
+            <span class="tf3-item__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+            <span>
+              <span class="tf3-item__name">Evaluación kinésica inicial</span>
+              <span class="tf3-item__meta"> · 6 campos · usada en 24 fichas</span>
+            </span>
+            <span class="tf3-item__side">
+              <span class="bw-chip bw-chip--success"><span class="bw-chip__dot"></span>Activo</span>
+              <span class="tf3-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </span>
+          </button>
+
+          <div class="tf3-panel" id="tf3-panel-1">
+            <div class="tf3-fields">
+              <div class="tf3-frow">
+                <span class="tf3-frow__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="tf3-frow__label">Motivo de consulta</span>
+                <select class="tf3-select tf3-select--xs" aria-label="Tipo de dato de Motivo de consulta"><option>Texto largo</option><option>Texto corto</option><option>Número</option></select>
+                <label class="tf3-check"><input type="checkbox" checked />Sí</label>
+                <button type="button" class="tf3-i" aria-label="Eliminar campo Motivo de consulta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
+              </div>
+              <div class="tf3-frow">
+                <span class="tf3-frow__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="tf3-frow__label">Antecedentes relevantes</span>
+                <select class="tf3-select tf3-select--xs" aria-label="Tipo de dato de Antecedentes relevantes"><option>Texto largo</option><option>Texto corto</option><option>Número</option></select>
+                <label class="tf3-check"><input type="checkbox" />Sí</label>
+                <button type="button" class="tf3-i" aria-label="Eliminar campo Antecedentes relevantes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
+              </div>
+              <div class="tf3-frow">
+                <span class="tf3-frow__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="tf3-frow__label">EVA inicial (0–10)</span>
+                <select class="tf3-select tf3-select--xs" aria-label="Tipo de dato de EVA inicial"><option>Número</option><option>Texto corto</option><option>Selección</option></select>
+                <label class="tf3-check"><input type="checkbox" checked />Sí</label>
+                <button type="button" class="tf3-i" aria-label="Eliminar campo EVA inicial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
+              </div>
+              <div class="tf3-frow">
+                <span class="tf3-frow__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="tf3-frow__label">Diagnóstico kinésico</span>
+                <select class="tf3-select tf3-select--xs" aria-label="Tipo de dato de Diagnóstico kinésico"><option>Texto corto</option><option>Texto largo</option><option>Número</option></select>
+                <label class="tf3-check"><input type="checkbox" checked />Sí</label>
+                <button type="button" class="tf3-i" aria-label="Eliminar campo Diagnóstico kinésico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
+              </div>
+              <div class="tf3-frow">
+                <span class="tf3-frow__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="tf3-frow__label">Pruebas especiales · 3 opciones</span>
+                <select class="tf3-select tf3-select--xs" aria-label="Tipo de dato de Pruebas especiales"><option>Selección</option><option>Texto corto</option><option>Texto largo</option></select>
+                <label class="tf3-check"><input type="checkbox" />Sí</label>
+                <button type="button" class="tf3-i" aria-label="Editar opciones de Pruebas especiales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M4 12h9M4 17h9"/><path d="M17 6v10m0 0-2-2m2 2 2-2"/></svg></button>
+              </div>
+              <div class="tf3-frow">
+                <span class="tf3-frow__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="tf3-frow__label">Indicaciones al paciente</span>
+                <select class="tf3-select tf3-select--xs" aria-label="Tipo de dato de Indicaciones al paciente"><option>Texto largo</option><option>Texto corto</option><option>Número</option></select>
+                <label class="tf3-check"><input type="checkbox" />Sí</label>
+                <button type="button" class="tf3-i" aria-label="Eliminar campo Indicaciones al paciente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
+              </div>
+            </div>
+
+            <button type="button" class="tf3-add">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Agregar campo
+            </button>
+
+            <div class="tf3-save">
+              <span class="tf3-dirty">Cambios sin guardar</span>
+              <span class="tf3-save__btns">
+                <button type="button" class="tf3-btn tf3-btn--ghost">Descartar</button>
+                <button type="button" class="tf3-btn tf3-btn--cta">Guardar cambios</button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tipos colapsados -->
+        <div class="tf3-item">
+          <button type="button" class="tf3-item__head" aria-expanded="false">
+            <span class="tf3-item__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+            <span>
+              <span class="tf3-item__name">Sesión de seguimiento</span>
+              <span class="tf3-item__meta"> · 4 campos · usada en 58 fichas</span>
+            </span>
+            <span class="tf3-item__side">
+              <span class="bw-chip bw-chip--success"><span class="bw-chip__dot"></span>Activo</span>
+              <span class="tf3-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </span>
+          </button>
+        </div>
+
+        <div class="tf3-item">
+          <button type="button" class="tf3-item__head" aria-expanded="false">
+            <span class="tf3-item__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+            <span>
+              <span class="tf3-item__name">Informe de alta</span>
+              <span class="tf3-item__meta"> · 5 campos · usada en 6 fichas</span>
+            </span>
+            <span class="tf3-item__side">
+              <span class="bw-chip bw-chip--success"><span class="bw-chip__dot"></span>Activo</span>
+              <span class="tf3-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </span>
+          </button>
+        </div>
+
+        <div class="tf3-item">
+          <button type="button" class="tf3-item__head" aria-expanded="false">
+            <span class="tf3-item__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+            <span>
+              <span class="tf3-item__name">Evaluación respiratoria</span>
+              <span class="tf3-item__meta"> · 3 campos · sin usar todavía</span>
+            </span>
+            <span class="tf3-item__side">
+              <span class="bw-chip bw-chip--success"><span class="bw-chip__dot"></span>Activo</span>
+              <span class="tf3-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </span>
+          </button>
+        </div>
+
+        <div class="tf3-item">
+          <button type="button" class="tf3-item__head" aria-expanded="false">
+            <span class="tf3-item__handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+            <span>
+              <span class="tf3-item__name">Ficha deportiva</span>
+              <span class="tf3-item__meta"> · 5 campos · no aparece en el desplegable de la agenda</span>
+            </span>
+            <span class="tf3-item__side">
+              <span class="bw-chip bw-chip--secondary"><span class="bw-chip__dot"></span>Inactiva</span>
+              <span class="tf3-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

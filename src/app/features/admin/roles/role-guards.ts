@@ -7,11 +7,11 @@
  * drift apart. No Angular dependencies.
  */
 
-/** The unique admin role name (see `Role.name`). */
+/** The unique admin role slug (see `Role.slug`). */
 export const ADMIN_GENERAL_ROLE = 'admin_general';
 
 /**
- * True when the role `name` cannot be toggled by the UI for a provider whose
+ * True when the role `slug` cannot be toggled by the UI for a provider whose
  * current roles are `current`.
  *
  * The `admin_general` option is always locked: the holder cannot remove it and
@@ -20,8 +20,8 @@ export const ADMIN_GENERAL_ROLE = 'admin_general';
  * tooltip copy) differs, and {@link applyAdminGeneralInvariant} enforces each
  * branch.
  */
-export function isAdminGeneralLocked(current: string[], name: string): boolean {
-  return name === ADMIN_GENERAL_ROLE;
+export function isAdminGeneralLocked(current: string[], slug: string): boolean {
+  return slug === ADMIN_GENERAL_ROLE;
 }
 
 /**
@@ -42,9 +42,41 @@ export function applyAdminGeneralInvariant(current: string[], next: string[]): s
   if (holdsGeneral && !wantsGeneral) {
     result = [...next, ADMIN_GENERAL_ROLE];
   } else if (!holdsGeneral && wantsGeneral) {
-    result = next.filter((name) => name !== ADMIN_GENERAL_ROLE);
+    result = next.filter((slug) => slug !== ADMIN_GENERAL_ROLE);
   } else {
     result = [...next];
   }
   return [...new Set(result)];
+}
+
+/**
+ * Single-select counterpart of {@link isAdminGeneralLocked}: true when the
+ * radio for `slug` must be disabled in a one-role picker.
+ *
+ * Because a professional holds exactly one business role, the lock flips to the
+ * whole group: a provider that holds `admin_general` is locked to it (every
+ * other role is disabled), while a non-holder can pick any role except
+ * `admin_general`.
+ */
+export function isSingleSelectRoleLocked(current: string[], slug: string): boolean {
+  const holdsGeneral = current.includes(ADMIN_GENERAL_ROLE);
+  return holdsGeneral ? slug !== ADMIN_GENERAL_ROLE : slug === ADMIN_GENERAL_ROLE;
+}
+
+/**
+ * Single-select counterpart of {@link applyAdminGeneralInvariant}: normalizes a
+ * one-role selection against the `admin_general` uniqueness rule.
+ *
+ * - A holder is always forced back to `admin_general` (it can never move away).
+ * - A non-holder that attempts `admin_general` is normalized to `null`, which
+ *   the caller surfaces as the empty-selection error.
+ *
+ * Returns the normalized slug (or `null`); the inputs are never mutated.
+ */
+export function applyAdminGeneralSingleInvariant(
+  current: string[],
+  next: string | null,
+): string | null {
+  if (current.includes(ADMIN_GENERAL_ROLE)) return ADMIN_GENERAL_ROLE;
+  return next === ADMIN_GENERAL_ROLE ? null : next;
 }

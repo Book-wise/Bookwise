@@ -1,0 +1,326 @@
+// ============================================
+// Servicios y packs — exportador a WooCommerce
+// ============================================
+// Estilos del exportador (artboards 04 y 05 de design/productos-packs):
+// botones locales, menú de alcance, barra de sincronización, barra de selección,
+// casilleros y estado por servicio. Separado de packs-list.component.scss para
+// que cada archivo quede bajo el budget `anyComponentStyle`.
+
+// ── Botones locales (exportador) ─────────────────────────────────────────────
+.sp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: var(--bw-control-height);
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--bw-radius-md);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--outlined {
+    border-color: var(--bw-300);
+    color: var(--bw-300);
+    background: transparent;
+
+    &:hover:not(:disabled) {
+      background: var(--bw-50);
+    }
+  }
+
+  &--cta {
+    background: var(--bw-300);
+    // Texto sobre el relleno de marca: blanco por defecto y oscuro en Kinesilk
+    // (donde --bw-300 es salmón pastel). `--sidebar-text-active` ya codifica esa
+    // inversión en los tres temas.
+    color: var(--sidebar-text-active);
+
+    &:hover:not(:disabled) {
+      background: var(--bw-200);
+    }
+  }
+
+  &--ghost {
+    color: var(--text-color-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-100);
+      color: var(--text-color);
+    }
+  }
+
+  &--sm {
+    height: 2rem;
+    padding: 0 0.75rem;
+    font-size: var(--bw-font-caption);
+  }
+}
+
+// ── Menú de alcance de exportación ───────────────────────────────────────────
+.sp-export {
+  position: relative;
+  display: inline-flex;
+
+  &__menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.375rem);
+    width: 20rem;
+    z-index: var(--z-float);
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--bw-radius-lg);
+    box-shadow: var(--bw-shadow-popover);
+    padding: 0.375rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border: none;
+    background: none;
+    border-radius: var(--bw-radius-md);
+    text-align: left;
+    font-family: inherit;
+    font-size: var(--bw-font-table);
+    color: var(--text-color);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--bw-surface-muted);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--bw-300);
+      outline-offset: 1px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    strong {
+      display: block;
+      font-weight: var(--bw-weight-medium);
+    }
+
+    small {
+      display: block;
+      color: var(--text-color-secondary);
+      font-size: var(--bw-font-caption);
+    }
+  }
+}
+
+// ── Barra de sincronización (informativa, borde azul) ────────────────────────
+.sp-sync {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--bw-300);
+  border-radius: var(--bw-radius-md);
+  font-size: var(--bw-font-table);
+  color: var(--text-color);
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--bw-radius-pill);
+    background: var(--bw-success);
+    flex-shrink: 0;
+  }
+
+  &__text {
+    min-width: 0;
+
+    strong {
+      font-weight: var(--bw-weight-semibold);
+    }
+
+    small {
+      display: block;
+      color: var(--text-color-secondary);
+      font-size: var(--bw-font-caption);
+    }
+  }
+
+  &__actions {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+}
+
+// ── Barra de selección ───────────────────────────────────────────────────────
+.sp-selbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--bw-50);
+  border: 1px solid var(--bw-200);
+  border-radius: var(--bw-radius-md);
+  font-size: var(--bw-font-table);
+  color: var(--text-color);
+
+  &__text {
+    display: grid;
+    gap: 0.125rem;
+
+    strong {
+      font-weight: var(--bw-weight-semibold);
+    }
+
+    small {
+      color: var(--text-color-secondary);
+      font-size: var(--bw-font-caption);
+    }
+  }
+
+  &__actions {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+}
+
+// ── Casillero de selección (tarjeta + lista) ─────────────────────────────────
+.sp-pick {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-sm);
+  background: var(--surface-card);
+  box-shadow: var(--bw-shadow-card);
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--bw-300);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bw-300);
+    outline-offset: 1px;
+  }
+
+  &[aria-checked='true'] {
+    background: var(--bw-300);
+    border-color: var(--bw-300);
+    color: var(--sidebar-text-active);
+  }
+
+  &__mark {
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-bold);
+    line-height: 1;
+  }
+
+  &--inline {
+    position: static;
+    width: 1.25rem;
+    height: 1.25rem;
+    box-shadow: none;
+  }
+}
+
+.sp-pick-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sp-card.is-selected {
+  border-color: var(--bw-300);
+  box-shadow: 0 0 0 2px var(--bw-300);
+}
+
+.sp-table tbody tr.is-selected > td {
+  background: var(--bw-50);
+}
+
+// ── Estado de sincronización por servicio ────────────────────────────────────
+.sp-woo-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  font-size: var(--bw-font-caption);
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: var(--bw-radius-pill);
+    background: var(--text-color-secondary);
+    flex-shrink: 0;
+  }
+
+  &--synced::before {
+    background: var(--bw-success);
+  }
+
+  &--changed::before {
+    background: var(--bw-warning);
+  }
+
+  &--new::before {
+    background: var(--text-color-secondary);
+  }
+}
+
+// ── Pie de tarjeta con el estado de sincronización ───────────────────────────
+.sp-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-card);
+}
+
+.sp-card__edit {
+  margin-left: auto;
+}
+
+// ── Aviso «sin término 1 sesión» (§7) ────────────────────────────────────────
+.sp-no-single {
+  margin: 0;
+  padding: 0.375rem 0.625rem;
+  border: 1px dashed color-mix(in srgb, var(--bw-warning) 45%, transparent);
+  border-radius: var(--bw-radius-sm);
+  background: color-mix(in srgb, var(--bw-warning) 10%, transparent);
+  color: var(--bw-chip-text-warning);
+  font-size: var(--bw-font-caption);
+}

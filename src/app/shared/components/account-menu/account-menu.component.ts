@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
-import { ReferenceStore } from '@core/stores/reference.store';
+import { TenantSwitchService } from '@services/tenant-switch.service';
 import { Business } from '@models';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
@@ -40,7 +40,7 @@ interface AccountMenuItem {
 export class AccountMenuComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly refStore = inject(ReferenceStore);
+  private readonly tenantSwitch = inject(TenantSwitchService);
   private readonly messageService = inject(MessageService);
   protected readonly lang = inject(LanguageService);
 
@@ -78,6 +78,7 @@ export class AccountMenuComponent {
       { icon: 'pi pi-id-card', label: this.lang.t('nav.profile'), route: '/admin/profile' },
       { icon: 'pi pi-building', label: this.lang.t('account.business_primary'), route: '/admin/negocios' },
       { icon: 'pi pi-shield', label: this.lang.t('nav.roles'), route: '/admin/roles' },
+      { icon: 'pi pi-ticket', label: this.lang.t('nav.plan'), route: '/admin/planes' },
       { icon: 'pi pi-credit-card', label: this.lang.t('nav.billing'), route: '/admin/facturacion' },
       { icon: 'pi pi-cog', label: this.lang.t('nav.settings'), route: '/admin/configuraciones' },
       { icon: 'pi pi-sign-out', label: this.lang.t('ui.logout'), logout: true },
@@ -95,16 +96,15 @@ export class AccountMenuComponent {
   }
 
   /**
-   * Cambia de negocio (multi-tenant, gate por plan: solo si canSwitch) y recarga
-   * los datos del nuevo tenant. Se usa desde el selector del menú (mobile).
+   * Cambia de negocio (multi-tenant, gate por plan: solo si canSwitch) delegando
+   * en el coordinador, que refresca identidad, datos de referencia y selección.
+   * Se usa desde el selector del menú (mobile).
    */
   switchTo(biz: Business, popover: Popover): void {
     if (biz.id === this.currentBusinessId()) return;
-    this.auth.switchTenant(biz.id).subscribe({
+    this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.refStore.loadLocations();
-        this.refStore.loadProviders();
-        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
+        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.switched_to', { name: biz.name }), key: 'global', life: 3500 });
       },
       error: (err) =>
         this.messageService.add({

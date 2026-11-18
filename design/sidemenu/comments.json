@@ -1,0 +1,271 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "7uf0edr7",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1)",
+      "excerpt": "DESKTOP · RAIL EN REPOSO B ‹ ☰ Sin mini calendario: el rail solo lleva iconos. El contenido no se mueve nunca porque el rail siempre reserva 64px. DESKTOP · HOVER / FOCOOVERLAY Bookwise Cerrar menú ‹ Dashboard Ubicaciones Profesionales Agenda Clientes Servicios y packs Salir ☰ Se expande encima del",
+      "comment": "mira lo que ha hecho google para abrir y cerrar ,,, aqui esta cerrado cuidado que la primera barra a la izquierda son tabs del navegador",
+      "createdAt": "2026-11-10T02:54:49.834Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T02:54:49.857Z",
+      "resolvedAt": "2026-11-10T02:55:48.152Z",
+      "screenshot": ".screenshots/7uf0edr7.png"
+    },
+    {
+      "id": "22icc01p",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1)",
+      "excerpt": "DESKTOP · RAIL EN REPOSO B ‹ ☰ Sin mini calendario: el rail solo lleva iconos. El contenido no se mueve nunca porque el rail siempre reserva 64px. DESKTOP · HOVER / FOCOOVERLAY Bookwise Cerrar menú ‹ Dashboard Ubicaciones Profesionales Agenda Clientes Servicios y packs Salir ☰ Se expande encima del",
+      "comment": "luego cuando lo abres queda asi",
+      "createdAt": "2026-11-10T02:55:32.692Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T02:55:33.186Z",
+      "resolvedAt": "2026-11-10T02:56:55.159Z",
+      "screenshot": ".screenshots/22icc01p.png"
+    },
+    {
+      "id": "17bmw3e2",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > span:nth-of-type(1)",
+      "excerpt": "10",
+      "comment": "esto seguiria siendo el icono de bookwise",
+      "createdAt": "2026-11-10T02:56:55.209Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T02:56:55.326Z",
+      "resolvedAt": "2026-11-10T02:57:44.308Z"
+    },
+    {
+      "id": "ofgtahyk",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "Calendario",
+      "comment": "esto seguiria siendo el logo en letras de bookwise, no estoy seguro si lo tenemos en assets separados, tambien puede ser que usamos el que teniamos el sidemenu grande",
+      "createdAt": "2026-11-10T02:57:41.672Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T02:57:41.708Z",
+      "resolvedAt": "2026-11-10T02:59:10.326Z"
+    },
+    {
+      "id": "nk3vgeqq",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body",
+      "excerpt": "01 · Hamburguesa en la cabecera + panel que empuja Corregido con tu segundo screenshot. Dos cosas clave que hace Google y que yo tenía mal: (1) la cabecera ocupa todo el ancho y no se mueve al abrir el panel; (2) el panel empuja el contenido — no hay scrim ni oscurecimiento, el calendario queda visi",
+      "comment": "me gusta que has hecho mas solido y simple como se ve el software, pero te llevaste por completo la navegacion del sidemenu original, necesitamos que eso vuelva",
+      "createdAt": "2026-11-10T02:59:18.989Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T02:59:19.203Z",
+      "resolvedAt": "2026-11-10T03:01:41.772Z"
+    },
+    {
+      "id": "5isjy1na",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > img",
+      "excerpt": "Bookwise",
+      "comment": "deja solo este, descarta el otro",
+      "createdAt": "2026-11-10T02:59:30.521Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T02:59:30.749Z",
+      "resolvedAt": "2026-11-10T03:02:19.142Z"
+    },
+    {
+      "id": "y4a30bqo",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > span:nth-of-type(1)",
+      "excerpt": "",
+      "comment": "este puede salir",
+      "createdAt": "2026-11-10T03:01:04.432Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:01:04.477Z",
+      "resolvedAt": "2026-11-10T03:03:06.698Z"
+    },
+    {
+      "id": "codv8diq",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(1) > span:nth-of-type(1)",
+      "excerpt": "",
+      "comment": "sale fuera",
+      "createdAt": "2026-11-10T03:01:10.179Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:01:10.226Z",
+      "resolvedAt": "2026-11-10T03:03:28.449Z"
+    },
+    {
+      "id": "f2rfcz2e",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(1)",
+      "excerpt": "☰",
+      "comment": "aplicariamos aca uno de los temas prueba el color original que tenia de azul",
+      "createdAt": "2026-11-10T03:03:03.058Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:03:03.100Z",
+      "resolvedAt": "2026-11-10T03:04:00.169Z"
+    },
+    {
+      "id": "bb7zdfmz",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > aside",
+      "excerpt": "Dashboard Ubicaciones Profesionales Agenda Clientes Servicios y packs Mes ▾ Noviembre 2026 ‹ › L M M J V S D 26 27 28 29 30 31 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 Cerrar sesión",
+      "comment": "aunque te vi ponerle algunos gradients sutiles entre los azules de la marca bookwise",
+      "createdAt": "2026-11-10T03:03:57.713Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:03:57.766Z",
+      "resolvedAt": "2026-11-10T03:04:38.330Z"
+    },
+    {
+      "id": "w8d8ntfp",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > aside > div:nth-of-type(1) > button",
+      "excerpt": "Mes ▾",
+      "comment": "no encuentro necesario esto ya que has reducio efectivamente el calendario de tamaño",
+      "createdAt": "2026-11-10T03:05:40.530Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:05:40.564Z",
+      "resolvedAt": "2026-11-10T03:06:47.439Z"
+    },
+    {
+      "id": "woq9fbgf",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div",
+      "excerpt": "LUN 9 MAR10 MIÉ 11 JUE 12 VIE 13 09:00 10:00 kine · Silva 11:00 12:00",
+      "comment": "altisima atencion con que hay elementos de control de fecha que estan por dentro del full-calendar, tendriamos que hacer que algunos de los botones e informacion que hoy estan dentro se muevan hacia arriba como el control que dice hoy las flechas de cambio eso nos dejaria un poco mas de espacio para el calendario que ya incluia esos controles, pero debemos cablear las interacciones corractamente desde angular hacia el full-calendar, esto no es para que rediseñes sino para considerar en la implementacion",
+      "createdAt": "2026-11-10T03:08:09.304Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:08:09.335Z",
+      "resolvedAt": "2026-11-10T03:08:49.857Z"
+    },
+    {
+      "id": "lrto338c",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(6)",
+      "excerpt": "Semana ▾",
+      "comment": "mes, semana, dia como opciones",
+      "createdAt": "2026-11-10T03:09:22.435Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:09:22.458Z",
+      "resolvedAt": "2026-11-10T03:09:53.923Z"
+    },
+    {
+      "id": "em9digb9",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > div > button:nth-of-type(2)",
+      "excerpt": "Semana",
+      "comment": "quiero que sean un select no que aparezcan los tres",
+      "createdAt": "2026-11-10T03:10:18.796Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:10:18.810Z",
+      "resolvedAt": "2026-11-10T03:10:41.619Z"
+    },
+    {
+      "id": "tfrc0jv3",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div",
+      "excerpt": "LUN 9 MAR10 MIÉ 11 JUE 12 VIE 13 09:00 10:00 kine · Silva 11:00 12:00",
+      "comment": "basate en el calendario ya existente y actualiza esta vista para los elementos de botones y de guia de informacion",
+      "createdAt": "2026-11-10T03:11:29.821Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:11:29.850Z",
+      "resolvedAt": "2026-11-10T03:12:49.972Z"
+    },
+    {
+      "id": "5admides",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div",
+      "excerpt": "LUN 9 MAR10 MIÉ 11 JUE 12 VIE 13 09:00 10:00 kine · Silva 11:00 12:00",
+      "comment": "filtros de sucursal profesional y todo eso",
+      "createdAt": "2026-11-10T03:11:50.453Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:11:50.488Z",
+      "resolvedAt": "2026-11-10T03:13:30.284Z"
+    },
+    {
+      "id": "rxpsi08l",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(5)",
+      "excerpt": "⚲",
+      "comment": "esto es el selector de tema?",
+      "createdAt": "2026-11-10T03:14:16.834Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:14:16.870Z",
+      "resolvedAt": "2026-11-10T03:15:08.663Z"
+    },
+    {
+      "id": "8hvychpk",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(2)",
+      "excerpt": "Bloquear Horario",
+      "comment": "deja bloquear horario y nueva reserva cerca el uno del otro y con sus iconos,",
+      "createdAt": "2026-11-10T03:16:04.464Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:16:04.502Z",
+      "resolvedAt": "2026-11-10T03:16:31.834Z"
+    },
+    {
+      "id": "p0vysufr",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(1)",
+      "excerpt": "☰ Hoy ‹ › Claro Oscuro Kinesilk ▾ Mes Semana Día ▾ AA",
+      "comment": "me falto el selector de negocio tal cual lo tenemos ahora",
+      "createdAt": "2026-11-10T03:19:02.669Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:19:02.735Z",
+      "resolvedAt": "2026-11-10T03:19:50.350Z"
+    },
+    {
+      "id": "8wm7cqjc",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1)",
+      "excerpt": "☰ Hoy ‹ › Claro Oscuro Kinesilk ▾ Mes Semana Día ▾ AA",
+      "comment": "mismo aqui me falto el selector de negocio",
+      "createdAt": "2026-11-10T03:19:35.118Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:19:35.160Z",
+      "resolvedAt": "2026-11-10T03:20:43.176Z"
+    },
+    {
+      "id": "xh34jowc",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(1) > span:nth-of-type(2) > select",
+      "excerpt": "Claro Oscuro Kinesilk",
+      "comment": "deja el selector de tema despues del de fecha",
+      "createdAt": "2026-11-10T03:20:09.115Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:20:09.122Z",
+      "resolvedAt": "2026-11-10T03:21:37.032Z"
+    },
+    {
+      "id": "7pcf088p",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(3) > b",
+      "excerpt": "10",
+      "comment": "highligth del dia actual esta importante de recordar",
+      "createdAt": "2026-11-10T03:24:15.551Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:24:15.569Z",
+      "resolvedAt": "2026-11-10T03:25:53.920Z"
+    },
+    {
+      "id": "5j15qido",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(1) > img",
+      "excerpt": "Bookwise",
+      "comment": "A esto aqui, debemos darle el card de background que tenia antes porque en tema oscuro se rompio, como es fondo transparente necesita un blanco de fondo, o un blanco con menor opacidad",
+      "createdAt": "2026-11-10T03:27:01.604Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:27:01.646Z",
+      "resolvedAt": "2026-11-10T03:27:30.963Z"
+    },
+    {
+      "id": "ckizrpgb",
+      "file": "01-rail-hover-expand.html",
+      "selector": "body > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3) > button",
+      "excerpt": "☰",
+      "comment": "quiero que se aplique efactivamente, ahora mismo cuando esta abierto aparece una x",
+      "createdAt": "2026-11-10T03:42:17.629Z",
+      "status": "resolved",
+      "sentAt": "2026-11-10T03:42:17.656Z",
+      "resolvedAt": "2026-11-10T03:42:39.713Z"
+    }
+  ]
+}

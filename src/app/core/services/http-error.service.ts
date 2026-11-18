@@ -20,6 +20,11 @@ interface ApiErrorBody {
   };
   // amount_exceeds_remaining error — remaining balance
   remaining?: string;
+  /** Stable rule identifier (A1..A7, R8..R10) for telemetry/UI decisions — never user-facing. */
+  rule?: string;
+  /** Capacity-limit errors (e.g. account_tenant_limit_reached) carry current usage and the plan limit. */
+  limit?: number;
+  current?: number;
 }
 
 export interface ToastConfig {
@@ -29,6 +34,37 @@ export interface ToastConfig {
   life?: number;
   sticky?: boolean;
   key?: string;
+}
+
+/**
+ * True when the API rejected the request because the admin has no tenant yet.
+ *
+ * `GET /v1/roles` responds `409 { error: 'onboarding_required' }` for tenantless
+ * admins. Callers use this predicate to redirect to onboarding instead of
+ * surfacing the misleading generic conflict toast.
+ */
+export function isOnboardingRequired(err: HttpErrorResponse): boolean {
+  return err.status === 409 && err.error?.error === 'onboarding_required';
+}
+
+/**
+ * Códigos con los que la API reporta que se agotó una cuota del plan (403).
+ * `POST /businesses` → `account_tenant_limit_reached`; crear/reactivar
+ * profesional → `tenant_professional_limit_reached`; crear sucursal →
+ * `tenant_location_limit_reached`. Los tres traen `limit`/`current`.
+ */
+export const CAPACITY_LIMIT_ERROR_CODES: readonly string[] = [
+  'account_tenant_limit_reached',
+  'tenant_professional_limit_reached',
+  'tenant_location_limit_reached',
+];
+
+/**
+ * True when the API rejected the request because the account/plan hit a capacity
+ * limit (ver `CAPACITY_LIMIT_ERROR_CODES`).
+ */
+export function isCapacityLimitError(err: HttpErrorResponse): boolean {
+  return err.status === 403 && CAPACITY_LIMIT_ERROR_CODES.includes(err.error?.error);
 }
 
 @Injectable({ providedIn: 'root' })
@@ -154,6 +190,13 @@ export class HttpErrorService {
     // Append remaining balance for amount_exceeds_remaining
     if (body.remaining) {
       detail += ` Saldo: $${Number(body.remaining).toLocaleString('es-CL')}`;
+    }
+    // Capacity-limit errors carry current/limit — surface the usage so the user sees why.
+    if (body.limit !== undefined && CAPACITY_LIMIT_ERROR_CODES.includes(errorKey)) {
+      detail += ' ' + this.lang.t('biz.capacity_usage', {
+        current: String(body.current ?? '?'),
+        limit:   String(body.limit),
+      });
     }
 
     return { severity: this.severity(status), summary, detail, life: 8000 };

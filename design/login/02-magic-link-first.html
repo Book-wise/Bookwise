@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise — Ingreso · Magic link primero</title>
+<style>
+  :root{
+    --ink:#0F172A; --muted:#475569; --line:#E2E8F0; --surface:#fff; --canvas:#F5F7FA;
+    --primary:#0F766E; --primary-ink:#0B5C55; --accent:#14B8A6;
+    --danger:#B91C1C; --success:#15803D;
+    --radius:12px; --radius-lg:20px;
+    --shadow:0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+       font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;
+       display:grid;place-items:center;padding:40px 20px}
+  a{color:var(--primary);text-decoration:none}
+  a:hover,a:focus-visible{text-decoration:underline}
+  :focus-visible{outline:3px solid rgba(20,184,166,.5);outline-offset:2px;border-radius:8px}
+  .wrap{width:100%;max-width:412px}
+
+  .mark{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:26px;
+        font-weight:700;font-size:17px;letter-spacing:-.2px}
+  .mark span.badge{width:32px;height:32px;border-radius:10px;background:var(--primary);
+        display:grid;place-items:center}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
+        box-shadow:var(--shadow);padding:30px 28px}
+  h1{margin:0 0 6px;font-size:24px;letter-spacing:-.3px;font-weight:600;text-align:center}
+  .sub{margin:0 0 24px;text-align:center;color:var(--muted);font-size:14.5px}
+
+  label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+  .control{width:100%;height:48px;border:1px solid var(--line);border-radius:var(--radius);
+           background:var(--surface);padding:0 14px;font:inherit;font-size:15px;color:var(--ink)}
+  .control::placeholder{color:#94A3B8}
+  .control:hover{border-color:#CBD5E1}
+  .control:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(20,184,166,.22)}
+
+  .btn{width:100%;height:48px;border:0;border-radius:var(--radius);background:var(--primary);
+       color:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;
+       transition:background .16s ease, transform .16s ease}
+  .btn:hover{background:var(--primary-ink)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--primary);border:1px solid var(--line);margin-top:10px}
+  .btn.ghost:hover{background:#F8FAFC;color:var(--primary-ink)}
+
+  details{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+  summary{cursor:pointer;color:var(--muted);font-size:14px;list-style:none;display:flex;
+          align-items:center;justify-content:center;gap:8px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"";width:7px;height:7px;border-right:1.6px solid currentColor;
+          border-bottom:1.6px solid currentColor;transform:rotate(45deg);transition:transform .16s ease}
+  details[open] summary::after{transform:rotate(-135deg)}
+  details .inner{margin-top:14px}
+
+  .social{display:flex;gap:10px;justify-content:center;margin-top:22px}
+  .icon{width:48px;height:48px;border-radius:var(--radius);border:1px solid var(--line);
+        background:var(--surface);display:grid;place-items:center;cursor:pointer;
+        transition:background .16s ease,border-color .16s ease,transform .16s ease}
+  .icon:hover{background:#F8FAFC;border-color:#CBD5E1}
+  .icon:active{transform:translateY(1px)}
+  .icon.apple{background:#000;border-color:#000}
+  .icon.apple:hover{background:#111}
+  .icon.facebook{background:#1877F2;border-color:#1877F2}
+  .icon.facebook:hover{background:#166FE5}
+  .or{display:flex;align-items:center;gap:12px;margin:22px 0 0;color:var(--muted);font-size:12.5px}
+  .or::before,.or::after{content:"";height:1px;background:var(--line);flex:1}
+
+  .note{margin:18px 0 0;text-align:center;font-size:12.5px;color:#64748B;line-height:1.6}
+
+  /* Estado «enlace enviado» */
+  .sent{display:none}
+  body.is-sent .sent{display:block}
+  body.is-sent .form-state{display:none}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:#ECFDF5;color:var(--success);
+        border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;margin:0 auto 16px}
+  .sent h2{margin:0 0 6px;font-size:22px;text-align:center;letter-spacing:-.3px}
+  .sent p{margin:0 0 18px;text-align:center;color:var(--muted);font-size:14.5px}
+  .sent .who-mail{font-weight:600;color:var(--ink)}
+  .center{text-align:center}
+  .hint{font-size:13px;color:#64748B;text-align:center;margin:14px 0 0}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="mark">
+    <span class="badge" aria-hidden="true">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </span>
+    Bookwise
+  </div>
+
+  <section class="card" aria-labelledby="t">
+    <div class="form-state">
+      <h1 id="t">Ingresa sin contraseña</h1>
+      <p class="sub">Te mandamos un enlace de un solo uso a tu correo.</p>
+
+      <form id="magic" action="#" method="post">
+        <label for="email">Correo</label>
+        <input class="control" id="email" name="email" type="email" autocomplete="email"
+               placeholder="tu@clinica.cl" value="karen.silva@kinesilk.cl" required>
+        <button class="btn" type="submit">Enviarme el enlace</button>
+      </form>
+
+      <div class="or">o entra con</div>
+      <div class="social">
+        <button class="icon" type="button" aria-label="Continuar con Google">
+          <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+        </button>
+        <button class="icon apple" type="button" aria-label="Continuar con Apple">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+            <path d="M16.36 12.72c-.02-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.79-3.33-1.81-1.42-.14-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79-1.55.02-2.98.9-3.78 2.28-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.35 2.88 2.31 1.16-.05 1.6-.75 3-.75s1.79.75 3.01.73c1.24-.02 2.03-1.13 2.79-2.25.88-1.29 1.24-2.54 1.26-2.6-.03-.01-2.42-.93-2.44-3.7zM14.1 5.98c.64-.77 1.07-1.85.95-2.92-.95.04-2.1.63-2.76 1.4-.61.7-1.12 1.79-.98 2.85 1.06.08 2.15-.54 2.79-1.33z"/>
+          </svg>
+        </button>
+        <button class="icon facebook" type="button" aria-label="Continuar con Facebook">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+            <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.03 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.27h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07z"/>
+          </svg>
+        </button>
+      </div>
+
+      <details>
+        <summary>Prefiero usar mi contraseña</summary>
+        <div class="inner">
+          <label for="password">Contraseña</label>
+          <input class="control" id="password" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña">
+          <button class="btn ghost" type="button">Ingresar con contraseña</button>
+          <p class="hint"><a href="#">Olvidé mi contraseña</a></p>
+        </div>
+      </details>
+    </div>
+
+    <div class="sent" role="status" aria-live="polite">
+      <div class="center"><span class="pill">Enlace enviado</span></div>
+      <h2>Revisa tu correo</h2>
+      <p>Mandamos un enlace de un solo uso a <span class="who-mail">karen.silva@kinesilk.cl</span>.<br>
+         Vence en 15 minutos.</p>
+      <button class="btn" type="button" id="resend" disabled>Reenviar en 30 s</button>
+      <button class="btn ghost" type="button" id="back">Usar otro correo</button>
+      <p class="hint">¿No llegó? Revisa spam o escríbenos a <a href="#">soporte@bookwise.cl</a></p>
+    </div>
+  </section>
+
+  <p class="note">Al ingresar aceptas los <a href="#">Términos del servicio</a> y la <a href="#">Política de privacidad</a>.</p>
+</main>
+
+<script>
+  (function () {
+    var form = document.getElementById('magic');
+    var resend = document.getElementById('resend');
+    var back = document.getElementById('back');
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      document.body.classList.add('is-sent');
+      var left = 30;
+      resend.disabled = true;
+      resend.textContent = 'Reenviar en ' + left + ' s';
+      var timer = setInterval(function () {
+        left -= 1;
+        if (left <= 0) {
+          clearInterval(timer);
+          resend.disabled = false;
+          resend.textContent = 'Reenviar enlace';
+          return;
+        }
+        resend.textContent = 'Reenviar en ' + left + ' s';
+      }, 1000);
+    });
+
+    back.addEventListener('click', function () {
+      document.body.classList.remove('is-sent');
+      document.getElementById('email').focus();
+    });
+  })();
+</script>
+</body>
+</html>

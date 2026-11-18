@@ -1,0 +1,22 @@
+<nav class="as-nav" [attr.aria-label]="lang.t('billing.nav.label')">
+  @for (group of groups; track group.titleKey) {
+    <div class="as-nav__group">
+      <p class="as-nav__title">{{ lang.t(group.titleKey) }}</p>
+      <ul class="as-nav__list">
+        @for (item of group.items; track item.link) {
+          <li class="as-nav__list-item">
+            <a
+              class="as-nav__item"
+              [routerLink]="item.link"
+              routerLinkActive="as-nav__item--active"
+              [routerLinkActiveOptions]="{ exact: !!item.exact }"
+            >
+              <i class="pi {{ item.icon }}" aria-hidden="true"></i>
+              <span class="as-nav__label">{{ lang.t(item.labelKey) }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</nav>

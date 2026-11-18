@@ -1,0 +1,127 @@
+// ============================================
+// Servicios y packs — vista de lista en mobile
+// ============================================
+// Spec: design/productos-packs/01-lista-tabla.html § «Vista mobile».
+// La tabla no entra en 390 px: cada fila pasa a ser un bloque apilado con los
+// mismos datos y los controles (casillero + desplegable) anclados a la izquierda.
+
+// ── Vista de lista en mobile (≤767px) ────────────────────────────────────────
+// Spec: design/productos-packs/01-lista-tabla.html § «Vista mobile».
+// La tabla no entra en 390 px: cada fila pasa a ser un bloque apilado con los
+// mismos datos (servicio, términos, precio base, estado) y los controles
+// (casillero + desplegable) anclados a la izquierda.
+@media (max-width: 767px) {
+  .sp-toolbar {
+    gap: var(--bw-space-xs);
+  }
+
+  .sp-search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .sp-sync,
+  .sp-selbar {
+    flex-wrap: wrap;
+
+    &__actions {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+
+  .sp-table {
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      position: relative;
+      display: block;
+      padding: 0.75rem 1rem 0.75rem 4.75rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    td {
+      display: block;
+      padding: 0;
+      border: none;
+
+      & + td {
+        margin-top: 0.375rem;
+      }
+    }
+
+    // controles (casillero arriba, desplegable abajo) fijos a la izquierda
+    td.sp-col-toggle {
+      position: absolute;
+      left: 0.625rem;
+      top: 0.75rem;
+      width: auto;
+    }
+
+    .sp-pick-cell {
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    // etiqueta visible para las celdas que no se explican solas
+    td[data-label]::before {
+      content: attr(data-label) ': ';
+      color: var(--text-color-secondary);
+      font-size: var(--bw-font-caption);
+    }
+
+    td.sp-num {
+      text-align: left;
+    }
+
+    .sp-amount {
+      font-size: var(--bw-font-title);
+    }
+
+    // sub-fila de términos: una línea legible por término
+    .sp-subrow {
+      padding: 0 0 0.75rem 4.75rem;
+
+      > td {
+        padding: 0;
+      }
+    }
+
+    .sp-table .sp-subtable {
+      thead {
+        display: none;
+      }
+
+      tbody tr {
+        position: static;
+        display: block;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--surface-border);
+      }
+
+      tbody tr:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        display: inline;
+        padding: 0;
+
+        & + td::before {
+          content: ' · ';
+          color: var(--text-color-secondary);
+        }
+      }
+
+      td.sp-num {
+        text-align: left;
+      }
+    }
+  }
+}

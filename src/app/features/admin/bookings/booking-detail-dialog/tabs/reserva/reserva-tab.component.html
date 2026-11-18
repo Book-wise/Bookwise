@@ -18,15 +18,15 @@
       <div class="rf-time-row">
         <div class="rf-time-group">
           <span class="rf-time-label">Desde</span>
-          <p-select [options]="hours"   [ngModel]="startHour()"   (ngModelChange)="startHour.set($event)"   [style]="{ width: '5.3rem' }" />
+          <p-select [options]="hours"   [ngModel]="startHour()"   (ngModelChange)="startHour.set($event)"   [appendTo]="'body'" [style]="{ width: '5.3rem' }" />
           <span class="rf-sep">:</span>
-          <p-select [options]="minutes" [ngModel]="startMinute()" (ngModelChange)="startMinute.set($event)" [style]="{ width: '5.3rem' }" />
+          <p-select [options]="minutes" [ngModel]="startMinute()" (ngModelChange)="startMinute.set($event)" [appendTo]="'body'" [style]="{ width: '5.3rem' }" />
         </div>
         <div class="rf-time-group">
           <span class="rf-time-label">Hasta</span>
-          <p-select [options]="hours"   [ngModel]="endHour()"     (ngModelChange)="endHour.set($event)"     [style]="{ width: '5.3rem' }" />
+          <p-select [options]="hours"   [ngModel]="endHour()"     (ngModelChange)="endHour.set($event)"     [appendTo]="'body'" [style]="{ width: '5.3rem' }" />
           <span class="rf-sep">:</span>
-          <p-select [options]="minutes" [ngModel]="endMinute()"   (ngModelChange)="endMinute.set($event)"   [style]="{ width: '5.3rem' }" />
+          <p-select [options]="minutes" [ngModel]="endMinute()"   (ngModelChange)="endMinute.set($event)"   [appendTo]="'body'" [style]="{ width: '5.3rem' }" />
         </div>
       </div>
     </div>

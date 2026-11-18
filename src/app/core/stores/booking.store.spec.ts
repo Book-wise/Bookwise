@@ -48,8 +48,11 @@ function makeAdminUser(): User {
   return { id: 1, email: 'admin@test.com', name: 'Admin', role: 'admin' } as User;
 }
 
-function makeProviderUser(): User {
-  return { id: 2, email: 'pro@test.com', name: 'Provider', role: 'provider', provider_id: 30 } as User;
+function makeProviderUser(overrides: Partial<User> = {}): User {
+  return {
+    id: 2, email: 'pro@test.com', name: 'Provider', role: 'provider', provider_id: 30,
+    ...overrides,
+  } as User;
 }
 
 // ---------------------------------------------------------------------------
@@ -101,7 +104,7 @@ describe('BookingStore', () => {
     });
 
     it('scopeProviderId is null for admin user', () => {
-      expect(store.filters().scopeProviderId).toBeNull();
+      expect(store.scopeProviderId()).toBeNull();
     });
 
     it('isProviderRole is false for admin', () => {
@@ -130,7 +133,7 @@ describe('BookingStore', () => {
       authUser = signal(makeProviderUser());
       createStore();
 
-      expect(store.filters().scopeProviderId).toBe(30);
+      expect(store.scopeProviderId()).toBe(30);
       expect(store.isProviderRole()).toBe(true);
     });
 
@@ -140,7 +143,34 @@ describe('BookingStore', () => {
       authUser = signal(null);
       createStore();
 
-      expect(store.filters().scopeProviderId).toBeNull();
+      expect(store.scopeProviderId()).toBeNull();
+    });
+
+    it('scopeProviderId reacts when the auth identity changes', () => {
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
+      authUser = signal(makeProviderUser({ provider_id: 30 }));
+      createStore();
+      expect(store.scopeProviderId()).toBe(30);
+
+      // Same store instance, new tenant identity → scope follows without re-init.
+      authUser.set(makeProviderUser({ id: 3, provider_id: 77 }));
+      expect(store.scopeProviderId()).toBe(77);
+      expect(store.isProviderRole()).toBe(true);
+
+      authUser.set(makeAdminUser());
+      expect(store.scopeProviderId()).toBeNull();
+      expect(store.isProviderRole()).toBe(false);
+    });
+
+    it('scopeProviderId is null for a provider user without provider_id', () => {
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
+      authUser = signal(makeProviderUser({ provider_id: null }));
+      createStore();
+
+      expect(store.scopeProviderId()).toBeNull();
+      expect(store.isProviderRole()).toBe(false);
     });
   });
 
@@ -427,15 +457,69 @@ describe('BookingStore', () => {
       createStore();
     });
 
-    it('setFilters ignores scopeProviderId changes', () => {
+    it('setFilters cannot override the derived scope', () => {
       store.setFilters({ scopeProviderId: 999 } as any);
-      // scopeProviderId should remain null (admin)
-      expect(store.filters().scopeProviderId).toBeNull();
+      // scopeProviderId is derived from auth, not from filters (admin → null)
+      expect(store.scopeProviderId()).toBeNull();
     });
 
     it('setFilters updates selectedLocationId', () => {
       store.setFilters({ selectedLocationId: 5 });
       expect(store.filters().selectedLocationId).toBe(5);
+    });
+  });
+
+  // ── Tenant reset ───────────────────────────────────────────────────
+
+  describe('resetTenantState', () => {
+    const booking1 = makeBooking({ id: 1 });
+
+    beforeEach(() => {
+      bookingsApi = { getBookings: vi.fn().mockReturnValue(of({ data: [booking1] })), getBooking: vi.fn(), createBooking: vi.fn(), updateBooking: vi.fn(), cancelBooking: vi.fn() } as any;
+      blockedSlotsApi = { getBlockedSlots: vi.fn().mockReturnValue(of({ data: [makeBlockedSlot()] })), createBlockedSlot: vi.fn(), deleteBlockedSlot: vi.fn() } as any;
+      authUser = signal(makeAdminUser());
+      createStore();
+      store.loadEvents({ dateFrom: '2026-06-01', dateTo: '2026-06-30' });
+    });
+
+    it('clears bookings, blocked slots and the selected booking', () => {
+      store.selectBooking(booking1);
+      expect(store.bookings()).toHaveLength(1);
+      expect(store.blockedSlots()).toHaveLength(1);
+
+      store.resetTenantState();
+
+      expect(store.bookings()).toEqual([]);
+      expect(store.blockedSlots()).toEqual([]);
+      expect(store.selectedBookingId()).toBeNull();
+      expect(store.selectedBooking()).toBeNull();
+    });
+
+    it('clears the selection filters', () => {
+      store.setFilters({ selectedLocationId: 5, selectedProviderId: 30, selectedStatusIds: [1] });
+
+      store.resetTenantState();
+
+      expect(store.filters()).toEqual({
+        selectedLocationId: null,
+        selectedProviderId: null,
+        selectedStatusIds: [],
+      });
+    });
+
+    it('drops stale events so the new tenant cannot reuse the previous rows', () => {
+      expect(store.eventsForCalendar()).toHaveLength(2);
+
+      store.resetTenantState();
+
+      expect(store.eventsForCalendar()).toEqual([]);
+    });
+
+    it('leaves the date range untouched for the next load', () => {
+      store.resetTenantState();
+
+      expect(store.dateFrom()).toBe('2026-06-01');
+      expect(store.dateTo()).toBe('2026-06-30');
     });
   });
 });

@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { BusinessesApiService } from '@services/api/businesses-api.service';
+import { isCapacityLimitError } from '@services/http-error.service';
 import { BusinessHeroComponent } from '@shared/components/business-hero/business-hero.component';
 
 const PLAN_OPTIONS = [
@@ -39,6 +40,7 @@ export class BusinessCreateComponent {
   readonly PLAN_OPTIONS = PLAN_OPTIONS;
   readonly saving = signal(false);
   readonly created = signal(false);
+  readonly capacityError = signal(false);
 
   readonly form = this.fb.group({
     name: ['', Validators.required],
@@ -85,6 +87,10 @@ export class BusinessCreateComponent {
       },
       error: (err) => {
         this.saving.set(false);
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         this.messageService.add({
           severity: 'error',
           summary: this.lang.t('ui.error'),
@@ -102,5 +108,9 @@ export class BusinessCreateComponent {
 
   goToList(): void {
     this.router.navigate(['/admin/negocios']);
+  }
+
+  goToBilling(): void {
+    this.router.navigate(['/admin/facturacion']);
   }
 }

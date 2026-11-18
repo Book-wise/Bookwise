@@ -1,0 +1,27 @@
+{
+  "title": "Sidebar: abrir, cerrar y recuperar espacio vertical",
+  "brief": "Rediseño del sidebar de Bookwise (admin y profesional) y de su interacción de abrir/cerrar. Punto de partida real: el sidebar apila logo (67px), botón «Cerrar menú» (51px), 6 ítems de nav (263px), el mini calendario (282px) y el logout (56px) = ~719px. En mobile eso no entra en un viewport corto y obliga a scrollear el drawer; al colapsarlo a 64px el mini calendario desaparece. Las tres direcciones resuelven lo mismo de forma distinta: que quepa sin scroll, que el calendario tenga un lugar estable y que abrir/cerrar sea predecible en desktop y mobile.",
+  "artboards": [
+    {
+      "file": "01-rail-hover-expand.html",
+      "title": "Hamburguesa en la cabecera + panel que empuja",
+      "tradeoff": "Vuelve la navegación original del sidebar (Dashboard, Ubicaciones, Profesionales, Agenda, Clientes, Servicios y packs + cierre de sesión) como bloque principal del panel, y se conserva del patrón Google lo que resolvía el problema: el botón vive inline en la cabecera, la cabecera no se mueve, y al abrir el panel empuja el contenido sin scrim, así el calendario sigue visible y legible. El mes queda como tarjeta fija y compacta debajo de la nav, sin cabecera plegable. En mobile no hay ancho para empujar, así que ahí el panel se abre como drawer con scrim. A cambio, en desktop el contenido se angosta 250px mientras el panel está abierto.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-dos-zonas-contextual.html",
+      "title": "Dos zonas: franja de iconos + panel contextual",
+      "tradeoff": "Una franja de 64px siempre visible más un panel de 220px que solo aparece cuando hay contexto (el mes del calendario, filtros). En mobile el panel se abre como capa del drawer. Da lugar propio al calendario sin competir con la nav, a cambio son dos contenedores que hay que mantener sincronizados.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-panel-secciones-colapsables.html",
+      "title": "Panel único con secciones colapsables",
+      "tradeoff": "Un solo panel: cabecera compacta, nav densa y el mini calendario como sección colapsable (abierta en desktop, cerrada en mobile por defecto). Mismo componente en ambos breakpoints y sin scroll posible, a cambio en mobile el calendario requiere un click.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

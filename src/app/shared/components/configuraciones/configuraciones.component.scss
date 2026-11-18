@@ -1,6 +1,4 @@
 .settings {
-  max-width: 960px;
-  margin: 0 auto;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -21,10 +19,17 @@
   }
 }
 
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--bw-space-lg);
+// Pestañas de configuración (artboard 02). Las cards de Perfil / Apariencia /
+// Negocio / Feriados mantienen un ancho de lectura acotado; «Fichas médicas»
+// usa todo el ancho del área de contenido (maestro-detalle).
+.settings-tabs {
+  :deep(.p-tabpanels) {
+    padding-top: var(--bw-space-md);
+  }
+}
+
+.settings-pane {
+  max-width: 960px;
 }
 
 .settings-card {
@@ -171,9 +176,6 @@
 @media (max-width: 768px) {
   .settings {
     padding: 1rem;
-  }
-  .settings-grid {
-    grid-template-columns: 1fr;
   }
   .setting-row {
     flex-direction: column;

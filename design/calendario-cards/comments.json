@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "sszou28m",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body",
+      "excerpt": "Cards del calendario · 01 — densidad en dos líneas Misma superficie, más información útil: la hora entra a la card y el estado se muda al borde izquierdo. En la vista de semana se aprovecha el alto real para sumar servicio y sesión de pack. Dirección 1 de 3 ⓘ Esto no es un componente Angular. La car",
+      "comment": "me referia a estas cards",
+      "createdAt": "2026-11-07T22:25:54.527Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:25:57.686Z",
+      "resolvedAt": "2026-11-07T22:28:28.138Z",
+      "screenshot": ".screenshots/sszou28m.png"
+    },
+    {
+      "id": "r3sbeznc",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(2) > span:nth-of-type(2) > span:nth-of-type(2) > span",
+      "excerpt": "$",
+      "comment": "esto se queda a la izquierda al comienzo como aparece en la imagen que te mande",
+      "createdAt": "2026-11-07T22:29:34.952Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:30:05.188Z",
+      "resolvedAt": "2026-11-07T22:31:22.166Z"
+    },
+    {
+      "id": "kxz9q2zg",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(1)",
+      "excerpt": "C",
+      "comment": "este elemento no es necesario",
+      "createdAt": "2026-11-07T22:30:02.158Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:30:05.188Z",
+      "resolvedAt": "2026-11-07T22:31:22.166Z"
+    },
+    {
+      "id": "ejqby5iv",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(1)",
+      "excerpt": "$",
+      "comment": "este elemento ocupa el alto completo del card",
+      "createdAt": "2026-11-07T22:32:41.341Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:34:48.191Z",
+      "resolvedAt": "2026-11-07T22:35:32.998Z"
+    },
+    {
+      "id": "qk83er05",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(2) > span:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "Felipe Castro",
+      "comment": "nombre primero hora despues",
+      "createdAt": "2026-11-07T22:34:40.440Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:34:48.191Z",
+      "resolvedAt": "2026-11-07T22:35:32.998Z"
+    },
+    {
+      "id": "wnyh30ri",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(1)",
+      "excerpt": "$",
+      "comment": "Icono o texto un poco mas grande",
+      "createdAt": "2026-11-07T22:35:43.862Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:38:02.206Z",
+      "resolvedAt": "2026-11-07T22:39:08.740Z"
+    },
+    {
+      "id": "4r3m5a7h",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(1)",
+      "excerpt": "A",
+      "comment": "utiliza el color correcto para este, es un verde 65a30d y podemos darle un borde estilo tarketa bookwise a la izquierda? con el tono del estado de la reserva?",
+      "createdAt": "2026-11-07T22:37:58.362Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:38:02.206Z",
+      "resolvedAt": "2026-11-07T22:39:08.740Z"
+    },
+    {
+      "id": "49ba3p7g",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(1)",
+      "excerpt": "$",
+      "comment": "vuelve a lo anterior se ve mejor cuando esta exactamente a la orilla sin ese borde",
+      "createdAt": "2026-11-07T22:40:27.375Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:40:28.372Z",
+      "resolvedAt": "2026-11-07T22:40:51.888Z"
+    },
+    {
+      "id": "vrt7ry52",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body > div > div:nth-of-type(3) > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(2) > span:nth-of-type(1) > span:nth-of-type(1)",
+      "excerpt": "Camila Torres",
+      "comment": "cuando no hay badge de pago puedes mover esta info al inicio del card y lo que hay abajo tambien",
+      "createdAt": "2026-11-07T22:51:31.201Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:51:33.127Z",
+      "resolvedAt": "2026-11-07T23:07:13.585Z"
+    },
+    {
+      "id": "id6t3604",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body",
+      "excerpt": "Cards del calendario · 01 — la card real, con hora y contexto Sobre el bloque de color que ya existe: se mantiene el relleno por estado y el badge de pago a la izquierda, se quita el avatar, y la línea única «Nombre · Servicio» pasa a dos líneas reales. Entra la hora, el servicio deja de cortarse y",
+      "comment": "en la aplicacion real creaste como extra ese texto que dice cliente, y ademas asumiste que siempre habria un tamaño fijo, la idea es que la primera linea del texto sea siempre visible.",
+      "createdAt": "2026-11-07T22:54:41.457Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:55:54.958Z",
+      "resolvedAt": "2026-11-07T23:07:13.585Z",
+      "screenshot": ".screenshots/id6t3604.png"
+    },
+    {
+      "id": "8othkb47",
+      "file": "01-densidad-dos-lineas.html",
+      "selector": "body",
+      "excerpt": "Cards del calendario · 01 — la card real, con hora y contexto Sobre el bloque de color que ya existe: se mantiene el relleno por estado y el badge de pago a la izquierda, se quita el avatar, y la línea única «Nombre · Servicio» pasa a dos líneas reales. Entra la hora, el servicio deja de cortarse y",
+      "comment": "entonces no se esta viendo el contenido cuando la trajeta esta en su tamaño mas pequeño o donde el slot es de 60 minutos, ordena para que se vea al menos la primera linea con el nombre y la hora",
+      "createdAt": "2026-11-07T22:55:53.654Z",
+      "status": "resolved",
+      "sentAt": "2026-11-07T22:55:54.958Z",
+      "resolvedAt": "2026-11-07T23:07:13.585Z",
+      "screenshot": ".screenshots/8othkb47.png"
+    }
+  ]
+}

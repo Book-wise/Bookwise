@@ -12,6 +12,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
 import { AuthApiService } from '@services/api/auth-api.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { translateValidationMessage } from '@i18n/validation-translator';
 import { Business, ChangePasswordData } from '@models';
@@ -35,6 +36,9 @@ export class ProfileComponent implements OnInit {
   private authApi = inject(AuthApiService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private tenantSwitch = inject(TenantSwitchService);
+  // Read-only: counts and the active-location timezone of the current tenant.
+  // The switch-path reload is owned by TenantSwitchService, not this component.
   private refStore = inject(ReferenceStore);
   readonly lang = inject(LanguageService);
 
@@ -59,6 +63,17 @@ export class ProfileComponent implements OnInit {
     const role = this.auth.userRole();
     if (role === 'admin') return this.lang.t('ui.role.admin');
     if (role === 'provider') return this.lang.t('ui.role.provider');
+    return '';
+  });
+
+  /**
+   * Rol de NEGOCIO en lenguaje humano (distinto del rol técnico de sesión).
+   * Prioridad: admin_general > admin_local > admin_location. Sin rol → ''.
+   */
+  readonly businessRoleLabel = computed(() => {
+    if (this.auth.isAdminGeneral()) return this.lang.t('profile.role.admin_general');
+    if (this.auth.isAdminLocal()) return this.lang.t('profile.role.admin_local');
+    if (this.auth.isAdminLocation()) return this.lang.t('profile.role.admin_location');
     return '';
   });
 
@@ -140,11 +155,9 @@ export class ProfileComponent implements OnInit {
 
   switchTo(biz: Business): void {
     if (biz.id === this.activeBusinessId()) return;
-    this.auth.switchTenant(biz.id).subscribe({
+    this.tenantSwitch.switchTenant(biz.id).subscribe({
       next: () => {
-        this.refStore.loadLocations();
-        this.refStore.loadProviders();
-        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.negocios'), detail: biz.name, key: 'global', life: 3500 });
+        this.messageService.add({ severity: 'success', summary: this.lang.t('biz.switched_to', { name: biz.name }), key: 'global', life: 3500 });
       },
       error: (err) =>
         this.messageService.add({

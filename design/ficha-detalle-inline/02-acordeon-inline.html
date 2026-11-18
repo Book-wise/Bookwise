@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 · Acordeón en el lugar</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --surface-muted:#f3f4f6;
+    --text:#1a2744; --text-2:#6b7280; --heading:#111827; --label:#374151;
+    --success:#22c55e; --tab:#0b3d95;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #dbe7ff 0%, #eef3ff 100%);
+    color: var(--text); min-height: 100vh;
+    display: grid; place-items: center; padding: 24px;
+  }
+  .dialog {
+    width: 880px; max-width: 100%; background: var(--surface-card);
+    border: 1px solid var(--surface-border); border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(1,38,99,.22); overflow: hidden;
+  }
+  .dialog__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--surface-border); }
+  .dialog__title { font-size: 18px; font-weight: 600; color: var(--heading); }
+  .dialog__sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+  .dialog__close { width: 32px; height: 32px; border: none; border-radius: 8px; background: transparent; color: var(--text-2); font-size: 18px; cursor: pointer; }
+  .dialog__close:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; }
+  .tabs { display: flex; gap: 4px; padding: 0 20px; border-bottom: 1px solid var(--surface-border); }
+  .tabs button { border: none; background: none; cursor: pointer; padding: 12px 14px; font-size: 14px; color: var(--text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit; }
+  .tabs button[aria-selected="true"] { color: var(--tab); font-weight: 600; border-bottom-color: var(--bw-300); }
+  .tabs button:focus-visible { outline: 2px solid var(--bw-300); outline-offset: -2px; }
+  .body { padding: 18px 20px 22px; background: var(--surface-ground); min-height: 560px; }
+
+  .section { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); margin: 18px 0 10px; }
+  .section:first-child { margin-top: 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .add {
+    display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+    font-size: 13px; font-weight: 600; color: #fff; background: var(--bw-300);
+    border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  }
+  .add:focus-visible { outline: 2px solid var(--bw-500); outline-offset: 2px; }
+
+  .record {
+    background: var(--surface-card); border: 1px solid var(--surface-border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  }
+  .record[data-open="true"] { border-color: var(--bw-200); box-shadow: 0 6px 18px rgba(1,38,99,.08); }
+  .record__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .record__title { font-size: 14px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--heading); }
+  .record__meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+  .record__meta .dot { color: var(--surface-border); }
+  .record__toggle {
+    border: none; background: none; cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: 600; color: var(--tab);
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  }
+  .record__toggle:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; border-radius: 4px; }
+  .chev { transition: transform .15s ease; }
+  .record[data-open="true"] .chev { transform: rotate(180deg); }
+
+  .fields { margin-top: 14px; border-top: 1px solid var(--surface-border); padding-top: 6px; }
+  .field { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--surface-border); }
+  .field:last-child { border-bottom: none; }
+  .field dt { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-2); padding-top: 1px; }
+  .field dd { font-size: 14px; color: var(--text); line-height: 1.5; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fields { animation: reveal .18s ease-out; }
+    @keyframes reveal { from { opacity: .3; } to { opacity: 1; } }
+  }
+</style>
+</head>
+<body>
+  <div class="dialog" role="dialog" aria-label="Detalles de la reserva">
+    <header class="dialog__header">
+      <div>
+        <div class="dialog__title">Detalles de la reserva</div>
+        <div class="dialog__sub">Valentina Silva · Kinesiología deportiva</div>
+      </div>
+      <button class="dialog__close" aria-label="Cerrar">×</button>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Secciones de la reserva">
+      <button role="tab">Reserva</button>
+      <button role="tab">Pago</button>
+      <button role="tab" aria-selected="true">Ficha</button>
+      <button role="tab">Historial</button>
+      <button role="tab">Notas</button>
+    </nav>
+
+    <div class="body">
+      <div class="row">
+        <span class="section" style="margin:0">Fichas asociadas a la reserva</span>
+        <button class="add" type="button">Agregar tipo de ficha ▾</button>
+      </div>
+
+      <!-- Ficha expandida inline -->
+      <article class="record" data-open="true" style="margin-top:12px">
+        <div class="record__top">
+          <div>
+            <h3 class="record__title">Evaluación kinésica</h3>
+            <div class="record__meta">
+              <span>12/11/2026 · 10:30 am</span>
+              <span class="dot">·</span>
+              <span>Karla Muñoz</span>
+            </div>
+          </div>
+          <button class="record__toggle" type="button" aria-expanded="true">
+            Ver menos <span class="chev" aria-hidden="true">▴</span>
+          </button>
+        </div>
+
+        <dl class="fields">
+          <div class="field"><dt>Diagnóstico</dt><dd>Lumbalgia mecánica</dd></div>
+          <div class="field"><dt>Objetivo</dt><dd>Reducir el dolor lumbar y recuperar movilidad en flexión.</dd></div>
+          <div class="field"><dt>Dolor (EVA 0-10)</dt><dd>6</dd></div>
+          <div class="field"><dt>Observaciones</dt><dd>Contractura en zona lumbar derecha. Se indica calor local + elongación.</dd></div>
+        </dl>
+      </article>
+
+      <span class="section">Historial de consultas anteriores</span>
+
+      <!-- Otra ficha colapsada -->
+      <article class="record">
+        <div class="record__top">
+          <div>
+            <h3 class="record__title">Ficha láser</h3>
+            <div class="record__meta"><span>05/11/2026 · 09:15 am</span><span class="dot">·</span><span>Karla Muñoz</span></div>
+          </div>
+          <button class="record__toggle" type="button" aria-expanded="false">
+            Ver más detalles <span class="chev" aria-hidden="true">▾</span>
+          </button>
+        </div>
+      </article>
+
+      <article class="record">
+        <div class="record__top">
+          <div>
+            <h3 class="record__title">Evaluación kinésica</h3>
+            <div class="record__meta"><span>28/10/2026 · 11:00 am</span><span class="dot">·</span><span>Karla Muñoz</span></div>
+          </div>
+          <button class="record__toggle" type="button" aria-expanded="false">
+            Ver más detalles <span class="chev" aria-hidden="true">▾</span>
+          </button>
+        </div>
+      </article>
+    </div>
+  </div>
+</body>
+</html>

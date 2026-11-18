@@ -1,0 +1,340 @@
+// ── Página "Mi plan" (lectura) ────────────────────────────────────────────────
+
+.my-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 0.25rem 0 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--text-color-secondary, #888);
+    font-size: 0.9rem;
+  }
+
+  &__layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+// ── Encabezado de página ─────────────────────────────────────────────────────
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+.page-title {
+  margin: 0;
+  color: var(--text-heading, #333);
+  font-size: var(--bw-font-h2, 1.5rem);
+  font-weight: var(--bw-weight-bold, 700);
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--text-color-secondary, #888);
+  font-size: var(--bw-font-caption, 0.9rem);
+}
+
+// ── Card "Plan actual" ───────────────────────────────────────────────────────
+
+:host ::ng-deep .plan-card .p-card-body {
+  padding: 1.75rem;
+}
+
+.plan-card {
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__identity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: var(--bw-font-title, 1.25rem);
+    font-weight: var(--bw-weight-semibold, 600);
+    color: var(--text-heading, #333);
+  }
+
+  &__meta {
+    margin: 0;
+    color: var(--text-color-secondary, #888);
+    font-size: 0.875rem;
+  }
+
+  &__price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  &__amount {
+    font-size: 2rem;
+    font-weight: var(--bw-weight-bold, 700);
+    color: var(--text-heading, #333);
+    white-space: nowrap;
+  }
+
+  &__interval {
+    color: var(--text-color-secondary, #888);
+    font-size: 0.9rem;
+  }
+
+  &__actions {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--surface-border, #e2e8f0);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__breakdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--surface-border, #e2e8f0);
+    border-radius: var(--bw-radius-md, 6px);
+    background: var(--surface-0, #fff);
+    color: var(--bw-300, #046af4);
+    font-size: 0.9rem;
+    font-weight: var(--bw-weight-medium, 500);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--bw-300, #046af4) 6%, transparent);
+      border-color: var(--bw-300, #046af4);
+    }
+  }
+}
+
+// ── Caja azul informativa (#19) ──────────────────────────────────────────────
+
+.next-billing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  border-radius: var(--bw-radius-lg, 8px);
+  background: color-mix(in srgb, var(--bw-300, #046af4) 8%, var(--surface-card, #fff));
+  border: 1px solid color-mix(in srgb, var(--bw-300, #046af4) 22%, transparent);
+  color: var(--text-color, #333);
+
+  &__label {
+    color: var(--bw-300, #046af4);
+    font-size: 0.8rem;
+    font-weight: var(--bw-weight-semibold, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__date {
+    font-size: 1.25rem;
+    font-weight: var(--bw-weight-bold, 700);
+    color: var(--text-heading, #333);
+  }
+
+  &__notice {
+    margin: 0;
+    color: var(--text-color-secondary, #888);
+    font-size: 0.875rem;
+  }
+
+  &__total {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--bw-300, #046af4) 22%, transparent);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+
+    span {
+      color: var(--text-color, #333);
+      font-size: 0.9rem;
+    }
+
+    strong {
+      font-size: 1.5rem;
+      font-weight: var(--bw-weight-bold, 700);
+      color: var(--text-heading, #333);
+    }
+  }
+}
+
+// ── Add-ons contratados (solo lectura) ───────────────────────────────────────
+
+.my-addons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__title {
+    margin: 0;
+    color: var(--text-heading, #333);
+    font-size: var(--bw-font-title, 1.25rem);
+    font-weight: var(--bw-weight-semibold, 600);
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--text-color-secondary, #888);
+    font-size: 0.875rem;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--surface-border, #e2e8f0);
+    border-radius: var(--bw-radius-md, 6px);
+    background: var(--surface-card, #fff);
+    color: var(--text-color, #333);
+    font-size: 0.9rem;
+  }
+
+  &__price {
+    font-weight: var(--bw-weight-medium, 500);
+    white-space: nowrap;
+  }
+}
+
+// ── Popover de desglose (#17) ────────────────────────────────────────────────
+
+:host ::ng-deep .breakdown-popover .p-popover-content {
+  padding: 0;
+}
+
+.breakdown {
+  min-width: 18rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__title {
+    margin: 0;
+    color: var(--text-heading, #333);
+    font-size: 0.95rem;
+    font-weight: var(--bw-weight-semibold, 600);
+  }
+
+  &__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-color, #333);
+
+    &--muted {
+      color: var(--text-color-secondary, #888);
+    }
+
+    &--total {
+      margin-top: 0.25rem;
+      padding-top: 0.625rem;
+      border-top: 1px solid var(--surface-border, #e2e8f0);
+      font-weight: var(--bw-weight-bold, 700);
+      color: var(--text-heading, #333);
+    }
+  }
+
+  &__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: none;
+    border-radius: var(--bw-radius-md, 6px);
+    background: color-mix(in srgb, var(--bw-300, #046af4) 8%, transparent);
+    color: var(--bw-300, #046af4);
+    font-size: 0.875rem;
+    font-weight: var(--bw-weight-medium, 500);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--bw-300, #046af4) 14%, transparent);
+    }
+  }
+}
+
+// ── Responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .my-plan {
+    padding: 0 0 1rem;
+    gap: 1.5rem;
+  }
+
+  :host ::ng-deep .plan-card .p-card-body {
+    padding: 1.25rem;
+  }
+
+  .plan-card__amount {
+    font-size: 1.5rem;
+  }
+}

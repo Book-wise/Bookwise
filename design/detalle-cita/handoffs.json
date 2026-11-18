@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "01-identidad-bloques.html",
+  "handoffs": {
+    "01-identidad-bloques.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-09T13:37:07.193Z",
+      "startedAt": "2026-11-09T13:37:17.961Z",
+      "implementedAt": "2026-11-09T13:56:04.125Z",
+      "feature": "odd/tasks/detalle-cita-rediseno.md",
+      "note": "Corregido: el chip de estado queda en la fila del nombre y el botón «Hablar por WhatsApp» baja siempre a su propio renglón, como el artboard. Verificado en un worktree limpio (build OK + 48/48 specs del calendario). Preview servida desde ese worktree limpio, no desde el árbol compartido que tiene el WIP de otra sesión.",
+      "previewUrl": "http://localhost:4300/admin/calendar"
+    }
+  }
+}

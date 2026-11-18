@@ -7,8 +7,6 @@
 // calendars:
 //   • .cal-* skeletons (provider layout)
 //   • .calendar-loading radius/padding override (common core is global)
-//   • .event-details (flex variant)
-//   • pink .fc-timegrid-slot:hover
 //   • .slot-menu (provider variant)
 
 .full-calendar-container {
@@ -65,43 +63,6 @@
   }
 }
 
-.event-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
-  .detail-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    .label {
-      font-weight: 600;
-      color: #6b7280;
-      font-size: 0.875rem;
-    }
-
-    .value {
-      color: #1f2937;
-      font-size: 1rem;
-    }
-  }
-}
-
-// ── Pink timegrid slot hover (provider-only accent) ───────────────────────────
-
-::ng-deep .fc .fc-timegrid-slot:hover {
-  background-color: rgba(236, 72, 153, 0.1);
-}
-
-::ng-deep .fc .fc-timegrid-slot:hover::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; top: 0; bottom: 0;
-  border: 1px dashed rgba(236, 72, 153, 0.3);
-  pointer-events: none;
-}
-
 // ── Slot menu (provider variant) ──────────────────────────────────────────────
 
 .slot-menu {
@@ -115,7 +76,11 @@
   background: var(--p-surface-0);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateX(-50%) translateY(-100%) translateY(-8px);
+  transform: translateX(-50%) translateY(8px);
+
+  &.slot-menu--above {
+    transform: translateX(-50%) translateY(-100%) translateY(-8px);
+  }
 
   .slot-menu-item {
     justify-content: flex-start;

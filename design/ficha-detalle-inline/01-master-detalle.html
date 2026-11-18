@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 · Maestro-detalle en la pestaña</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0;
+    --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --surface-muted:#f3f4f6;
+    --text:#1a2744; --text-2:#6b7280; --heading:#111827; --label:#374151;
+    --success:#22c55e; --red-500:#ef4444; --tab:#0b3d95;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #dbe7ff 0%, #eef3ff 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: grid; place-items: center;
+    padding: 24px;
+  }
+  .dialog {
+    width: 880px; max-width: 100%;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(1,38,99,.22);
+    overflow: hidden;
+  }
+  .dialog__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--surface-border);
+    background: var(--surface-card);
+  }
+  .dialog__title { font-size: 18px; font-weight: 600; color: var(--heading); }
+  .dialog__sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+  .dialog__close {
+    width: 32px; height: 32px; border: none; border-radius: 8px;
+    background: transparent; color: var(--text-2); font-size: 18px; cursor: pointer;
+  }
+  .dialog__close:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; }
+  .tabs {
+    display: flex; gap: 4px; padding: 0 20px;
+    border-bottom: 1px solid var(--surface-border);
+    background: var(--surface-card);
+  }
+  .tabs button {
+    border: none; background: none; cursor: pointer;
+    padding: 12px 14px; font-size: 14px; color: var(--text-2);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: inherit;
+  }
+  .tabs button[aria-selected="true"] {
+    color: var(--tab); font-weight: 600; border-bottom-color: var(--bw-300);
+  }
+  .tabs button:focus-visible { outline: 2px solid var(--bw-300); outline-offset: -2px; }
+  .body { padding: 18px 20px 22px; background: var(--surface-ground); min-height: 560px; }
+
+  .crumb {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 600; color: var(--tab);
+    background: none; border: none; cursor: pointer; font-family: inherit;
+  }
+  .crumb:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; border-radius: 4px; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .topbar__actions { display: flex; gap: 8px; }
+  .btn {
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    height: 40px; padding: 0 16px; border-radius: 6px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: transparent;
+  }
+  .btn:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; }
+  .btn--secondary { border: 1px solid var(--surface-border); color: var(--text); }
+  .btn--secondary:hover { background: var(--surface-muted); border-color: var(--text-2); }
+  .btn--primary { border: 1px solid var(--bw-300); background: var(--bw-300); color: #fff; }
+  .btn--primary:hover { background: var(--bw-500); border-color: var(--bw-500); }
+
+  .detail {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .detail__head { padding: 16px 18px; border-bottom: 1px solid var(--surface-border); }
+  .detail__title { font-size: 16px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--heading); }
+  .detail__meta { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+  .detail__meta .dot { color: var(--surface-border); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    background: var(--bw-100); color: var(--tab);
+  }
+  .detail__fields { padding: 8px 18px 18px; }
+  .field { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--surface-border); }
+  .field:last-child { border-bottom: none; }
+  .field dt { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-2); padding-top: 1px; }
+  .field dd { font-size: 14px; color: var(--text); line-height: 1.5; }
+
+  input[type="text"], input[type="number"], textarea {
+    font-family: inherit; font-size: 14px; color: var(--text);
+    border: 1px solid var(--surface-border); border-radius: 6px;
+    padding: 8px 10px; width: 100%; background: var(--surface-card);
+  }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 1px; border-color: var(--bw-300); }
+  .detail__footer { display: flex; gap: 8px; justify-content: flex-end; padding: 4px 18px 18px; }
+  .is-hidden { display: none !important; }
+
+  .section { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); margin: 18px 0 10px; }
+  .section:first-child { margin-top: 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .add { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 13px; font-weight: 600; color: #fff; background: var(--bw-300); border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+  .add:focus-visible { outline: 2px solid var(--bw-500); outline-offset: 2px; }
+  .record { background: var(--surface-card); border: 1px solid var(--surface-border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .record__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .record__title { font-size: 14px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--heading); }
+  .record__meta { display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+  .dot { color: var(--surface-border); }
+  .record__link { border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--tab); white-space: nowrap; }
+  .record__link:focus-visible { outline: 2px solid var(--bw-300); outline-offset: 2px; border-radius: 4px; }
+
+  .modal { position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; padding: 24px; }
+  .modal__backdrop { position: absolute; inset: 0; background: rgba(1,38,99,.55); }
+  .pdf-sheet {
+    position: relative; z-index: 1;
+    width: 640px; max-width: 100%; max-height: 90vh; overflow: auto;
+    background: #fff; color: #111; border-radius: 4px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    padding: 40px 46px 44px; font-size: 13px; line-height: 1.55;
+  }
+  .modal__close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: none; border-radius: 8px; background: #e5e7eb; color: #374151; font-size: 16px; cursor: pointer; }
+  .pdf-sheet__brand { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #6b7280; }
+  .pdf-sheet__logo { width: 30px; height: 30px; border-radius: 6px; background: #012663; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  .pdf-sheet__title { font-size: 19px; font-weight: 700; text-transform: uppercase; color: #012663; margin: 16px 0 2px; letter-spacing: .02em; line-height: 1.2; }
+  .pdf-sheet__sub { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+  .pdf-sheet hr { border: none; border-top: 1px solid #e5e7eb; margin: 14px 0; }
+  .pdf-sheet__section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin: 2px 0 6px; }
+  .pdf-sheet__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+  .pdf-sheet__field dt { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+  .pdf-sheet__field dd { font-size: 13px; color: #111; margin: 0; }
+  .pdf-sheet__sign { display: flex; gap: 44px; margin-top: 30px; }
+  .pdf-sheet__sign > div { flex: 1; }
+  .pdf-sheet__sign .line { border-top: 1px solid #111; margin-top: 44px; padding-top: 5px; font-size: 11px; color: #6b7280; text-align: center; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .detail { animation: fade .18s ease-out; }
+    @keyframes fade { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+  <div class="dialog" role="dialog" aria-label="Detalles de la reserva">
+    <header class="dialog__header">
+      <div>
+        <div class="dialog__title">Detalles de la reserva</div>
+        <div class="dialog__sub">Valentina Silva · Kinesiología deportiva</div>
+      </div>
+      <button class="dialog__close" aria-label="Cerrar">×</button>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Secciones de la reserva">
+      <button role="tab">Reserva</button>
+      <button role="tab">Pago</button>
+      <button role="tab" aria-selected="true">Ficha</button>
+      <button role="tab">Historial</button>
+      <button role="tab">Notas</button>
+    </nav>
+
+    <div class="body">
+      <!-- Estado: lista (master) -->
+      <div id="listView">
+        <div class="row">
+          <span class="section">Fichas asociadas a la reserva</span>
+          <button class="add" type="button">Agregar tipo de ficha ▾</button>
+        </div>
+
+        <article class="record" style="margin-top:12px">
+          <div class="record__top">
+            <div>
+              <h3 class="record__title">Evaluación kinésica</h3>
+              <div class="record__meta"><span>12/11/2026 · 10:30 am</span><span class="dot">·</span><span>Karla Muñoz</span></div>
+            </div>
+            <button class="record__link" type="button" id="openDetail">Ver más detalles ›</button>
+          </div>
+        </article>
+
+        <span class="section">Historial de consultas anteriores</span>
+
+        <article class="record">
+          <div class="record__top">
+            <div>
+              <h3 class="record__title">Ficha láser</h3>
+              <div class="record__meta"><span>05/11/2026 · 09:15 am</span><span class="dot">·</span><span>Karla Muñoz</span></div>
+            </div>
+            <button class="record__link" type="button">Ver más detalles ›</button>
+          </div>
+        </article>
+      </div>
+
+      <!-- Estado: detalle (tras «Ver más detalles») -->
+      <div id="detailView" class="is-hidden">
+      <div class="topbar">
+        <button class="crumb" type="button" id="backBtn">‹ Volver a las fichas</button>
+        <div class="topbar__actions" id="actions">
+          <button class="btn btn--primary" type="button" id="editBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Editar ficha
+          </button>
+          <button class="btn btn--secondary" type="button" id="printBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>
+            Imprimir ficha
+          </button>
+        </div>
+      </div>
+
+      <article class="detail" id="readView">
+        <header class="detail__head">
+          <h2 class="detail__title">Evaluación kinésica</h2>
+          <div class="detail__meta">
+            <span>12/11/2026 · 10:30 am</span>
+            <span class="dot">·</span>
+            <span>Karla Muñoz</span>
+            <span class="chip">Sesión 3 de 6</span>
+          </div>
+        </header>
+
+        <dl class="detail__fields">
+          <div class="field">
+            <dt>Diagnóstico</dt>
+            <dd>Lumbalgia mecánica</dd>
+          </div>
+          <div class="field">
+            <dt>Objetivo</dt>
+            <dd>Reducir el dolor lumbar y recuperar movilidad en flexión.</dd>
+          </div>
+          <div class="field">
+            <dt>Dolor (EVA 0-10)</dt>
+            <dd>6</dd>
+          </div>
+          <div class="field">
+            <dt>Observaciones</dt>
+            <dd>Contractura en zona lumbar derecha. Se indica calor local + elongación de isquiotibiales.</dd>
+          </div>
+        </dl>
+      </article>
+
+      <!-- Estado: edición (tras «Editar ficha»); los botones de acción desaparecen -->
+      <article class="detail is-hidden" id="editView">
+        <header class="detail__head">
+          <h2 class="detail__title">Evaluación kinésica</h2>
+          <div class="detail__meta">
+            <span>12/11/2026 · 10:30 am</span>
+            <span class="dot">·</span>
+            <span>Karla Muñoz</span>
+            <span class="chip">Sesión 3 de 6</span>
+          </div>
+        </header>
+
+        <form class="detail__fields" onsubmit="return false">
+          <div class="field">
+            <dt><label for="f-diag">Diagnóstico</label></dt>
+            <dd><input id="f-diag" type="text" value="Lumbalgia mecánica"></dd>
+          </div>
+          <div class="field">
+            <dt><label for="f-obj">Objetivo</label></dt>
+            <dd><textarea id="f-obj" rows="2">Reducir el dolor lumbar y recuperar movilidad en flexión.</textarea></dd>
+          </div>
+          <div class="field">
+            <dt><label for="f-dolor">Dolor (EVA 0-10)</label></dt>
+            <dd><input id="f-dolor" type="number" min="0" max="10" value="6"></dd>
+          </div>
+          <div class="field">
+            <dt><label for="f-obs">Observaciones</label></dt>
+            <dd><textarea id="f-obs" rows="3">Contractura en zona lumbar derecha. Se indica calor local + elongación de isquiotibiales.</textarea></dd>
+          </div>
+        </form>
+
+        <footer class="detail__footer">
+          <button class="btn btn--primary" type="button" id="saveBtn">Guardar cambios</button>
+          <button class="btn btn--secondary" type="button" id="cancelBtn">Cancelar</button>
+        </footer>
+      </article>
+      </div><!-- /detailView -->
+    </div>
+  </div>
+
+  <!-- Vista previa del PDF (en la app real se abre en una pestaña nueva) -->
+  <div class="modal is-hidden" id="pdfModal" role="dialog" aria-modal="true" aria-label="Vista previa del PDF de la ficha">
+    <div class="modal__backdrop" id="pdfBackdrop"></div>
+    <div class="pdf-sheet">
+      <button class="modal__close" id="pdfClose" type="button" aria-label="Cerrar vista previa">×</button>
+
+      <div class="pdf-sheet__brand">
+        <span class="pdf-sheet__logo" aria-hidden="true">B</span>
+        <span>Bookwise · Estética Láser</span>
+      </div>
+      <h2 class="pdf-sheet__title">Ficha de eliminación de tatuajes con láser</h2>
+      <div class="pdf-sheet__sub">Registro de cada sesión</div>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Paciente</div>
+      <dl class="pdf-sheet__grid">
+        <div class="pdf-sheet__field"><dt>Nombre</dt><dd>Valentina Silva</dd></div>
+        <div class="pdf-sheet__field"><dt>RUT</dt><dd>12.345.678-9</dd></div>
+        <div class="pdf-sheet__field"><dt>Teléfono</dt><dd>+56 9 1234 5678</dd></div>
+        <div class="pdf-sheet__field"><dt>Correo</dt><dd>valentina@correo.cl</dd></div>
+      </dl>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Sesión</div>
+      <dl class="pdf-sheet__grid">
+        <div class="pdf-sheet__field"><dt>Fecha</dt><dd>12/11/2026</dd></div>
+        <div class="pdf-sheet__field"><dt>Sesión Nº</dt><dd>3 de 6</dd></div>
+        <div class="pdf-sheet__field"><dt>Zona tratada</dt><dd>Antebrazo izquierdo</dd></div>
+        <div class="pdf-sheet__field"><dt>Fototipo de piel</dt><dd>III</dd></div>
+      </dl>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Parámetros del láser</div>
+      <dl class="pdf-sheet__grid">
+        <div class="pdf-sheet__field"><dt>Longitud de onda</dt><dd>1064 nm</dd></div>
+        <div class="pdf-sheet__field"><dt>Fluencia</dt><dd>5,5 J/cm²</dd></div>
+        <div class="pdf-sheet__field"><dt>Spot</dt><dd>4 mm</dd></div>
+        <div class="pdf-sheet__field"><dt>Pulsos</dt><dd>120</dd></div>
+      </dl>
+
+      <hr>
+
+      <div class="pdf-sheet__section">Observaciones</div>
+      <p style="margin:0; color:#111;">Buena respuesta al tratamiento. Sin ampollas ni sangrado. Se indica hidratación y evitar sol directo 48 h.</p>
+
+      <div class="pdf-sheet__sign">
+        <div><div class="line">Firma del profesional</div></div>
+        <div><div class="line">Firma del paciente</div></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const listView = document.getElementById('listView');
+  const detailView = document.getElementById('detailView');
+  const actions = document.getElementById('actions');
+  const readView = document.getElementById('readView');
+  const editView = document.getElementById('editView');
+
+  function backToRead() {
+    actions.classList.remove('is-hidden');
+    readView.classList.remove('is-hidden');
+    editView.classList.add('is-hidden');
+  }
+  function openDetail() {
+    listView.classList.add('is-hidden');
+    detailView.classList.remove('is-hidden');
+    backToRead();
+  }
+  function backToList() {
+    detailView.classList.add('is-hidden');
+    listView.classList.remove('is-hidden');
+  }
+  function enterEdit() {
+    actions.classList.add('is-hidden');
+    readView.classList.add('is-hidden');
+    editView.classList.remove('is-hidden');
+  }
+
+  document.getElementById('openDetail').addEventListener('click', openDetail);
+  document.getElementById('backBtn').addEventListener('click', backToList);
+  document.getElementById('editBtn').addEventListener('click', enterEdit);
+  document.getElementById('cancelBtn').addEventListener('click', backToRead);
+  document.getElementById('saveBtn').addEventListener('click', backToRead);
+
+  const pdfModal = document.getElementById('pdfModal');
+  document.getElementById('printBtn').addEventListener('click', () => pdfModal.classList.remove('is-hidden'));
+  document.getElementById('pdfClose').addEventListener('click', () => pdfModal.classList.add('is-hidden'));
+  document.getElementById('pdfBackdrop').addEventListener('click', () => pdfModal.classList.add('is-hidden'));
+</script>
+</body>
+</html>

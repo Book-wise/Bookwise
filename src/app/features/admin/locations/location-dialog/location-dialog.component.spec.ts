@@ -147,4 +147,179 @@ describe('LocationDialogComponent', () => {
       expect(component.saving()).toBe(false);
     });
   });
+
+  // ── Cuota agotada: el CTA de upgrade no queda pegado ────────────────
+
+  describe('capacity limit CTA', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    const quotaError = () =>
+      new HttpErrorResponse({
+        status: 403,
+        error: { error: 'tenant_location_limit_reached', detail: 'sin cupo' },
+      });
+
+    /** Completa el alta mínima válida y dispara el guardado. */
+    function submitCreate(): void {
+      component.form.controls.name.setValue(required.name);
+      component.form.controls.address.setValue(required.address);
+      component.form.controls.city.setValue(required.city);
+      component.form.controls.regionId.setValue(required.regionId);
+      fixture.detectChanges();
+      component.onSave();
+    }
+
+    it('muestra el CTA y no emite saved cuando el backend rechaza el alta por cuota', () => {
+      open('create', null);
+      locationsApi.createLocation.mockReturnValue(throwError(() => quotaError()));
+      const savedSpy = vi.spyOn(component.saved, 'emit');
+
+      submitCreate();
+
+      expect(component.capacityError()).toBe(true);
+      expect(savedSpy).not.toHaveBeenCalled();
+      expect(httpErrorHandle).not.toHaveBeenCalled();
+    });
+
+    it('limpia el CTA al reabrir el diálogo', () => {
+      open('create', null);
+      locationsApi.createLocation.mockReturnValue(throwError(() => quotaError()));
+      submitCreate();
+      expect(component.capacityError()).toBe(true);
+
+      fixture.componentRef.setInput('visible', false);
+      fixture.detectChanges();
+      open('create', null);
+
+      expect(component.capacityError()).toBe(false);
+    });
+
+    it('limpia el CTA cuando el reintento sale bien', () => {
+      open('create', null);
+      locationsApi.createLocation.mockReturnValue(throwError(() => quotaError()));
+      submitCreate();
+      expect(component.capacityError()).toBe(true);
+
+      locationsApi.createLocation.mockReturnValue(of({ message: 'ok', data: baseLocation() }));
+      submitCreate();
+
+      expect(component.capacityError()).toBe(false);
+    });
+  });
+
+  // ── Días laborables + feriados (business-days) ────────────────────
+
+  describe('working days', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    it('create mode defaults to Mon–Sat working days', () => {
+      open('create', null);
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('sends working_days in the create payload', () => {
+      open('create', null);
+      component.form.controls.name.setValue(required.name);
+      component.form.controls.address.setValue(required.address);
+      component.form.controls.city.setValue(required.city);
+      component.form.controls.regionId.setValue(required.regionId);
+      component.onSave();
+
+      expect(locationsApi.createLocation).toHaveBeenCalledWith(
+        expect.objectContaining({ working_days: [1, 2, 3, 4, 5, 6] }),
+      );
+    });
+
+    it('edit mode prefills working_days from the location', () => {
+      open('edit', baseLocation({ working_days: [1, 2, 3, 4, 5] }));
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it('edit mode defaults working_days to Mon–Sat when the location has none', () => {
+      open('edit', baseLocation());
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('prefills opening/closing time from effective_* when opening/closing are null', () => {
+      open(
+        'edit',
+        baseLocation({
+          opening_time: null,
+          closing_time: null,
+          effective_opening_time: '08:00:00',
+          effective_closing_time: '22:00:00',
+        }),
+      );
+      expect(component.form.controls.openingTime.value?.getHours()).toBe(8);
+      expect(component.form.controls.closingTime.value?.getHours()).toBe(22);
+    });
+
+    it('toggling a day off removes it and toggling back re-adds it sorted', () => {
+      open('create', null);
+      const evt = (checked: boolean) => ({ target: { checked } }) as unknown as Event;
+      component.toggleWorkingDay(3, evt(false));
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 4, 5, 6]);
+      component.toggleWorkingDay(7, evt(true));
+      expect(component.form.controls.workingDays.value).toEqual([1, 2, 4, 5, 6, 7]);
+    });
+
+    it('marks the form invalid when all working days are unchecked', () => {
+      open('create', null);
+      component.form.controls.workingDays.setValue([]);
+      expect(component.form.controls.workingDays.invalid).toBe(true);
+    });
+  });
+
+  // ── Horas: no materializar el default si no se editaron (R3-002) ──
+
+  describe('hours preservation', () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    it('does not send the hours when they were not edited (null stays null)', () => {
+      open(
+        'edit',
+        baseLocation({
+          opening_time: null,
+          closing_time: null,
+          effective_opening_time: '08:00:00',
+          effective_closing_time: '22:00:00',
+        }),
+      );
+
+      component.onSave();
+
+      const payload = locationsApi.updateLocation.mock.calls[0][1];
+      expect(payload.opening_time).toBeUndefined();
+      expect(payload.closing_time).toBeUndefined();
+    });
+
+    it('sends only the hour the admin edited', () => {
+      open('edit', baseLocation({ opening_time: '09:00:00', closing_time: '18:00:00' }));
+      const edited = new Date(0);
+      edited.setHours(10, 30, 0, 0);
+      component.form.controls.openingTime.setValue(edited);
+
+      component.onSave();
+
+      const payload = locationsApi.updateLocation.mock.calls[0][1];
+      expect(payload.opening_time).toBe('10:30:00');
+      expect(payload.closing_time).toBeUndefined();
+    });
+
+    it('sends explicit null when the admin clears the hour', () => {
+      open('edit', baseLocation({ opening_time: '09:00:00', closing_time: '18:00:00' }));
+      component.form.controls.openingTime.setValue(null);
+
+      component.onSave();
+
+      const payload = locationsApi.updateLocation.mock.calls[0][1];
+      expect(payload.opening_time).toBeNull();
+    });
+  });
 });

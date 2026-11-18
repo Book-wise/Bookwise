@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "2lgr51af",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section:nth-of-type(1) > div:nth-of-type(3) > div > div:nth-of-type(3) > button",
+      "excerpt": "",
+      "comment": "si necesito que diga hablar por whatsapp, es mas evidente",
+      "createdAt": "2026-11-09T12:10:00.499Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T12:15:05.793Z",
+      "resolvedAt": "2026-11-09T12:18:01.106Z"
+    },
+    {
+      "id": "5q5x212j",
+      "file": "03-recibo-lineal.html",
+      "selector": "body > div > section:nth-of-type(1) > div:nth-of-type(3) > div > header > div:nth-of-type(2) > p",
+      "excerpt": "17.842.503-6 · +56 9 8123 4567",
+      "comment": "el telefono es importante por eso queremos conservar el boton de hablar por whatsapp donde aparezca el telefono, con el icono de whatsapp incluido",
+      "createdAt": "2026-11-09T12:11:50.234Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T12:15:05.793Z",
+      "resolvedAt": "2026-11-09T12:18:01.106Z"
+    },
+    {
+      "id": "1a5d2xmn",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section:nth-of-type(1) > div:nth-of-type(3) > div > div:nth-of-type(3) > button > svg",
+      "excerpt": "",
+      "comment": "que sea el icono real de whatsapp, tenemos icons en el proyecto",
+      "createdAt": "2026-11-09T12:12:34.129Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T12:15:05.793Z",
+      "resolvedAt": "2026-11-09T12:18:01.106Z"
+    },
+    {
+      "id": "yzorjk6d",
+      "file": "03-recibo-lineal.html",
+      "selector": "body > div > section > div:nth-of-type(3) > figure > div",
+      "excerpt": "Detalles de la Cita Confirmado Camila Rojas Fuentes 17.842.503-6 Servicio Kinesiología deportiva Sesión 3 de 6 Ubicación Providencia · Box 2 Cuándo vie 14 nov · 09:30 Cerrar Editar",
+      "comment": "podrias integrar esa barra superior que veo que usaste el color del estado, en los otros dos diseños?",
+      "createdAt": "2026-11-09T13:25:34.970Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:25:36.639Z",
+      "resolvedAt": "2026-11-09T13:25:56.524Z"
+    },
+    {
+      "id": "3sqnbi4k",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div:nth-of-type(3)",
+      "excerpt": "CR Camila Rojas Fuentes 17.842.503-6",
+      "comment": "añade el correo del cliente",
+      "createdAt": "2026-11-09T13:30:26.029Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:30:29.708Z",
+      "resolvedAt": "2026-11-09T13:30:43.758Z"
+    },
+    {
+      "id": "t63dsi3l",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div:nth-of-type(5) > div:nth-of-type(4) > span",
+      "excerpt": "Saldo $18.000",
+      "comment": "por pagar",
+      "createdAt": "2026-11-09T13:30:54.145Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:30:56.243Z",
+      "resolvedAt": "2026-11-09T13:31:07.137Z"
+    },
+    {
+      "id": "a6k205vu",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div:nth-of-type(5) > div:nth-of-type(4) > span",
+      "excerpt": "Por pagar $18.000",
+      "comment": "pendiente pago",
+      "createdAt": "2026-11-09T13:31:22.525Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:31:23.657Z",
+      "resolvedAt": "2026-11-09T13:31:31.030Z"
+    },
+    {
+      "id": "9xxoiaca",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div:nth-of-type(5) > div:nth-of-type(4) > p:nth-of-type(2)",
+      "excerpt": "$38.000",
+      "comment": "precio sesion",
+      "createdAt": "2026-11-09T13:31:51.975Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:35:53.506Z",
+      "resolvedAt": "2026-11-09T13:36:27.318Z"
+    },
+    {
+      "id": "em8iem5h",
+      "file": "02-hora-protagonista.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > footer > div > button:nth-of-type(1)",
+      "excerpt": "Abonar",
+      "comment": "recuerda que este boton tambien tiene su version que dice ver pago, cuando ya tiene algun pago registrado, osea es un boton adicional",
+      "createdAt": "2026-11-09T13:35:49.204Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:35:53.506Z",
+      "resolvedAt": "2026-11-09T13:36:27.318Z"
+    },
+    {
+      "id": "xbkyokx9",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div > section:nth-of-type(1) > div > div:nth-of-type(2) > span",
+      "excerpt": "Sesión 3 de 6",
+      "comment": "necesitamos que el agente de front mensajee al backend para que haga seeds donde existan agendas que hayan tomado packs o servicios que vienen con la variacion para poder consumir esta informacion en el front, es decir saber cual es la sesion actual",
+      "createdAt": "2026-11-09T13:50:43.394Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:50:45.450Z",
+      "resolvedAt": "2026-11-09T13:52:17.082Z"
+    },
+    {
+      "id": "tp3n150s",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > header > div > div",
+      "excerpt": "17.842.503-6 +56 9 8123 4567 Hablar por WhatsApp",
+      "comment": "en este diseño el boton quedo el boton de whatsapp abajo, asegurate de que en la implementacion tambien quede abajo, porque en la implementacion lo que bajo fue el estado.",
+      "createdAt": "2026-11-09T13:52:49.808Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:52:52.121Z",
+      "resolvedAt": "2026-11-09T13:55:45.574Z"
+    },
+    {
+      "id": "dy5vjapm",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div > section:nth-of-type(1) > p:nth-of-type(1)",
+      "excerpt": "LA SESIÓN",
+      "comment": "la sesion, me parece poco profesional, prueba otra palabra u otra forma de escribirlo",
+      "createdAt": "2026-11-09T13:55:55.260Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:56:01.733Z",
+      "resolvedAt": "2026-11-09T13:57:16.246Z"
+    },
+    {
+      "id": "3ud0952i",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > div > section:nth-of-type(1) > p:nth-of-type(1)",
+      "excerpt": "ATENCIÓN",
+      "comment": "esta sesion",
+      "createdAt": "2026-11-09T13:58:52.810Z",
+      "status": "resolved",
+      "sentAt": "2026-11-09T13:58:58.214Z",
+      "resolvedAt": "2026-11-09T13:59:50.711Z"
+    },
+    {
+      "id": "huq4rjby",
+      "file": "01-identidad-bloques.html",
+      "selector": "body > div > section > div:nth-of-type(3) > div > header",
+      "excerpt": "CR Camila Rojas Fuentes 17.842.503-6 +56 9 8123 4567 Hablar por WhatsApp Confirmado",
+      "comment": "te muestro como ha quedado en realidad , esta todo un poco encima los elementos, podemos mejorarlo?",
+      "createdAt": "2026-11-09T14:19:53.667Z",
+      "status": "open",
+      "sentAt": "2026-11-09T14:19:55.278Z",
+      "resolvedAt": null,
+      "screenshot": ".screenshots/huq4rjby.png"
+    }
+  ]
+}

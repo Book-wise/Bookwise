@@ -171,12 +171,10 @@
           </p-tabpanel>
 
           <p-tabpanel value="ficha">
-            <div class="tab-content">
-              <div class="empty-state">
-                <i class="pi pi-file-edit empty-state__icon"></i>
-                <p class="empty-state__text">Ficha médica próximamente.</p>
-              </div>
-            </div>
+            <bw-ficha-tab
+              [serviceLabel]="fichaServiceLabel()"
+              (configureTypes)="goToRecordTypesSettings()"
+            />
           </p-tabpanel>
 
           <p-tabpanel value="historial">

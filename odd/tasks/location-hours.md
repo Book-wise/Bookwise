@@ -1,0 +1,87 @@
+# Horario de apertura/cierre por sucursal
+
+Feature nueva del backend: horario configurable por sucursal, consumido por la agenda.
+**No es una pantalla nueva**: son dos campos de hora en el **diálogo de edición de la sucursal**
+(`admin/locations`).
+
+## Contrato (backend, 2026-10-28)
+
+Rama `feat/location-hours` — **no mergeada aún**. Review + merge los coordina seba; el backend avisa
+con el hash cuando esté en `develop`.
+
+### Endpoint y payload
+
+- `PATCH /api/v1/locations/{id}` (y también `POST /locations`), **sin rutas nuevas**.
+- Body: `{ "opening_time": "08:00", "closing_time": "20:00" }`.
+- Acepta **`HH:MM`** (`<input type="time">`) **y** `HH:MM:SS`; ambos normalizan a `HH:MM:SS`.
+- `null` explícito **limpia** el horario (vuelve a "sin configurar").
+
+### Validaciones (422)
+
+- Formato inválido → `errors.opening_time` / `errors.closing_time`.
+- **Cierre debe ser posterior a apertura** → `errors.closing_time` con
+  `"El horario de cierre debe ser posterior al de apertura."`
+  - En un PATCH que manda **sólo uno**, se compara contra el valor **persistido** del otro.
+- **No** se soporta horario que cruce medianoche (22:00→02:00): el cierre tiene que ser mayor.
+
+### Resource (4 campos)
+
+```json
+{
+  "opening_time": null,
+  "closing_time": null,
+  "effective_opening_time": "08:00:00",
+  "effective_closing_time": "22:00:00"
+}
+```
+
+- `opening_time` / `closing_time`: lo **configurado** (puede ser `null` = sin configurar).
+- `effective_opening_time` / `effective_closing_time`: lo que hay que **usar**, nunca `null`.
+- **Default sin configurar: 08:00 → 22:00**. Lo resuelve el backend — **NO hardcodear en el front**.
+
+### Agenda (ACTUALIZADO 2026-10-28 por decisión de seba)
+
+- La grilla del calendario es **FIJA 08:00–22:00 siempre**, se elija o no sucursal. **NO** se
+  redimensiona con `effective_opening_time`/`effective_closing_time`.
+- **Motivo**: la vista inicial carga sin sucursal; si la grilla cambiara al elegir una, “saltaría”
+  entre dos comportamientos → peor UX que una grilla estable.
+- El backend **sí** acota los slots al horario real de la sucursal: dentro de la grilla fija vas a ver
+  slots sólo en el rango real (ej. 10:00–12:00) y el resto vacío. `GET /available_slots` **no cambió**.
+- `effective_opening_time`/`effective_closing_time` se usan **sólo para mostrar** la config (ej. en el
+  diálogo), **no** para la grilla.
+- Limitación aceptada: si una sucursal abre antes de 08:00 o cierra después de 22:00, esos slots no
+  se ven en la grilla.
+
+### Migración de datos
+
+Las sucursales con el default viejo exacto (**09:00/19:00**) pasan a "sin configurar". Las que estaban
+configuradas distinto se conservan.
+
+## Tasks
+
+- ✅ T1 `Location` model: `opening_time`/`closing_time` nullable + `effective_opening_time`/`effective_closing_time`.
+- ✅ T2 `location-dialog`: campos de hora ya existían; se agregó el **prefill con `effective_*`** cuando
+  `opening_time`/`closing_time` son `null`. La validación "cierre > apertura" en el front NO se agregó
+  (la cubre el 422 del backend `errors.closing_time`).
+- ✅ T3 Agenda: grilla **fija 00:00–24:00** (decisión de seba, no 08:00–22:00) y **no** se redimensiona
+  con `effective_*`.
+- ⬜ T4 i18n es/en de las etiquetas del diálogo: siguen hardcodeadas en ES (`Apertura`/`Cierre`), como el
+  resto del diálogo.
+- ✅ T5 Specs (preservación de horas en `location-dialog.component.spec.ts`) + `ng build`.
+
+## Log
+
+- L1 (backend, contrato, 2026-10-28): feature de horario por sucursal en `feat/location-hours`
+  (no mergeada). Contrato completo arriba. Se captura acá para implementar en cuanto se mergee.
+- L2 (backend, CAMBIO de contrato, 2026-10-28): **la grilla del calendario es FIJA 08:00–22:00**, no
+  se redimensiona con `effective_*`. La config de horas sigue existiendo (dos campos en el diálogo de
+  sucursal); `effective_*` se usa sólo para **mostrar** la config, no para la grilla. El backend sigue
+  acotando los slots al horario real vía `GET /available_slots`. Rama `feat/location-hours`
+  (`380bb53` + `1a12dc8` docs), aún sin mergear.
+- L3 (cierre 2026-10-28): **decisión de seba: la grilla es 00:00–24:00** (día completo, scroll a
+  08:00), NO 08:00–22:00. El horario configurado sólo acota los slots. Backend mergeó
+  `feat/location-hours` a `develop` (`131c26c`). Falta: deploy (`tenants:migrate`) + usar `effective_*`
+  para mostrar la config en el diálogo de sucursal.
+- L4 (2026-10-29): `effective_*` en el modelo + prefill en el diálogo hechos (junto con R3-002: las horas
+  "sin configurar" no se materializan si no se editan). Contrato en backend `develop` `ed801fb`; deploy
+  a dev bloqueado por credenciales SSH del droplet.

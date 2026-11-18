@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "chosen": "01-densidad-dos-lineas.html",
+  "handoffs": {
+    "01-densidad-dos-lineas.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-07T22:42:13.968Z",
+      "startedAt": "2026-11-07T22:42:42.348Z",
+      "implementedAt": null
+    }
+  }
+}

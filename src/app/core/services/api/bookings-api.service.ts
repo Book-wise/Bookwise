@@ -8,7 +8,7 @@ import {
   UpdateBooking,
   ApiResponse,
   PaginatedResponse,
-  AvailableSlot,
+  AvailableSlotsResponse,
 } from '@models';
 import { buildHttpParams } from './build-http-params';
 
@@ -51,12 +51,12 @@ export class BookingsApiService {
   }
 
   getAvailableSlots(params: {
+    start_date?: string;
     location_id?: number;
     provider_id?: number;
     service_id?: number;
-    date?: string;
-  }): Observable<AvailableSlot[]> {
-    return this.http.get<AvailableSlot[]>(`${this.baseUrl}/available_slots`, {
+  }): Observable<AvailableSlotsResponse> {
+    return this.http.get<AvailableSlotsResponse>(`${this.baseUrl}/available_slots`, {
       params: buildHttpParams(params),
     });
   }

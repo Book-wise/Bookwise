@@ -3,6 +3,7 @@ import {
   BOOKING_STATUSES,
   STATUS_COLOR_MAP,
   bookingStatusChipClass,
+  bookingStatusChipTextClass,
   salePaymentChipClass,
 } from './booking-statuses';
 
@@ -31,6 +32,32 @@ describe('bookingStatusChipClass', () => {
   it('returns the neutral variant for unknown or missing status', () => {
     expect(bookingStatusChipClass('Estado desconocido')).toBe('var(--bw-status-cancelado)');
     expect(bookingStatusChipClass()).toBe('var(--bw-status-cancelado)');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// bookingStatusChipTextClass — the AA-compliant text colour that goes with
+// bookingStatusChipClass. The accent (e.g. #FCCAC2) is unreadable as text on
+// its own 18% tint, so chips that render a label must also set this variable.
+// ---------------------------------------------------------------------------
+
+describe('bookingStatusChipTextClass', () => {
+  it('maps each status id to the text variable of its severity', () => {
+    expect(bookingStatusChipTextClass(undefined, 1)).toBe('var(--bw-chip-text-online)');
+    expect(bookingStatusChipTextClass(undefined, 2)).toBe('var(--bw-chip-text-warning)');
+    expect(bookingStatusChipTextClass(undefined, 3)).toBe('var(--bw-chip-text-success)');
+    expect(bookingStatusChipTextClass(undefined, 4)).toBe('var(--bw-chip-text-secondary)');
+    expect(bookingStatusChipTextClass(undefined, 5)).toBe('var(--bw-chip-text-danger)');
+    expect(bookingStatusChipTextClass(undefined, 6)).toBe('var(--bw-chip-text-success)');
+    expect(bookingStatusChipTextClass(undefined, 7)).toBe('var(--bw-chip-text-secondary)');
+  });
+
+  it('falls back to name matching and then to the neutral text', () => {
+    expect(bookingStatusChipTextClass('confirmado')).toBe('var(--bw-chip-text-warning)');
+    expect(bookingStatusChipTextClass('Estado desconocido')).toBe(
+      'var(--bw-chip-text-secondary)',
+    );
+    expect(bookingStatusChipTextClass()).toBe('var(--bw-chip-text-secondary)');
   });
 });
 

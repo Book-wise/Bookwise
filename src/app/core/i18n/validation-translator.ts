@@ -42,6 +42,7 @@ const FIELD_LABELS_ES: Record<string, string> = {
   name: 'el nombre',
   phone: 'el teléfono',
   scope: 'el alcance',
+  'working days': 'al menos un día laborable',
 };
 
 function labelEs(attribute: string): string {

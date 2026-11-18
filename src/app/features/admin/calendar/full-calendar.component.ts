@@ -29,19 +29,33 @@ import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { TimezoneService } from '@services/timezone.service';
-import { Booking, BlockedSlot, Location, Provider } from '@models';
+import { Booking, BlockedSlot, Location, Payment, Provider } from '@models';
 import { BookingFormDialogComponent } from '../bookings/booking-form-dialog/booking-form-dialog.component';
 import { BlockTimeDialogComponent } from '../bookings/block-time-dialog/block-time-dialog.component';
 import { BookingDetailDialogComponent } from '../bookings/booking-detail-dialog/booking-detail-dialog.component';
-import { BOOKING_STATUSES, bookingStatusChipClass } from '../bookings/constants/booking-statuses';
+import {
+  BOOKING_STATUSES,
+  bookingStatusChipClass,
+  bookingStatusChipTextClass,
+} from '../bookings/constants/booking-statuses';
+import {
+  formatSpanishLongDate,
+  personInitials,
+  whatsappHref as buildWhatsappHref,
+} from '@core/utils/booking-sheet.util';
+import { blockedCardHtml, eventCardHtml } from './calendar-event-content';
 import { BwCurrencyPipe } from '@shared/pipes/bw-currency.pipe';
 import { LanguageService } from '@services/language.service';
 import { AuthService } from '@services/auth.service';
 import { CalendarPrefsService } from '@services/calendar-prefs.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
+import type { TenantSwitchResult } from '@services/tenant-switch.service';
 import type { CalendarViewContext } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { hasAttentionRole } from '../roles/role-meta';
+import { HolidaysApiService } from '@services/api/holidays-api.service';
+import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
+import { dayClosedKind, holidayNameFor, type HolidayMap } from '@core/utils/calendar-holidays.util';
 import { DateTime } from 'luxon';
 
 import { HttpErrorService } from '@services/http-error.service';
@@ -101,6 +115,23 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   private readonly auth = inject(AuthService);
   private readonly calendarPrefs = inject(CalendarPrefsService);
+  private readonly tenantSwitch = inject(TenantSwitchService);
+  private readonly holidaysApi = inject(HolidaysApiService);
+  private readonly tenantSettingsApi = inject(TenantSettingsApiService);
+
+  /** Feriados cargados por fecha (`YYYY-MM-DD` → nombre). */
+  private readonly holidaysByDate = signal<HolidayMap>(new Map());
+  /** Bloqueo global de feriados del tenant (default `true`). */
+  private readonly blockHolidays = signal(true);
+  private readonly loadedHolidayYears = new Set<number>();
+
+  /**
+   * Last tenant-switch result applied by the effect below. Primed with the
+   * coordinator's current value so mounting the agenda after a switch does not
+   * re-apply it: the unmounted-agenda handoff is the tenant-scoped preferences,
+   * restored by the default `loadLocations()` path (avoids a duplicate fetch).
+   */
+  private lastAppliedSwitch: TenantSwitchResult | null = this.tenantSwitch.lastSwitch();
 
   // ── Identidad "viendo como" (chip en la fila de herramientas junto a slots y guía) ──
   readonly userName = computed(() => this.auth.user()?.name ?? '');
@@ -169,12 +200,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Leyenda de estados de pago — badge/token por estado. */
   /** Leyenda de estados de pago — colores alineados con los badges del evento en
-   *  la agenda (ev-pay-badge--paid/partial en _calendar.scss), no con los tokens
+   *  la agenda (ev__pay--paid/partial en _calendar.scss), no con los tokens
    *  de chips, para que la guía coincida con lo que se ve en el calendario. */
   readonly paymentLegend = computed(() => [
     { label: this.lang.t('cal.legend.payment.unpaid'),   cssVar: 'var(--bw-payment-unpaid)', badge: '' },
     { label: this.lang.t('cal.legend.payment.partial'),  cssVar: '#65a30d',                   badge: 'A' },
-    { label: this.lang.t('cal.legend.payment.paid'),     cssVar: '#16a34a',                   badge: '$' },
+    { label: this.lang.t('cal.legend.payment.paid'),     cssVar: 'var(--bw-payment-paid)',    badge: '$' },
   ]);
   private previousLocationId: number | null = null;
   selectedDate: Date | null = null;
@@ -186,23 +217,30 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   slotMenuPosition = { x: 0, y: 0 };
   selectedTimeStr = signal('');
 
-  // Slot duration density selector (visual time-grid density only — the
-  // click/drag selection snap duration stays fixed at 1h regardless of this).
+  // Slot duration density selector — drives the visual grid density and the
+  // click/drag selection snap (FullCalendar default: snap = slotDuration).
   readonly slotDurationOptions = [5, 10, 15, 20, 30, 40, 45, 60];
   slotDurationMinutes = signal(30);
 
-  private readonly SLOT_PREVIEW_ID = 'bw-slot-preview';
+  // Ephemeral hover preview (timeGrid): the day + time are resolved from the
+  // pointer, then FullCalendar paints the highlight through select(). No state.
+  private hoverEl: HTMLElement | null = null;
+  private hoverBoundMove: (e: Event) => void = () => {};
+  private hoverBoundLeave: (e: Event) => void = () => {};
   private lastHoverKey = '';
-  private lastHoverTime = 0;
 
   // Signal para detectar viewport
   isMobile = signal(false);
 
+  /** Mobile + tablet: header del día angosto → feriado compacto + tap. */
+  isCompactHeader = signal(false);
+
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin, listPlugin, timeGridPlugin, luxonPlugin],
     initialView: 'timeGridWeek',
-    slotMinTime: '09:00:00',
-    slotMaxTime: '21:00:00',
+    slotMinTime: '00:00:00',
+    slotMaxTime: '24:00:00',
+    scrollTime: '08:00:00',
     locale: this.lang.lang() === 'en' ? 'en' : esLocale,
     // Timezone desde servicio centralizado
     timeZone: this.tzService.activeTimezone(),
@@ -223,7 +261,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     selectable: true,
     selectMirror: true,
     unselectAuto: false,
-    snapDuration: '01:00:00',
+    allDaySlot: false,
     dayMaxEvents: true,
     weekends: true,
     longPressDelay: this.isTouchDevice ? 0 : 150,
@@ -246,9 +284,14 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     },
     // Duración de slots en minutos
     slotDuration: '00:30:00',
-    // Snapping: 1h para selección click/drag
-    // (slotDuration 30min es solo la grilla visual)
+    // Sin snapDuration explícito: FullCalendar usa por defecto snap = slotDuration,
+    // así la selección click/drag sigue la densidad del grid.
     contentHeight: this.getContentHeight(),
+    // Sombreado de días cerrados (no laborables o feriados bloqueados) + nombre
+    // del feriado en el header del día.
+    dayCellClassNames: (arg) => this.dayCellClassNames(arg),
+    dayHeaderContent: (arg) => this.holidayHeader(arg),
+    dayHeaderDidMount: (arg) => this.decorateHolidayHeader(arg),
   };
 
   /** Sucursales seleccionables: solo activas (C1). La intención de navegación
@@ -259,11 +302,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       .map((l) => ({ label: l.name, value: l.id })),
   );
 
-  /** Profesionales seleccionables: solo activos con rol de atención (C2), usando
-   *  la constante compartida ATTENTION_ROLES/hasAttentionRole (role-meta). */
+  /** Profesionales seleccionables: todos los activos, sin filtro de rol (un
+   *  Provider ya es profesional; decisión de seba 2026-10-28). */
   providerOptions = computed(() =>
     this.providers()
-      .filter((p) => p.active && hasAttentionRole(p.roles))
+      .filter((p) => p.active)
       .map((p) => ({ label: `${p.first_name} ${p.last_name}`, value: p.id })),
   );
 
@@ -281,6 +324,13 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.calendar) {
         this.ngZone.runOutsideAngular(() => this.calendar!.setOption('timeZone', tz));
       }
+    });
+
+    // Re-render day cells when the locations list loads/changes so the
+    // working_days shading appears once the (async) locations arrive.
+    effect(() => {
+      this.locations();
+      this.rerenderDays();
     });
 
     // Watch store state to manage loading visual and refresh calendar
@@ -326,15 +376,29 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this._dragMutPending = true;
       }
     });
+
+    // A successful tenant switch publishes the selection the coordinator
+    // resolved for the new tenant. The component's own lists still hold the
+    // previous tenant's data, so the selection is re-applied through a fresh
+    // fetch (see applyTenantSwitch). The priming guard makes this a
+    // switch-while-mounted concern only.
+    effect(() => {
+      const result = this.tenantSwitch.lastSwitch();
+      if (!result || result === this.lastAppliedSwitch) return;
+      this.lastAppliedSwitch = result;
+      this.applyTenantSwitch(result);
+    });
   }
 
   ngOnInit(): void {
     this.checkViewport();
     this.loadLocations();
+    this.loadHolidayConfig();
   }
 
   ngAfterViewInit(): void {
     this.initCalendar();
+    this.setupHolidayTap();
     this.watchDateQueryParam();
   }
 
@@ -370,6 +434,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private checkViewport(): void {
     this.isMobile.set(window.innerWidth < 768);
+    this.isCompactHeader.set(window.innerWidth < 1024);
   }
 
   private initCalendar(): void {
@@ -378,11 +443,18 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         ...this.calendarOptions,
         eventClick: (info) => this.ngZone.run(() => this.handleEventClick(info)),
         select: (info) => this.ngZone.run(() => this.handleDateSelect(info)),
-        eventContent: (info) => this.buildEventContent(info),
+        // La hora va dentro de la card: sin esto FullCalendar pinta además su propio
+    // texto de hora y se superpone con el contenido.
+    displayEventTime: false,
+    eventContent: (info) => this.buildEventContent(info),
         eventMouseEnter: (info) => {
           if (info.event.extendedProps['isBlocked']) return;
           const booking = info.event.extendedProps['booking'] as Booking | undefined;
           if (!booking) return;
+          // Month view only: events listed inside FullCalendar's day popover
+          // ("+N más") must not raise our hover tooltip on top of that popover.
+          // That popover only exists in dayGrid/month, so this is month-scoped.
+          if (info.el.closest('.fc-popover')) return;
           this.ngZone.run(() => {
             this.hoveredBooking.set(booking);
             this.eventTooltip?.show(info.jsEvent, info.el);
@@ -396,8 +468,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         dateClick: (info) =>
           this.ngZone.run(() => {
-            this.removeSlotPreview();
-
             const previewMs = this.getPreviewDuration();
             const start = this.tzService.parseDate(info.dateStr);
             const end = new Date(start.getTime() + previewMs);
@@ -407,13 +477,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
             const isTimeGrid = (this.calendar?.view.type ?? '').startsWith('timeGrid');
             if (!isTimeGrid) {
-              this.clearHoverSelect();
               this.slotMenuPosition = { x: info.jsEvent.clientX, y: info.jsEvent.clientY };
               this.showSlotMenu.set(true);
               return;
             }
 
-            // timeGrid: snapDuration hace que FC seleccione 1h naturalmente.
+            // timeGrid: la selección sigue la densidad del grid (snap = slotDuration);
             // handleDateSelect inyecta barra + menú cuando el select dispare.
             this.selectedTimeStr.set(this.fmt(info.dateStr));
           }),
@@ -548,6 +617,7 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         // con caída a la primera sucursal ACTIVA / primer item de la lista.
         const rememberedLocationId = this.calendarPrefs.getLastLocationId(
           this.auth.user()?.id ?? null,
+          this.auth.user()?.tenant_id ?? null,
         );
         const rememberedLocation =
           rememberedLocationId != null
@@ -556,6 +626,12 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         const defaultLocation = rememberedLocation ?? data.find((l) => l.active) ?? data[0];
         this.selectedLocationId = defaultLocation.id;
         this.previousLocationId = defaultLocation.id;
+        // Provider memory (per user + tenant): restored when it still exists in
+        // the loaded list; loadProviders reconciles a stale id to null (all).
+        this.selectedProviderId = this.calendarPrefs.getLastProviderId(
+          this.auth.user()?.id ?? null,
+          this.auth.user()?.tenant_id ?? null,
+        );
         this.loadProviders(defaultLocation.id);
         this.onFilterChange();
         // Status-only pending navigation (dashboard "Pending appointments" card):
@@ -626,6 +702,50 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
           this.httpError.handle(err, 'cargar profesionales');
         }
         this.reconcileProviderSelection();
+      },
+    });
+  }
+
+  /**
+   * Re-applies, for the mounted agenda, the selection the coordinator resolved
+   * after a tenant switch. The component's own location/provider lists still
+   * hold the previous tenant's data, so they are re-fetched; the coordinator's
+   * provider memory is then reconciled against the new tenant's list — a
+   * provider that no longer exists (or is not selectable) falls back to `null`
+   * (= all providers). No navigation toast is emitted: this is a switch, not a
+   * navigation intent.
+   */
+  private applyTenantSwitch(result: TenantSwitchResult): void {
+    this.locationsApi.getLocations().subscribe({
+      next: (data) => {
+        this.locations.set(data);
+        const resolvedLocationId =
+          result.locationId != null && data.some((l) => l.id === result.locationId)
+            ? result.locationId
+            : (data.find((l) => l.active)?.id ?? data[0]?.id ?? null);
+
+        this.selectedLocationId = resolvedLocationId;
+        this.previousLocationId = resolvedLocationId;
+
+        if (resolvedLocationId == null) {
+          this.providers.set([]);
+          this.selectedProviderId = null;
+          this.onFilterChange();
+          return;
+        }
+
+        // The coordinator carries provider memory as-is (null = all); assigning
+        // it before loadProviders lets reconcileProviderSelection() clear a
+        // stale id against the new tenant's provider list.
+        this.selectedProviderId = result.providerId;
+        this.loadProviders(resolvedLocationId);
+        this.onFilterChange();
+      },
+      error: () => {
+        this.locations.set([]);
+        this.providers.set([]);
+        this.selectedProviderId = null;
+        this.onFilterChange();
       },
     });
   }
@@ -815,7 +935,11 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Cambio intencional del usuario (dropdown de sucursales) → persiste la
       // última sucursal por usuario para abrir ahí la próxima visita a la agenda.
-      this.calendarPrefs.setLastLocationId(this.auth.user()?.id ?? null, this.selectedLocationId);
+      this.calendarPrefs.setLastLocationId(
+        this.auth.user()?.id ?? null,
+        this.auth.user()?.tenant_id ?? null,
+        this.selectedLocationId,
+      );
 
       // Propagate location timezone to the centralized service
       const loc = this.locations().find((l) => l.id === this.selectedLocationId);
@@ -823,6 +947,21 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.tzService.setTimezone(loc.timezone);
       }
     }
+    this.onFilterChange();
+    this.rerenderDays();
+  }
+
+  /**
+   * Provider dropdown change: syncs the filters and remembers the choice per
+   * user + tenant. Clearing the selection persists `null` (= all providers),
+   * so "cleared" is remembered as such instead of falling back to a provider.
+   */
+  onProviderChange(): void {
+    this.calendarPrefs.setLastProviderId(
+      this.auth.user()?.id ?? null,
+      this.auth.user()?.tenant_id ?? null,
+      this.selectedProviderId ?? null,
+    );
     this.onFilterChange();
   }
 
@@ -860,15 +999,124 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.tzService.formatTime(iso);
   }
 
+  /** Carga el bloqueo global de feriados + los feriados de años vecinos. */
+  private loadHolidayConfig(): void {
+    this.tenantSettingsApi.getSettings().subscribe({
+      next: (s) => {
+        this.blockHolidays.set(s.block_bookings_on_holidays ?? true);
+        this.rerenderDays();
+      },
+      error: () => {}, // fallback: los feriados bloquean por defecto
+    });
+    const year = new Date().getFullYear();
+    [year - 1, year, year + 1].forEach((y) => this.loadHolidayYear(y));
+  }
+
+  private loadHolidayYear(year: number): void {
+    if (this.loadedHolidayYears.has(year)) return;
+    this.loadedHolidayYears.add(year);
+    this.holidaysApi.getHolidays({ year }).subscribe({
+      next: (list) => {
+        const map = new Map(this.holidaysByDate());
+        list.forEach((h) => map.set(h.date, h.name));
+        this.holidaysByDate.set(map);
+        this.rerenderDays();
+      },
+      error: () => this.loadedHolidayYears.delete(year),
+    });
+  }
+
+  /** Re-renderiza las celdas-día para reflejar feriados/bloqueo, preservando el scroll vertical. */
+  private rerenderDays(): void {
+    if (!this.calendar) return;
+    const host = this.calendarContainer.nativeElement as HTMLElement;
+    const scrollTop = (host.querySelector('.fc-scroller') as HTMLElement | null)?.scrollTop ?? 0;
+    this.ngZone.runOutsideAngular(() => {
+      this.calendar!.render();
+      if (scrollTop > 0) {
+        const after = host.querySelector('.fc-scroller') as HTMLElement | null;
+        if (after) after.scrollTop = scrollTop;
+      }
+    });
+  }
+
+  private dayCellClassNames(arg: { date: Date }): string[] {
+    const loc = this.locations().find((l) => l.id === this.selectedLocationId);
+    const kind = dayClosedKind(
+      arg.date,
+      loc?.working_days,
+      this.holidaysByDate(),
+      this.blockHolidays(),
+    );
+    return kind ? [`fc-day-${kind}`] : []; // 'fc-day-holiday' | 'fc-day-closed'
+  }
+
+  private holidayHeader(arg: { date: Date; text: string; view: { type: string } }): { html: string } {
+    // En la vista mes el header son nombres de weekday, no fechas: no aplica.
+    if (!arg.view.type.startsWith('timeGrid')) return { html: arg.text };
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (!name) return { html: arg.text };
+    const safe = name.replace(
+      /[&<>"']/g,
+      (c: string) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+    );
+    if (this.isCompactHeader()) {
+      return {
+        html: `${arg.text}<span class="fc-holiday-badge" title="${safe}" aria-label="${safe}">●</span>`,
+      };
+    }
+    return { html: `${arg.text}<span class="fc-holiday-label" title="${safe}">${safe}</span>` };
+  }
+
+  /** Nombre del feriado como tooltip del header del día (hover en desktop). */
+  private decorateHolidayHeader(arg: {
+    date: Date;
+    el: HTMLElement;
+    view: { type: string };
+  }): void {
+    if (!arg.view.type.startsWith('timeGrid')) {
+      arg.el.removeAttribute('title');
+      return;
+    }
+    const name = holidayNameFor(arg.date, this.holidaysByDate());
+    if (name) arg.el.title = name;
+    else arg.el.removeAttribute('title');
+  }
+
   /**
-   * Fixed preview duration for the slot hover/date-click preview. Derived from
-   * snapDuration (1h) rather than slotDuration so the preview stays ~1h no
-   * matter how dense the visual time grid is set. Returns milliseconds.
+   * En mobile/tablet el `title` no se abre en touch: un tap en el header de un día
+   * feriado muestra el nombre en un toast. Delegado en el contenedor para sobrevivir
+   * a los re-render (los headers se montan antes de que carguen los feriados).
    */
+  private setupHolidayTap(): void {
+    const host = this.calendarContainer.nativeElement as HTMLElement;
+    host.addEventListener('click', (e) => this.onHolidayHeaderTap(e));
+  }
+
+  private onHolidayHeaderTap(e: Event): void {
+    if (!this.isCompactHeader()) return;
+    if (!this.calendar?.view.type.startsWith('timeGrid')) return;
+    const cell = (e.target as HTMLElement | null)?.closest(
+      '.fc-col-header-cell',
+    ) as HTMLElement | null;
+    const dateStr = cell?.getAttribute('data-date');
+    const holidayName = dateStr ? this.holidaysByDate().get(dateStr) : undefined;
+    if (!holidayName) return;
+    this.ngZone.run(() =>
+      this.messageService.add({
+        severity: 'info',
+        summary: this.lang.t('cal.legend.holiday'),
+        detail: holidayName,
+        life: 4000,
+        key: 'global',
+      }),
+    );
+  }
+
+  /** Preview duration for the slot click/date preview — follows the slot density. */
   private getPreviewDuration(): number {
-    const raw = (this.calendarOptions.snapDuration as string) ?? '01:00:00';
-    const [h, m] = raw.split(':').map(Number);
-    return (h * 60 + m) * 60 * 1000;
+    return this.slotDurationMinutes() * 60_000;
   }
 
   /** Format minutes as a FullCalendar duration string 'HH:mm:00' (e.g. 40 → '00:40:00'). */
@@ -894,29 +1142,21 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.slotDurationPopover?.hide();
   }
 
-  private removeSlotPreview(): void {
-    this.ngZone.runOutsideAngular(() => {
-      this.calendar?.getEventById(this.SLOT_PREVIEW_ID)?.remove();
-    });
-  }
-
   dismissSlotMenu(): void {
     this.showSlotMenu.set(false);
     this.clearHoverSelect();
-    this.removeSlotPreview();
   }
 
-  // ── Hover select: usa selectMirror para mostrar ghost preview ─────────
-
-  private hoverEl: HTMLElement | null = null;
-  private hoverBoundMove: (e: Event) => void = () => {};
-  private hoverBoundLeave: (e: Event) => void = () => {};
+  // ── Hover preview (timeGrid) ──────────────────────────────────────────────
+  // FullCalendar renders ONE full-width slat lane per time row and separate
+  // per-day column overlays, so a pure-CSS row hover cannot isolate a day. The
+  // day is read from the column header cell and the time from the slat lane,
+  // then select() paints the exact day+time cell as `.fc-highlight`.
 
   private setupHoverSelect(): void {
     this.hoverEl = this.calendarContainer?.nativeElement ?? null;
     if (!this.hoverEl) return;
-    // En mobile el hover se activa vía eventos de compatibilidad mousemove
-    // e interfiere con el tap — lo desactivamos completamente.
+    // On touch devices the compatibility mouse events fight with tap-to-select.
     if (this.isTouchDevice) return;
 
     this.hoverBoundMove = (e: Event) => this.onHoverMove(e as MouseEvent);
@@ -938,80 +1178,77 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   private onHoverMove(event: MouseEvent): void {
     if (!this.calendar) return;
     if (!this.calendar.view.type.startsWith('timeGrid')) return;
-    if (this.showSlotMenu()) return; // No mover mirror mientras el menú está abierto
+    if (this.showSlotMenu()) return; // menu owns the highlight while open
+    if (event.buttons !== 0) return; // do not fight an in-progress drag-select
 
-    // No mostrar mirror sobre eventos existentes
     const target = event.target as HTMLElement;
     if (target.closest('.fc-event') || target.closest('.fc-more-link')) {
       this.clearHoverSelect();
       return;
     }
 
-    // Leer hora desde data-time del slot
-    const slot = target.closest('.fc-timegrid-slot');
-    if (!slot) {
-      this.clearHoverSelect();
-      return;
-    }
-    const timeStr = slot.getAttribute('data-time');
-    if (!timeStr) {
+    const dateStr = this.resolveHoverDate(event.clientX);
+    const timeStr = this.resolveHoverTime(event.clientY);
+    if (!dateStr || !timeStr) {
       this.clearHoverSelect();
       return;
     }
 
-    // Obtener fecha desde la columna del día (data-date en .fc-timegrid-col)
-    const col = target.closest('.fc-timegrid-col');
-    let dateStr: string | null = col?.getAttribute('data-date') ?? null;
-    if (!dateStr) {
-      const container: HTMLElement = this.calendarContainer.nativeElement;
-      const cols = container.querySelectorAll<HTMLElement>('.fc-timegrid-col');
-      for (const c of cols) {
-        const rect = c.getBoundingClientRect();
-        if (event.clientX >= rect.left && event.clientX <= rect.right) {
-          dateStr = c.getAttribute('data-date');
-          break;
-        }
-      }
-    }
-    if (!dateStr) {
-      this.clearHoverSelect();
-      return;
-    }
-
-    // Construir fechas
-    const [hStr, mStr] = timeStr.split(':');
-    const hours = parseInt(hStr, 10);
-    const minutes = parseInt(mStr, 10);
-    const isoStr = `${dateStr}T${this.pad(hours)}:${this.pad(minutes)}:00`;
-    const slotStart = this.tzService.parseDate(isoStr);
-    const previewMs = this.getPreviewDuration();
-    const slotEnd = new Date(slotStart.getTime() + previewMs);
-
-    // Throttle: no actualizar si el slot no cambió
-    const key = `${slotStart.getTime()}`;
+    const start = this.tzService.parseDate(`${dateStr}T${timeStr}`);
+    const key = `${start.getTime()}`;
     if (key === this.lastHoverKey) return;
     this.lastHoverKey = key;
-    this.lastHoverTime = Date.now();
 
-    this.calendar.select(slotStart, slotEnd);
+    const end = new Date(start.getTime() + this.getPreviewDuration());
+    this.ngZone.runOutsideAngular(() => this.calendar!.select(start, end));
 
-    // Inyectar hora en el mirror
-    const label = `${this.pad(hours)}:${this.pad(minutes)}`;
-    const mirror = this.calendar.el.querySelector('.fc-event-mirror');
-    if (mirror) {
-      mirror.querySelector('.bw-mirror-bar')?.remove();
-      const bar = document.createElement('div');
-      bar.className = 'bw-mirror-bar';
-      bar.innerHTML = `<span class="bw-mirror-time">${label}</span>`;
-      mirror.appendChild(bar);
+    // Ghost state until a click pins it (Bookwise border); the menu-close path
+    // removes the class and the selection together.
+    this.calendarContainer?.nativeElement?.classList.add('bw-slot-hovering');
+    this.markHighlightTime(timeStr);
+  }
+
+  /** Stamp the hour onto FullCalendar's highlight node (rendered after select()). */
+  private markHighlightTime(timeStr: string): void {
+    const label = timeStr.slice(0, 5);
+    requestAnimationFrame(() => {
+      const hl = this.calendarContainer?.nativeElement?.querySelector('.fc-highlight');
+      if (hl) (hl as HTMLElement).setAttribute('data-bw-time', label);
+    });
+  }
+
+  /** Day (YYYY-MM-DD) of the column under the pointer, from the header cell. */
+  private resolveHoverDate(clientX: number): string | null {
+    const root = this.calendarContainer.nativeElement as HTMLElement;
+    const cells = root.querySelectorAll<HTMLElement>('.fc-col-header-cell[data-date]');
+    for (const cell of cells) {
+      const rect = cell.getBoundingClientRect();
+      if (clientX >= rect.left && clientX <= rect.right) {
+        return cell.getAttribute('data-date');
+      }
     }
+    return null;
+  }
+
+  /** Slot time (HH:mm:ss) of the slat row under the pointer. */
+  private resolveHoverTime(clientY: number): string | null {
+    const root = this.calendarContainer.nativeElement as HTMLElement;
+    const lanes = root.querySelectorAll<HTMLElement>('.fc-timegrid-slot-lane[data-time]');
+    for (const lane of lanes) {
+      const rect = lane.getBoundingClientRect();
+      if (clientY >= rect.top && clientY <= rect.bottom) {
+        return lane.getAttribute('data-time');
+      }
+    }
+    return null;
   }
 
   private clearHoverSelect(): void {
+    this.calendarContainer?.nativeElement?.classList.remove('bw-slot-hovering');
     this.lastHoverKey = '';
-    this.lastHoverTime = 0;
-    if (this.calendar) {
-      this.calendar.unselect();
+    // Keep the pinned block while the slot menu is open (a click persists it).
+    if (this.calendar && !this.showSlotMenu()) {
+      this.ngZone.runOutsideAngular(() => this.calendar!.unselect());
     }
   }
 
@@ -1020,48 +1257,63 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private buildEventContent(info: EventContentArg): { html: string } {
-    if (info.event.id === this.SLOT_PREVIEW_ID) {
-      return { html: '<div class="bw-slot-preview-inner"></div>' };
-    }
     if (info.event.extendedProps['isBlocked']) {
-      const reason = info.event.title || 'Bloqueado';
-      const start = this.fmt(info.event.startStr);
-      const end = this.fmt(info.event.endStr);
       return {
-        html: `<div class="ev-blocked"><i class="pi pi-lock ev-blocked__icon"></i><span class="ev-blocked__label">${reason} · ${start}–${end}</span></div>`,
+        html: blockedCardHtml({
+          reason: info.event.title || 'Bloqueado',
+          startLabel: this.fmt(info.event.startStr),
+          endLabel: this.fmt(info.event.endStr),
+        }),
       };
     }
-    const booking: Booking | undefined = info.event.extendedProps['booking'];
-    const payment = booking?.payment_status;
-    const title = info.event.title.replace(
-      /[&<>"']/g,
-      (c: string) =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
-    );
 
-    // Status color — used in the month view where the pastel fill is hard to
-    // perceive: a leading status dot plus a soft tinted pill makes the state
-    // readable at a glance.
+    const booking: Booking | undefined = info.event.extendedProps['booking'];
+    // El bloque de selección (`selectMirror`) llega por este mismo hook sin
+    // reserva: no es un evento real, y dibujar la card acá pintaba su hora en
+    // tinta oscura encima de la etiqueta azul del slot
+    // (`.fc-highlight::after` → la misma hora dos veces).
+    if (!booking) return { html: '' };
+    // Sin placeholders: si el dato no vino, el span no se emite (antes se
+    // renderizaba «Cliente»/«Servicio» como si fueran contenido real).
+    const clientName = `${booking?.client?.first_name ?? ''} ${booking?.client?.last_name ?? ''}`.trim();
+    const serviceLabel = booking?.pack_session
+      ? `Pack · sesión ${booking.pack_session.session_number}/${booking.pack_session.total_sessions}`
+      : (booking?.service?.name ?? '');
+    const sessionPill = booking?.pack_session
+      ? `${booking.pack_session.session_number}/${booking.pack_session.total_sessions}`
+      : null;
+    const payment =
+      booking?.payment_status === 'paid'
+        ? 'paid'
+        : booking?.payment_status === 'partial'
+          ? 'partial'
+          : null;
+
     const statusColor =
       booking?.status?.color ??
       BOOKING_STATUSES.find((s) => s.value === booking?.status_id)?.color ??
       '';
 
-    const badge =
-      payment === 'paid'
-        ? '<span class="ev-pay-badge ev-pay-badge--paid">$</span>'
-        : payment === 'partial'
-          ? '<span class="ev-pay-badge ev-pay-badge--partial">A</span>'
-          : '';
+    // La card es la misma en mes y semana. No se asume un alto fijo: si la card
+    // es baja, el CSS recorta el eje Y y la primera línea (nombre + hora) queda
+    // anclada arriba. `isShort` solo decide si tiene sentido emitir la segunda.
+    const isDayGrid = info.view.type.startsWith('dayGrid');
+    const start = info.event.start;
+    const end = info.event.end;
+    const isShort =
+      isDayGrid || !start || !end || end.getTime() - start.getTime() < 30 * 60 * 1000;
 
-    const isMonthView = info.view.type.startsWith('dayGrid');
-    if (isMonthView && statusColor) {
-      return {
-        html: `<div class="ev-inner ev-inner--month" style="--ev-status-color:${statusColor}">${badge}<span class="ev-dot"></span><span class="ev-title">${title}</span></div>`,
-      };
-    }
-
-    return { html: `<div class="ev-inner">${badge}<span class="ev-title">${title}</span></div>` };
+    return {
+      html: eventCardHtml({
+        statusColor,
+        clientName,
+        serviceLabel,
+        sessionPill,
+        payment,
+        startLabel: this.fmt(info.event.startStr),
+        isShort,
+      }),
+    };
   }
 
   private handleEventMove(
@@ -1159,7 +1411,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.eventTooltip?.hide();
     this.hoveredBooking.set(null);
 
-    if (clickInfo.event.id === this.SLOT_PREVIEW_ID) return;
     if (clickInfo.event.extendedProps['isBlocked']) {
       const slot = clickInfo.event.extendedProps['blockedSlot'];
       if (slot) this.blockTimeDialog.openForEdit(slot);
@@ -1192,27 +1443,29 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedEndDate = end;
 
     const jsEvent = selectInfo.jsEvent;
-    // Solo mostrar menú si la selección fue iniciada por el usuario (click/drag)
-    // Las selecciones programáticas (hover mirror) no tienen jsEvent
+    // Solo mostrar menú si la selección fue iniciada por el usuario (click/drag);
+    // una selección programática no trae jsEvent.
     if (!jsEvent || !this.calendar) return;
 
     const isTimeGrid = this.calendar.view.type.startsWith('timeGrid');
     if (isTimeGrid) {
-      // snapDuration:01:00:00 → click/drag ya seleccionan 1h+
       this.selectedTimeStr.set(this.fmt(selectInfo.startStr));
 
-      // Inyectar barra + menú sobre el mirror
+      // A click pins the block: drop the ghost class so it gets the Bookwise
+      // border, and keep the hour stamped on the highlight.
+      this.calendarContainer?.nativeElement?.classList.remove('bw-slot-hovering');
+      this.markHighlightTime(this.selectedTimeStr());
+
+      // Anclar el menú justo debajo de la celda marcada. Se usa el bloque
+      // `.fc-highlight` (que persiste) porque el mirror de selección se elimina
+      // en cuanto se suelta el click.
       requestAnimationFrame(() => {
         if (!this.calendar) return;
-        const mirror = this.calendar.el.querySelector('.fc-event-mirror');
-        if (mirror) {
-          mirror.querySelector('.bw-mirror-bar')?.remove();
-          const bar = document.createElement('div');
-          bar.className = 'bw-mirror-bar';
-          bar.innerHTML = `<span class="bw-mirror-time">${this.selectedTimeStr()}</span>`;
-          mirror.appendChild(bar);
-
-          const rect = mirror.getBoundingClientRect();
+        const cell = this.calendarContainer.nativeElement.querySelector(
+          '.fc-highlight',
+        ) as HTMLElement | null;
+        if (cell) {
+          const rect = cell.getBoundingClientRect();
           // slot menu: header (~32px) + 3 botones (a ~36px c/u) ≈ 140px → usamos 150 como margen seguro
           const MENU_HEIGHT_ESTIMATE = 150;
           const belowRoom = window.innerHeight - rect.bottom;
@@ -1230,6 +1483,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
             y: jsEvent.clientY ?? 0,
           };
         }
+        // Re-assert the pinned look: a stray mousemove before the menu opens
+        // must not flip the block back to the hover ghost.
+        this.calendarContainer?.nativeElement?.classList.remove('bw-slot-hovering');
         this.showSlotMenu.set(true);
       });
     } else {
@@ -1239,20 +1495,9 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Show slot action menu
-  showSlotActions(event: MouseEvent, dateInfo?: { start: Date; end?: Date }): void {
-    if (dateInfo) {
-      this.selectedDate = dateInfo.start;
-      this.selectedEndDate = dateInfo.end || dateInfo.start;
-    }
-    this.slotMenuPosition = { x: event.clientX, y: event.clientY };
-    this.showSlotMenu.set(true);
-  }
-
   openNewBooking(): void {
     this.showSlotMenu.set(false);
     this.clearHoverSelect();
-    this.removeSlotPreview();
     const dateToUse = this.selectedDate || new Date();
     this.newBookingDialog.openNew(undefined, dateToUse, this.selectedLocationId);
   }
@@ -1260,7 +1505,6 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   openBlockTime(): void {
     this.showSlotMenu.set(false);
     this.clearHoverSelect();
-    this.removeSlotPreview();
     this.blockTimeDialog.open(
       this.selectedDate || new Date(),
       this.selectedEndDate || this.selectedDate || new Date(),
@@ -1289,4 +1533,32 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
   getStatusChipClass(statusName?: string, statusId?: number): string {
     return bookingStatusChipClass(statusName, statusId);
   }
+
+  /** Texto AA del chip de estado — el acento solo no es legible sobre su tinte. */
+  getStatusChipTextClass(statusName?: string, statusId?: number): string {
+    return bookingStatusChipTextClass(statusName, statusId);
+  }
+
+  /** Iniciales del avatar en la ficha de la cita. */
+  readonly sheetInitials = computed(() => {
+    const client = this.store.selectedBooking()?.client;
+    return personInitials(client?.first_name, client?.last_name);
+  });
+
+  /** «viernes 14 de noviembre»: el día del bloque de sesión. */
+  readonly sheetLongDate = computed(() =>
+    formatSpanishLongDate(this.store.selectedBooking()?.start_time),
+  );
+
+  /** Enlace de WhatsApp del teléfono del cliente (null si no hay número). */
+  readonly whatsappHref = buildWhatsappHref;
+
+  /**
+   * Pago real de la reserva. El backend manda `{}` cuando no hay pagos, así que
+   * la mera presencia del objeto no alcanza: sin montos no hay nada que mostrar.
+   */
+  readonly sheetPayment = computed(() => {
+    const payment = this.store.selectedBooking()?.payment as Payment | undefined;
+    return payment && typeof payment.paid_amount === 'number' ? payment : null;
+  });
 }

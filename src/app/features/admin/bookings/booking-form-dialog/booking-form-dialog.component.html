@@ -133,6 +133,7 @@
           [filterPlaceholder]="lang.t('common.search')"
           showClear="true"
           class="w-full"
+          [appendTo]="'body'"
           (onFilter)="onClientFilter()"
           (onChange)="onClientChange()">
           <ng-template pTemplate="item" let-client>
@@ -170,6 +171,7 @@
         optionLabel="label"
         optionValue="value"
         class="w-full"
+        [appendTo]="'body'"
         (onChange)="onLocationChange()">
       </p-select>
     </div>
@@ -184,7 +186,8 @@
           [placeholder]="lang.t('booking_form.provider_placeholder')"
           [showClear]="true"
           [loading]="providersLoading()"
-          class="w-full">
+          class="w-full"
+          [appendTo]="'body'">
         </p-select>
       </div>
     }
@@ -199,6 +202,7 @@
         [filter]="true"
         [filterPlaceholder]="lang.t('common.search')"
         class="w-full"
+        [appendTo]="'body'"
         (onChange)="onServiceChange()">
         <ng-template pTemplate="header">
           <button class="service-create-btn" type="button" (click)="openServicePanel()">
@@ -213,6 +217,46 @@
         </ng-template>
       </p-select>
     </div>
+
+    <!-- Variación -->
+    <div class="field">
+      <label class="field-label">{{ lang.t('booking_form.variation') }}</label>
+      <p-select
+        [options]="variationOptions()"
+        [(ngModel)]="selectedVariationKey"
+        [placeholder]="variationOptions().length ? lang.t('booking_form.variation.placeholder') : lang.t('booking_form.variation.none')"
+        [disabled]="variationOptions().length === 0"
+        optionLabel="label"
+        optionValue="value"
+        class="w-full"
+        [appendTo]="'body'"
+        (onChange)="onVariationChange()">
+        <ng-template pTemplate="item" let-variation>
+          <div class="variation-option">
+            <span class="variation-name">{{ variation.label }}</span>
+            <span class="variation-per-session">{{ variation.perSession | bwCurrency }} {{ lang.t('booking_form.variation.per_session') }}</span>
+            @if (variation.discountPercent > 0) {
+              <span class="bw-chip bw-chip--success variation-discount" [title]="lang.t('booking_form.variation.discount_title')">−{{ variation.discountPercent }}%</span>
+            }
+          </div>
+        </ng-template>
+        <ng-template pTemplate="selectedItem" let-variation>
+          <div class="variation-option">
+            <span class="variation-name">{{ variation.label }}</span>
+            @if (variation.discountPercent > 0) {
+              <span class="bw-chip bw-chip--success variation-discount" [title]="lang.t('booking_form.variation.discount_title')">−{{ variation.discountPercent }}%</span>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+    </div>
+
+    @if (activeClientPack(); as pack) {
+      <div class="paid-summary">
+        <span>{{ paidPackSummary(pack) }}</span>
+        <span class="bw-chip bw-chip--success">{{ lang.t('booking_form.variation.paid_chip') }}</span>
+      </div>
+    }
 
     <!-- Información adicional -->
     <p-accordion [pt]="{ root: { style: { marginTop: '0' } } }">

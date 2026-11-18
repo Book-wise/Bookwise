@@ -1,0 +1,28 @@
+{
+  "title": "Datos de facturación: cómo se completa el perfil fiscal",
+  "brief": "Rediseño de /admin/facturacion/datos en el admin de Bookwise (cuenta Kinesilk). Hoy son tres p-card apiladas a todo el ancho: scroll largo, el botón Guardar queda lejos de los campos, no hay señal de completitud aunque el perfil fiscal nace incompleto (9 campos nullable, ninguno obligatorio para guardar) y no se ve cómo queda la factura. Con !canEdit() se muestra el aviso de solo lectura pero los campos quedan editables. Las tres direcciones resuelven lo mismo: estado de completitud visible, guardado siempre a mano, vista previa fiscal y solo lectura real.",
+  "feature": "odd/tasks/billing-datos-facturacion.md",
+  "artboards": [
+    {
+      "file": "01-formulario-preview.html",
+      "title": "Formulario en una tarjeta + vista previa de la factura",
+      "tradeoff": "Barra de guardado fija bajo el título, tres bloques con hairline en una sola tarjeta y una columna lateral sticky con la factura resultante y la lista de lo que falta: se ve el estado y el resultado sin scrollear, y el toggle demuestra el solo-lectura real; a cambio el formulario queda en 572 px y los campos de dos columnas son angostos.",
+      "width": 1440,
+      "height": 1100
+    },
+    {
+      "file": "02-asistente-pasos.html",
+      "title": "Asistente por pasos con progreso del perfil",
+      "tradeoff": "Un rail de 3 pasos con resumen y chip de estado por paso, progreso compacto (chip 7 de 9 + barra de 3 segmentos) y la lista \"Qué falta\" con atajo directo a cada paso: nunca hay scroll largo y el usuario sabe qué le falta y a dónde ir; a cambio revisar o comparar todos los datos exige recorrer los pasos y el guardado se reparte en cada paso.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-ficha-lectura.html",
+      "title": "Ficha fiscal en lectura + edición en panel lateral",
+      "tradeoff": "La pantalla muestra el perfil como ficha (datos agrupados, lo que falta en rojo y un checklist de lo que se necesita para emitir factura) y la edición vive en un panel de 480 px con guardado propio: el estado incompleto se lee de un vistazo y nadie edita por accidente; a cambio son dos modos y un panel más que mantener.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

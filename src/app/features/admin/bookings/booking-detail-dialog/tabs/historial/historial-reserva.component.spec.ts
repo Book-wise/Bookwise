@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal, type WritableSignal } from '@angular/core';
 import { HistorialReservaComponent } from './historial-reserva.component';
-import { HistorialStore } from '@core/stores/historial.store';
+import { HistorialStore, type PaginationState } from '@core/stores/historial.store';
 import { TimezoneService } from '@services/timezone.service';
 import { Booking } from '@models';
 
@@ -15,10 +15,28 @@ describe('HistorialReservaComponent', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<HistorialReservaComponent>>;
   let component: HistorialReservaComponent;
   let mockHistorialStore: {
-    loading: WritableSignal<boolean>;
-    bookings: WritableSignal<Booking[]>;
+    loadingBookingsPage: WritableSignal<boolean>;
+    paginatedBookings: WritableSignal<Booking[]>;
+    bookingsPagination: WritableSignal<PaginationState>;
+    bookingsShowingCount: WritableSignal<number>;
+    loadNextBookingsPage: ReturnType<typeof vi.fn>;
   };
   const mockTimezone = { formatCardDate: vi.fn((iso: string) => iso) };
+
+  // jsdom no trae los observers que usa el scroll infinito del componente.
+  if (!globalThis.IntersectionObserver) {
+    globalThis.IntersectionObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() { return []; }
+    } as unknown as typeof IntersectionObserver;
+  }
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      value: () => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
+    });
+  }
 
   const makeBooking = (overrides: Partial<Booking> = {}): Booking => ({
     id: 1,
@@ -44,7 +62,19 @@ describe('HistorialReservaComponent', () => {
   });
 
   beforeEach(async () => {
-    mockHistorialStore = { loading: signal(false), bookings: signal([]) };
+    mockHistorialStore = {
+      loadingBookingsPage: signal(false),
+      paginatedBookings: signal([]),
+      bookingsPagination: signal({
+        currentPage: 1,
+        lastPage: 1,
+        total: 0,
+        perPage: 10,
+        hasMore: false,
+      }),
+      bookingsShowingCount: signal(0),
+      loadNextBookingsPage: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [HistorialReservaComponent],
@@ -57,28 +87,34 @@ describe('HistorialReservaComponent', () => {
 
     fixture = TestBed.createComponent(HistorialReservaComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('clientId', 1);
   });
 
   describe('status chip rendering', () => {
-    it('renders the bw-chip--warning variant for a "Confirmado" booking (status_id 2)', () => {
-      mockHistorialStore.bookings.set([makeBooking()]);
+    // El chip no usa clases de variante: el acento del estado viaja como
+    // `--chip-color` (tokens de `_tokens.scss`), así que el output visible que
+    // hay que fijar es esa custom property, no un `bw-chip--*`.
+    it('renders the confirmado status token for a "Confirmado" booking (status_id 2)', () => {
+      mockHistorialStore.paginatedBookings.set([makeBooking()]);
+      mockHistorialStore.bookingsShowingCount.set(1);
       fixture.detectChanges();
 
       const nativeEl = fixture.nativeElement as HTMLElement;
-      const chip = nativeEl.querySelector('.bw-chip');
+      const chip = nativeEl.querySelector('.bw-chip') as HTMLElement | null;
       expect(chip).toBeTruthy();
-      expect(chip!.classList.contains('bw-chip--warning')).toBe(true);
+      expect(chip!.style.getPropertyValue('--chip-color')).toBe('var(--bw-status-confirmado)');
       expect(chip!.textContent?.trim()).toBe('Confirmado');
     });
 
-    it('renders the bw-chip--danger variant for a booking resolved by status_id alone (status_id 5)', () => {
-      mockHistorialStore.bookings.set([makeBooking({ status: undefined, status_id: 5 })]);
+    it('renders the pendiente status token for a booking resolved by status_id alone (status_id 5)', () => {
+      mockHistorialStore.paginatedBookings.set([makeBooking({ status: undefined, status_id: 5 })]);
+      mockHistorialStore.bookingsShowingCount.set(1);
       fixture.detectChanges();
 
       const nativeEl = fixture.nativeElement as HTMLElement;
-      const chip = nativeEl.querySelector('.bw-chip');
+      const chip = nativeEl.querySelector('.bw-chip') as HTMLElement | null;
       expect(chip).toBeTruthy();
-      expect(chip!.classList.contains('bw-chip--danger')).toBe(true);
+      expect(chip!.style.getPropertyValue('--chip-color')).toBe('var(--bw-status-pendiente)');
     });
 
     it('renders no chip when there are no bookings', () => {

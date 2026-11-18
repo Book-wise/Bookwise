@@ -1,22 +1,36 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TabsModule } from 'primeng/tabs';
 import { RouterLink } from '@angular/router';
-import { ThemeService, ThemeName } from '@services/theme.service';
+import { Appearance, APPEARANCE_OPTIONS, ThemeService, ThemeName } from '@services/theme.service';
 import { LanguageService, Language } from '@services/language.service';
 import { AuthService } from '@services/auth.service';
+import { HttpErrorService } from '@services/http-error.service';
+import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
 import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.component';
+import { ClinicalRecordTypesComponent } from './clinical-record-types.component';
 
+/**
+ * `/admin/configuraciones` (y `/provider/configuraciones`).
+ *
+ * Reorganizada en pestañas (artboard
+ * `design/config-tipos-ficha/02-maestro-detalle-builder.html`): Perfil,
+ * Apariencia, Negocio principal, Feriados y Fichas médicas. Las tres últimas
+ * solo para admin. El catálogo clínico lo provee el store de dominio root
+ * `ClinicalRecordTypesStore`.
+ */
 @Component({
   selector: 'bw-configuraciones',
   standalone: true,
   imports: [
     CommonModule, FormsModule, CardModule, ButtonModule, SelectModule,
-    ToggleSwitchModule, RouterLink, UserAvatarComponent,
+    ToggleSwitchModule, TabsModule, RouterLink, UserAvatarComponent,
+    ClinicalRecordTypesComponent,
   ],
   templateUrl: './configuraciones.component.html',
   styleUrls: ['./configuraciones.component.scss'],
@@ -24,9 +38,16 @@ import { UserAvatarComponent } from '@shared/components/user-avatar/user-avatar.
 export class ConfiguracionesComponent {
   private auth = inject(AuthService);
   private themeService = inject(ThemeService);
+  private tenantSettingsApi = inject(TenantSettingsApiService);
+  private httpError = inject(HttpErrorService);
   readonly lang = inject(LanguageService);
 
-  readonly darkMode = computed(() => this.themeService.darkMode);
+  readonly activeTab = signal<string>('profile');
+
+  readonly appearance = computed(() => this.themeService.appearance);
+  readonly appearanceOptions = computed(() =>
+    APPEARANCE_OPTIONS.map((opt) => ({ label: this.lang.t(opt.labelKey), value: opt.value })),
+  );
   readonly currentTheme = computed(() => this.themeService.currentTheme);
   readonly themeOptions = this.themeService.themeOptions;
 
@@ -48,12 +69,52 @@ export class ConfiguracionesComponent {
     this.isAdmin() ? '/admin/profile' : '/provider/profile',
   );
 
+  /** `null` = cargando; el toggle queda deshabilitado hasta tener el valor. */
+  readonly blockHolidays = signal<boolean | null>(null);
+  readonly savingHolidays = signal(false);
+  private holidaysLoaded = false;
+
+  constructor() {
+    // `me` puede llegar async: cargamos la config del tenant cuando el usuario
+    // ya es admin (solo los admins ven/editan esta sección).
+    effect(() => {
+      if (!this.isAdmin() || this.holidaysLoaded) return;
+      this.holidaysLoaded = true;
+      this.tenantSettingsApi.getSettings().subscribe({
+        next: (s) => this.blockHolidays.set(s.block_bookings_on_holidays ?? true),
+        error: () => this.blockHolidays.set(null),
+      });
+    });
+  }
+
+  onTabChange(value: string | number | undefined): void {
+    if (value === undefined) return;
+    this.activeTab.set(String(value));
+  }
+
+  onBlockHolidaysChange(value: boolean): void {
+    const previous = this.blockHolidays();
+    this.blockHolidays.set(value);
+    this.savingHolidays.set(true);
+    this.tenantSettingsApi.updateSettings({ block_bookings_on_holidays: value }).subscribe({
+      next: (s) => {
+        this.blockHolidays.set(s.block_bookings_on_holidays ?? value);
+        this.savingHolidays.set(false);
+      },
+      error: (err) => {
+        this.blockHolidays.set(previous);
+        this.savingHolidays.set(false);
+        this.httpError.handle(err, this.lang.t('settings.holidays.save_action'));
+      },
+    });
+  }
+
   onThemeChange(v: ThemeName): void {
     this.themeService.setTheme(v);
   }
 
-  onDarkChange(v: boolean): void {
-    this.themeService.setDarkMode(v);
+  onAppearanceChange(mode: Appearance): void {
+    this.themeService.setAppearance(mode);
   }
 
   onLangChange(v: Language): void {

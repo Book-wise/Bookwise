@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { Client } from '@models';
+import { Client, ClientPack } from '@models';
 import { LanguageService } from '@services/language.service';
 import { ClientDetailStore, PatientTab as StorePatientTab, NotificationValues } from '@core/stores/client-detail.store';
 import { STATUS_COLOR_MAP } from '@features/admin/bookings/constants/booking-statuses';
@@ -103,9 +103,10 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   // ── Computed: badge counts (from store) ──────────────────────────────────────
 
-  readonly plansCount = computed(() =>
-    this.detailStore.packs().data.filter(p => p.status === 'active').length
-  );
+  /** Todos los packs del cliente (active + completed + abandoned). */
+  readonly packs = computed(() => this.detailStore.packs().data);
+
+  readonly plansCount = computed(() => this.packs().length);
 
   readonly sessionsCount = computed(() =>
     this.detailStore.packs().data
@@ -135,6 +136,20 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
   readonly activePacks = computed(() =>
     this.detailStore.packs().data.filter(p => p.status === 'active')
   );
+
+  /** Chip de estado del pack (etiqueta i18n + clase de color por status). */
+  packStatusChip(pack: ClientPack): { label: string; cls: string } {
+    switch (pack.status) {
+      case 'completed':
+      case 'used':
+        return { label: this.lang.t('patient_card.pack.status.completed'), cls: 'bw-chip bw-chip--secondary' };
+      case 'abandoned':
+      case 'expired':
+        return { label: this.lang.t('patient_card.pack.status.abandoned'), cls: 'bw-chip bw-chip--warning' };
+      default:
+        return { label: this.lang.t('patient_card.pack.status.active'), cls: 'bw-chip bw-chip--success' };
+    }
+  }
 
   /** Flattened sessions from all active packs */
   readonly allPackSessions = computed(() => {

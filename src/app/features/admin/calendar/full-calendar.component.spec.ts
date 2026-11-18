@@ -1,22 +1,30 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal, computed } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FullCalendarComponent } from './full-calendar.component';
 import { AuthService } from '@services/auth.service';
+import { TenantSwitchService } from '@services/tenant-switch.service';
+import type { TenantSwitchResult } from '@services/tenant-switch.service';
 import { LocationsApiService } from '@services/api/locations-api.service';
 import { ProvidersApiService } from '@services/api/providers-api.service';
 import { BlockedSlotsApiService } from '@services/api/blocked-slots-api.service';
 import { BookingsApiService } from '@services/api/bookings-api.service';
 import { ServicesApiService } from '@services/api/services-api.service';
 import { ClientsApiService } from '@services/api/clients-api.service';
+import { HolidaysApiService } from '@services/api/holidays-api.service';
+import { TenantSettingsApiService } from '@services/api/tenant-settings-api.service';
 import { MessageService } from 'primeng/api';
 import { HttpErrorService } from '@services/http-error.service';
 import { CalendarNavigationService } from '@services/calendar-navigation.service';
 import { BookingStore } from '@core/stores/booking.store';
-import { Location, Provider, User } from '@models';
+import { Booking, BookingStatus, Client, Location, Provider, Service, User } from '@models';
+import type { EventContentArg } from '@fullcalendar/core';
 import { DateTime } from 'luxon';
+import { formatCLP } from '@shared/config/currency.config';
+import type { Payment } from '@models';
+import { formatSpanishLongDate } from '@core/utils/booking-sheet.util';
 
 /**
  * Integration tests for the calendar-navigation flow inside FullCalendarComponent.
@@ -73,6 +81,10 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
   let mockMessageService: { add: ReturnType<typeof vi.fn> };
   let mockHttpError: { handle: ReturnType<typeof vi.fn>; toToastConfig: ReturnType<typeof vi.fn> };
   let mockAuthUser: ReturnType<typeof signal<User | null>>;
+  let mockTenantSwitch: {
+    lastSwitch: ReturnType<typeof signal<TenantSwitchResult | null>>;
+    switchTenant: ReturnType<typeof vi.fn>;
+  };
 
   /** Test admin user with a stable id — the preference key is per-user. */
   function testUser(id: number): User {
@@ -122,7 +134,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'ana@test.com',
     active: true,
     location: locNorte,
-    roles: [{ id: 1, name: 'staff' }],
+    roles: [{ id: 1, slug: 'staff', name: 'Staff', permissions: [] }],
   };
   const providerJuan: Provider = {
     id: 8,
@@ -131,9 +143,9 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'juan@test.com',
     active: true,
     location: locCentro,
-    roles: [{ id: 1, name: 'staff' }],
+    roles: [{ id: 1, slug: 'staff', name: 'Staff', permissions: [] }],
   };
-  // Sólo recepcionista: activo pero SIN rol de atención → oculto (C2)
+  // Sólo recepcionista: activo → visible (C2, ya no hay filtro de rol)
   const providerRosa: Provider = {
     id: 9,
     first_name: 'Rosa',
@@ -141,7 +153,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'rosa@test.com',
     active: true,
     location: locCentro,
-    roles: [{ id: 3, name: 'recepcionista' }],
+    roles: [{ id: 3, slug: 'recepcionista', name: 'Recepcionista', permissions: [] }],
   };
   // staff_readonly: activo y visible (C2)
   const providerLuis: Provider = {
@@ -151,9 +163,9 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'luis@test.com',
     active: true,
     location: locCentro,
-    roles: [{ id: 4, name: 'staff_readonly' }],
+    roles: [{ id: 4, slug: 'staff_readonly', name: 'Staff (solo lectura)', permissions: [] }],
   };
-  // Inactivo con staff: excluido por active (C2)
+  // Inactivo: excluido por active, sin importar el rol (C2)
   const providerSofia: Provider = {
     id: 11,
     first_name: 'Sofía',
@@ -161,7 +173,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     email: 'sofia@test.com',
     active: false,
     location: locCentro,
-    roles: [{ id: 5, name: 'staff' }],
+    roles: [{ id: 5, slug: 'staff', name: 'Staff', permissions: [] }],
   };
 
   beforeEach(async () => {
@@ -183,21 +195,34 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     // tests so no test inherits another one's key.
     localStorage.clear();
     mockAuthUser = signal<User | null>(testUser(5));
+    mockTenantSwitch = { lastSwitch: signal<TenantSwitchResult | null>(null), switchTenant: vi.fn(() => of(void 0)) };
 
     await TestBed.configureTestingModule({
       imports: [FullCalendarComponent],
       providers: [
         provideZonelessChangeDetection(),
         { provide: Router, useValue: mockRouter },
+        // The component reads `?date=` from the route snapshot/subscription; a
+        // minimal ActivatedRoute keeps the calendar navigation tests hermetic.
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { queryParamMap: convertToParamMap({}) },
+            queryParamMap: of(convertToParamMap({})),
+          },
+        },
         // Minimally mocked AuthService — the component and BookingStore only
         // read `user()` in these flows.
         { provide: AuthService, useValue: { user: computed(() => mockAuthUser()), userRole: computed(() => mockAuthUser()?.role ?? null) } },
+        { provide: TenantSwitchService, useValue: mockTenantSwitch },
         { provide: LocationsApiService, useValue: mockLocationsApi },
         { provide: ProvidersApiService, useValue: mockProvidersApi },
         { provide: BlockedSlotsApiService, useValue: mockBlockedSlotsApi },
         { provide: BookingsApiService, useValue: mockBookingsApi },
         { provide: ServicesApiService, useValue: mockServicesApi },
         { provide: ClientsApiService, useValue: mockClientsApi },
+        { provide: HolidaysApiService, useValue: { getHolidays: vi.fn(() => of([])) } },
+        { provide: TenantSettingsApiService, useValue: { getSettings: vi.fn(() => of({ block_bookings_on_holidays: true })) } },
         { provide: MessageService, useValue: mockMessageService },
         { provide: HttpErrorService, useValue: mockHttpError },
         // REAL service — the transactional consumption is the behavior under test
@@ -524,13 +549,13 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     });
   });
 
-  describe('C2 — provider visibility (active + attention role)', () => {
-    it('shows active providers with role staff', () => {
+  describe('C2 — provider visibility (active only)', () => {
+    it('shows active providers regardless of role', () => {
       component.providers.set([providerAna, providerSofia]);
 
       const values = component.providerOptions().map((o) => o.value);
       expect(values).toContain(7); // activo + staff
-      expect(values).not.toContain(11); // inactivo + staff → oculto
+      expect(values).not.toContain(11); // inactivo → oculto
     });
 
     it('shows active providers with role staff_readonly', () => {
@@ -539,12 +564,12 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.providerOptions().map((o) => o.value)).toEqual([10]);
     });
 
-    it('hides active providers whose only role is recepcionista', () => {
+    it('shows active providers whose only role is recepcionista', () => {
       component.providers.set([providerRosa, providerJuan]);
 
       const values = component.providerOptions().map((o) => o.value);
       expect(values).toContain(8); // staff visible
-      expect(values).not.toContain(9); // recepcionista-only → oculto
+      expect(values).toContain(9); // recepcionista-only → ahora visible
     });
   });
 
@@ -555,7 +580,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       component.onFilterChange();
       expect(store.filters().selectedProviderId).toBe(8);
 
-      // Reload returns Juan now inactive → excluded by the C2 filter
+      // Reload returns Juan now inactive → excluded because inactive
       const juanInactive: Provider = { ...providerJuan, active: false };
       mockProvidersApi.getProviders.mockReturnValue(of([providerAna, juanInactive]));
 
@@ -592,11 +617,11 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.slotDurationMinutes()).toBe(40);
       expect(component.calendarOptions.slotDuration).toBe('00:40:00');
       expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '00:40:00');
-      // Selection snap must stay fixed at 1h
-      expect(component.calendarOptions.snapDuration).toBe('01:00:00');
+      // Snap follows slotDuration by FullCalendar default — never hardcoded
+      expect(component.calendarOptions.snapDuration).toBeUndefined();
     });
 
-    it('formats edge durations and never touches snapDuration', () => {
+    it('formats edge durations for the density control', () => {
       const calendarMock = setOptionStub();
       (component as unknown as { calendar: unknown }).calendar = calendarMock as never;
 
@@ -604,12 +629,13 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.slotDurationMinutes()).toBe(60);
       expect(component.calendarOptions.slotDuration).toBe('01:00:00');
       expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '01:00:00');
+      expect(component.calendarOptions.snapDuration).toBeUndefined();
 
       component.applySlotDuration(5);
       expect(component.slotDurationMinutes()).toBe(5);
       expect(component.calendarOptions.slotDuration).toBe('00:05:00');
       expect(calendarMock.setOption).toHaveBeenCalledWith('slotDuration', '00:05:00');
-      expect(component.calendarOptions.snapDuration).toBe('01:00:00');
+      expect(component.calendarOptions.snapDuration).toBeUndefined();
     });
 
     it('exposes the 8 duration options with localized labels', () => {
@@ -696,4 +722,382 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.userRoleLabel()).toBe('');
     });
   });
+
+  describe('tenant switch effect (lastSwitch)', () => {
+    it('re-applies the coordinator resolved location and provider after a switch', () => {
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 2,
+        providerId: 8,
+      });
+
+      fixture.detectChanges();
+
+      // New tenant's lists are re-fetched and the resolved selection applied
+      expect(mockLocationsApi.getLocations).toHaveBeenCalled();
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 2 });
+      expect(component.selectedLocationId).toBe(2);
+      expect(component.selectedProviderId).toBe(8);
+      expect(store.filters().selectedLocationId).toBe(2);
+      expect(store.filters().selectedProviderId).toBe(8);
+    });
+
+    it('reconciles a provider missing from the new tenant to null (all providers)', () => {
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 1,
+        providerId: 999,
+      });
+
+      fixture.detectChanges();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
+      // A switch is not a navigation intent — no context toast is emitted
+      expect(mockMessageService.add).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the first active location when the resolved one is not in the new tenant', () => {
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 999,
+        providerId: null,
+      });
+
+      fixture.detectChanges();
+
+      expect(component.selectedLocationId).toBe(1);
+      expect(mockProvidersApi.getProviders).toHaveBeenCalledWith({ location_id: 1 });
+      expect(component.selectedProviderId).toBeNull();
+    });
+
+    it('does not re-apply a switch already present when the agenda mounts', () => {
+      // Stop the beforeEach component's effects before publishing the switch.
+      fixture.destroy();
+      mockTenantSwitch.lastSwitch.set({
+        userId: 5,
+        tenantId: 2,
+        locationId: 2,
+        providerId: 8,
+      });
+      mockLocationsApi.getLocations.mockClear();
+
+      const fresh = TestBed.createComponent(FullCalendarComponent);
+      fresh.detectChanges();
+
+      // Only the mount-time default load ran; the primed effect did not
+      // duplicate it (it restores from the tenant-scoped preferences instead).
+      expect(mockLocationsApi.getLocations).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('provider memory (per user, localStorage)', () => {
+    const providerKeyFor = (userId: number) => `bw:lastProviderId:${userId}`;
+
+    it('restores the remembered provider on the default load path', () => {
+      localStorage.setItem(providerKeyFor(5), '8');
+
+      component.loadLocations();
+
+      expect(component.selectedProviderId).toBe(8);
+      expect(store.filters().selectedProviderId).toBe(8);
+    });
+
+    it('reconciles a remembered provider missing from the list to null', () => {
+      localStorage.setItem(providerKeyFor(5), '999');
+
+      component.loadLocations();
+
+      expect(component.selectedProviderId).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
+    });
+
+    it('persists the provider choice per user + tenant on change', () => {
+      component.selectedProviderId = 8;
+
+      component.onProviderChange();
+
+      expect(localStorage.getItem(providerKeyFor(5))).toBe('8');
+      expect(store.filters().selectedProviderId).toBe(8);
+    });
+
+    it('remembers a cleared provider as null (all providers)', () => {
+      localStorage.setItem(providerKeyFor(5), '8');
+      component.selectedProviderId = null;
+
+      component.onProviderChange();
+
+      expect(localStorage.getItem(providerKeyFor(5))).toBeNull();
+      expect(store.filters().selectedProviderId).toBeNull();
+    });
+  });
+
+  describe('buildEventContent (input de la card de evento)', () => {
+    function bookingInput(overrides: Partial<Booking> = {}): Booking {
+      return {
+        id: 1,
+        status_id: 2,
+        start_time: '2025-01-01T09:00:00-03:00',
+        end_time: '2025-01-01T10:00:00-03:00',
+        price: 0,
+        client: { id: 1, first_name: 'Matias', last_name: 'Díaz', email: 'm@t.com', active: true },
+        service: { id: 5, name: 'Kinesiología general', duration_minutes: 30, price: 0, active: true },
+        status: { id: 2, name: 'confirmado', color: '#ECBE51', is_cancellation: false },
+        payment_status: null,
+        pack_session: null,
+        ...overrides,
+      } as Booking;
+    }
+
+    function infoFor(
+      booking: Booking,
+      opts: { start?: Date; end?: Date; viewType?: string } = {},
+    ): EventContentArg {
+      return {
+        event: {
+          title: `${booking.client?.first_name ?? ''} ${booking.client?.last_name ?? ''}`.trim(),
+          startStr: booking.start_time,
+          endStr: booking.end_time,
+          start: opts.start ?? new Date('2025-01-01T12:00:00Z'),
+          end: opts.end ?? new Date('2025-01-01T13:00:00Z'),
+          extendedProps: { booking },
+        },
+        view: { type: opts.viewType ?? 'timeGridWeek' },
+      } as unknown as EventContentArg;
+    }
+
+    const build = (info: EventContentArg) =>
+      (
+        component as unknown as {
+          buildEventContent(i: EventContentArg): { html: string };
+        }
+      ).buildEventContent(info).html;
+
+    it('mapea pago pagado y color de estado', () => {
+      const html = build(infoFor(bookingInput({ payment_status: 'paid' })));
+      expect(html).toContain('ev__pay--paid');
+      expect(html).toContain('>$</span>');
+      expect(html).toContain('--ev-c:#ECBE51');
+    });
+
+    it('mapea pack session a servicio y píldora', () => {
+      const html = build(
+        infoFor(
+          bookingInput({
+            pack_session: {
+              session_number: 3,
+              total_sessions: 6,
+              client_pack_id: 1,
+              service_pack_id: 1,
+              status: 'active',
+            },
+          }),
+        ),
+      );
+      expect(html).toContain('Pack · sesión 3/6');
+      expect(html).toContain('ev__sessions">3/6');
+    });
+
+    it('evento corto (< 30 min) no emite la fila de contexto', () => {
+      const html = build(
+        infoFor(bookingInput(), {
+          start: new Date('2025-01-01T12:00:00Z'),
+          end: new Date('2025-01-01T12:15:00Z'),
+        }),
+      );
+      expect(html).not.toContain('ev__row2');
+    });
+
+    it('el bloque de selección (sin reserva ni bloqueo) no dibuja la hora oscura', () => {
+      // `selectMirror` re-renderiza la selección por este mismo hook: sin reserva
+      // el generador emitía la card vacía y la hora quedaba en tinta oscura
+      // encima de la etiqueta azul del slot (`.fc-highlight::after`).
+      const mirror = {
+        event: {
+          title: '',
+          startStr: '2025-01-01T10:00:00-03:00',
+          endStr: '2025-01-01T11:00:00-03:00',
+          start: new Date('2025-01-01T13:00:00Z'),
+          end: new Date('2025-01-01T14:00:00Z'),
+          extendedProps: {},
+        },
+        view: { type: 'timeGridWeek' },
+      } as unknown as EventContentArg;
+
+      expect(build(mirror)).toBe('');
+    });
+  });
+
+  // ── Ficha de la cita («Detalles de la Cita») ──────────────────────────────
+  // El rediseño mueve la jerarquía al template, pero el contrato de acciones y
+  // el dato de pago tienen que seguir siendo los mismos: estos tests los pinean.
+  describe('detalle de la cita (ficha compartida)', () => {
+    const start = '2025-11-14T09:30:00';
+
+    function bookingFixture(
+      paymentStatus: Booking['payment_status'],
+      payment: Payment | null = null,
+    ): Booking {
+      return {
+        id: 452,
+        start_time: start,
+        end_time: '2025-11-14T10:15:00',
+        effective_duration_minutes: 45,
+        price: 38000,
+        notes: 'Llegar 10 minutos antes con ropa cómoda.',
+        internal_notes: 'Segunda sesión de hombro derecho.',
+        status_id: 2,
+        status: { id: 2, name: 'Confirmado', color: '#ECBE51' } as BookingStatus,
+        client: {
+          id: 88,
+          first_name: 'Camila',
+          last_name: 'Rojas Fuentes',
+          email: 'camila.rojas@correo.cl',
+          phone: '+56 9 8123 4567',
+          rut: '17.842.503-6',
+          active: true,
+        } as Client,
+        service: {
+          id: 3,
+          name: 'Kinesiología deportiva',
+          price: 38000,
+        } as unknown as Service,
+        provider: { id: 7, first_name: 'Nicolás', last_name: 'Herrera Salas' } as Provider,
+        location: { id: 1, name: 'Sede Providencia' } as unknown as Location,
+        payment_status: paymentStatus,
+        payment: payment as Booking['payment'],
+        pack_session: {
+          session_number: 3,
+          total_sessions: 6,
+          client_pack_id: 1,
+          service_pack_id: 2,
+          status: 'scheduled',
+        },
+      };
+    }
+
+    /** Abre la ficha con la reserva dada y devuelve el nodo donde vive el shell. */
+    function openSheet(booking: Booking): ParentNode {
+      mockBookingsApi.getBookings.mockReturnValue(of({ data: [booking], meta: {} }) as never);
+      store.loadEvents({ dateFrom: '2025-11-01', dateTo: '2025-11-30' });
+      store.selectBooking(booking);
+      component.showEventDialog.set(true);
+      fixture.detectChanges();
+
+      const host = fixture.nativeElement as HTMLElement;
+      return host.querySelector('.bw-sheet__body') ? host : document;
+    }
+
+    function textsOf(scope: ParentNode, selector: string): string[] {
+      return Array.from(scope.querySelectorAll(selector)).map((node) =>
+        (node.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
+    }
+
+    afterEach(() => {
+      component.showEventDialog.set(false);
+      fixture.detectChanges();
+    });
+
+    it('ordena la ficha por jerarquía: identidad, sesión, pago y notas', () => {
+      const payment: Payment = {
+        id: 9,
+        total_amount: 38000,
+        paid_amount: 20000,
+        remaining_amount: 18000,
+        status: 'partial',
+      };
+      const scope = openSheet(bookingFixture('partial', payment));
+
+      // Cabecera, fila 1: iniciales, nombre, RUT y badge de estado.
+      expect(textsOf(scope, '.bw-sheet__avatar')).toEqual(['CR']);
+      expect(textsOf(scope, '.bw-sheet__name')[0]).toContain('Camila Rojas Fuentes');
+      expect(textsOf(scope, '.bw-sheet__top .bw-chip--secondary')).toEqual(['17.842.503-6']);
+      expect(textsOf(scope, '.bw-sheet__head-status')).toEqual(['Confirmado']);
+
+      // Cabecera, fila 2: el teléfono con su botón de WhatsApp.
+      expect(textsOf(scope, '.bw-sheet__contact')).toEqual(['+56 9 8123 4567']);
+      expect(scope.querySelector('.bw-sheet__wa-link')?.getAttribute('href')).toBe(
+        'https://wa.me/56981234567',
+      );
+
+      // Bloque de sesión: el «cuándo» grande, la duración y la sesión del pack.
+      expect(textsOf(scope, '.bw-sheet__day')).toEqual([formatSpanishLongDate(start)]);
+      expect(textsOf(scope, '.bw-sheet__time')[0]).toContain('09:30');
+      expect(textsOf(scope, '.bw-sheet__time')[0]).toContain('10:15');
+      expect(textsOf(scope, '.bw-sheet__duration')).toEqual(['45 min']);
+      expect(textsOf(scope, '.bw-sheet__session-side .bw-chip')).toEqual(['Sesión 3 de 6']);
+      expect(textsOf(scope, '.bw-sheet__service')).toEqual(['Kinesiología deportiva']);
+      expect(textsOf(scope, '.bw-sheet__fact').join(' ')).toContain('Nicolás Herrera Salas');
+      expect(textsOf(scope, '.bw-sheet__fact').join(' ')).toContain('Sede Providencia');
+
+      // Pago visible sin abrir nada: precio, estado, abonado y saldo.
+      expect(textsOf(scope, '.bw-sheet__amount')).toEqual([formatCLP(38000)]);
+      expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pago parcial']);
+      expect(textsOf(scope, '.bw-sheet__pay-note')[0]).toContain(formatCLP(20000));
+      expect(textsOf(scope, '.bw-sheet__pay-note')[0]).toContain(formatCLP(18000));
+
+      // Las notas se separan por lector.
+      expect(textsOf(scope, '.bw-sheet__note--internal')[0]).toContain(
+        'Segunda sesión de hombro derecho.',
+      );
+    });
+
+    it('ofrece Abonar y Ver pago con pago parcial', () => {
+      const scope = openSheet(
+        bookingFixture('partial', {
+          id: 9,
+          total_amount: 38000,
+          paid_amount: 20000,
+          remaining_amount: 18000,
+          status: 'partial',
+        }),
+      );
+
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Abonar',
+        'Ver pago',
+        'Editar',
+      ]);
+      // Iconos del footer: plus para Abonar, dollar para Ver pago, lápiz para Editar.
+      for (const icon of ['pi-plus', 'pi-dollar', 'pi-pencil']) {
+        expect(scope.querySelectorAll(`.bw-sheet__foot-actions .${icon}`).length).toBe(1);
+      }
+    });
+
+    it('con la reserva pagada sólo deja Ver pago', () => {
+      const scope = openSheet(
+        bookingFixture('paid', {
+          id: 9,
+          total_amount: 38000,
+          paid_amount: 38000,
+          remaining_amount: 0,
+          status: 'paid',
+        }),
+      );
+
+      expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pagado']);
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Ver pago',
+        'Editar',
+      ]);
+    });
+
+    it('sin pagos registrados ofrece sólo Abonar y lo dice', () => {
+      // El backend manda `{}` cuando no hay pagos: no debe pintar montos.
+      const scope = openSheet(bookingFixture('unpaid', {} as Payment));
+
+      expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pago pendiente']);
+      expect(textsOf(scope, '.bw-sheet__pay-note')).toEqual(['Sin pagos registrados']);
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Abonar',
+        'Editar',
+      ]);
+    });
+  });
+
 });

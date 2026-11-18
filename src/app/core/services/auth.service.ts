@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, of, tap } from 'rxjs';
-import { AuthMeData, User, UserRole } from '@models';
+import { Observable, of, tap, map } from 'rxjs';
+import { AccountSummary, AuthMeData, AuthSwitchResponse, User, UserRole } from '@models';
 import { AuthApiService } from './api/auth-api.service';
 import { CalendarPrefsService } from './calendar-prefs.service';
 
@@ -19,11 +19,16 @@ export class AuthService {
   private _user  = signal<User | null>(this.getStoredUser());
   private _me    = signal<AuthMeData | null>(null);
   private _meLoaded = signal(false);
+  private _abilities = signal<string[]>([]);
+  private _permissions = signal<string[]>([]);
 
   readonly token           = computed(() => this._token());
   readonly user            = computed(() => this._user());
   readonly me              = computed(() => this._me());
   readonly meLoaded        = computed(() => this._meLoaded());
+  readonly abilities       = computed(() => this._abilities());
+  /** Permission keys efectivos del tenant activo (matriz editable), fail-closed. */
+  readonly permissions     = computed(() => this._permissions());
   readonly isAuthenticated = computed(() => !!this._token());
   readonly userRole        = computed(() => this._user()?.role ?? null);
   readonly isAdmin         = computed(() => this._user()?.role === 'admin');
@@ -31,6 +36,7 @@ export class AuthService {
   /** Roles de NEGOCIO (multi-tenant) — expuestos por el backend en /auth/me. */
   readonly isAdminGeneral  = computed(() => this._me()?.is_admin_general ?? false);
   readonly isAdminLocal    = computed(() => this._me()?.is_admin_local ?? false);
+  readonly isAdminLocation = computed(() => this._me()?.is_admin_location ?? false);
   /** True cuando el usuario debe completar onboarding: sin negocio o negocio pendiente
    *  (name vacío). El backend crea el tenant en el registro, así que NO se usa
    *  `onboarding_complete` (siempre true cuando hay tenant_id). */
@@ -45,9 +51,18 @@ export class AuthService {
     return this._token();
   }
 
-  private getStoredToken(): string | null {
+  /** Token persisted in `localStorage` — the cross-tab source of truth. The
+   *  interceptor compares it against the token a failed request actually used
+   *  to tell a rotated (stale) token apart from a genuinely expired session. */
+  getStoredToken(): string | null {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  /** Re-syncs the in-memory token from `localStorage` after another tab rotated
+   *  it. Does NOT write to `localStorage` — the persisted value wins. */
+  syncTokenFromStorage(): void {
+    this._token.set(this.getStoredToken());
   }
 
   private getStoredUser(): User | null {
@@ -70,9 +85,11 @@ export class AuthService {
     }
   }
 
-  login(token: string, user: User): void {
+  login(token: string, user: User, abilities?: string[], permissions?: string[]): void {
     this.setToken(token);
     this.setUser(user);
+    this._abilities.set(abilities ?? []);
+    this._permissions.set(permissions ?? []);
     this.navigateByRole(user.role);
   }
 
@@ -86,10 +103,13 @@ export class AuthService {
       return of(this._me() as AuthMeData);
     }
     return this.authApi.getMe().pipe(
-      tap((me) => {
-        this._me.set(me);
+      tap((res) => {
+        this._me.set(res.user);
+        this._abilities.set(res.abilities ?? []);
+        this._permissions.set(res.permissions ?? []);
         this._meLoaded.set(true);
       }),
+      map((res) => res.user),
     );
   }
 
@@ -99,14 +119,76 @@ export class AuthService {
     this._meLoaded.set(true);
   }
 
-  /** Cambia el negocio activo (admin_general) y refresca el caché de /auth/me. */
-  switchTenant(tenantId: number): Observable<AuthMeData> {
+  /**
+   * Reemplaza una cuenta dentro del caché de /auth/me con el summary devuelto
+   * por el backend (p. ej. el `data` del `PATCH /v1/accounts/{id}`), sin refetch.
+   * Si la cuenta no está cacheada, no hace nada.
+   */
+  updateAccount(account: AccountSummary): void {
+    const me = this._me();
+    const accounts = me?.accounts;
+    if (!me || !accounts?.length) return;
+    const index = accounts.findIndex((a) => a.id === account.id);
+    if (index < 0) return;
+    const next = accounts.slice();
+    next[index] = account;
+    this._me.set({ ...me, accounts: next });
+  }
+
+  /** Cambia el negocio activo (admin_general) y adopta la sesión rotada.
+   *  El backend revoca el token viejo y devuelve uno nuevo, así que hay que
+   *  reemplazar el token persistido; actualiza `user()` vía `setUser` — nunca
+   *  `login()`, que navegaría. */
+  switchTenant(tenantId: number): Observable<AuthSwitchResponse> {
     return this.authApi.switchTenant(tenantId).pipe(
-      tap((me) => {
-        this._me.set(me);
+      tap((res) => {
+        this.setToken(res.token);
+        this._me.set(res.user);
         this._meLoaded.set(true);
+        this.setUser(this.toUser(res.user));
+        this._abilities.set(res.abilities ?? []);
+        this._permissions.set(res.permissions ?? []);
       }),
     );
+  }
+
+  /** True when the backend granted the given ability on the active session. */
+  hasAbility(ability: string): boolean {
+    return this._abilities().includes(ability);
+  }
+
+  /** True when the user holds the given permission key on the active tenant. */
+  hasPermission(permission: string): boolean {
+    return this._permissions().includes(permission);
+  }
+
+  /** True when the user holds ALL the given permission keys. */
+  hasAllPermissions(...permissions: string[]): boolean {
+    const set = new Set(this._permissions());
+    return permissions.every((p) => set.has(p));
+  }
+
+  /** True when the user holds AT LEAST ONE of the given permission keys. */
+  hasAnyPermission(...permissions: string[]): boolean {
+    const set = new Set(this._permissions());
+    return permissions.some((p) => set.has(p));
+  }
+
+  /** Mapea el payload de /auth/me a la forma persistida `User`. */
+  private toUser(me: AuthMeData): User {
+    return {
+      id: me.id,
+      email: me.email,
+      name: me.name,
+      phone: me.phone ?? undefined,
+      avatar_url: me.avatar_url ?? null,
+      role: me.role,
+      provider_id: me.provider_id ?? null,
+      tenant_id: me.tenant_id,
+      email_verified_at: me.email_verified_at,
+      onboarding_complete: me.onboarding_complete,
+      business: me.business,
+    };
   }
 
   private navigateByRole(role: UserRole): void {
@@ -125,13 +207,16 @@ export class AuthService {
     this._user.set(null);
     this._me.set(null);
     this._meLoaded.set(false);
+    this._abilities.set([]);
+    this._permissions.set([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
     }
-    // Limpia preferencias por usuario (p. ej. última sucursal de la agenda)
-    // para que no queden restos del usuario anterior en el mismo navegador.
-    this.calendarPrefs.setLastLocationId(userId, null);
+    // Limpia TODAS las preferencias tenant-scoped del usuario (sucursal +
+    // profesional, incl. la clave legacy user-only) para que no queden restos
+    // del usuario anterior en el mismo navegador.
+    this.calendarPrefs.clearForUser(userId);
     this.router.navigate(['/login']);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -39,6 +39,29 @@ export class LoginComponent {
 
   credentials: LoginCredentials = { email: '', password: '' };
 
+  /**
+   * El formulario de correo arranca plegado: los proveedores y el correo son
+   * los cuatro caminos de entrada y el formulario aparece cuando se elige el
+   * de correo (artboard `design/login/01-split-brand.html`).
+   */
+  readonly showEmailForm = signal(false);
+
+  private readonly emailInput = viewChild<ElementRef<HTMLInputElement>>('emailInput');
+
+  constructor() {
+    // Al desplegar, el foco va al campo de correo: el usuario ya eligió el
+    // camino, no tiene que buscarlo con Tab.
+    effect(() => {
+      if (this.showEmailForm()) {
+        this.emailInput()?.nativeElement.focus();
+      }
+    });
+  }
+
+  toggleEmailForm(): void {
+    this.showEmailForm.update((open) => !open);
+  }
+
   onLogin(): void {
     if (!this.credentials.email || !this.credentials.password) return;
 
@@ -46,8 +69,8 @@ export class LoginComponent {
     this.error.set(null);
 
     this.authApi.login(this.credentials).subscribe({
-      next: ({ token, user }) => {
-        this.auth.login(token, user);
+      next: ({ token, user, abilities, permissions }) => {
+        this.auth.login(token, user, abilities, permissions);
         this.loading.set(false);
       },
       error: (err) => {

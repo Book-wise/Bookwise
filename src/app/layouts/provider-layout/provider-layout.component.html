@@ -4,12 +4,24 @@
   <!-- Sidebar -->
   <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()" [class.collapsed]="effectivelyCollapsed()">
     <div class="sidebar-header">
-      <div class="logo-wrapper" [class.logo-hidden]="effectivelyCollapsed()">
+      <a
+        class="logo-wrapper"
+        href="https://www.bookwise.cl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [class.logo-hidden]="effectivelyCollapsed()"
+      >
         <img src="assets/images/logo_side_transparente.png" alt="Bookwise" class="sidebar-logo" />
-      </div>
-      <div class="logo-icon-wrapper" [class.logo-hidden]="!effectivelyCollapsed()">
+      </a>
+      <a
+        class="logo-icon-wrapper"
+        href="https://www.bookwise.cl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [class.logo-hidden]="!effectivelyCollapsed()"
+      >
         <img src="assets/images/icono.svg" alt="BW" class="sidebar-icon-img" />
-      </div>
+      </a>
     </div>
 
     <!-- Flecha de colapso/cierre, ARRIBA antes del menú, separada por una línea.

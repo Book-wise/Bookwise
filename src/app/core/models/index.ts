@@ -8,6 +8,9 @@ export * from './requests/sales';
 export * from './responses/bookings';
 export * from './responses/sales';
 
+// Dominio clínico (ficha médica)
+export * from './clinical-record';
+
 export interface Locality {
   id: number;
   name: string;
@@ -30,8 +33,11 @@ export interface Location {
   comuna?: LocationComuna;
   timezone: string;
   codigo_postal?: string;
-  opening_time?: string;
-  closing_time?: string;
+  opening_time?: string | null;
+  closing_time?: string | null;
+  effective_opening_time?: string;
+  effective_closing_time?: string;
+  working_days?: number[];
   active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -51,6 +57,8 @@ export interface Provider {
   updated_at?: string;
 }
 
+export type ServiceStatus = 'draft' | 'active' | 'inactive';
+
 export interface Service {
   id: number;
   name: string;
@@ -61,6 +69,12 @@ export interface Service {
   max_duration_minutes?: number;
   price: string | number;
   active: boolean;
+  status?: ServiceStatus;
+  attribute_name?: string | null;
+  image_url?: string | null;
+  image_thumb_url?: string | null;
+  variations?: ServiceVariation[];
+  wc_product_id?: number | null;
   slot_config?: {
     interval_minutes: number;
     buffer_minutes: number;
@@ -68,6 +82,42 @@ export interface Service {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface ServiceVariation {
+  id?: number;
+  term: string;
+  total_sessions: number;
+  price: string | number;
+  compare_at_price?: string | number | null;
+  discount_percent?: number | null;
+  sku?: string | null;
+  active?: boolean;
+  name?: string;
+}
+
+export interface ServiceVariationInput {
+  id?: number;
+  term: string;
+  total_sessions: number;
+  price: string | number;
+  compare_at_price?: string | number | null;
+  sku?: string | null;
+  active?: boolean;
+}
+
+export interface CreateServicePayload {
+  name: string;
+  description?: string;
+  attribute_name?: string | null;
+  duration_minutes: number;
+  price: string | number;
+  slot_interval_minutes?: number;
+  active?: boolean;
+  status?: ServiceStatus;
+  variations?: ServiceVariationInput[];
+}
+
+export type UpdateServicePayload = Partial<CreateServicePayload>;
 
 export interface ServicePack {
   id: number;
@@ -102,6 +152,8 @@ export interface Client {
   phone?: string | null;
   rut?: string | null;
   gender?: string | null;
+  /** Fecha de nacimiento `YYYY-MM-DD` (contrato §2, columna `date` nullable). */
+  birth_date?: string | null;
   wc_customer_id?: number | null;
   active: boolean;
   custom_attributes?: Record<string, unknown>;
@@ -121,7 +173,7 @@ export interface ClientPack {
   total_sessions: number;
   used_sessions: number;
   remaining_sessions: number;
-  status: 'active' | 'used' | 'expired';
+  status: 'active' | 'used' | 'expired' | 'completed' | 'abandoned';
   created_at?: string;
   updated_at?: string;
 }
@@ -193,12 +245,43 @@ export interface Booking {
 // Sale interface is defined in responses/sales.ts and re-exported via the barrel
 
 export interface AvailableSlot {
-  location_id: number;
-  provider_id: number;
-  service_id: number;
-  start_time: string;
-  end_time: string;
+  start: string;
+  end: string;
   duration_minutes: number;
+  provider_id: number;
+}
+
+/** `meta` de `GET /available_slots` (consulta de un día puntual). */
+export interface AvailableSlotsMeta {
+  date: string;
+  location_id: number;
+  service_id: number | null;
+  duration_minutes: number | null;
+  slot_interval: number | null;
+  is_working_day: boolean;
+  is_holiday: boolean;
+  holiday_name: string | null;
+  total_slots: number;
+}
+
+export interface AvailableSlotsResponse {
+  data: AvailableSlot[];
+  meta: AvailableSlotsMeta;
+}
+
+/** Feriado nacional (`GET /holidays`). `date` en formato `YYYY-MM-DD`. */
+export interface Holiday {
+  date: string;
+  name: string;
+}
+
+/** Configuración global del tenant (`GET`/`PATCH /tenant/settings`). */
+export interface TenantSettings {
+  business_name?: string;
+  business_rut?: string;
+  business_logo_url?: string | null;
+  /** Default `true` en el backend; puede faltar hasta que se despliegue. */
+  block_bookings_on_holidays?: boolean;
 }
 
 export interface ProviderAvailability {
@@ -232,6 +315,10 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+  /** Top-level abilities granted by the backend (A1) — outside `user`. */
+  abilities?: string[];
+  /** Effective permission keys of the active tenant (editable matrix). */
+  permissions?: string[];
 }
 
 export interface LoginCredentials {
@@ -288,8 +375,84 @@ export interface Business {
   /** Texto libre cuando business_type === 'other'. */
   business_type_other?: string | null;
   logo_url?: string | null;
+  /** Bloqueo global de feriados del tenant (expuesto por BusinessResource en /auth/me). */
+  block_bookings_on_holidays?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+// ── Perfil fiscal de la cuenta (Datos de facturación) ────────────────────────
+/** Tipo de contribuyente (`accounts.taxpayer_type`). Los valores viajan en
+ *  inglés; las etiquetas en español viven en i18n. */
+export type TaxpayerType = 'company' | 'individual';
+
+/** Actividad económica del SII (`GET /v1/sii-activities`): el "giro" fiscal. */
+export interface SiiActivity {
+  id: number;
+  /** Código oficial SII de 6 dígitos (ej. `960200`). */
+  code: string;
+  description: string;
+}
+
+/** Bloque fiscal de una cuenta. Todos los campos son nullable: toda cuenta nace
+ *  sin perfil fiscal, así que el formulario debe tratarlo como "incompleto". */
+export interface AccountBillingData {
+  rut: string | null;
+  taxpayer_type: TaxpayerType | null;
+  legal_name: string | null;
+  /** Giro ya desnormalizado por el backend (evita un lookup en el select). */
+  sii_activity: SiiActivity | null;
+  billing_email: string | null;
+  /** E.164 tal cual lo emite `bw-phone-input` (ej. `+56987524346`). */
+  billing_phone: string | null;
+  billing_address: string | null;
+  billing_region_id: number | null;
+  billing_comuna_id: number | null;
+}
+
+/** Rol de CUENTA del usuario, distinto de los roles de negocio `is_admin_*`. */
+export type AccountRole = 'owner' | 'admin' | 'billing';
+
+/** Negocio dentro del summary de cuenta. */
+export interface AccountTenantSummary {
+  id: number;
+  uuid?: string;
+  /** `business_name` del tenant. */
+  name: string;
+  /** Rol principal del usuario en ese negocio (`admin_general`, …). */
+  role: string | null;
+  membership_status: 'active' | 'inactive' | null;
+  provisioning_status?: string | null;
+}
+
+/** Summary de cuenta: shape compartido por `GET /v1/accounts`, `user.accounts[]`
+ *  de `/auth/me` y el `data` del `PATCH /v1/accounts/{id}`. */
+export interface AccountSummary extends AccountBillingData {
+  id: number;
+  uuid?: string;
+  /** Referencia pública corta (BW-XXXXXX), no secuencial. */
+  reference: string;
+  /** Nombre display de la cuenta; **distinto** de `legal_name` (razón social). */
+  name: string;
+  role: AccountRole;
+  membership_status: 'active' | 'inactive';
+  subscription?: Subscription | null;
+  tenants?: AccountTenantSummary[];
+}
+
+/** Payload de `PATCH /v1/accounts/{id}`. Update parcial: se manda solo lo que
+ *  cambia; un campo ausente no se toca y un `null` lo limpia.
+ *  Usa `sii_activity_id` (id del catálogo), nunca el objeto desnormalizado. */
+export interface UpdateAccountBillingData {
+  rut?: string | null;
+  taxpayer_type?: TaxpayerType | null;
+  legal_name?: string | null;
+  sii_activity_id?: number | null;
+  billing_email?: string | null;
+  billing_phone?: string | null;
+  billing_address?: string | null;
+  billing_region_id?: number | null;
+  billing_comuna_id?: number | null;
 }
 
 /** GET /auth/me (Bearer) → { user: AuthMeData }. El email del negocio no es editable. */
@@ -300,7 +463,14 @@ export interface AuthMeData {
   phone?: string | null;
   avatar_url?: string | null;
   role: UserRole;
+  /** Provider id when the authenticated user is provider-scoped; null otherwise. */
+  provider_id?: number | null;
   tenant_id: number | null;
+  /** Cuenta activa: la resuelve el backend, el front solo la lee. */
+  current_account_id?: number | null;
+  /** Cuentas del usuario, cada una con su bloque fiscal (mismo shape que
+   *  `GET /v1/accounts`). */
+  accounts?: AccountSummary[];
   email_verified_at: string | null;
   onboarding_complete: boolean;
   business: Business | null;
@@ -309,17 +479,61 @@ export interface AuthMeData {
   /** Roles de NEGOCIO (distintos del rol técnico `role`). */
   is_admin_general?: boolean;
   is_admin_local?: boolean;
+  is_admin_location?: boolean;
 }
 
 export interface AuthMeResponse {
   user: AuthMeData;
+  /** Top-level abilities on /auth/me (A1) — outside `user`. */
+  abilities?: string[];
+  /** Effective permission keys of the active tenant (editable matrix), fail-closed. */
+  permissions?: string[];
 }
 
-/** Rol de negocio (capa separada de `UserRole`). name ∈ admin_general|admin_local|recepcionista|recepcionista_readonly|staff|staff_readonly */
+/** POST /auth/switch-tenant | /auth/switch-account (Bearer) → { token, user, abilities }.
+ *  The backend ROTATES the token on every switch and revokes the previous one,
+ *  so callers MUST adopt `token`. `abilities` and `permissions` are TOP-LEVEL,
+ *  never inside `user`. */
+export interface AuthSwitchResponse {
+  token: string;
+  user: AuthMeData;
+  abilities: string[];
+  permissions: string[];
+}
+
+/**
+ * Business role (a layer separate from `UserRole`). `slug` is the identity used
+ * by every consumer: admin_general | admin_local | recepcionista |
+ * recepcionista_readonly | staff | staff_readonly. `name` is display-only and
+ * acts as the fallback label when no i18n key exists for the slug.
+ */
 export interface Role {
   id: number;
+  slug: string;
   name: string;
-  label?: string;
+  permissions: string[];
+}
+
+/** Single entry of the tenantless permission catalog (GET /v1/roles/permissions). */
+export interface PermissionItem {
+  key: string;
+  label: string;
+}
+
+/** Grouped permission catalog entry. */
+export interface PermissionGroup {
+  group: string;
+  items: PermissionItem[];
+}
+
+/** PATCH /v1/roles/{id}/permissions response body. */
+export interface RolePermissionsResponse {
+  message?: string;
+  data: {
+    role_id: number;
+    slug: string;
+    permissions: string[];
+  };
 }
 
 /** POST /businesses (Bearer) → cuerpo que SIEMPRE se valida en el front. */
@@ -368,4 +582,145 @@ export type { ClientPaginatedResponse } from './responses/client-paginated-respo
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
+}
+
+// ── Subscription usage (GET /subscription/usage) ──────────────────────────────
+/** Cuota plana del plan: `limit` es el máximo permitido y `current` el consumo actual. */
+export interface Quota {
+  limit: number;
+  current: number;
+}
+
+/** Uso por negocio. NO trae `name` — el front mapea `tenant_id` → nombre desde
+ *  `AuthService.me().businesses`. */
+export interface BusinessUsage {
+  tenant_id: number;
+  professionals: Quota;
+  locations: Quota;
+}
+
+/** Desglose por negocio del consumo de confirmaciones (bucket compartido de la cuenta). */
+export interface ConfirmationUsageByTenant {
+  tenant_id: number;
+  name: string;
+  consumed: number;
+}
+
+/** Consumo de confirmaciones de un canal. `consumed` es el TOTAL de la cuenta
+ *  (bucket compartido); `by_tenant` es el desglose por negocio.
+ *  `remaining = limit - consumed`. */
+export interface ConfirmationUsage {
+  limit: number;
+  consumed: number;
+  remaining: number;
+  period_start: string;
+  period_end: string;
+  pack_credit: number;
+  by_tenant: ConfirmationUsageByTenant[];
+}
+
+/** Payload de `GET /subscription/usage` (dentro del envoltorio `data`). */
+export interface UsageData {
+  account_id: number;
+  /** Referencia pública corta de la cuenta (BW-XXXXXX), no secuencial. */
+  account_reference?: string;
+  plan: {
+    slug: string;
+    billing_interval: string;
+  };
+  tenants: Quota;
+  users: Quota;
+  businesses: BusinessUsage[];
+  confirmations: {
+    email: ConfirmationUsage;
+    whatsapp: ConfirmationUsage;
+  };
+}
+
+/** Respuesta completa de `GET /subscription/usage`. */
+export interface UsageResponse {
+  data: UsageData;
+}
+
+// ── Plan catalog & subscription (GET /v1/plans · GET /v1/subscription) ────────
+/** Límites de entitlement de un plan (eje-b). `null` = cupo sin definir aún. */
+export interface PlanLimits {
+  max_tenants: number;
+  max_profesionales: number;
+  max_locations: number | null;
+  max_users: number | null;
+  email_monthly_limit: number | null;
+  whatsapp_monthly_limit: number | null;
+}
+
+/** Fila completa de un plan (PlanResource) — tal como la expone el backend. */
+export interface Plan extends PlanLimits {
+  id: number;
+  slug: string;
+  name: string;
+  billing_interval: 'month' | 'year';
+  price_clp: number;
+}
+
+/** Intervalo de un plan dentro del catálogo agrupado (GET /v1/plans). */
+export interface PlanCatalogEntry extends PlanLimits {
+  billing_interval: 'month' | 'year';
+  price_clp: number;
+}
+
+/** Grupo del catálogo público: un slug con sus intervalos month/year. */
+export interface PlanCatalogGroup {
+  slug: string;
+  name: string;
+  display_order: number;
+  plans: PlanCatalogEntry[];
+}
+
+/** Respuesta de `GET /v1/plans` (catálogo público, sin auth). */
+export interface PlansCatalogResponse {
+  data: PlanCatalogGroup[];
+}
+
+/** Add-on (pack de confirmaciones) contratado por la cuenta. */
+export interface SubscriptionAddon {
+  type: 'email' | 'whatsapp';
+  quantity: number;
+  credits_per_pack: number;
+  /** Costo del add-on para el período (unitario × quantity). */
+  price_clp: number;
+}
+
+/** Pack de confirmaciones ofrecido (catálogo de add-ons). */
+export interface AddonCatalogItem {
+  type: 'email' | 'whatsapp';
+  credits_per_pack: number;
+  price_clp: number;
+}
+
+/** Suscripción de la cuenta activa (GET /v1/subscription). */
+export interface Subscription {
+  id: number;
+  status: string;
+  plan: Plan | null;
+  scheduled_plan: Plan | null;
+  cancel_at_period_end: boolean;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  next_billing_at: string | null;
+  activated_at: string | null;
+  paused_at: string | null;
+  cancelled_at: string | null;
+  /** Packs de confirmaciones contratados (aditivo). */
+  addons?: SubscriptionAddon[];
+  /** Costo total de los add-ons del período. */
+  addons_total_clp?: number;
+  /** Precio del plan + add-ons del período. */
+  total_price_clp?: number;
+  /** Catálogo de packs disponibles para contratar (aditivo). */
+  addon_catalog?: AddonCatalogItem[];
+}
+
+/** Respuesta de `GET /v1/subscription` (dentro del envoltorio `data`). */
+export interface SubscriptionResponse {
+  data: Subscription | null;
 }

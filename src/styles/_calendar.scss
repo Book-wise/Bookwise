@@ -4,27 +4,38 @@
 //
 // Consumed by full-calendar (admin) and provider-calendar (provider).
 // Extracted verbatim from both components (pure move — zero behavior change)
-// with two deliberate exceptions per design:
-//   • .hover-mirror-* : :host dropped, #3788d8 → var(--bw-300) + color-mix
+// with one deliberate exception per design:
 //   • body.dark-theme .fc : merged from styles.scss + full-calendar, brand tokens
+// It also hosts the shared FullCalendar highlight (slot hover/click preview).
 // The dark block MUST stay last in this file — equal-specificity overrides.
 //
 // Component-scoped rules stay in each component: .cal-* skeletons,
-// .calendar-loading radius/padding, .slot-menu variants, .event-details,
-// provider pink .fc-timegrid-slot:hover.
+// .calendar-loading radius/padding, .slot-menu variants, .event-details.
 
 // ── Layout chrome ────────────────────────────────────────────────────────────
 
 .full-calendar-container {
-  padding: 1rem;
+  // Full-bleed y sin gap arriba: cancela el margen inferior del app-header y el
+  // padding lateral/bottom del `.main-content`.
+  margin: calc(-1 * var(--bw-space-lg)) -1.25rem -1.25rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: 991px) {
+    margin: calc(-1 * var(--bw-space-md)) -1rem -1rem;
+  }
+  // No padding here — the layout's `.main-content` is the only spacer now.
+  padding: 0;
+
+  // El calendario ocupa todo el card: sin padding interno del card.
+  .p-card-body,
+  .p-card-content {
     padding: 0;
+  }
 
-    .p-card {
-      border-radius: 0;
-      box-shadow: none;
-    }
+  // Full-bleed: el card ocupa todo el ancho y no lleva esquinas, sombra ni borde.
+  .p-card {
+    border-radius: 0;
+    box-shadow: none;
+    border: 0;
   }
 
   .calendar-header {
@@ -42,7 +53,7 @@
 
     @media (max-width: 425px) {
       flex-direction: row;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: flex-start;
       justify-content: flex-start;
       padding: 0.75rem;
@@ -86,18 +97,17 @@
     }
   }
 
-  // ── Herramientas (identity + slots + guía) — fila propia, visible en todos los tamaños ──
+  // Herramientas (slots + guía) inline en la fila de filtros — ahorra una fila.
   .calendar-tools {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    justify-content: center;
     flex-wrap: wrap;
-    padding: 0 1rem 0.75rem;
 
-    @media (max-width: 768px) {
+    // En mobile (S/M) los dos controles bajan a su propia línea.
+    @media (max-width: 425px) {
+      flex-basis: 100%;
       justify-content: center;
-      padding: 0 0.75rem 0.5rem;
     }
   }
 
@@ -113,7 +123,10 @@
     display: flex;
     align-items: flex-start;
     justify-content: stretch;
-    background: var(--p-surface-0);
+    // `--p-surface-0` es un token de PrimeNG y el preset está fijado en claro
+    // (`darkModeSelector: false`), así que en oscuro y en Kinesilk quedaba blanco.
+    // `--surface-card` sí lo redefinen los tres temas.
+    background: var(--surface-card);
     z-index: var(--z-overlay);
   }
 
@@ -183,6 +196,8 @@
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .fc .fc-event {
@@ -192,9 +207,16 @@
   padding: 0;
   font-size: 0.85rem;
   overflow: hidden;
+  // dayGrid events are rendered as <a> — kill the global link underline.
+  text-decoration: none;
 }
 
-.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview) {
+// Month/week split: dayGrid (month) events carry their state in the inner pill,
+// so the outer 3px accent bar is timeGrid-only. Without this exclusion the
+// dayGrid `<a>` events fall back to currentColor (#000) → a black left bar.
+// The admin card (`.ev`) now fills that left edge with the full-height payment
+// band, so events containing `.ev` are excluded too (provider keeps its own).
+.fc .fc-event:not(.fc-blocked-slot):not(.bw-slot-preview):not(.fc-event-mirror):not(.fc-daygrid-event):not(:has(.ev)) {
   border-left-width: 3px !important;
   border-left-style: solid !important;
 }
@@ -265,6 +287,147 @@
   align-self: center;
 }
 
+// ── Admin event card — nombre + hora + contexto (dos líneas) ─────────────────
+// La card real la genera buildEventContent() como string HTML (clases .ev__*).
+// El relleno por estado viene de booking.status.color vía `--ev-c` (el mismo
+// color que FullCalendar pinta en .fc-event). La banda de pago ocupa el borde
+// izquierdo donde antes iba la barra de acento de 3px.
+.fc .ev {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 0.4375rem 0 0;
+  overflow: hidden; // eje Y incluido: el contenido que no entra se recorta acá
+  background: var(--ev-c, transparent);
+  // La tinta NO sigue el tema: el relleno es un pastel fijo por estado, así que
+  // en oscuro --text-color (claro) quedaría ilegible sobre el pastel.
+  --ev-ink: var(--bw-900);
+  color: var(--ev-ink);
+}
+
+.fc .ev__pay {
+  align-self: stretch;
+  width: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  font-size: var(--bw-text-sm);
+  font-weight: var(--bw-weight-bold);
+  color: var(--bw-text-on-brand);
+
+  &--paid {
+    background: var(--bw-payment-paid);
+  }
+  &--partial {
+    background: #65a30d; // valor ya existente en _calendar.scss (no el token --bw-payment-partial)
+  }
+  &--none {
+    // Sin pago no se reserva la banda: la info arranca en el borde de la card.
+    display: none;
+  }
+}
+
+.fc .ev__main {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  // La fila 1 se ancla arriba y no se comprime: es la que siempre debe verse.
+  justify-content: flex-start;
+  gap: 0;
+  // Sin padding superior y con line-height compacto el bloque sube un poco y la
+  // fila 1 entra entera incluso en slots de 60 min (cards más bajas).
+  padding: 0 0 0 0.4375rem;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+.fc .ev__row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.fc .ev__row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.fc .ev__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--bw-font-table);
+  font-weight: var(--bw-weight-medium);
+  // Tinta oscura fija: el relleno es un pastel de estado, igual en los tres temas.
+  // El color explícito también evita que gane `.fc .fc-event { color:#000 !important }`.
+  color: var(--ev-ink, var(--bw-900));
+}
+
+.fc .ev__time {
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+  font-size: var(--bw-text-2xs);
+  font-weight: var(--bw-weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--ev-ink, var(--bw-900));
+}
+
+.fc .ev__ctx {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--bw-text-2xs);
+  color: color-mix(in srgb, var(--ev-ink, var(--bw-900)) 72%, transparent);
+}
+
+.fc .ev__marks {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.1875rem;
+  flex-shrink: 0;
+}
+
+.fc .ev__sessions {
+  padding: 0 0.1875rem;
+  border-radius: 3px;
+  font-size: var(--bw-text-2xs);
+  font-weight: var(--bw-weight-bold);
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--ev-ink, var(--bw-900)) 16%, transparent);
+  color: var(--ev-ink, var(--bw-900));
+}
+
+// Bloqueado: el rayado lo pinta `.fc-blocked-slot` (clase que FullCalendar
+// recibe en el evento); acá solo se apaga el relleno por estado y se baja el
+// contraste del texto a secundario.
+.fc .ev--blocked {
+  background: transparent;
+  color: var(--text-color-secondary);
+}
+
+.fc .ev--blocked .ev__name {
+  font-weight: var(--bw-weight-regular);
+  color: var(--text-color-secondary);
+}
+
+.fc .ev--blocked .ev__time {
+  color: var(--text-color-secondary);
+}
+
 .fc .fc-event-title {
   font-weight: 500;
 }
@@ -272,6 +435,53 @@
 .fc .fc-day-today {
   background-color: rgba(59, 130, 246, 0.1) !important;
 }
+
+/* Día no laborable (weekday fuera de working_days): rayas grises. */
+.fc .fc-day-closed {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(156, 163, 175, 0.12) 0px,
+    rgba(156, 163, 175, 0.12) 6px,
+    transparent 6px,
+    transparent 14px
+  ) !important;
+}
+
+/* Feriado bloqueado: mismo patrón de rayas que el bloqueo, en ámbar. */
+.fc .fc-day-holiday {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(217, 119, 6, 0.16) 0px,
+    rgba(217, 119, 6, 0.16) 6px,
+    transparent 6px,
+    transparent 14px
+  ) !important;
+}
+
+.fc-holiday-label {
+  display: block;
+  margin-top: 2px;
+  max-width: 100%;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #b45309;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mobile (vista semana): indicador compacto con el nombre en el tooltip nativo. */
+.fc-holiday-badge {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.6rem;
+  line-height: 1;
+  color: #b45309;
+  vertical-align: middle;
+}
+
+/* Header de un día feriado: en mobile es tappable para ver el nombre completo. */
 
 .fc .fc-timegrid-slot {
   height: 1.25rem;
@@ -478,11 +688,76 @@
   }
 }
 
+// ── Day popover (month "+N más") — Bookwise signature card ───────────────────
+// FullCalendar paints this card from its theme-dependent rules; we style it
+// explicitly so it is a solid, opaque Bookwise card with the signature left
+// accent (its theme background resolves to transparent in our setup).
+
+.fc .fc-popover {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--bw-300);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  opacity: 1;
+  overflow: hidden;
+  // Above our app overlays AND PrimeNG's dynamic overlay z-index
+  // (starts ~1000 and grows ~1000 per open overlay).
+  z-index: 10000 !important;
+}
+
+.fc .fc-popover-header {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.fc .fc-popover-title {
+  font-weight: 600;
+}
+
+.fc .fc-popover-close {
+  color: var(--text-color-secondary);
+  cursor: pointer;
+}
+
+.fc .fc-popover-body {
+  background: var(--surface-card);
+  padding: 0.5rem;
+}
+
 // ── Event hover tooltip ───────────────────────────────────────────────────────
 
 .event-tooltip-panel {
-  .p-overlaypanel-content {
+  // PrimeNG's anchored-overlay motion preset animates with a 300ms scale(.93),
+  // which feels heavy for a hover tooltip. Override it here (scoped to this
+  // tooltip) with a subtler fade + tiny slide on enter and leave.
+  &.p-anchored-overlay-enter-active {
+    animation: bw-tooltip-in 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &.p-anchored-overlay-leave-active {
+    animation: bw-tooltip-out 150ms cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  .p-popover-content {
     padding: 0.75rem 1rem;
+  }
+}
+
+@keyframes bw-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes bw-tooltip-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
   }
 }
 
@@ -561,7 +836,7 @@
   }
 
   &__label {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: #000;
     font-weight: 500;
     white-space: nowrap;
@@ -612,49 +887,50 @@
   pointer-events: none !important; /* IMPORTANTE: Hace el bloque invisible a los toques */
 }
 
-/* 2. EL CONTENEDOR PRINCIPAL */
-.hover-mirror-container {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: visible !important;
-  pointer-events: none !important; /* El dedo traspasará esta capa */
+// ── Slot preview — FullCalendar highlight fill (hover ghost → pinned card) ───
+// The per-component pointer handler resolves day + time and calls select();
+// FullCalendar paints `.fc-highlight` (inset:0 inside the day column), filling
+// the exact hovered day + slot. While hovering it is a translucent ghost; after
+// a click the wrapper drops `bw-slot-hovering` and it keeps the Bookwise border.
+
+// Persistent selection block (after click) — Bookwise signature card.
+.fc .fc-highlight {
+  background-color: color-mix(in srgb, var(--bw-300) 12%, transparent);
+  border-left: 3px solid var(--bw-300);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bw-300) 30%, transparent);
+  border-radius: 6px;
 }
 
-/* 3. LA ETIQUETA FLOTANTE SUPERIOR */
-.hover-mirror-label {
-  position: absolute !important;
-  top: -14px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-
-  background-color: var(--bw-300) !important;
-  color: #ffffff !important;
-  font-size: 11px !important;
-  font-weight: bold !important;
-  padding: 3px 8px !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-  z-index: 9999 !important;
-  pointer-events: none !important; /* Evita que la píldora azul bloquee el touch */
+// Hour label shown at the marked cell (hover + pinned).
+.fc .fc-highlight::after {
+  content: attr(data-bw-time);
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bw-300);
+  pointer-events: none;
 }
 
-/* 4. EL CUERPO DEL PREVIEW */
-.hover-mirror-body {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+// Hover preview (not yet clicked) — ghost, without the Bookwise border.
+.calendar-wrapper.bw-slot-hovering .fc .fc-highlight {
+  background-color: color-mix(in srgb, var(--bw-300) 8%, transparent);
+  border-left: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bw-300) 40%, transparent);
+  border-radius: 6px;
+}
 
-  background-color: color-mix(in srgb, var(--bw-300) 15%, transparent) !important;
-  border: 2px dashed var(--bw-300) !important;
-  border-radius: 6px !important;
-  box-sizing: border-box !important;
-  pointer-events: none !important; /* El dedo traspasará el fondo azul traslúcido */
+// The select mirror rides on top of the highlight — keep it outline-free.
+.fc .fc-timegrid-event.fc-event-mirror {
+  box-shadow: none;
+}
+
+// Hover preview in dark mode. The state class lives on `.calendar-wrapper`, an
+// ancestor of `.fc`, so this variant cannot nest inside the dark block below.
+body.dark-theme .calendar-wrapper.bw-slot-hovering .fc .fc-highlight {
+  background-color: color-mix(in srgb, var(--bw-300) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bw-300) 55%, transparent);
 }
 
 // ── Slot preview event (bloque temporal al clickear un slot) ─────────────────
@@ -715,6 +991,18 @@ body.dark-theme .fc {
   .fc-button-active:hover {
     background: var(--bw-300) !important;
     border-color: var(--bw-300) !important;
+  }
+
+  // Persistent (pinned) highlight in dark mode. The hovering variant lives just
+  // above this block because its state class is on `.calendar-wrapper` (an
+  // ancestor of `.fc`) and cannot be targeted from inside here.
+  .fc-highlight {
+    background-color: color-mix(in srgb, var(--bw-300) 22%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bw-300) 45%, transparent);
+  }
+
+  .fc-highlight::after {
+    color: var(--bw-200);
   }
 }
 
@@ -796,6 +1084,34 @@ body.dark-theme .fc {
       -45deg,
       #9ca3af 0px,
       #9ca3af 2px,
+      #ffffff 2px,
+      #ffffff 8px
+    );
+  }
+
+  &__holiday {
+    width: 28px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      #d97706 0px,
+      #d97706 2px,
+      #ffffff 2px,
+      #ffffff 8px
+    );
+  }
+
+  &__closed {
+    width: 28px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      #cbd5e1 0px,
+      #cbd5e1 2px,
       #ffffff 2px,
       #ffffff 8px
     );

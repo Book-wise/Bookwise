@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -9,9 +9,15 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
-import { HttpErrorService } from '@services/http-error.service';
+import { HttpErrorService, isCapacityLimitError } from '@services/http-error.service';
+import { LanguageService } from '@services/language.service';
+import { Router } from '@angular/router';
 import { ReferenceStore } from '@core/stores/reference.store';
 import { Location } from '@models';
+
+/** Requiere al menos un día laborable seleccionado (working_days no vacío). */
+const nonEmptyWorkingDays = (control: AbstractControl): ValidationErrors | null =>
+  Array.isArray(control.value) && control.value.length > 0 ? null : { required: true };
 
 export type DialogMode = 'create' | 'edit' | 'view';
 
@@ -30,6 +36,11 @@ export class LocationDialogComponent {
   private httpError = inject(HttpErrorService);
   private refStore = inject(ReferenceStore);
   private messageService = inject(MessageService);
+  private router = inject(Router);
+  protected readonly lang = inject(LanguageService);
+
+  /** Cuota de sucursales agotada (403 `tenant_location_limit_reached`). */
+  readonly capacityError = signal(false);
 
   visible = input(false);
   mode = input<DialogMode>('create');
@@ -43,8 +54,24 @@ export class LocationDialogComponent {
 
   saving = signal(false);
 
+  /** Horas tal como se mostraron al abrir el diálogo (ms epoch), para distinguir
+   *  si el admin las editó. Sin edición no se envían, así un horario "sin
+   *  configurar" (null) no se materializa como el default 08:00/22:00. */
+  private loadedHours: { opening: number | null; closing: number | null } = { opening: null, closing: null };
+
   /** Internal mode allows override from view→edit via switchToEdit(). */
   private internalMode = signal<DialogMode>('create');
+
+  /** Días de la semana (ISO 1=lunes … 7=domingo) para los checkboxes de atención. */
+  readonly weekDays = [
+    { value: 1, label: 'Lun' },
+    { value: 2, label: 'Mar' },
+    { value: 3, label: 'Mié' },
+    { value: 4, label: 'Jue' },
+    { value: 5, label: 'Vie' },
+    { value: 6, label: 'Sáb' },
+    { value: 7, label: 'Dom' },
+  ];
 
   form = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -55,6 +82,7 @@ export class LocationDialogComponent {
     codigoPostal: new FormControl('', { nonNullable: true }),
     openingTime: new FormControl<Date | null>(null),
     closingTime: new FormControl<Date | null>(null),
+    workingDays: new FormControl<number[]>([1, 2, 3, 4, 5, 6], { validators: [nonEmptyWorkingDays] }),
     active: new FormControl(true, { nonNullable: true }),
   });
 
@@ -83,8 +111,12 @@ export class LocationDialogComponent {
     effect(() => {
       const mode = this.mode();
       const loc = this.location();
+      // `visible` como dependencia: al reabrir el diálogo se limpia el CTA de
+      // cuota, que pertenece a la operación anterior.
+      const isOpen = this.visible();
       this.internalMode.set(mode);
       untracked(() => {
+        if (isOpen) this.capacityError.set(false);
         if (loc) {
           this.form.patchValue({
             name: loc.name,
@@ -93,8 +125,9 @@ export class LocationDialogComponent {
             regionId: loc.region_id ?? null,
             comunaId: loc.comuna_id ?? null,
             codigoPostal: loc.codigo_postal ?? '',
-            openingTime: this.parseTimeToDate(loc.opening_time),
-            closingTime: this.parseTimeToDate(loc.closing_time),
+            openingTime: this.parseTimeToDate(loc.opening_time ?? loc.effective_opening_time),
+            closingTime: this.parseTimeToDate(loc.closing_time ?? loc.effective_closing_time),
+            workingDays: loc.working_days ?? [1, 2, 3, 4, 5, 6],
             active: loc.active,
           });
         } else {
@@ -107,9 +140,14 @@ export class LocationDialogComponent {
             codigoPostal: '',
             openingTime: null,
             closingTime: null,
+            workingDays: [1, 2, 3, 4, 5, 6],
             active: true,
           });
         }
+        this.loadedHours = {
+          opening: this.form.controls.openingTime.value?.getTime() ?? null,
+          closing: this.form.controls.closingTime.value?.getTime() ?? null,
+        };
         // Apply disabled state AFTER populating
         if (mode === 'view') {
           this.form.disable();
@@ -130,9 +168,9 @@ export class LocationDialogComponent {
     return d;
   }
 
-  /** Format Date to "HH:mm:ss" string for the API */
-  private formatTimeToString(date: Date | null): string | undefined {
-    if (!date) return undefined;
+  /** Format Date to "HH:mm:ss", or explicit null to clear the configured hours. */
+  private formatTimeOrNull(date: Date | null): string | null {
+    if (!date) return null;
     const hh = String(date.getHours()).padStart(2, '0');
     const mm = String(date.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}:00`;
@@ -150,6 +188,19 @@ export class LocationDialogComponent {
     }
   }
 
+  hasWorkingDay(day: number): boolean {
+    return (this.form.controls.workingDays.value ?? []).includes(day);
+  }
+
+  toggleWorkingDay(day: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const current = this.form.controls.workingDays.value ?? [];
+    const next = checked
+      ? [...current, day].sort((a, b) => a - b)
+      : current.filter((d) => d !== day);
+    this.form.controls.workingDays.setValue(next);
+  }
+
   switchToEdit(): void {
     this.editRequested.emit();
   }
@@ -165,10 +216,17 @@ export class LocationDialogComponent {
       region_id: raw.regionId!,
       comuna_id: raw.comunaId ?? undefined,
       codigo_postal: raw.codigoPostal?.trim() || undefined,
-      opening_time: this.formatTimeToString(raw.openingTime),
-      closing_time: this.formatTimeToString(raw.closingTime),
+      working_days: raw.workingDays ?? [],
       active: raw.active!,
     };
+    // Solo se envían las horas que el admin editó: un horario "sin configurar"
+    // (null, prellenado con effective_*) no debe materializarse como default.
+    const openingEdited =
+      (raw.openingTime?.getTime() ?? null) !== this.loadedHours.opening;
+    const closingEdited =
+      (raw.closingTime?.getTime() ?? null) !== this.loadedHours.closing;
+    if (openingEdited) payload.opening_time = this.formatTimeOrNull(raw.openingTime);
+    if (closingEdited) payload.closing_time = this.formatTimeOrNull(raw.closingTime);
 
     this.saving.set(true);
     // Mutación vía store: createLocation (append) / updateLocation (merge
@@ -181,11 +239,18 @@ export class LocationDialogComponent {
     obs.subscribe({
       next: (res) => {
         this.saving.set(false);
+        this.capacityError.set(false);
         this.messageService.add({ severity: 'success', summary: res.message, key: 'global' });
         this.saved.emit();
       },
       error: (err) => {
         this.saving.set(false);
+        // 403 `tenant_location_limit_reached`: cupo del plan agotado. Se muestra
+        // CTA de upgrade en vez del toast genérico.
+        if (isCapacityLimitError(err)) {
+          this.capacityError.set(true);
+          return;
+        }
         this.httpError.handle(err, 'guardar sucursal');
       },
     });
@@ -193,5 +258,9 @@ export class LocationDialogComponent {
 
   onClose(): void {
     this.closed.emit();
+  }
+
+  goToBilling(): void {
+    this.router.navigate(['/admin/facturacion']);
   }
 }

@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "x9p8m66g",
+      "file": "02-asistente-pasos.html",
+      "selector": "body > div > main > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button",
+      "excerpt": "Ver facturas",
+      "comment": "conservemos este boton",
+      "createdAt": "2026-11-08T16:45:11.537Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:45:11.556Z",
+      "resolvedAt": "2026-11-08T16:49:28.089Z"
+    },
+    {
+      "id": "8vhjl205",
+      "file": "01-formulario-preview.html",
+      "selector": "body > div > main > div > div > div > div:nth-of-type(3) > form > fieldset:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "Completo",
+      "comment": "me gustan estos labels de que esta completo",
+      "createdAt": "2026-11-08T16:45:59.802Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:45:59.906Z",
+      "resolvedAt": "2026-11-08T16:49:53.506Z"
+    },
+    {
+      "id": "dws9zup2",
+      "file": "01-formulario-preview.html",
+      "selector": "body > div > main > div > div > div > div:nth-of-type(3) > form > fieldset:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(2)",
+      "excerpt": "Falta el giro",
+      "comment": "me gusta que muestre directamente que falta.",
+      "createdAt": "2026-11-08T16:46:13.575Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:46:13.595Z",
+      "resolvedAt": "2026-11-08T16:50:23.712Z"
+    },
+    {
+      "id": "f5nzl19c",
+      "file": "01-formulario-preview.html",
+      "selector": "body > div > main > div > div > div > div:nth-of-type(3) > aside > section:nth-of-type(1)",
+      "excerpt": "Así se verá tu factura VISTA PREVIA Bookwise SpA · RUT 76.543.210-K Factura electrónica · suscripción mensual · noviembre 2026 RAZÓN SOCIAL Kinesilk SpA RUT 77.456.123-9 GIRO Sin completar DIRECCIÓN Av. Providencia 1234, of. 502 Providencia, Región Metropolitana EMAIL pagos@kinesilk.cl El giro y la",
+      "comment": "me gusta este preview del recibo",
+      "createdAt": "2026-11-08T16:46:37.333Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:46:37.345Z",
+      "resolvedAt": "2026-11-08T16:50:50.786Z"
+    },
+    {
+      "id": "e1afmnmd",
+      "file": "02-asistente-pasos.html",
+      "selector": "body > div > main > div > div > div > section",
+      "excerpt": "Perfil fiscal de la cuenta 7 de 9 datos Mientras falten datos la suscripción sigue igual, pero no podemos emitir la factura del período.",
+      "comment": "este me parece demas, ocupa mucho espacio",
+      "createdAt": "2026-11-08T16:46:50.714Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:46:50.747Z",
+      "resolvedAt": "2026-11-08T16:49:28.089Z"
+    },
+    {
+      "id": "ysv2jbo8",
+      "file": "02-asistente-pasos.html",
+      "selector": "body > div > main > div > div > div > div:nth-of-type(2) > form > div:nth-of-type(1)",
+      "excerpt": "Dirección de facturación Paso 2 de 3",
+      "comment": "en esta zona podrias añadir los labels que pusiste en el primer diseño donde determina que falta, osea adicionarlo",
+      "createdAt": "2026-11-08T16:47:25.162Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:47:25.177Z",
+      "resolvedAt": "2026-11-08T16:49:28.089Z"
+    },
+    {
+      "id": "pa00k4ha",
+      "file": "01-formulario-preview.html",
+      "selector": "body > div > main > div > div > div > div:nth-of-type(3) > aside > section:nth-of-type(2) > div",
+      "excerpt": "QUÉ FALTA Tu suscripción sigue activa; solo se frena la emisión de la factura. Giro (sector económico) Completar Teléfono de contacto Completar",
+      "comment": "podemos usar esta para integrar en el diseño del medio, me gusta que ese diseño ocupa menos espacio",
+      "createdAt": "2026-11-08T16:49:21.768Z",
+      "status": "resolved",
+      "sentAt": "2026-11-08T16:49:23.643Z",
+      "resolvedAt": "2026-11-08T16:51:32.717Z"
+    }
+  ]
+}

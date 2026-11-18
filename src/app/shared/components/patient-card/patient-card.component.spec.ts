@@ -279,7 +279,7 @@ describe('PatientCardComponent', () => {
   // ── badge counts ──────────────────────────────────────────────────────────────
 
   describe('badge counts', () => {
-    it('plansCount() counts only active packs when loaded via store', () => {
+    it('plansCount() counts every pack when loaded via store', () => {
       clientsApi.getClientPacks!.mockReturnValue(of([
         makePack({ id: 1, status: 'active' }),
         makePack({ id: 2, status: 'active' }),
@@ -289,7 +289,7 @@ describe('PatientCardComponent', () => {
 
       component.openPanel('planes');
 
-      expect(component.plansCount()).toBe(2);
+      expect(component.plansCount()).toBe(3);
     });
 
     it('sessionsCount() sums used_sessions of active packs via store', () => {
@@ -303,6 +303,13 @@ describe('PatientCardComponent', () => {
       component.openPanel('planes');
 
       expect(component.sessionsCount()).toBe(20);
+    });
+
+    it('packStatusChip() maps completed/abandoned to distinct labels and colors', () => {
+      expect(component.packStatusChip(makePack({ status: 'completed' })).label).toBe('Completado');
+      expect(component.packStatusChip(makePack({ status: 'completed' })).cls).toContain('bw-chip--secondary');
+      expect(component.packStatusChip(makePack({ status: 'abandoned' })).cls).toContain('bw-chip--warning');
+      expect(component.packStatusChip(makePack({ status: 'active' })).cls).toContain('bw-chip--success');
     });
 
     it('plansCount() and sessionsCount() return 0 when packs are empty', () => {
