@@ -119,7 +119,7 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | T1 | Inventario verificado de disparadores, pantallas y preferencias (este documento) | S1, S2 | ✅ hecho |
 | T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ cerrado |
 | T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado · ⏳ UI |
-| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ⏳ pendiente (decisión tomada) |
+| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ✅ cerrado (slice/13) |
 | T5 | Diseñar e implementar magic link (pantalla + estado «revisa tu correo» + consumo de token) | S4 | ⏳ pendiente (no existe) |
 | T6 | Diseñar e implementar login social Google/Apple/Facebook | S4 | ⏳ pendiente (no existe) |
 | T7 | Botón «reenviar verificación»: el endpoint lo hace el API (`POST /auth/verify-email/resend`, S9/T20, rate limit por usuario); el front espera que exista | S1 | ⏳ bloqueado por el API (no diseñar a ciegas) |
@@ -127,7 +127,7 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | T9 | Cruzar este inventario con el del API y cerrar diferencias | S1 | ✅ cerrado (L3) |
 | T11 | Diseñar la tarjeta de preferencias: maestro + 6 flags por canal | S3 | ✅ `design/preferencias-cliente/` (3 direcciones) |
 | T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ⏳ pendiente (tras elegir dirección) |
-| T13 | Quitar la card de `/admin/profile` | S3 | ⏳ pendiente |
+| T13 | Quitar la card de `/admin/profile` | S3 | ✅ cerrado (mismo cierre que T4, slice/13) |
 | T10 | Mapear el onboarding existente contra lo que el API espera de «cuenta completa» | S5 | ✅ inventariado acá |
 
 ## Log
@@ -170,3 +170,12 @@ público, así que ningún email al cliente se origina en una sesión de cliente
   Copy nuevo propuesto para el 6º flag: «Recordatorio de reserva» / «Email 24 h y 30 min antes de la
   reserva.» (el de WhatsApp ya existía y su tooltip ya decía «WhatsApp programado 24 h y 30 min»).
   Ninguna toca la card de `/admin/profile`: su eliminación es T13.
+
+- **L5 (2026-11-21):** se cierra T4/T13: la card «Canales de notificación» de `/admin/profile` se
+  eliminó en `slice/13-remove-channels-card` (rama desde `origin/develop` con #57/#58/#59 ya
+  mergeados). Quita la card del template, las señales `notif*` y el import `ToggleSwitchModule`
+  de `profile.component.ts`, el bloque `__notif-row` del SCSS y las 6 claves `biz.notifications*`
+  de `en.ts`/`es.ts`. `profile.component.spec` 19/19 y `tsc --noEmit` limpio. Contexto del cierre:
+  los 3 PRs abiertos (#57/#58/#59) quedaron mergeados a `develop`; la revisión nativa quedó sin
+  cuota del proveedor (resetea 2026-12-08) y el usuario decidió desactivar review mode en este
+  clon (`gentle-ai review mode disable --scope clone`) para poder mergear con política ordinaria.
