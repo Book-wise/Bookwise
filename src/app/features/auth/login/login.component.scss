@@ -56,21 +56,6 @@
   }
 }
 
-.forgot-password {
-  text-align: center;
-  margin-top: 1.25rem;
-
-  a {
-    font-size: 0.875rem;
-    color: #6b7280;
-    text-decoration: none;
-    &:hover {
-      color: #046af4;
-      text-decoration: underline;
-    }
-  }
-}
-
 .auth-footer {
   display: flex;
   justify-content: center;
@@ -245,22 +230,65 @@
   }
 }
 
-.magic-link {
+// ── Fila «Mantener sesión» / «Olvidé mi contraseña» y pie, según el artboard ──
+.form-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  margin-top: 1rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 0.875rem;
-  color: #6b7280;
-  cursor: not-allowed;
+  justify-content: space-between;
+  gap: var(--bw-space-md, 1rem);
+  margin: 0.25rem 0 1rem;
 
-  i {
+  a {
     font-size: 0.875rem;
+    color: var(--bw-500, #0b3d95);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-label, #374151);
+  cursor: pointer;
+}
+
+// Línea de acceso sin contraseña: texto + enlace, como el artboard
+.passwordless {
+  margin: 1.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary, #6b7280);
+
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--bw-500, #0b3d95);
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      color: var(--text-color-secondary, #6b7280);
+      text-decoration: none;
+    }
+  }
+}
+
+.legal {
+  margin: 1.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--text-color-secondary, #6b7280);
+
+  a {
+    color: inherit;
+    text-decoration: underline;
   }
 }

@@ -205,6 +205,56 @@ describe('AuthService', () => {
     });
   });
 
+  describe('«Mantener sesión» storage choice', () => {
+    const user = { id: 7, email: 'admin@test.com', name: 'Admin', role: 'admin' as const };
+
+    it('keeps the session in localStorage when the user marked «Mantener sesión»', () => {
+      service.login('tok', user, [], [], true);
+
+      expect(localStorage.getItem('auth_token')).toBe('tok');
+      expect(sessionStorage.getItem('auth_token')).toBeNull();
+      expect(service.getStoredToken()).toBe('tok');
+    });
+
+    it('keeps the session in sessionStorage when the user did not mark it', () => {
+      service.login('tok', user, [], [], false);
+
+      expect(sessionStorage.getItem('auth_token')).toBe('tok');
+      expect(localStorage.getItem('auth_token')).toBeNull();
+      expect(service.getStoredToken()).toBe('tok');
+      expect(JSON.parse(sessionStorage.getItem('auth_user') ?? '{}').id).toBe(7);
+    });
+
+    it('does not resurrect a stale local token when a tab-only session logs in', () => {
+      localStorage.setItem('auth_token', 'stale-token');
+
+      service.login('tok', user, [], [], false);
+
+      expect(localStorage.getItem('auth_token')).toBeNull();
+      expect(service.getStoredToken()).toBe('tok');
+    });
+
+    it('keeps a rotated token in the storage the session already used', () => {
+      service.login('tok', user, [], [], false);
+
+      service.setToken('rotated-token');
+
+      expect(sessionStorage.getItem('auth_token')).toBe('rotated-token');
+      expect(localStorage.getItem('auth_token')).toBeNull();
+    });
+
+    it('logout clears both storages', () => {
+      service.login('tok', user, [], [], false);
+      localStorage.setItem('auth_token', 'leftover');
+
+      service.logout();
+
+      expect(localStorage.getItem('auth_token')).toBeNull();
+      expect(sessionStorage.getItem('auth_token')).toBeNull();
+      expect(sessionStorage.getItem('auth_user')).toBeNull();
+    });
+  });
+
   describe('persisted token accessor', () => {
     it('getStoredToken reads the token persisted in localStorage', () => {
       localStorage.setItem('auth_token', 'persisted-token');

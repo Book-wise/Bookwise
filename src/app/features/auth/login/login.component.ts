@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { AuthApiService } from '@services/api/auth-api.service';
@@ -22,6 +23,7 @@ import { AuthLayoutComponent } from '@shared/components/auth-layout/auth-layout.
     RouterLink,
     InputTextModule,
     PasswordModule,
+    CheckboxModule,
     ButtonModule,
     MessageModule,
     AuthLayoutComponent,
@@ -38,6 +40,10 @@ export class LoginComponent {
   error   = signal<string | null>(null);
 
   credentials: LoginCredentials = { email: '', password: '' };
+
+  /** «Mantener sesión»: marcado guarda el token en `localStorage`; sin marcar,
+   *  la sesión vive en `sessionStorage` (solo esta pestaña). */
+  remember = true;
 
   /**
    * El formulario de correo arranca plegado: los proveedores y el correo son
@@ -76,7 +82,7 @@ export class LoginComponent {
 
     this.authApi.login(this.credentials).subscribe({
       next: ({ token, user, abilities, permissions }) => {
-        this.auth.login(token, user, abilities, permissions);
+        this.auth.login(token, user, abilities, permissions, this.remember);
         this.loading.set(false);
       },
       error: (err) => {
