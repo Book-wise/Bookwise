@@ -117,15 +117,9 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | # | Tarea | Specs | Estado |
 |---|---|---|---|
 | T1 | Inventario verificado de disparadores, pantallas y preferencias (este documento) | S1, S2 | ✅ hecho |
-<<<<<<< HEAD
-| T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ cerrado |
-| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado · ⏳ UI |
-| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ✅ cerrado (slice/13) |
-=======
-| T2 | `email_reminder` como 6º flag, default `true` | S3 | ✅ contrato cerrado + UI entregada (T12) |
-| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado + UI entregada (T12) |
-| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ⏳ pendiente (decisión tomada) |
->>>>>>> origin/slice/12-login-artboard
+| T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ hecho (PR #59) |
+| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ hecho (PR #59) |
+| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ✅ cerrado (slice/13, PR #60) |
 | T5 | Diseñar e implementar magic link (pantalla + estado «revisa tu correo» + consumo de token) | S4 | ⏳ pendiente (no existe) |
 | T6 | Diseñar e implementar login social Google/Apple/Facebook | S4 | ⏳ pendiente (no existe) |
 | T7 | Botón «reenviar verificación»: el endpoint lo hace el API (`POST /auth/verify-email/resend`, S9/T20, rate limit por usuario); el front espera que exista | S1 | ⏳ bloqueado por el API (no diseñar a ciegas) |
