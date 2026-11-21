@@ -172,6 +172,7 @@ export const EN: Record<string, string> = {
   'auth.login.provider_google': 'Continue with Google',
   'auth.login.provider_apple': 'Continue with Apple',
   'auth.login.provider_facebook': 'Continue with Facebook',
+  'auth.login.back': 'Back to the other options',
   'auth.login.provider_email': 'Continue with email',
   'auth.login.providers_pending': 'Google, Apple and Facebook sign-in is coming soon.',
   'auth.login.magic_link_pending': 'Passwordless sign-in',

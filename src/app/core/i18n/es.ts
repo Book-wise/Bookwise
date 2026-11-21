@@ -172,6 +172,7 @@ export const ES: Record<string, string> = {
   'auth.login.provider_google': 'Continuar con Google',
   'auth.login.provider_apple': 'Continuar con Apple',
   'auth.login.provider_facebook': 'Continuar con Facebook',
+  'auth.login.back': 'Volver a los otros accesos',
   'auth.login.provider_email': 'Continuar con el correo',
   'auth.login.providers_pending': 'El ingreso con Google, Apple y Facebook estará disponible próximamente.',
   'auth.login.magic_link_pending': 'Acceso sin contraseña',

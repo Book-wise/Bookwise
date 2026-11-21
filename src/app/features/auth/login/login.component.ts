@@ -1,4 +1,4 @@
-import { Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, Injector, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -46,20 +46,26 @@ export class LoginComponent {
    */
   readonly showEmailForm = signal(false);
 
+  private readonly injector = inject(Injector);
   private readonly emailInput = viewChild<ElementRef<HTMLInputElement>>('emailInput');
+  private readonly emailBack = viewChild<ElementRef<HTMLButtonElement>>('emailBack');
 
-  constructor() {
-    // Al desplegar, el foco va al campo de correo: el usuario ya eligió el
-    // camino, no tiene que buscarlo con Tab.
-    effect(() => {
-      if (this.showEmailForm()) {
-        this.emailInput()?.nativeElement.focus();
-      }
-    });
-  }
-
+  /**
+   * Cambia entre la vista de accesos y la del formulario de correo, y mueve el
+   * foco al control que toma el relevo: el campo de correo al abrir, el botón
+   * «volver» al cerrar. Va con `afterNextRender` para no robar el foco del
+   * documento al montar la pantalla.
+   */
   toggleEmailForm(): void {
     this.showEmailForm.update((open) => !open);
+
+    afterNextRender(
+      () => {
+        const target = this.showEmailForm() ? this.emailInput() : this.emailBack();
+        target?.nativeElement.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   onLogin(): void {

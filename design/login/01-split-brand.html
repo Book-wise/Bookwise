@@ -81,6 +81,13 @@
   .provider.email svg{stroke:currentColor}
   .provider .chev{transition:transform .16s ease;margin-left:auto}
   .provider[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  /* Al abrir el formulario los accesos se retiran y el form toma el espacio. */
+  .providers[hidden]{display:none}
+  .back{display:inline-flex;align-items:center;gap:6px;margin:0 0 14px;padding:0;
+        background:none;border:0;font:inherit;font-size:14px;color:var(--muted);cursor:pointer}
+  .back:hover{color:var(--ink)}
+  .back:focus-visible{outline:2px solid var(--bw-500);outline-offset:3px;border-radius:4px}
+  .back svg{flex:0 0 auto}
   .form-slot{margin-top:18px}
   .form-slot[hidden]{display:none}
   .form-slot{animation:reveal .18s ease both}
@@ -214,6 +221,10 @@
       </div>
 
       <div class="form-slot" id="email-form" hidden>
+        <button class="back" type="button" id="email-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+          Volver a los otros accesos
+        </button>
         <form action="#" method="post">
         <div class="field">
           <label for="email">Correo</label>
@@ -240,18 +251,25 @@
   </section>
 </main>
 <script>
-  // Cuarto camino: «Continuar con el correo» revela el formulario en el lugar.
+  // Cuarto camino: «Continuar con el correo» retira los accesos y deja el
+  // formulario ocupando ese espacio. «Volver» restituye la vista de accesos.
+  const providers = document.querySelector('.providers');
   const entry = document.getElementById('email-entry');
   const slot = document.getElementById('email-form');
+  const back = document.getElementById('email-back');
 
   entry.addEventListener('click', () => {
-    const open = entry.getAttribute('aria-expanded') === 'true';
-    entry.setAttribute('aria-expanded', String(!open));
-    slot.hidden = open;
-    if (!open) {
-      const input = slot.querySelector('#email');
-      if (input) input.focus();
-    }
+    providers.hidden = true;
+    slot.hidden = false;
+    entry.setAttribute('aria-expanded', 'true');
+    slot.querySelector('#email').focus();
+  });
+
+  back.addEventListener('click', () => {
+    slot.hidden = true;
+    providers.hidden = false;
+    entry.setAttribute('aria-expanded', 'false');
+    entry.focus();
   });
 </script>
 </body>
