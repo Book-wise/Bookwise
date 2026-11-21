@@ -161,43 +161,6 @@
   gap: 0.5rem;
 }
 
-// ── Canales de notificación ─────────────────────────────────────────────────
-.notif-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.875rem 0;
-
-  & + & {
-    border-top: 1px solid var(--surface-border);
-  }
-
-  &__label {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    min-width: 0;
-  }
-
-  &__icon {
-    color: var(--bw-500, #3b82f6);
-    font-size: 1.25rem;
-  }
-
-  &__title {
-    display: block;
-    font-weight: var(--bw-weight-semibold, 600);
-    color: var(--text-color);
-  }
-
-  &__hint {
-    display: block;
-    font-size: 0.8125rem;
-    color: var(--text-color-secondary);
-  }
-}
-
 .biz-list {
   display: flex;
   flex-direction: column;
