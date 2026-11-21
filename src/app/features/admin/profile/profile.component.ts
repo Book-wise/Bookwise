@@ -7,7 +7,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { LanguageService } from '@services/language.service';
@@ -26,7 +25,7 @@ import { switchTenantErrorKey } from '@shared/utils/switch-tenant-error.util';
   standalone: true,
   imports: [
     CommonModule, FormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule,
-    MessageModule, ToggleSwitchModule, PhoneInputComponent, UserAvatarComponent,
+    MessageModule, PhoneInputComponent, UserAvatarComponent,
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss'],
@@ -89,7 +88,7 @@ export class ProfileComponent implements OnInit {
     return (name || 'B').trim().charAt(0).toUpperCase();
   }
 
-  // ── Datos del hero / notificaciones ─────────────────────────────────────
+  // ── Datos del hero ──────────────────────────────────────────────────────
   /** Zona horaria del negocio activo (derivada de la primera sucursal activa). */
   readonly timezoneLabel = computed<string>(() => {
     const tz = this.refStore.locations().find((l) => l.active)?.timezone;
@@ -99,10 +98,6 @@ export class ProfileComponent implements OnInit {
     this.lang.lang() === 'es' ? 'Español' : 'English',
   );
   readonly memberSince = computed(() => this.me()?.business?.created_at ?? null);
-  // Notificaciones (UI local por ahora; persistencia a futuro con notification_prefs)
-  readonly notifWhatsApp = signal(true);
-  readonly notifEmail = signal(true);
-  readonly notifPush = signal(false);
 
   /** Etiqueta del miembro actual en la lista: owner = admin_general del tenant
    *  (no el rol técnico de sesión, que en la transición aún separa layouts). */

@@ -143,39 +143,6 @@
       </div>
     </p-card>
 
-    <p-card [header]="lang.t('biz.notifications')" class="profile-card">
-      <div class="notif-row">
-        <div class="notif-row__label">
-          <i class="pi pi-whatsapp notif-row__icon"></i>
-          <div>
-            <span class="notif-row__title">WhatsApp Business</span>
-            <span class="notif-row__hint">{{ lang.t('biz.notifications.wa_hint') }}</span>
-          </div>
-        </div>
-        <p-toggleswitch [(ngModel)]="notifWhatsApp" />
-      </div>
-      <div class="notif-row">
-        <div class="notif-row__label">
-          <i class="pi pi-envelope notif-row__icon"></i>
-          <div>
-            <span class="notif-row__title">{{ lang.t('biz.notifications.email') }}</span>
-            <span class="notif-row__hint">{{ lang.t('biz.notifications.email_hint') }}</span>
-          </div>
-        </div>
-        <p-toggleswitch [(ngModel)]="notifEmail" />
-      </div>
-      <div class="notif-row">
-        <div class="notif-row__label">
-          <i class="pi pi-bell notif-row__icon"></i>
-          <div>
-            <span class="notif-row__title">{{ lang.t('biz.notifications.push') }}</span>
-            <span class="notif-row__hint">{{ lang.t('biz.notifications.push_hint') }}</span>
-          </div>
-        </div>
-        <p-toggleswitch [(ngModel)]="notifPush" />
-      </div>
-    </p-card>
-
     @if (showBusiness()) {
     <p-card class="profile-card">
       <ng-template pTemplate="header">
