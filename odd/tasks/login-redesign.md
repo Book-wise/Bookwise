@@ -38,6 +38,8 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
 | L8 | **Diseño**: proveedores largos con texto + cuarto botón de correo con `aria-expanded` que abre el formulario | S5 | ✅ hecho en `01-split-brand.html` |
 | L9 | **Implementación** de L8: `.providers` en columna, botón de correo con CTA de marca que despliega el `.form-slot`, foco al campo al abrir, sin divisor | S5 | ✅ hecho |
 | L6 | Habilitar magic link cuando el API lo exponga: consumir 202 y navegar al estado «revisa tu correo» **según `02-magic-link-first.html`** (contador de reenvío 30 s, «prefiero usar mi contraseña» plegado) + ruta de consumo del token | S3, S4 | ⏳ pendiente (bloqueado por el API) |
+| L10 | El formulario de correo **ocupa el panel**: al elegirlo se retiran los accesos y aparece «Volver a los otros accesos» | S5 | ✅ hecho (PR #57) |
+| L11 | Artboard implementado completo: fila «Mantener sesión» + «Olvidé mi contraseña», remember real (localStorage / sessionStorage), línea de acceso sin contraseña y pie legal | S1, S5 | ✅ hecho (PR #58) |
 | L7 | Habilitar los proveedores cuando existan los callbacks OAuth | S3, S4 | ⏳ pendiente (bloqueado por el API) |
 
 ## Log
@@ -78,3 +80,16 @@ Diseño: `design/login/` (3 artboards; elegido `01-split-brand.html`). Traído d
   «Continuar con el correo» / «Continue with email». Spec nuevo (6 casos): cuatro entradas con texto
   visible, los tres OAuth deshabilitados con su nota, el correo habilitado, el formulario plegado que se
   abre, `aria-expanded` que acompaña, y el foco que cae en el campo de correo.
+
+- **L7 (2026-11-14, segunda ronda de canvas `5od9xf2t` + implementación del artboard completo):** el
+  formulario pasa a **ocupar el panel** (los cuatro accesos se retiran) con «Volver a los otros accesos»
+  arriba; el foco acompaña el cambio de vista con `afterNextRender` y el acceso por correo deja de llevar
+  `aria-expanded` porque ya no es un disclosure. Después se completó el resto del artboard: fila
+  «Mantener sesión» + «Olvidé mi contraseña» dentro del formulario, línea «¿Prefieres no usar contraseña?
+  Enviarme un enlace de acceso» (deshabilitada con nota hasta que exista `POST /auth/magic-link`) y pie
+  legal con Términos, privacidad y `soporte@bookwise.cl`.
+  **`Mantener sesión` funciona de verdad** (un checkbox decorativo es peor que no tenerlo): marcado guarda
+  token y usuario en `localStorage`, sin marcar en `sessionStorage`; `getStoredToken()` lee
+  `sessionStorage` primero para que una sesión no recordada gane sobre un token viejo; la rotación de
+  token conserva el storage de la sesión y `logout()` limpia ambos. Verificación: login spec 11/11,
+  auth.service spec 28/28, build AOT OK.

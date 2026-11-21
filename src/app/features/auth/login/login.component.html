@@ -114,6 +114,14 @@
       <p-message severity="error" class="w-full">{{ error() }}</p-message>
     }
 
+    <div class="form-row">
+      <label class="check" for="remember">
+        <p-checkbox inputId="remember" name="remember" [binary]="true" [(ngModel)]="remember" />
+        <span>{{ lang.t('auth.login.remember') }}</span>
+      </label>
+      <a routerLink="/forgot-password">{{ lang.t('auth.login.forgot') }}</a>
+    </div>
+
     <p-button
       type="submit"
       label="Iniciar sesión"
@@ -124,24 +132,29 @@
     </form>
   </div>
 
-  <div class="forgot-password">
-    <a routerLink="/forgot-password">{{ lang.t('auth.login.forgot') }}</a>
-  </div>
 
   <!--
-    Magic link: mismo caso que los proveedores, depende de S8 del documento de
-    emails (POST /auth/magic-link). Deshabilitado hasta que exista el endpoint.
+    Acceso sin contraseña: depende de POST /auth/magic-link, que todavía no
+    existe en el API (odd/tasks/email-automation.md). Se muestra como el
+    artboard —línea con enlace— pero el enlace queda deshabilitado hasta que
+    exista el endpoint: un botón que falla es peor que uno que avisa.
   -->
-  <button type="button" class="magic-link" disabled aria-describedby="login-magic-pending">
-    <i class="pi pi-envelope" aria-hidden="true"></i>
-    <span>{{ lang.t('auth.login.magic_link_pending') }}</span>
-  </button>
+  <p class="passwordless">
+    {{ lang.t('auth.login.passwordless_ask') }}
+    <button type="button" class="link" disabled aria-describedby="login-magic-pending">
+      {{ lang.t('auth.login.passwordless_cta') }}
+    </button>
+  </p>
   <p class="pending-note center" id="login-magic-pending">
     {{ lang.t('auth.login.magic_link_note') }}
   </p>
 
-  <div class="auth-footer">
-    <span>¿No tienes cuenta?</span>
-    <a routerLink="/register">Registrarse</a>
-  </div>
+  <p class="legal">
+    {{ lang.t('auth.login.legal_accept') }}
+    <a routerLink="/terms">{{ lang.t('auth.login.legal_terms') }}</a>
+    {{ lang.t('auth.login.legal_and') }}
+    <a routerLink="/terms">{{ lang.t('auth.login.legal_privacy') }}</a>.<br />
+    {{ lang.t('auth.login.legal_help') }}
+    <a href="mailto:soporte@bookwise.cl">soporte@bookwise.cl</a>
+  </p>
 </bw-auth-layout>

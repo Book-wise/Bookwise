@@ -117,16 +117,22 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | # | Tarea | Specs | Estado |
 |---|---|---|---|
 | T1 | Inventario verificado de disparadores, pantallas y preferencias (este documento) | S1, S2 | ✅ hecho |
+<<<<<<< HEAD
 | T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ cerrado |
 | T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado · ⏳ UI |
 | T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ✅ cerrado (slice/13) |
+=======
+| T2 | `email_reminder` como 6º flag, default `true` | S3 | ✅ contrato cerrado + UI entregada (T12) |
+| T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ contrato cerrado + UI entregada (T12) |
+| T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ⏳ pendiente (decisión tomada) |
+>>>>>>> origin/slice/12-login-artboard
 | T5 | Diseñar e implementar magic link (pantalla + estado «revisa tu correo» + consumo de token) | S4 | ⏳ pendiente (no existe) |
 | T6 | Diseñar e implementar login social Google/Apple/Facebook | S4 | ⏳ pendiente (no existe) |
 | T7 | Botón «reenviar verificación»: el endpoint lo hace el API (`POST /auth/verify-email/resend`, S9/T20, rate limit por usuario); el front espera que exista | S1 | ⏳ bloqueado por el API (no diseñar a ciegas) |
 | T8 | ~~Recordatorio de sesión de pack con `remaining_sessions`~~ — **descartada**: el correo lo renderiza el API (Blade) leyendo el `client_pack`; el front no participa ni recibe ese payload. Sólo aplica si algún día hay estado de recordatorio en pantalla | S6 | ⛔ descartada |
 | T9 | Cruzar este inventario con el del API y cerrar diferencias | S1 | ✅ cerrado (L3) |
 | T11 | Diseñar la tarjeta de preferencias: maestro + 6 flags por canal | S3 | ✅ `design/preferencias-cliente/` (3 direcciones) |
-| T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ⏳ pendiente (tras elegir dirección) |
+| T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ✅ hecho (PR #59) |
 | T13 | Quitar la card de `/admin/profile` | S3 | ✅ cerrado (mismo cierre que T4, slice/13) |
 | T10 | Mapear el onboarding existente contra lo que el API espera de «cuenta completa» | S5 | ✅ inventariado acá |
 
@@ -171,11 +177,21 @@ público, así que ningún email al cliente se origina en una sesión de cliente
   reserva.» (el de WhatsApp ya existía y su tooltip ya decía «WhatsApp programado 24 h y 30 min»).
   Ninguna toca la card de `/admin/profile`: su eliminación es T13.
 
-- **L5 (2026-11-21):** se cierra T4/T13: la card «Canales de notificación» de `/admin/profile` se
-  eliminó en `slice/13-remove-channels-card` (rama desde `origin/develop` con #57/#58/#59 ya
-  mergeados). Quita la card del template, las señales `notif*` y el import `ToggleSwitchModule`
-  de `profile.component.ts`, el bloque `__notif-row` del SCSS y las 6 claves `biz.notifications*`
-  de `en.ts`/`es.ts`. `profile.component.spec` 19/19 y `tsc --noEmit` limpio. Contexto del cierre:
-  los 3 PRs abiertos (#57/#58/#59) quedaron mergeados a `develop`; la revisión nativa quedó sin
-  cuota del proveedor (resetea 2026-12-08) y el usuario decidió desactivar review mode en este
-  clon (`gentle-ai review mode disable --scope clone`) para poder mergear con política ordinaria.
+- **L5 (2026-11-14, T12 entregada — PR #59):** la tarjeta del cliente implementa la dirección elegida
+  `design/preferencias-cliente/01-maestro-y-canales.html`: switch maestro «Recibir notificaciones» con
+  la nota de consentimiento, `email_reminder` como sexto flag del grupo Email (default `true`) y
+  contador «N de M activos» por canal. El maestro sólo PATCH-ea `notifications_enabled`; apagarlo
+  deshabilita y atenúa los seis canales **sin borrar su estado**, así al reencender vuelven como estaban.
+  Lee `notification_prefs.notifications_enabled` → `client.notifications_enabled` → `true`, así funciona
+  con el API aditivo y con el viejo. Los defaults se resuelven en la card, no en el store: el estado
+  guardado sigue 1:1 con el GET (y el spec del store no cambia). Verificación: 54/54 en
+  `patient-card.component.spec.ts`, 11/11 en `client-detail.store.spec.ts`, build AOT OK.
+- **L6 (2026-11-21):** se cierra T4/T13: la card «Canales de notificación» de `/admin/profile` se
+  eliminó en `slice/13-remove-channels-card` (PR #60). Quita la card del template, las señales `notif*`
+  y el import `ToggleSwitchModule` de `profile.component.ts`, el bloque `__notif-row` del SCSS y las 6
+  claves `biz.notifications*` de `en.ts`/`es.ts`. `profile.component.spec` 19/19 y `tsc --noEmit` limpio.
+  Contexto del cierre: #57/#58/#59 mergeados a `develop`; la revisión nativa quedó sin cuota del
+  proveedor (resetea 2026-12-08) y el usuario decidió desactivar review mode en este clon
+  (`gentle-ai review mode disable --scope clone`) para poder mergear con política ordinaria.
+  Nota de integración: #58 mergeó contra su base apilada (`slice/11`) y no contra `develop`, así que el
+  contenido del split-brand entró a `develop` vía el merge manual de `slice/12-login-artboard`.
