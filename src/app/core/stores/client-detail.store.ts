@@ -27,7 +27,11 @@ function emptyDomain<T>(): DomainState<T> {
 export type PatientTab = 'planes' | 'sesiones' | 'prepago' | 'recientes';
 export type PatientView = 'reserva' | PatientTab;
 
-/** Alias of the backend notification prefs contract — 5 flags, 1:1, no mapping. */
+/**
+ * Alias of the backend notification prefs contract — no mapping: 6 channel flags plus the
+ * `notifications_enabled` master switch. Values stay as the API returned them; the UI resolves
+ * the additive defaults (`email_reminder` → true, master → `Client.notifications_enabled` → true).
+ */
 export type NotificationValues = NotificationPrefs;
 
 export interface ClientDetailState {
@@ -143,7 +147,9 @@ export const ClientDetailStore = signalStore(
         patchState(store, {
           client: { ...client },
           // Always repopulate prefs from GET /clients/{id}, same-client included,
-          // so stale in-memory values never survive a reopen. Absent prefs → all false.
+          // so stale in-memory values never survive a reopen. Absent prefs → all false;
+          // additively-added keys (email_reminder, notifications_enabled) stay absent so the
+          // UI can apply their defaults (true, and Client.notifications_enabled → true).
           notifications: { ...emptyNotifications(), ...client.notification_prefs },
           ...(sameClient ? {} : {
             activeView: 'reserva' as PatientView,

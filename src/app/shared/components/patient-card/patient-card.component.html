@@ -74,12 +74,37 @@
         }
 
         @if (notifOpen()) {
-          <div class="bw-pc__notif-groups">
+          <div class="bw-pc__notif-master">
+            <div class="bw-pc__notif-master-text">
+              <span class="bw-pc__notif-master-label" id="notif-master-label">
+                {{ lang.t('patient_card.notif.master.label') }}
+              </span>
+              <p class="bw-pc__notif-master-note">
+                {{ lang.t('patient_card.notif.master.note') }}
+                <strong>{{ lang.t('patient_card.notif.master.note_security') }}</strong>
+              </p>
+            </div>
+            <p-checkbox
+              data-testid="notif-master-checkbox"
+              [ariaLabelledBy]="'notif-master-label'"
+              [ngModel]="masterEnabled()"
+              (ngModelChange)="setMaster($event)"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="bw-pc__notif-groups" [class.bw-pc__notif-groups--off]="!masterEnabled()">
             <div class="bw-pc__notif-group">
-              <span class="bw-pc__notif-group-title">{{ lang.t('patient_card.notif.group.email') }}</span>
+              <span class="bw-pc__notif-group-title">
+                {{ lang.t('patient_card.notif.group.email') }}
+                <span class="bw-pc__notif-group-count">{{ groupActiveCount(emailNotificationFlags) }}</span>
+              </span>
               @for (flag of emailNotificationFlags; track flag) {
                 <div class="bw-pc__notif-flag" [attr.data-testid]="'notif-flag-' + flag">
-                  <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
+                  <span class="bw-pc__notif-flag-text">
+                    <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
+                    <span class="bw-pc__notif-flag-hint">{{ lang.t('patient_card.notif.tip.' + flag) }}</span>
+                  </span>
                   <div class="bw-pc__notif-flag-actions">
                     <button
                       type="button"
@@ -91,19 +116,27 @@
                       <i class="pi pi-question-circle"></i>
                     </button>
                     <p-checkbox
+                      [attr.data-testid]="'notif-checkbox-' + flag"
                       [ngModel]="notificationValue(flag)"
                       (ngModelChange)="setNotification(flag, $event)"
                       [binary]="true"
+                      [disabled]="!masterEnabled()"
                     />
                   </div>
                 </div>
               }
             </div>
             <div class="bw-pc__notif-group">
-              <span class="bw-pc__notif-group-title">{{ lang.t('patient_card.notif.group.whatsapp') }}</span>
+              <span class="bw-pc__notif-group-title">
+                {{ lang.t('patient_card.notif.group.whatsapp') }}
+                <span class="bw-pc__notif-group-count">{{ groupActiveCount(whatsappNotificationFlags) }}</span>
+              </span>
               @for (flag of whatsappNotificationFlags; track flag) {
                 <div class="bw-pc__notif-flag" [attr.data-testid]="'notif-flag-' + flag">
-                  <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
+                  <span class="bw-pc__notif-flag-text">
+                    <span class="bw-pc__notif-flag-label">{{ lang.t('patient_card.notif.label.' + flag) }}</span>
+                    <span class="bw-pc__notif-flag-hint">{{ lang.t('patient_card.notif.tip.' + flag) }}</span>
+                  </span>
                   <div class="bw-pc__notif-flag-actions">
                     <button
                       type="button"
@@ -115,9 +148,11 @@
                       <i class="pi pi-question-circle"></i>
                     </button>
                     <p-checkbox
+                      [attr.data-testid]="'notif-checkbox-' + flag"
                       [ngModel]="notificationValue(flag)"
                       (ngModelChange)="setNotification(flag, $event)"
                       [binary]="true"
+                      [disabled]="!masterEnabled()"
                     />
                   </div>
                 </div>

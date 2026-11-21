@@ -505,7 +505,7 @@ describe('PatientCardComponent', () => {
       });
     });
 
-    it('renders exactly five flags grouped by channel and no citaWa', async () => {
+    it('renders exactly six flags grouped by channel and no citaWa', async () => {
       fixture.componentRef.setInput('showNotifications', true);
       fixture.componentRef.setInput('dialogMode', true);
       component.detailStore.initialize(makeClient());
@@ -517,6 +517,7 @@ describe('PatientCardComponent', () => {
         'notif-flag-email_new_booking',
         'notif-flag-email_booking_confirmation',
         'notif-flag-email_booking_cancellation',
+        'notif-flag-email_reminder',
         'notif-flag-whatsapp_reminder',
         'notif-flag-whatsapp_cancellation_confirmation',
       ];
@@ -528,7 +529,7 @@ describe('PatientCardComponent', () => {
 
       const groups = fixture.debugElement.queryAll(By.css('.bw-pc__notif-group-title'));
       expect(groups.length).toBe(2);
-      expect(flags.length).toBe(5);
+      expect(flags.length).toBe(6);
     });
 
     it('exposes a keyboard-reachable info button with a tooltip per flag', async () => {
@@ -540,7 +541,7 @@ describe('PatientCardComponent', () => {
       await fixture.whenStable();
 
       const infoButtons = fixture.debugElement.queryAll(By.css('.bw-pc__notif-info-btn'));
-      expect(infoButtons.length).toBe(5);
+      expect(infoButtons.length).toBe(6);
       for (const btn of infoButtons) {
         expect(btn.nativeElement.tagName).toBe('BUTTON');
       }
@@ -551,6 +552,250 @@ describe('PatientCardComponent', () => {
       await fixture.whenStable();
       const tooltip = document.body.querySelector('.p-tooltip .p-tooltip-text');
       expect(tooltip?.textContent?.trim()).toBe('Email inmediato al crear una reserva.');
+    });
+  });
+
+  // ── master switch, email reminder and per-group counters (T12) ─────────────
+
+  describe('notification master switch', () => {
+    /** Opens the notifications accordion and renders with the given prefs. */
+    async function renderWith(prefs?: Client['notification_prefs'], topLevel?: boolean) {
+      const client = makeClient({ notification_prefs: prefs, notifications_enabled: topLevel });
+      fixture.componentRef.setInput('client', client);
+      fixture.componentRef.setInput('showNotifications', true);
+      fixture.componentRef.setInput('dialogMode', true);
+      component.detailStore.initialize(client);
+      component.toggleNotif();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges(); // flush the checkbox model→checked binding after ngModel writes
+    }
+
+    function masterInput(): HTMLInputElement {
+      const host = fixture.debugElement.query(By.css('[data-testid="notif-master-checkbox"]'));
+      expect(host).not.toBeNull();
+      return host.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    }
+
+    function flagInput(flag: string): HTMLInputElement {
+      const host = fixture.debugElement.query(By.css(`[data-testid="notif-checkbox-${flag}"]`));
+      expect(host).not.toBeNull();
+      return host.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    }
+
+    it('reflects notification_prefs.notifications_enabled', async () => {
+      await renderWith({
+        email_new_booking: true,
+        email_booking_confirmation: true,
+        email_booking_cancellation: true,
+        email_reminder: true,
+        whatsapp_reminder: true,
+        whatsapp_cancellation_confirmation: true,
+        notifications_enabled: false,
+      });
+
+      expect(masterInput().checked).toBe(false);
+      expect(component.masterEnabled()).toBe(false);
+    });
+
+    it('falls back to the top-level Client.notifications_enabled when prefs omit it', async () => {
+      await renderWith(
+        {
+          email_new_booking: false,
+          email_booking_confirmation: false,
+          email_booking_cancellation: false,
+          email_reminder: true,
+          whatsapp_reminder: false,
+          whatsapp_cancellation_confirmation: false,
+        },
+        false,
+      );
+
+      expect(masterInput().checked).toBe(false);
+    });
+
+    it('defaults the master to on when neither source provides a value', async () => {
+      await renderWith(undefined, undefined);
+
+      expect(masterInput().checked).toBe(true);
+      expect(component.masterEnabled()).toBe(true);
+    });
+
+    it('toggling the master PATCHes only notifications_enabled and keeps flag state', async () => {
+      await renderWith({
+        email_new_booking: true,
+        email_booking_confirmation: true,
+        email_booking_cancellation: false,
+        email_reminder: true,
+        whatsapp_reminder: true,
+        whatsapp_cancellation_confirmation: false,
+      });
+      clientsApi.updateClient!.mockClear();
+
+      masterInput().click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(component.masterEnabled()).toBe(false);
+      expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
+      expect(clientsApi.updateClient).toHaveBeenCalledWith(1, {
+        notification_prefs: { notifications_enabled: false },
+      });
+
+      // Turning it off must NOT rewrite any per-channel flag.
+      const state = component.detailStore.notifications();
+      expect(state.email_new_booking).toBe(true);
+      expect(state.email_booking_confirmation).toBe(true);
+      expect(state.email_booking_cancellation).toBe(false);
+      expect(state.email_reminder).toBe(true);
+      expect(state.whatsapp_reminder).toBe(true);
+      expect(state.whatsapp_cancellation_confirmation).toBe(false);
+    });
+
+    it('with the master off the six switches are disabled and keep their checked state', async () => {
+      await renderWith({
+        email_new_booking: true,
+        email_booking_confirmation: false,
+        email_booking_cancellation: true,
+        email_reminder: true,
+        whatsapp_reminder: true,
+        whatsapp_cancellation_confirmation: false,
+        notifications_enabled: false,
+      });
+
+      const flags = [
+        'email_new_booking',
+        'email_booking_confirmation',
+        'email_booking_cancellation',
+        'email_reminder',
+        'whatsapp_reminder',
+        'whatsapp_cancellation_confirmation',
+      ];
+      for (const flag of flags) {
+        expect(flagInput(flag).disabled).toBe(true);
+      }
+
+      expect(flagInput('email_new_booking').checked).toBe(true);
+      expect(flagInput('email_booking_confirmation').checked).toBe(false);
+      expect(flagInput('email_booking_cancellation').checked).toBe(true);
+      expect(flagInput('email_reminder').checked).toBe(true);
+      expect(flagInput('whatsapp_reminder').checked).toBe(true);
+      expect(flagInput('whatsapp_cancellation_confirmation').checked).toBe(false);
+    });
+  });
+
+  describe('email reminder flag (6th email flag)', () => {
+    async function renderWith(prefs?: Client['notification_prefs']) {
+      fixture.componentRef.setInput('showNotifications', true);
+      fixture.componentRef.setInput('dialogMode', true);
+      component.detailStore.initialize(makeClient({ notification_prefs: prefs }));
+      component.toggleNotif();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges(); // flush the checkbox model→checked binding after ngModel writes
+    }
+
+    function flagInput(flag: string): HTMLInputElement {
+      const host = fixture.debugElement.query(By.css(`[data-testid="notif-checkbox-${flag}"]`));
+      expect(host).not.toBeNull();
+      return host.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    }
+
+    it('renders in the Email group after cancellation with its label and hint', async () => {
+      await renderWith(undefined);
+
+      const row = fixture.debugElement.query(By.css('[data-testid="notif-flag-email_reminder"]'));
+      expect(row).not.toBeNull();
+      expect(row.nativeElement.textContent).toContain('Recordatorio de reserva');
+      expect(row.nativeElement.textContent).toContain('Email 24 h y 30 min antes de la reserva.');
+
+      const groupRows = fixture.debugElement
+        .queryAll(By.css('.bw-pc__notif-group'))[0]
+        .queryAll(By.css('[data-testid^="notif-flag-"]'))
+        .map(el => el.attributes['data-testid']);
+      expect(groupRows).toEqual([
+        'notif-flag-email_new_booking',
+        'notif-flag-email_booking_confirmation',
+        'notif-flag-email_booking_cancellation',
+        'notif-flag-email_reminder',
+      ]);
+    });
+
+    it('defaults to on when the API omits email_reminder', async () => {
+      await renderWith({
+        email_new_booking: true,
+        email_booking_confirmation: true,
+        email_booking_cancellation: true,
+        whatsapp_reminder: true,
+        whatsapp_cancellation_confirmation: true,
+      });
+
+      expect(flagInput('email_reminder').checked).toBe(true);
+    });
+
+    it('toggling it PATCHes only email_reminder', async () => {
+      await renderWith(undefined);
+      clientsApi.updateClient!.mockClear();
+
+      flagInput('email_reminder').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
+      expect(clientsApi.updateClient).toHaveBeenCalledWith(1, {
+        notification_prefs: { email_reminder: false },
+      });
+    });
+  });
+
+  describe('per-group active counters', () => {
+    async function renderWith(prefs: Client['notification_prefs']) {
+      fixture.componentRef.setInput('showNotifications', true);
+      fixture.componentRef.setInput('dialogMode', true);
+      component.detailStore.initialize(makeClient({ notification_prefs: prefs }));
+      component.toggleNotif();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges(); // flush the checkbox model→checked binding after ngModel writes
+    }
+
+    it('shows “N de M activos” per channel group', async () => {
+      await renderWith({
+        email_new_booking: true,
+        email_booking_confirmation: false,
+        email_booking_cancellation: true,
+        email_reminder: true,
+        whatsapp_reminder: false,
+        whatsapp_cancellation_confirmation: true,
+      });
+
+      const counts = fixture.debugElement
+        .queryAll(By.css('.bw-pc__notif-group-count'))
+        .map(el => el.nativeElement.textContent.trim());
+
+      expect(counts).toEqual(['3 de 4 activos', '1 de 2 activos']);
+    });
+  });
+
+  describe('pre-existing flags still PATCH themselves', () => {
+    it('whatsapp_reminder toggle still sends a partial PATCH with only that flag', async () => {
+      fixture.componentRef.setInput('showNotifications', true);
+      fixture.componentRef.setInput('dialogMode', true);
+      component.detailStore.initialize(makeClient());
+      component.toggleNotif();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      clientsApi.updateClient!.mockClear();
+
+      const host = fixture.debugElement.query(By.css('[data-testid="notif-checkbox-whatsapp_reminder"]'));
+      (host.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
+      expect(clientsApi.updateClient).toHaveBeenCalledWith(1, {
+        notification_prefs: { whatsapp_reminder: true },
+      });
     });
   });
 
