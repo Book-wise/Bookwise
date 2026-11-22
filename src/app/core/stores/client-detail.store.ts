@@ -176,8 +176,11 @@ export const ClientDetailStore = signalStore(
         patchState(store, {
           notifications: { ...store.notifications(), [key]: value },
         });
-        // Partial PATCH — the backend accepts a single flag under notification_prefs.
-        const patch = { notification_prefs: { [key]: value } } as unknown as Partial<Client>;
+        // Partial PATCH — per-flag keys ride under notification_prefs; the master switch is
+        // top-level (ClientController validates prefs keys strictly and rejects unknown ones).
+        const patch = (key === 'notifications_enabled'
+          ? { notifications_enabled: value }
+          : { notification_prefs: { [key]: value } }) as unknown as Partial<Client>;
         clientsApi.updateClient(clientId, patch).subscribe({
           error: (err: HttpErrorResponse) => {
             patchState(store, {

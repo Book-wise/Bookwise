@@ -73,12 +73,12 @@ export class PatientCardComponent implements AfterViewInit, OnDestroy {
 
   readonly notifOpen = signal(false);
 
-  /** Backend flags grouped by channel — the 6-flag contract plus the master switch, 1:1. */
+  /** Backend flags grouped by channel — the 5 flags the API validates today, 1:1.
+   *  `email_reminder` stays out until the API ships it (unknown keys return 422). */
   readonly emailNotificationFlags: (keyof NotificationValues)[] = [
     'email_new_booking',
     'email_booking_confirmation',
     'email_booking_cancellation',
-    'email_reminder',
   ];
   readonly whatsappNotificationFlags: (keyof NotificationValues)[] = [
     'whatsapp_reminder',

@@ -117,7 +117,7 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | # | Tarea | Specs | Estado |
 |---|---|---|---|
 | T1 | Inventario verificado de disparadores, pantallas y preferencias (este documento) | S1, S2 | ✅ hecho |
-| T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ✅ hecho (PR #59) |
+| T2 | `email_reminder` como 6º flag, default `true` (**contrato cerrado por el mantenedor**) | S3 | ⏳ bloqueado por el API: manda 422 (L7) — re-habilitar con T14 |
 | T3 | Switch maestro **visible** en la tarjeta del cliente: `notifications_enabled` viaja también dentro de `notification_prefs` (aditivo, el GET sigue con el top-level) | S3 | ✅ hecho (PR #59) |
 | T4 | **Eliminar** la card «Canales de notificación» de `/admin/profile`: una sola superficie, la tarjeta del cliente | S3 | ✅ cerrado (slice/13, PR #60) |
 | T5 | Diseñar e implementar magic link (pantalla + estado «revisa tu correo» + consumo de token) | S4 | ⏳ pendiente (no existe) |
@@ -128,6 +128,7 @@ público, así que ningún email al cliente se origina en una sesión de cliente
 | T11 | Diseñar la tarjeta de preferencias: maestro + 6 flags por canal | S3 | ✅ `design/preferencias-cliente/` (3 direcciones) |
 | T12 | Implementar el maestro y el 6º flag en `bw-patient-card` + PATCH parcial con `notifications_enabled` | S3 | ✅ hecho (PR #59) |
 | T13 | Quitar la card de `/admin/profile` | S3 | ✅ cerrado (mismo cierre que T4, slice/13) |
+| T14 | Re-habilitar `email_reminder` en la tarjeta cuando el API lo valide (default `true`, fila en el grupo Email) | S3 | ⏳ pendiente (espera BE) |
 | T10 | Mapear el onboarding existente contra lo que el API espera de «cuenta completa» | S5 | ✅ inventariado acá |
 
 ## Log

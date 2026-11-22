@@ -505,7 +505,7 @@ describe('PatientCardComponent', () => {
       });
     });
 
-    it('renders exactly six flags grouped by channel and no citaWa', async () => {
+    it('renders exactly five flags grouped by channel and no citaWa', async () => {
       fixture.componentRef.setInput('showNotifications', true);
       fixture.componentRef.setInput('dialogMode', true);
       component.detailStore.initialize(makeClient());
@@ -517,7 +517,6 @@ describe('PatientCardComponent', () => {
         'notif-flag-email_new_booking',
         'notif-flag-email_booking_confirmation',
         'notif-flag-email_booking_cancellation',
-        'notif-flag-email_reminder',
         'notif-flag-whatsapp_reminder',
         'notif-flag-whatsapp_cancellation_confirmation',
       ];
@@ -529,7 +528,7 @@ describe('PatientCardComponent', () => {
 
       const groups = fixture.debugElement.queryAll(By.css('.bw-pc__notif-group-title'));
       expect(groups.length).toBe(2);
-      expect(flags.length).toBe(6);
+      expect(flags.length).toBe(5);
     });
 
     it('exposes a keyboard-reachable info button with a tooltip per flag', async () => {
@@ -541,7 +540,7 @@ describe('PatientCardComponent', () => {
       await fixture.whenStable();
 
       const infoButtons = fixture.debugElement.queryAll(By.css('.bw-pc__notif-info-btn'));
-      expect(infoButtons.length).toBe(6);
+      expect(infoButtons.length).toBe(5);
       for (const btn of infoButtons) {
         expect(btn.nativeElement.tagName).toBe('BUTTON');
       }
@@ -639,7 +638,7 @@ describe('PatientCardComponent', () => {
       expect(component.masterEnabled()).toBe(false);
       expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
       expect(clientsApi.updateClient).toHaveBeenCalledWith(1, {
-        notification_prefs: { notifications_enabled: false },
+        notifications_enabled: false,
       });
 
       // Turning it off must NOT rewrite any per-channel flag.
@@ -652,7 +651,7 @@ describe('PatientCardComponent', () => {
       expect(state.whatsapp_cancellation_confirmation).toBe(false);
     });
 
-    it('with the master off the six switches are disabled and keep their checked state', async () => {
+    it('with the master off the five switches are disabled and keep their checked state', async () => {
       await renderWith({
         email_new_booking: true,
         email_booking_confirmation: false,
@@ -667,7 +666,6 @@ describe('PatientCardComponent', () => {
         'email_new_booking',
         'email_booking_confirmation',
         'email_booking_cancellation',
-        'email_reminder',
         'whatsapp_reminder',
         'whatsapp_cancellation_confirmation',
       ];
@@ -678,73 +676,8 @@ describe('PatientCardComponent', () => {
       expect(flagInput('email_new_booking').checked).toBe(true);
       expect(flagInput('email_booking_confirmation').checked).toBe(false);
       expect(flagInput('email_booking_cancellation').checked).toBe(true);
-      expect(flagInput('email_reminder').checked).toBe(true);
       expect(flagInput('whatsapp_reminder').checked).toBe(true);
       expect(flagInput('whatsapp_cancellation_confirmation').checked).toBe(false);
-    });
-  });
-
-  describe('email reminder flag (6th email flag)', () => {
-    async function renderWith(prefs?: Client['notification_prefs']) {
-      fixture.componentRef.setInput('showNotifications', true);
-      fixture.componentRef.setInput('dialogMode', true);
-      component.detailStore.initialize(makeClient({ notification_prefs: prefs }));
-      component.toggleNotif();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      fixture.detectChanges(); // flush the checkbox model→checked binding after ngModel writes
-    }
-
-    function flagInput(flag: string): HTMLInputElement {
-      const host = fixture.debugElement.query(By.css(`[data-testid="notif-checkbox-${flag}"]`));
-      expect(host).not.toBeNull();
-      return host.nativeElement.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    }
-
-    it('renders in the Email group after cancellation with its label and hint', async () => {
-      await renderWith(undefined);
-
-      const row = fixture.debugElement.query(By.css('[data-testid="notif-flag-email_reminder"]'));
-      expect(row).not.toBeNull();
-      expect(row.nativeElement.textContent).toContain('Recordatorio de reserva');
-      expect(row.nativeElement.textContent).toContain('Email 24 h y 30 min antes de la reserva.');
-
-      const groupRows = fixture.debugElement
-        .queryAll(By.css('.bw-pc__notif-group'))[0]
-        .queryAll(By.css('[data-testid^="notif-flag-"]'))
-        .map(el => el.attributes['data-testid']);
-      expect(groupRows).toEqual([
-        'notif-flag-email_new_booking',
-        'notif-flag-email_booking_confirmation',
-        'notif-flag-email_booking_cancellation',
-        'notif-flag-email_reminder',
-      ]);
-    });
-
-    it('defaults to on when the API omits email_reminder', async () => {
-      await renderWith({
-        email_new_booking: true,
-        email_booking_confirmation: true,
-        email_booking_cancellation: true,
-        whatsapp_reminder: true,
-        whatsapp_cancellation_confirmation: true,
-      });
-
-      expect(flagInput('email_reminder').checked).toBe(true);
-    });
-
-    it('toggling it PATCHes only email_reminder', async () => {
-      await renderWith(undefined);
-      clientsApi.updateClient!.mockClear();
-
-      flagInput('email_reminder').click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      expect(clientsApi.updateClient).toHaveBeenCalledTimes(1);
-      expect(clientsApi.updateClient).toHaveBeenCalledWith(1, {
-        notification_prefs: { email_reminder: false },
-      });
     });
   });
 
@@ -764,7 +697,6 @@ describe('PatientCardComponent', () => {
         email_new_booking: true,
         email_booking_confirmation: false,
         email_booking_cancellation: true,
-        email_reminder: true,
         whatsapp_reminder: false,
         whatsapp_cancellation_confirmation: true,
       });
@@ -773,7 +705,7 @@ describe('PatientCardComponent', () => {
         .queryAll(By.css('.bw-pc__notif-group-count'))
         .map(el => el.nativeElement.textContent.trim());
 
-      expect(counts).toEqual(['3 de 4 activos', '1 de 2 activos']);
+      expect(counts).toEqual(['2 de 3 activos', '1 de 2 activos']);
     });
   });
 
