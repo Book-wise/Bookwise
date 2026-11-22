@@ -17,15 +17,19 @@
   .stage-sub { font-size:.8125rem; color:var(--text-secondary); padding:0 20px 14px; max-width:1100px; }
   /* app chrome */
   .app { max-width:1360px; margin:0 auto 28px; border:1px solid var(--surface-border); border-radius:var(--r-lg); overflow:hidden; background:var(--surface-card); box-shadow:var(--sh-card); }
-  .topbar { height:67px; background:var(--bw-900); color:#fff; display:flex; align-items:center; gap:28px; padding:0 20px; position:relative; }
-  .brand { font-weight:700; letter-spacing:.02em; display:flex; align-items:center; gap:10px; }
-  .brand i { width:26px; height:26px; border-radius:6px; background:var(--bw-300); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; font-style:normal; }
-  .topnav { display:flex; gap:4px; }
-  .topnav a { color:rgba(255,255,255,.68); text-decoration:none; font-size:.875rem; padding:8px 12px; border-radius:var(--r-md); position:relative; }
-  .topnav a[aria-current] { color:#fff; font-weight:600; background:rgba(255,255,255,.14); }
-  .topnav a.pinned { display:inline-flex; align-items:center; gap:6px; }
-  .topnav a.pinned::before { content:"📅"; font-size:.8125rem; }
-  .top-actions { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .topbar { height:67px; background:var(--bw-900); color:#fff; display:flex; align-items:center; gap:20px; padding:0 20px; position:relative; }
+  .brand img { height:26px; display:block; }
+  .biz { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.08); border-radius:var(--r-md); padding:6px 12px; }
+  .biz .mono { width:30px; height:30px; border-radius:var(--r-md); background:#fff; color:var(--bw-900); display:inline-flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; }
+  .biz b { font-size:.875rem; font-weight:600; display:block; line-height:1.2; }
+  .biz small { font-size:.6875rem; color:rgba(255,255,255,.55); display:block; }
+  .biz i { font-style:normal; color:rgba(255,255,255,.55); font-size:.625rem; }
+  .agenda-link { display:inline-flex; align-items:center; gap:7px; color:#fff; font-size:.875rem; font-weight:600; text-decoration:none; background:rgba(255,255,255,.14); padding:8px 14px; border-radius:var(--r-md); box-shadow:inset 0 -2px 0 var(--bw-300); }
+  .agenda-link::before { content:"▦"; font-size:.8125rem; }
+  .top-actions { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .cal-mini { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.08); border-radius:var(--r-md); padding:5px 10px; }
+  .cal-mini span { font-size:.75rem; color:rgba(255,255,255,.85); }
+  .theme { background:rgba(255,255,255,.08); border-radius:var(--r-md); padding:6px 10px; font-size:.75rem; color:rgba(255,255,255,.85); display:inline-flex; gap:6px; align-items:center; }
   .avatar { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; }
   .main { display:flex; min-height:560px; }
   .rail { width:56px; background:linear-gradient(180deg,var(--bw-900),var(--bw-600)); display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 0; }
@@ -50,9 +54,9 @@
   .filters { display:flex; gap:8px; }
   .filters span { font-size:.8125rem; padding:6px 12px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; color:var(--text-label); }
   /* grid del calendario */
-  /* Esquinas derechas redondeadas estilo Google Calendar: la izquierda queda
-     cuadrada porque ahí la grilla nace del borde del shell/rail. */
-  .cal { height:430px; border:1px solid var(--surface-border); border-radius:0 var(--r-lg) var(--r-lg) 0; background:repeating-linear-gradient(90deg, var(--surface-card) 0 62px, var(--bw-surface-muted) 62px 63px); position:relative; overflow:hidden; }
+  /* El grid entero es una tarjeta flotante redondeada (ref. Google Calendar):
+     las 4 esquinas redondeadas y aire respecto del rail/panel lateral. */
+  .cal { height:430px; margin-left:6px; border:1px solid var(--surface-border); border-radius:12px; background:repeating-linear-gradient(90deg, var(--surface-card) 0 62px, var(--bw-surface-muted) 62px 63px); position:relative; overflow:hidden; }
   .cal .ev { position:absolute; border-radius:var(--r-pill); padding:4px 12px; font-size:.75rem; color:var(--text-heading); border-left:3px solid; background:var(--surface-card); box-shadow:var(--sh-card); }
   .legend { display:flex; align-items:center; gap:14px; margin-top:10px; flex-wrap:wrap; }
   .legend__title { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); }
@@ -68,14 +72,20 @@
 
 <section class="app" aria-label="App Bookwise con selector de vista">
   <header class="topbar">
-    <span class="brand"><i>BW</i> Bookwise</span>
-    <nav class="topnav" aria-label="Navegación superior">
-      <a href="#" aria-current="page" class="pinned">Agenda</a>
-      <a href="#">Clientes</a>
-      <a href="#">Packs</a>
-      <a href="#">Facturación</a>
-    </nav>
-    <div class="top-actions"><span class="avatar" aria-hidden="true">CQ</span></div>
+    <button class="burger" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    <span class="brand"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='86' height='26'%3E%3Crect width='86' height='26' rx='4' fill='%23ffffff' opacity='.92'/%3E%3Ctext x='43' y='18' text-anchor='middle' font-size='13' font-weight='700' fill='%23012663'%3EBookwise%3C/text%3E%3C/svg%3E" alt="Bookwise"/></span>
+    <span class="biz">
+      <span class="mono">K</span>
+      <span class="biz-info"><b>Kinesilk</b><small>RUT: 77.483.192-6</small></span>
+      <i>▼</i>
+    </span>
+    <!-- Lo ÚNICO que sube: «Agenda» como enlace directo siempre visible -->
+    <a href="#" class="agenda-link" aria-current="page">Agenda</a>
+    <div class="top-actions">
+      <span class="cal-mini"><span>Hoy</span><span>‹</span><span>›</span><span>Mes ▾</span></span>
+      <span class="theme">◐ Claro ▾</span>
+      <span class="avatar" aria-hidden="true">CQ</span>
+    </div>
   </header>
 
   <div class="main">
