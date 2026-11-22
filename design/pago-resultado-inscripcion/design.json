@@ -1,0 +1,42 @@
+{
+  "title": "Resultado de inscripción de medio de pago (P1 Transbank)",
+  "brief": "Pantallas de retorno del flujo de inscripción Oneclick Mall: éxito, fallo con motivo del banco y estado processing. Basadas en la implementación real de src/app/features/billing-public/ y la card de medio de pago; el backend no expone datos de tarjeta (sin últimos 4 dígitos ni marca). Copy del proyecto en es/en ya escrito.",
+  "feature": "odd/tasks/transbank-integration.md",
+  "artboards": [
+    {
+      "file": "01-notificacion-centrada.html",
+      "title": "Notificación centrada",
+      "tradeoff": "Directa y rápida de leer; cero contexto adicional",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-resultado-con-contexto.html",
+      "title": "Resultado con contexto",
+      "tradeoff": "Informa qué sigue y causas del rechazo; página más larga",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-panel-marca.html",
+      "title": "Panel de marca (split)",
+      "tradeoff": "Momento de marca fuerte y consistente con el login split; más pesada en mobile",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "04-split-con-contexto.html",
+      "title": "Split con contexto",
+      "tradeoff": "Combina el panel de marca con el contexto de 02 (steps, causas, processing); la más completa y más larga",
+      "width": 1440,
+      "height": 960
+    },
+    {
+      "file": "05-mobile.html",
+      "title": "Mobile (confirmación responsive)",
+      "tradeoff": "Franja de marca compacta arriba, cards apiladas, CTAs full-width; valida el breakpoint ≤900px",
+      "width": 960,
+      "height": 840
+    }
+  ]
+}
