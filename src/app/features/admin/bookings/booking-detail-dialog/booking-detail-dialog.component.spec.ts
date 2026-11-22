@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
+import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 import { BookingDetailDialogComponent } from './booking-detail-dialog.component';
+import { ABILITIES } from '@shared/config/abilities.config';
 import { BookingStore } from '@core/stores/booking.store';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { BookingsApiService } from '@services/api/bookings-api.service';
@@ -59,6 +61,7 @@ const completeBooking = {
 } as Booking;
 
 describe('BookingDetailDialogComponent', () => {
+  const specPermissions = { clientsView: false };
   let fixture: ComponentFixture<BookingDetailDialogComponent>;
   let component: BookingDetailDialogComponent;
   let bookingStore: InstanceType<typeof BookingStore>;
@@ -94,7 +97,7 @@ describe('BookingDetailDialogComponent', () => {
         { provide: ClientsApiService, useValue: { getClients: vi.fn().mockReturnValue(of({ data: [] })), ...clientsApi } },
         { provide: ProvidersApiService, useValue: { getProviders: vi.fn().mockReturnValue(of([])) } },
         { provide: SalesApiService, useValue: { getSales: vi.fn().mockReturnValue(of({ data: [], meta: {} })) } },
-        { provide: AuthService, useValue: { user: signal(null) } },
+        { provide: AuthService, useValue: { user: signal(null), hasPermission: (p: string) => p === ABILITIES.clientsView && specPermissions.clientsView } },
         { provide: HttpErrorService, useValue: { handle: vi.fn() } },
         { provide: MessageService, useValue: messageService },
         { provide: ClinicalRecordTypesApiService, useValue: clinicalRecordTypesApi },
@@ -255,6 +258,37 @@ describe('BookingDetailDialogComponent', () => {
     expect(clinicalRecordsApi.getRecords).toHaveBeenCalledTimes(2);
     expect(clinicalRecordsApi.getRecords).toHaveBeenNthCalledWith(1, { client_id: 7 });
     expect(clinicalRecordsApi.getRecords).toHaveBeenNthCalledWith(2, { client_id: 8 });
+  });
+
+  describe('footer Ver ficha shortcut', () => {
+    function fichaButton(): DebugElement | null {
+      const btns = fixture.debugElement.queryAll(By.css('.dialog-footer p-button'));
+      const el = btns.find((b) => b.nativeElement.querySelector('.p-button-label')?.textContent === 'Ver ficha');
+      return el ?? null;
+    }
+
+    it('opens the patient ficha dialog and closes the booking dialog for permitted users', () => {
+      specPermissions.clientsView = true;
+      component.open(booking, 'reserva');
+      fixture.detectChanges();
+
+      const btn = fichaButton();
+      expect(btn).not.toBeNull();
+
+      btn!.nativeElement.querySelector('button').click();
+
+      expect(component.fichaVisible()).toBe(true);
+      expect(component.fichaClient()?.id).toBe(7);
+      expect(component.visible()).toBe(false);
+    });
+
+    it('hides the shortcut without clients.view permission', () => {
+      specPermissions.clientsView = false;
+      component.open(booking, 'reserva');
+      fixture.detectChanges();
+
+      expect(fichaButton()).toBeNull();
+    });
   });
 });
 
