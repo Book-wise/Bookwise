@@ -30,6 +30,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },
   {
+    // Retorno de inscripción de medio de pago (P1 Transbank Oneclick Mall):
+    // el BE redirige acá tras confirmar; pública y terminal (S5/S12 de
+    // odd/tasks/transbank-integration.md). El BE debe apuntar
+    // TRANSBANK frontendResultUrl a /payment/enrollment.
+    path: 'payment/enrollment',
+    loadComponent: () => import('./features/billing-public/enrollment-result.component').then(m => m.EnrollmentResultComponent)
+  },
+  {
     path: 'onboarding',
     canActivate: [roleGuard(['admin'])],
     loadComponent: () => import('./features/admin/onboarding/onboarding.component').then(m => m.OnboardingComponent)

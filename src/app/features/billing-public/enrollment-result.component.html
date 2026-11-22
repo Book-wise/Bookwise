@@ -1,0 +1,116 @@
+<div class="enrollment-result" [class]="'is-' + vm().kind">
+  <!-- Panel de marca (04: lateral en desktop; franja compacta ≤900px según 05) -->
+  <aside class="enrollment-result__brand">
+    <div class="enrollment-result__brand-top">
+      <img src="assets/images/logo_side_transparente.png" alt="Bookwise" />
+      <svg class="enrollment-result__shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 11 2 2 4-4" />
+      </svg>
+    </div>
+  </aside>
+
+  <main class="enrollment-result__content">
+    <section
+      class="enrollment-result__card"
+      [attr.role]="vm().kind === 'error' ? 'alert' : 'status'">
+
+      @switch (vm().kind) {
+        @case ('success') {
+          <span class="enrollment-result__icon enrollment-result__icon--success" aria-hidden="true">
+            <i class="pi pi-check-circle"></i>
+          </span>
+          <span class="bw-chip bw-chip--success">{{ lang.t('payment.enrollment.result.success_chip') }}</span>
+          <h1 class="enrollment-result__title">{{ lang.t('payment.enrollment.result.success_title') }}</h1>
+          <p class="enrollment-result__message">{{ lang.t('payment.enrollment.result.success_body') }}</p>
+        }
+        @case ('error') {
+          <span class="enrollment-result__icon enrollment-result__icon--error" aria-hidden="true">
+            <i class="pi pi-times-circle"></i>
+          </span>
+          <span class="bw-chip" [style.--chip-color]="'#dc2626'" [style.--chip-text-color]="'var(--bw-chip-text-danger)'">
+            {{ lang.t('payment.enrollment.result.error_chip') }}
+          </span>
+          <h1 class="enrollment-result__title">{{ lang.t('payment.enrollment.result.error_title') }}</h1>
+          <p class="enrollment-result__message">{{ lang.t(errorMessageKey()) }}</p>
+        }
+        @case ('processing') {
+          <span class="enrollment-result__icon enrollment-result__icon--processing" aria-hidden="true">
+            <i class="pi pi-spin pi-spinner"></i>
+          </span>
+          <span class="bw-chip" [style.--chip-color]="'var(--bw-300, #046af4)'" [style.--chip-text-color]="'var(--bw-chip-text-primary)'">
+            {{ lang.t('payment.enrollment.result.processing_chip') }}
+          </span>
+          <h1 class="enrollment-result__title">{{ lang.t('payment.enrollment.result.processing_title') }}</h1>
+          <p class="enrollment-result__message">{{ lang.t('payment.enrollment.result.processing_body') }}</p>
+        }
+        @case ('unconfirmed') {
+          <span class="enrollment-result__icon enrollment-result__icon--processing" aria-hidden="true">
+            <i class="pi pi-spin pi-spinner"></i>
+          </span>
+          <span class="bw-chip" [style.--chip-color]="'var(--bw-300, #046af4)'" [style.--chip-text-color]="'var(--bw-chip-text-primary)'">
+            {{ lang.t('payment.enrollment.result.unconfirmed_chip') }}
+          </span>
+          <h1 class="enrollment-result__title">{{ lang.t('payment.enrollment.result.unconfirmed_title') }}</h1>
+          <p class="enrollment-result__message">{{ lang.t('payment.enrollment.result.unconfirmed_body') }}</p>
+        }
+        @default {
+          <span class="enrollment-result__icon enrollment-result__icon--neutral" aria-hidden="true">
+            <i class="pi pi-info-circle"></i>
+          </span>
+          <h1 class="enrollment-result__title">{{ lang.t('payment.enrollment.result.neutral_title') }}</h1>
+          <p class="enrollment-result__message">{{ lang.t('payment.enrollment.result.neutral_body') }}</p>
+        }
+      }
+
+      <!-- Contexto según estado (04): Qué pasa ahora / Causas posibles (copy Transbank) -->
+      @if (vm().kind === 'success') {
+        <aside class="enrollment-result__context" aria-label="Qué pasa ahora">
+          <h2>{{ lang.t('payment.enrollment.context.next_title') }}</h2>
+          <ol>
+            <li><span class="step-n">1</span>{{ lang.t('payment.enrollment.context.next_step1') }}</li>
+            <li><span class="step-n">2</span>{{ lang.t('payment.enrollment.context.next_step2') }}</li>
+            <li><span class="step-n">3</span>{{ lang.t('payment.enrollment.context.next_step3') }}</li>
+          </ol>
+        </aside>
+      } @else if (vm().kind === 'error') {
+        <aside class="enrollment-result__context enrollment-result__context--causes" aria-label="Causas posibles">
+          <h2>{{ lang.t('payment.enrollment.context.causes_title') }}</h2>
+          <ul>
+            <li>{{ lang.t('payment.enrollment.context.causes_1') }}</li>
+            <li>{{ lang.t('payment.enrollment.context.causes_2') }}</li>
+            <li>{{ lang.t('payment.enrollment.context.causes_3') }}</li>
+          </ul>
+        </aside>
+      }
+    </section>
+
+    <!-- CTAs según estado -->
+    <div class="enrollment-result__actions">
+      @if (vm().kind === 'neutral') {
+        <p-button
+          [label]="lang.t('payment.enrollment.result.open_billing')"
+          icon="pi pi-credit-card"
+          [outlined]="true"
+          styleClass="enrollment-result__cta"
+          routerLink="/login" />
+      } @else {
+        <p-button
+          [label]="lang.t('payment.enrollment.result.back_to_billing')"
+          icon="pi pi-arrow-left"
+          [outlined]="true"
+          styleClass="enrollment-result__cta"
+          routerLink="/admin/facturacion" />
+        @if (vm().kind === 'error') {
+          <p-button
+            [label]="lang.t('payment.enrollment.result.retry')"
+            icon="pi pi-arrow-right"
+            [outlined]="true"
+            styleClass="enrollment-result__cta enrollment-result__cta--secondary"
+            routerLink="/admin/facturacion"
+            [queryParams]="{ retry: '1' }" />
+        }
+      }
+    </div>
+  </main>
+</div>

@@ -129,4 +129,16 @@ describe('account area routes — grouped shell', () => {
   it('expone Mi plan y Administrar mi plan bajo /admin/planes', () => {
     expect(childPaths('planes')).toEqual(['', 'administrar']);
   });
+
+  // Retorno de inscripción de medio de pago (P1 Transbank): pública y terminal,
+  // fuera del layout admin (el BE redirige acá con ?status=&reason=, S5 de
+  // odd/tasks/transbank-integration.md).
+  it('expone /payment/enrollment como ruta pública (sin guard ni layout admin)', () => {
+    const route = routes.find((r) => r.path === 'payment/enrollment');
+
+    expect(route).toBeDefined();
+    expect(route?.loadComponent).toBeTypeOf('function');
+    expect(route?.canActivate).toBeUndefined();
+    expect(route?.children).toBeUndefined();
+  });
 });
