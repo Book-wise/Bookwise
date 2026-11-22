@@ -190,3 +190,9 @@ público, así que ningún email al cliente se origina en una sesión de cliente
   (`gentle-ai review mode disable --scope clone`) para poder mergear con política ordinaria.
   Nota de integración: #58 mergeó contra su base apilada (`slice/11`) y no contra `develop`, así que el
   contenido del split-brand entró a `develop` vía el merge manual de `slice/12-login-artboard`.
+
+- **L8 (2026-11-21, confirmación del BE):** el backend re-confirma los 3 puntos de L7 y fija
+  **top-level only como estado estable**: `notifications_enabled` dentro de `notification_prefs` hoy
+  no se acepta (422) y NO está planificado aceptarlo; si cambia, lo anuncian. `email_reminder`
+  (default `true`) queda pendiente de su lado — cuando entre sumará una key más al PATCH y avisan
+  para re-habilitar la fila (T14). No hay cambio de código: el front (PR #61) ya coincide.
