@@ -38,60 +38,72 @@
         </div>
       </header>
 
-      <dl class="detail__fields">
-        @for (field of visibleFields(); track field.key) {
-          <div class="detail__field">
-            <dt class="detail__label">{{ field.label }}</dt>
-            <dd class="detail__value">{{ formatValue(field) }}</dd>
-          </div>
-        } @empty {
-          <p class="detail__empty" data-testid="detail-no-values">{{ t('ficha.detail.no_values') }}</p>
-        }
-      </dl>
+      <div class="detail__body">
+        <dl class="detail__fields">
+          @for (field of visibleFields(); track field.key) {
+            <div class="detail__field">
+              <dt class="detail__label">{{ field.label }}</dt>
+              <dd class="detail__value">{{ formatValue(field) }}</dd>
+            </div>
+          } @empty {
+            <p class="detail__empty" data-testid="detail-no-values">{{ t('ficha.detail.no_values') }}</p>
+          }
+        </dl>
 
-      <!-- ── Campos image (F10): la ruta no es pública, se pinta un blob ── -->
-      @if (imageFields().length) {
-        <div class="detail__images">
-          @for (field of imageFields(); track field.key) {
-            <div class="detail__image" data-testid="record-image">
-              <span class="detail__label">{{ field.label }}</span>
+        <!-- ── Panel visual lateral (dirección elegida): imágenes como
+             timeline a la derecha, agrupadas por la fecha del registro ── -->
+        @if (imageFields().length) {
+          <aside class="detail__gallery" data-testid="detail-gallery" aria-label="Imágenes de la ficha">
+            <div class="detail__gallery-title">
+              <span>{{ t('ficha.detail.gallery_title') }}</span>
+            </div>
+            <div class="detail__gallery-day">
+              <div class="detail__gallery-date">{{ galleryDay() }}</div>
+              @for (field of imageFields(); track field.key; let first = $first) {
+                <div class="detail__image" data-testid="record-image" [class.detail__image--latest]="first">
+                  @if (first) {
+                    <span class="detail__gallery-badge" data-testid="image-latest">{{ t('ficha.detail.image_latest') }}</span>
+                  }
+                  <span class="detail__label detail__label--gallery">{{ field.label }}</span>
 
-              @if (imageFor(field.key); as image) {
-                <div class="detail__image-body">
-                  <img
-                    class="detail__thumb"
-                    data-testid="image-thumb"
-                    [src]="image.url"
-                    [alt]="field.label"
-                  />
-                  <div class="detail__image-actions">
-                    <p-button
-                      [label]="t('ficha.detail.image_view')"
-                      icon="pi pi-external-link"
-                      size="small"
-                      [outlined]="true"
-                      (onClick)="onViewImage(field)"
-                    />
-                    <p-button
-                      [label]="t('ficha.detail.image_download')"
-                      icon="pi pi-download"
-                      size="small"
-                      [outlined]="true"
-                      (onClick)="onDownloadImage(field)"
-                    />
-                  </div>
+                  @if (imageFor(field.key); as image) {
+                    <div class="detail__image-body">
+                      <img
+                        class="detail__thumb"
+                        data-testid="image-thumb"
+                        [src]="image.url"
+                        [alt]="field.label"
+                      />
+                      <div class="detail__image-actions">
+                        <p-button
+                          [label]="t('ficha.detail.image_view')"
+                          icon="pi pi-external-link"
+                          size="small"
+                          [outlined]="true"
+                          (onClick)="onViewImage(field)"
+                        />
+                        <p-button
+                          [label]="t('ficha.detail.image_download')"
+                          icon="pi pi-download"
+                          size="small"
+                          [outlined]="true"
+                          (onClick)="onDownloadImage(field)"
+                        />
+                      </div>
+                    </div>
+                  } @else if (isImagePending(field)) {
+                    <span class="detail__thumb detail__thumb--loading" aria-hidden="true"></span>
+                  } @else {
+                    <span class="detail__image-empty" data-testid="image-empty">
+                      {{ t('ficha.detail.image_none') }}
+                    </span>
+                  }
                 </div>
-              } @else if (isImagePending(field)) {
-                <span class="detail__thumb detail__thumb--loading" aria-hidden="true"></span>
-              } @else {
-                <span class="detail__image-empty" data-testid="image-empty">
-                  {{ t('ficha.detail.image_none') }}
-                </span>
               }
             </div>
-          }
-        </div>
-      }
+          </aside>
+        }
+      </div>
     </article>
   } @else {
     <article class="detail__card">

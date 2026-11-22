@@ -311,6 +311,20 @@ describe('RecordDetailComponent', () => {
   const withImage = (): ClinicalRecord =>
     makeRecord({ images: { lesion: '/clinical-records/123/image/lesion' } });
 
+  const withTwoImages = (): ClinicalRecord =>
+    makeRecord({
+      images: {
+        lesion: '/clinical-records/123/image/lesion',
+        evolucion: '/clinical-records/123/image/evolucion',
+      },
+    });
+
+  const GALLERY_FIELDS: ClinicalRecordField[] = [
+    makeField({ key: 'diagnostico', label: 'Diagnóstico' }),
+    makeField({ key: 'lesion', label: 'Lesión', type: 'image' }),
+    makeField({ key: 'evolucion', label: 'Evolución', type: 'image' }),
+  ];
+
   function mockObjectUrls(): {
     create: ReturnType<typeof vi.fn>;
     revoke: ReturnType<typeof vi.fn>;
@@ -340,6 +354,37 @@ describe('RecordDetailComponent', () => {
     input.dispatchEvent(new Event('change'));
     render();
   }
+
+  it('la galería lateral agrupa por la fecha del registro y marca la primera imagen como Última', async () => {
+    const urls = mockObjectUrls();
+    try {
+      await setup(withTwoImages(), makeType(GALLERY_FIELDS));
+
+      const el = fixture.nativeElement as HTMLElement;
+      const gallery = el.querySelector('[data-testid="detail-gallery"]');
+      expect(gallery).toBeTruthy();
+      // El encabezado del día usa la fecha del registro (dd/mm/aaaa).
+      expect(gallery!.textContent).toContain('12/11/2026');
+      // Título local de la galería, sin contador de imágenes.
+      expect(gallery!.textContent).toContain('Imágenes');
+      // La primera imagen en orden lleva la marca Última.
+      const cards = el.querySelectorAll('[data-testid="record-image"]');
+      expect(cards.length).toBe(2);
+      expect(cards[0].querySelector('[data-testid="image-latest"]')).toBeTruthy();
+      expect(cards[1].querySelector('[data-testid="image-latest"]')).toBeNull();
+      // Los campos de texto quedan en la columna de datos, fuera del panel.
+      expect(el.querySelectorAll('.detail__fields .detail__field').length).toBe(1);
+    } finally {
+      urls.restore();
+    }
+  });
+
+  it('sin imágenes el panel lateral no se renderiza y los datos ocupan todo el ancho', async () => {
+    await setup(makeRecord(), makeType(FIELDS));
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="detail-gallery"]')).toBeNull();
+  });
 
   it('en lectura muestra la imagen del campo image con «Ver imagen» y «Descargar»', async () => {
     const urls = mockObjectUrls();

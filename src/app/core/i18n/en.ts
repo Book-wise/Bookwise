@@ -1002,6 +1002,8 @@ export const EN: Record<string, string> = {
   'ficha.detail.back': 'Back to records',
   'ficha.detail.edit': 'Edit record',
   'ficha.detail.print': 'Print record',
+  'ficha.detail.gallery_title': 'Images',
+  'ficha.detail.image_latest': 'Latest',
   'ficha.print_stage_label': 'Record print preview',
   'ficha.back': 'Back',
   'ficha.print_action': 'Print / Save PDF',
