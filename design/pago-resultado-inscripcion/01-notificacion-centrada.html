@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>01 · Notificación centrada — Resultado de inscripción</title>
+<style>
+:root {
+  --bw-900: #012663; --bw-600: #083d96; --bw-300: #046af4; --bw-200: #60a7f0; --bw-100: #dbeafe; --bw-50: #f0f6ff;
+  --bw-success: #22c55e; --bw-danger: #b91c1c; --bw-danger-soft: #fef2f2; --bw-success-soft: #f0fdf4;
+  --surface-ground: #f0f5ff; --surface-card: #ffffff; --surface-border: #e5e7eb;
+  --text-color: #1a2744; --text-color-secondary: #6b7280;
+  --bw-font-title: 18px; --bw-font-body: 16px; --bw-font-caption: 12px; --bw-font-sm: 14px;
+  --bw-radius-lg: 8px; --bw-radius-pill: 999px;
+  --bw-shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+}
+* { margin: 0; box-sizing: border-box; }
+body {
+  font-family: 'Roboto', sans-serif; background: var(--surface-ground); color: var(--text-color);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 48px 40px; min-height: 100vh; align-content: center;
+}
+.overline { font-size: var(--bw-font-caption); letter-spacing: .06em; text-transform: uppercase; color: var(--text-color-secondary); text-align: center; margin-bottom: 16px; grid-column: 1 / -1; }
+.panel { display: flex; align-items: center; justify-content: center; }
+.card {
+  background: var(--surface-card); border: 1px solid var(--surface-border); border-radius: 16px;
+  box-shadow: var(--bw-shadow-card); padding: 40px 36px; max-width: 420px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;
+}
+.icon-badge { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; }
+.icon-badge svg { width: 32px; height: 32px; }
+.icon-badge--ok { background: var(--bw-success-soft); color: var(--bw-success); }
+.icon-badge--fail { background: var(--bw-danger-soft); color: var(--bw-danger); }
+h1 { font-size: var(--bw-font-title); line-height: 1.3; font-weight: 700; }
+.msg { font-size: var(--bw-font-sm); line-height: 1.55; color: var(--text-color-secondary); }
+.btn {
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+  height: 44px; padding: 0 22px; border-radius: var(--bw-radius-pill);
+  border: 1px solid var(--bw-300); color: var(--bw-300); background: transparent;
+  font: inherit; font-weight: 500; font-size: var(--bw-font-sm); cursor: pointer; text-decoration: none;
+}
+.btn:hover { background: var(--bw-50); }
+.btn:focus-visible { outline: 3px solid var(--bw-200); outline-offset: 2px; }
+.chip { font-size: var(--bw-font-caption); font-weight: 600; padding: 4px 12px; border-radius: var(--bw-radius-pill); }
+.chip--ok { color: #166534; background: rgba(34,197,94,.12); }
+.chip--fail { color: #991b1b; background: rgba(220,38,38,.10); }
+@media (prefers-reduced-motion: no-preference) {
+  .card { animation: rise .25s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px);} }
+}
+</style>
+</head>
+<body>
+  <p class="overline">Dirección 01 · refinamiento de la implementación actual — éxito (izq) vs fallo (der)</p>
+
+  <!-- ÉXITO -->
+  <section class="panel" aria-label="Estado éxito">
+    <div class="card">
+      <div class="icon-badge icon-badge--ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <span class="chip chip--ok">Inscripción confirmada</span>
+      <h1>Tarjeta registrada</h1>
+      <p class="msg">Tu tarjeta quedó registrada como medio de pago. La usaremos para cobrar tu suscripción y los add-ons en cada período.</p>
+      <a class="btn" href="#">Volver a Facturación</a>
+    </div>
+  </section>
+
+  <!-- FALLO (motivo: rechazo del banco) -->
+  <section class="panel" aria-label="Estado fallo">
+    <div class="card" role="alert">
+      <div class="icon-badge icon-badge--fail">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </div>
+      <span class="chip chip--fail">La inscripción no se completó</span>
+      <h1>Tu banco rechazó la inscripción</h1>
+      <p class="msg">Podés intentarlo con otra tarjeta o consultar a tu banco. No se realizó ningún cobro.</p>
+      <a class="btn" href="#">Volver a Facturación</a>
+    </div>
+  </section>
+</body>
+</html>

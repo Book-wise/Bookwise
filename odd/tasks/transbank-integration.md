@@ -1,0 +1,65 @@
+# Transbank Oneclick Mall (P1) — Inscripción de medio de pago
+
+Branch `feat/transbank-integration` (worktree Bookwise-transbank). El backend ya tiene P1 en
+`feat/transbank-p1` (Bookwise-API): WE consumimos ese contrato; el cobro transaccional es P2 (falla cerrada).
+
+## Specs
+
+- S1 (usuario): "quiero que completemos la integracion de transbank, para que ejecutemos las pruebas".
+- S2 (usuario): "el cliente registra una vez la tarjeta y luego se le cobra la mensualidad, cuando ha añadido add-ons este valor se adiciona al cobro del periodo correspondiente, en la siguiente boleta".
+- S3 (usuario): "Efectivamente nosotros tenemos oneclick mall, que permite el cobro modo subscripcion o periodico".
+- S4 (BE, rama feat/transbank-p1): `POST /v1/payment-methods/enroll` (autenticado, owner|billing) → 201 `{ message, data: { redirect_url } }`. `redirect_url` es la URL de Webpay con `TBK_TOKEN` embebido (SDK `getRedirectUrl()`); el FE SOLO navega el browser ahí, nunca arma el POST form ni conoce el token.
+- S5 (BE): el retorno de Transbank lo recibe el BE en `GET|POST /v1/billing/transbank/return` (NO es pantalla del FE); el BE confirma (ventana de 60 s) y hace 302 redirect a la pantalla de resultado del FE (`frontendResultUrl`) con query `status` y `reason`:
+  - `status` ∈ `ok` | `error` | `processing`.
+  - `reason` ∈ null | `payment_enrollment_cancelled` (abortado con TBK_ORDEN_COMPRA) | `payment_enrollment_missing_token` | `payment_enrollment_failed` | `payment_enrollment_rejected` | `payment_enrollment_expired` | `payment_enrollment_<inscription_status>`.
+- S6 (BE): `GET /v1/payment-methods` → `{ data: [{ id, provider, is_default, status, created_at }] }`. **Sin campos card_\***: el recurso no expone últimos 4 dígitos ni tipo de tarjeta (spec "No full card data stored" / "no hay campos card_* en el contrato").
+- S7 (BE): `DELETE /v1/payment-methods/{id}` → `{ message }`; método de otra cuenta → not found. Soft-delete (status `disabled`).
+- S8 (BE): gate owner|billing; errores normalizados `{ error, detail }`: sin cuenta activa, sin membresía, rol insuficiente.
+- S9 (BE): conflictos de inscripción — `payment_enrollment_in_progress` (409, ya hay enrollment en curso), `payment_method_already_enrolled` (409, ya hay tarjeta; cambiar = delete-then-enroll), `payment_provider_unavailable` (503), `payment_provider_error` (502). Una cuenta = una tarjeta.
+- S10 (BE, P1): `charge`, `getPaymentStatus`, `refundOrReverse` fallan cerrado hasta P2–P4. El FE no implementa checkout de cobro en esta fase; al cambiar de plan no hay redirect de pago.
+- S11 (docs Transbank): flujo de inscripción con timeout de 4 min (prod) / 10 min (integración); retorno GET (API 1.1+) aunque el FE no lo procesa directamente (lo hace el BE). Tarjetas de prueba: VISA 4051 8856 0044 6623 CVV 123 (aprobada), MASTER 5186 0595 5959 0568 (rechazada); auth bancaria RUT 11.111.111-1 clave 123 (amb. integración).
+- S12 (usuario, validación del demo oficial Node): "no necesitamos que lo hagas identico pero sigue la documentación". El redirect del FE a la inscripción es navigation directa a `redirect_url` (el BE entrega la URL con `TBK_TOKEN` ya embebido como query param, API 1.1+ GET); el FE NUNCA arma un form POST manual ni toca el token.
+- S13 (usuario, seguridad): "esa pagina no deberia tener alguna proteccion? evalua que restricciones debe tener". Nivel 1 implementado (FE): la página NO confía en la query — `status=ok` solo se muestra con tarjeta activa verificada contra `GET /v1/payment-methods` (con sesión); sin sesión o sin verificación queda "por confirmar"; URL directa sin `status` → estado neutral, nunca error inventado; `robots noindex`; `reason` solo via mapa i18n cerrado. Nivel 2 (P2 BE): nonce opaco de un solo uso TTL corto ligado a la enrollment session en el redirect del BE + endpoint autenticado para validarlo — propuesta enviada al backend.
+- S14 (BE, P2 confirmado por mensaje): contract nonce elegido sobre HMAC firmado ("el HMAC da integridad pero permite replay dentro del TTL; el nonce one-use mata el replay de raíz"). (1) Nonce 48 hex aleatorio; BE guarda solo sha256 atado a PaymentInscription + account + expiración 300s; un solo uso con used_at; usado/expirado/inexistente → **410 Gone**. (2) `GET /v1/payment-methods/enrollment-result?n=` autenticado con sesión Sanctum (no auth-by-hash, ese es solo del return de Transbank); 200 `{status, reason, payment_method:{id, status, is_default}}`. (3) Redirect del callback pasa a `?status=ok|failure&n=<nonce>` — el status en query queda SOLO como hint de UX del primer render. (4) Caso `?n` válido con inscripción aún `processing` → 200 `{status: processing}` y el FE reintenta (polling corto), nunca 404. Anotado como P2 del contrato payment-method-enrollment en BE; implementación recién cuando el mantenedor descongele `feat/transbank-p1`. FE actual: "sin cambios urgentes".
+
+## Tasks
+
+- T1 [S4,S9,S10] API/estado FE: modelos (`PaymentMethodInfo`), `PaymentsApiService` (`enroll()`, `list()`, `remove()`), manejo de errores 409/502/503; specs.
+- T2 [S5] Página de resultado de inscripción: ruta pública (sin guard) que lee `?status=&reason=`, estados ok/error/processing, i18n es/en; specs.
+- T3 [S6,S7,S8,S9] UI en `/admin/facturacion`: bloque "Medio de pago" — sin tarjeta: CTA "Agregar tarjeta" → enroll → redirección; con tarjeta: estado/default/fecha + eliminar con confirmación; errores del gate mapeados; i18n es/en; specs.
+- T4 [S1] Cierre: `ng build` verde, suite, y procedimiento de prueba end-to-end con el BE en `feat/transbank-p1` (ver sección debajo).
+
+## Pruebas end-to-end (procedimiento)
+
+**Preparación BE (Bookwise-API, rama `feat/transbank-p1`, el mantenedor la mantiene local):**
+1. `php artisan serve` (o su runtime habitual) + `frontend_url` en `.env`. En `.env`, credenciales de integración Transbank: commerce code `597055555541` (Mall) + Api-Key Secret pública de integración; `TRANSBANK_RETURN_URL` apuntando a `/api/v1/billing/transbank/return` del host del BE y `frontendResultUrl` a `"{frontend}/payment/enrollment"`.
+2. Migraciones de `payment_inscriptions` aplicadas (el schema test ya las pina).
+
+**Preparación FE (este worktree):**
+3. `npx ng serve` con `environment.apiUrl` apuntando al host del BE.
+
+**Flujo de prueba con tarjetas de integración (S11):**
+4. Logueado como owner|billing: Facturación → card "Medio de pago" → "Agregar tarjeta". Verificar: `POST /v1/payment-methods/enroll` → 201 y el browser navega al form de Webpay (integración).
+5. En el form Webpay: VISA `4051 8856 0044 6623`, CVV `123`, RUT `11.111.111-1`, clave `123` → aprobado. El BE confirma y redirige a `/payment/enrollment?status=ok` → pantalla "Tarjeta registrada".
+6. Rechazo: repetir con MASTER `5186 0595 5959 0568` (requiere eliminar la tarjeta inscripta primero — S9 delete-then-enroll) → `status=error&reason=payment_enrollment_rejected` → mensaje de rechazo bancario.
+7. Timeout/aborto: esperar 10 min en el form o "anular compra" → `reason=payment_enrollment_cancelled` o `payment_enrollment_expired`.
+8. Volver a Facturación: card muestra "Webpay OneClick · Predeterminada · Registrada el ..." (sin datos de tarjeta, S6) → "Eliminar" con confirmación → vuelve al estado vacío.
+9. Conflictos: con tarjeta activa, iniciar enroll vía API → 409 `payment_method_already_enrolled` → toast warn + refresco de lista.
+
+**Cobro recurrente (fuera de alcance P1, S10):** el scheduler del BE cobra al método default; el FE no participa. Verificación FE: tras un cobro, `GET /v1/subscription` refleja el nuevo período en "Mi plan".
+- T5 [S14] Adaptación FE al contrato P2: consume `GET /v1/payment-methods/enrollment-result?n=` (auth Sanctum) como fuente de verdad única desde el redirect; estados derivados del endpoint; polling corto ante `{status: processing}` (410/nonce gastado → estado neutral con CTA); 410 nunca tratado como error app. PENDIENTE: el BE recién implementa cuando el mantenedor desbloquee feat/transbank-p1.
+
+## Log
+
+- L1 (2026-02-12): "puedes moverte a otra branch desde develop... quiero que completemos la integracion de transbank, para que ejecutemos las pruebas". Creado worktree + branch desde origin/develop.
+- L2: backend responde vía orquestador: P1 existe en `feat/transbank-p1` (Bookwise-API, local, no pusheada); contrato en openspec/changes/subscription-billing/specs/payment-method-enrollment/spec.md; el mantenedor pidió mantener la rama local.
+- L3: usuario autoriza lectura read-only de los specs del repo BE vía `git show` (sin tocar su worktree). Contrato pinnado en S4–S10. usuario: "oneclick mall... cobro modo subscripcion o periodico"; "revisar exhaustivamente la documentación" (hecha con fetch_content, guardada en memoria id 922).
+- L4: usuario pide validar el proyecto de ejemplo oficial Node (proyecto-ejemplo-node.transbankdevelopers.cl/oneclick-mall). Hallazgo: el demo arma form POST manual con TBK_TOKEN, pero NUESTRO BE ya entrega redirect_url con TBK_TOKEN embebido (TransbankOneclickProviderTest.php:122, GET API 1.1+). Consecuencia: el FE hace navigation directa, nunca arma forms ni toca tokens. Agregado como S12.
+- L5: gentle-design «pago-resultado-inscripcion» — 3 artboards del retorno de inscripción (01 notificación centrada, 02 con contexto de "qué pasa ahora" y causas de rechazo, 03 panel de marca split). El diseño NO muestra datos de tarjeta (S6).
+- L6: iteración de diseño con comentarios del canvas: 03/04 con logo real del side-menu sobre chip blanco, sin caption, mobile real; artboard 05-mobile.html (franja de marca, cards apiladas, CTAs full-width). "Causas posibles" se mantiene: copy recomendado por la doc oficial de Transbank (página de resultado no autorizada).
+- L7 (handoff 05-mobile): implementado en el stack real — EnrollmentResultComponent reescrito: franja de marca con logo (asset real assets/images/logo_side_transparente.png), chips de estado (kit .bw-chip), bloques de contexto (steps/Causas posibles según kind), CTA Reintentar en fallo, estilos por tokens --bw-*, animaciones sutiles con prefers-reduced-motion. i18n es/en con las keys nuevas. Spec 10/10 GREEN. No commits (pendiente decisión del usuario).
+- L8 (handoff 04-split-con-contexto): desktop ≥900px pasa a layout split — panel de marca lateral (clamp 15–22.5rem) con logo + escudo debajo; ≤900px mantiene la franja de 05. Mismo contenido de contexto. Spec 10/10 GREEN. Ambas artboards (04 y 05) quedan implementadas en el mismo componente; la app elige layout por breakpoint.
+- L9 (seguridad): usuario pide evaluar protecciones de la página de resultado. Evaluación completa → decisión usuario: Nivel 1 (FE) + propuesta P2 (BE). Implementado Nivel 1: reconciliación con GET /payment-methods (ok solo con tarjeta activa real), unconfirmed sin sesión/verificación, neutral para URL sin status, noindex, spec 12/12 GREEN. Pendiente: P2 nonce en BE.
+- L10 (commits): primeros work-unit commits en feat/transbank-integration (5 commits, ~2.112 líneas autoría: API client, i18n, página resultado con reconciliación, card en Facturación, docs+designs). Todos los tasks T1-T4 verificados antes de commitear (build verde, suite 1146/2 flaky preexistentes, specs propios 100%). Siguiente slice (P2 nonce si procede) parte del estado actual.
+- L11 (rebase): branch rebasada sobre origin/develop actualizado (d321841: login/prefs del otro agente FE, 8 commits) — sin conflictos. Re-validado post-rebase: specs del feature 63/63 GREEN + build en curso. Sin push (decisión del usuario).
+- L12 (P2 aceptada): BE confirma el contrato del nonce (S14) y lo anota como P2 de payment-method-enrollment; rama feat/transbank-p1 congelada a P1 hasta decisión del mantenedor. FE se adapta cuando el BE implemente: task T5 creado (pending, bloqueado por el OK del mantenedor).

@@ -1,0 +1,46 @@
+<p-card [header]="lang.t('billing.payment_method.title')">
+  <ng-template pTemplate="body">
+    @if (vm().loading) {
+      <div class="pm-loading">
+        <p-skeleton width="3rem" height="3rem" borderRadius="50%" />
+        <div class="pm-loading__lines">
+          <p-skeleton width="45%" height="1rem" />
+          <p-skeleton width="70%" height="0.85rem" />
+        </div>
+      </div>
+    } @else if (vm().method; as method) {
+      <div class="pm-row" data-testid="payment-method-row">
+        <span class="pm-row__icon"><i class="pi pi-credit-card"></i></span>
+        <div class="pm-row__info">
+          <span class="pm-row__provider">{{ providerLabel(method.provider) }}</span>
+          <span class="pm-row__meta">
+            @if (method.is_default) {
+              <span class="bw-chip bw-chip--success">{{ lang.t('billing.payment_method.default_chip') }}</span>
+            }
+            {{ sinceLabel(method.created_at) }}
+          </span>
+        </div>
+        <p-button
+          [label]="lang.t('billing.payment_method.remove_action')"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          size="small"
+          (onClick)="confirmRemove()" />
+      </div>
+    } @else {
+      <div class="pm-empty">
+        <span class="pm-empty__icon"><i class="pi pi-credit-card"></i></span>
+        <p class="pm-empty__text">{{ lang.t('billing.payment_method.empty_text') }}</p>
+        <p-button
+          data-testid="enroll-cta"
+          [label]="lang.t('billing.payment_method.enroll_cta')"
+          icon="pi pi-arrow-up-right"
+          [loading]="enrolling()"
+          (onClick)="enroll()" />
+      </div>
+    }
+
+    <p class="pm-hint">{{ lang.t('billing.payment_method.hint') }}</p>
+  </ng-template>
+</p-card>

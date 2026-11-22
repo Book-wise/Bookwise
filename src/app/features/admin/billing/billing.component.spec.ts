@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { BillingComponent } from './billing.component';
+import { PaymentsApiService } from '@services/api/payments-api.service';
+import { MessageService } from 'primeng/api';
 import { AuthService } from '@services/auth.service';
 import { SubscriptionStore } from '@core/stores/subscription.store';
 import { HttpErrorService } from '@services/http-error.service';
@@ -128,6 +130,9 @@ describe('BillingComponent — plan usage wiring', () => {
       providers: [
         provideZonelessChangeDetection(),
         { provide: AuthService, useValue: auth },
+        // providers que introduce la card de medio de pago anidada.
+        { provide: PaymentsApiService, useValue: { getMethods: vi.fn(() => of({ data: [] })), startEnrollment: vi.fn(), removeMethod: vi.fn() } },
+        { provide: MessageService, useValue: { add: vi.fn() } },
         { provide: SubscriptionStore, useValue: fakeStore },
         { provide: HttpErrorService, useValue: httpError },
         { provide: Router, useValue: router },

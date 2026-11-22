@@ -732,3 +732,29 @@ export interface Subscription {
 export interface SubscriptionResponse {
   data: Subscription | null;
 }
+
+// ── Payment methods (P1 Transbank Oneclick Mall) ─────────────────────────────
+/**
+ * Medio de pago inscripto de la cuenta (GET /v1/payment-methods).
+ * El recurso NO expone datos de tarjeta (spec "No full card data stored"):
+ * sin PAN, CVV, últimos 4 dígitos ni tipo de tarjeta — solo referencia, estado y flags.
+ */
+export interface PaymentMethodInfo {
+  id: number;
+  provider: string;
+  is_default: boolean;
+  /** `active` (inscripta y cobrable) | `disabled` (eliminada/baja) | `pending_confirmation` (inscripción en curso). */
+  status: string;
+  created_at: string;
+}
+
+/** Respuesta de `GET /v1/payment-methods` (envoltorio `data`). */
+export interface PaymentMethodsResponse {
+  data: PaymentMethodInfo[];
+}
+
+/** Respuesta de `POST /v1/payment-methods/enroll`: URL del formulario del proveedor. */
+export interface EnrollmentStartResponse {
+  message?: string;
+  data: { redirect_url: string };
+}

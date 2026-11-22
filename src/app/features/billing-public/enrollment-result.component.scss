@@ -1,0 +1,244 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.enrollment-result {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface-ground, #f0f5ff);
+}
+
+// ── Panel de marca (04: lateral full-height en desktop; franja ≤900px) ────────
+.enrollment-result__brand {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(180deg, var(--bw-900, #012663), var(--bw-600, #083d96));
+}
+
+.enrollment-result__brand-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.enrollment-result__shield {
+  display: none;
+  width: 6.5rem;
+  height: 6.5rem;
+  opacity: 0.18;
+  color: #fff;
+}
+
+.enrollment-result__brand img {
+  display: block;
+  height: 1.875rem;
+  width: auto;
+  background: var(--surface-card, #fff);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--bw-radius-md, 6px);
+  box-shadow: 0 1px 2px rgb(1 38 99 / 25%);
+}
+
+// Desktop ≥900px (04): panel lateral con logo + escudo debajo; contenido a la derecha.
+@media (min-width: 900px) {
+  .enrollment-result {
+    flex-direction: row;
+  }
+
+  .enrollment-result__brand {
+    flex: 0 0 clamp(15rem, 34%, 22.5rem);
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 1.5rem;
+    padding: 2.75rem 2.5rem;
+  }
+
+  .enrollment-result__brand-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.75rem;
+  }
+
+  .enrollment-result__brand img {
+    height: 2.25rem;
+  }
+
+  .enrollment-result__shield {
+    display: block;
+  }
+}
+
+.enrollment-result__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.5rem 1rem;
+  justify-content: flex-start;
+}
+
+// ≥ 900px: la card se centra verticalmente como en la versión desktop previa.
+@media (min-width: 900px) {
+  .enrollment-result__content { justify-content: center; padding: 2rem; }
+  .enrollment-result__card { max-width: 28rem; }
+}
+
+// ── Card de resultado ────────────────────────────────────────────────────────
+.enrollment-result__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  text-align: center;
+  width: 100%;
+  max-width: 27.5rem;
+  padding: 1.75rem 1.375rem;
+  border-radius: 1rem;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  box-shadow: var(--bw-shadow-card);
+  background: var(--surface-card, #fff);
+}
+
+.enrollment-result__icon {
+  font-size: 2.25rem;
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+
+  &--success {
+    color: var(--bw-success);
+    background: color-mix(in srgb, var(--bw-success) 12%, white);
+  }
+  &--processing {
+    color: var(--bw-600, #083d96);
+    background: var(--bw-100, #dbeafe);
+  }
+  &--error {
+    color: var(--bw-chip-text-danger, #991b1b);
+    background: color-mix(in srgb, #dc2626 10%, white);
+  }
+}
+
+.enrollment-result__title {
+  margin: 0;
+  font-size: var(--bw-font-title, 1.125rem);
+  font-weight: var(--bw-weight-bold, 700);
+  color: var(--text-heading, #111827);
+}
+
+.enrollment-result__message {
+  margin: 0;
+  font-size: var(--bw-font-table, 0.875rem);
+  line-height: 1.55;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+// ── Bloques de contexto (Qué pasa ahora / Causas posibles) ───────────────────
+.enrollment-result__context {
+  margin-top: 0.375rem;
+  padding: 1rem 1.125rem;
+  border-radius: var(--bw-radius-lg, 8px);
+  border: 1px solid var(--surface-border, #e5e7eb);
+  text-align: left;
+  width: 100%;
+
+  h2 {
+    margin: 0 0 0.625rem;
+    font-size: var(--bw-font-caption, 0.75rem);
+    font-weight: var(--bw-weight-semibold, 600);
+    letter-spacing: var(--bw-tracking-overline, 0.06em);
+    text-transform: uppercase;
+    color: var(--text-color-secondary, #6b7280);
+  }
+
+  ol,
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5625rem;
+  }
+
+  li {
+    display: flex;
+    gap: 0.625rem;
+    font-size: var(--bw-font-table, 0.875rem);
+    line-height: 1.45;
+    color: var(--text-color, #1a2744);
+    align-items: flex-start;
+  }
+
+  &--causes li::before {
+    content: '·';
+    font-weight: var(--bw-weight-bold, 700);
+    color: var(--bw-300, #046af4);
+  }
+}
+
+.step-n {
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: var(--bw-radius-pill, 999px);
+  background: var(--bw-100, #dbeafe);
+  color: var(--bw-chip-text-primary, #0b3d95);
+  font-size: var(--bw-font-caption, 0.75rem);
+  font-weight: var(--bw-weight-semibold, 600);
+  display: grid;
+  place-items: center;
+}
+
+// ── CTAs (05: full-width, 48px, apilados; secundario "Reintentar") ───────────
+.enrollment-result__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 27.5rem;
+
+  ::ng-deep .enrollment-result__cta {
+    width: 100%;
+    height: 3rem;
+    border-radius: var(--bw-radius-pill, 999px);
+  }
+}
+
+// ── Animaciones sutiles (05: pop de ícono, fade secuencial) ──────────────────
+@media (prefers-reduced-motion: no-preference) {
+  .enrollment-result__card {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: rise 0.4s ease-out forwards;
+  }
+
+  .enrollment-result__icon {
+    opacity: 0;
+    transform: scale(0.92);
+    animation: pop 0.45s ease-out 0.15s forwards;
+  }
+
+  .enrollment-result__context,
+  .enrollment-result__actions {
+    opacity: 0;
+    animation: fade 0.4s ease-out 0.32s forwards;
+  }
+
+  @keyframes rise {
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    to { opacity: 1; }
+  }
+}
