@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ficha con imágenes — detalle en diálogo (galería por campo)</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --success:#1FB27C; --r-sm:4px; --r-md:6px; --r-lg:8px; --r-pill:999px;
+    --sh-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04); --sh-popover:0 4px 12px rgba(0,0,0,.15);
+    --font:'Roboto', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; min-height:100vh; padding:24px; }
+  .stage-label { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); margin-bottom:12px; }
+  .dialog { width:880px; max-width:100%; margin:0 auto; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--r-lg); box-shadow:var(--sh-popover); overflow:hidden; }
+  .dialog__head { display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid var(--surface-border); box-shadow:0 6px 10px -6px rgba(0,0,0,.08); }
+  .dialog__avatar { width:40px; height:40px; border-radius:50%; background:var(--bw-100); color:var(--bw-500); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.875rem; }
+  .dialog__title { font-size:1.125rem; font-weight:500; color:var(--text-heading); }
+  .dialog__sub { font-size:.75rem; color:var(--text-secondary); }
+  .chips { display:flex; gap:8px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:2px 10px; border-radius:var(--r-pill); font-size:12px; font-weight:500; }
+  .chip .dot { width:7px; height:7px; border-radius:50%; }
+  .dialog__body { display:grid; grid-template-columns:148px 1fr; min-height:520px; }
+  .side { border-right:1px solid var(--surface-border); background:var(--bw-surface-muted); padding:12px 8px; display:flex; flex-direction:column; gap:2px; }
+  .side a { display:block; padding:8px 12px; border-radius:var(--r-md); font-size:.875rem; color:var(--text-secondary); text-decoration:none; }
+  .side a[aria-current] { background:var(--bw-50); color:var(--bw-500); font-weight:600; }
+  .content { padding:20px 24px; max-height:640px; overflow:auto; }
+  .return { display:inline-flex; align-items:center; gap:6px; font-size:.875rem; color:var(--bw-500); text-decoration:none; margin-bottom:16px; }
+  .record + .record { margin-top:16px; }
+  .record__head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:10px 0 6px; }
+  .record__title { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); }
+  .record__meta { font-size:.75rem; color:var(--text-secondary); }
+  .fields { display:grid; gap:0; }
+  .field { display:grid; grid-template-columns:200px 1fr; gap:16px; padding:10px 0; border-bottom:1px solid var(--surface-border); align-items:start; }
+  dt, .field__k { font-size:.875rem; color:var(--text-secondary); }
+  dd, .field__v { font-size:.875rem; color:var(--text-color); }
+  .imggroup { grid-column:1 / -1; margin-top:6px; }
+  .imggroup__label { font-size:.75rem; font-weight:600; color:var(--text-label); margin-bottom:8px; display:flex; justify-content:space-between; align-items:baseline; }
+  .imggroup__label small { font-weight:400; color:var(--text-secondary); font-size:.75rem; }
+  .thumbs { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .thumb { position:relative; border:1px solid var(--surface-border); border-radius:var(--r-md); overflow:hidden; background:var(--bw-surface-muted); cursor:zoom-in; transition:box-shadow .15s; }
+  .thumb:hover { box-shadow:var(--sh-popover); }
+  .thumb:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .thumb svg { display:block; width:100%; height:auto; }
+  .thumb__cap { padding:6px 8px; }
+  .thumb__cap b { display:block; font-size:.75rem; font-weight:500; color:var(--text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .thumb__cap small { font-size:.6875rem; color:var(--text-secondary); }
+  .thumb__zoom { position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:var(--r-pill); background:rgba(1,38,99,.75); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; opacity:0; transition:opacity .15s; }
+  .thumb:hover .thumb__zoom { opacity:1; }
+  .hint { margin-top:8px; font-size:.75rem; color:var(--text-secondary); display:flex; gap:6px; align-items:center; }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<p class="stage-label">Dirección 01 — galería por campo · los grupos de imágenes viven dentro del dl, como una fila más</p>
+
+<section class="dialog" aria-label="Detalle de reserva">
+  <header class="dialog__head">
+    <span class="dialog__avatar" aria-hidden="true">CR</span>
+    <div>
+      <h1 class="dialog__title">Camila Rojas Fuentes</h1>
+      <p class="dialog__sub">RUT 17.234.567-8 · Kinesiología deportiva</p>
+    </div>
+    <span class="chips" style="margin-left:auto">
+      <span class="chip" style="background:color-mix(in srgb,#77D0FA 18%,white);color:#1d4ed8"><span class="dot" style="background:#77D0FA"></span>Reservado</span>
+    </span>
+  </header>
+
+  <div class="dialog__body">
+    <nav class="side" aria-label="Secciones del detalle">
+      <a href="#" aria-current="page">Reserva</a>
+      <a href="#">Pago</a>
+      <a href="#">Ficha</a>
+      <a href="#">Historial</a>
+    </nav>
+
+    <div class="content">
+      <a class="return" href="#">← Volver a la ficha</a>
+
+      <article class="record">
+        <div class="record__head">
+          <h2 class="record__title">Evaluación kinesica inicial</h2>
+          <span class="record__meta">05 nov 2026 · Carlos Rojas</span>
+        </div>
+        <dl class="fields">
+          <div class="field"><dt>Diagnóstico funcional</dt><dd>Dolor lumbar mecánico, deficiente estabilización de core.</dd></div>
+          <div class="field"><dt>Rango de movimiento</dt><dd>Flexión 60° (limitada por dolor), extensión 15°.</dd></div>
+          <div class="field"><dt>Plan de tratamiento</dt><dd>8 sesiones, 2 por semana: Core stability + terapia manual.</dd></div>
+
+          <div class="imggroup field">
+            <div class="imggroup__label">
+              <span>Fotos pre-tratamiento</span>
+              <small>3 archivos · Backblaze B2 · fichas/17.234.567-8/eval-2026-11-05/</small>
+            </div>
+            <div class="thumbs" role="list">
+              <figure class="thumb" role="listitem" tabindex="0" aria-label="Ampliar foto: vista frontal, 05 nov 2026">
+                <svg viewBox="0 0 160 110" role="img" aria-label="Vista frontal"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#f0f6ff"/></linearGradient></defs><rect width="160" height="110" fill="url(#g1)"/><circle cx="80" cy="34" r="16" fill="#0b3d95" opacity=".18"/><path d="M52 96 C52 66 108 66 108 96" fill="#0b3d95" opacity=".18"/><text x="80" y="26" text-anchor="middle" font-size="9" fill="#0b3d95">frontal.jpg</text></svg>
+                <span class="thumb__zoom" aria-hidden="true">⤢</span>
+                <figcaption class="thumb__cap"><b>Vista frontal</b><small>05 nov 2026 · Carlos Rojas</small></figcaption>
+              </figure>
+              <figure class="thumb" role="listitem" tabindex="0" aria-label="Ampliar foto: vista lateral izquierda, 05 nov 2026">
+                <svg viewBox="0 0 160 110" role="img" aria-label="Vista lateral"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#f0f6ff"/></linearGradient></defs><rect width="160" height="110" fill="url(#g2)"/><circle cx="64" cy="34" r="16" fill="#0b3d95" opacity=".18"/><path d="M40 96 C40 66 92 66 92 96" fill="#0b3d95" opacity=".18"/><text x="80" y="26" text-anchor="middle" font-size="9" fill="#0b3d95">lateral-izq.jpg</text></svg>
+                <span class="thumb__zoom" aria-hidden="true">⤢</span>
+                <figcaption class="thumb__cap"><b>Vista lateral izq.</b><small>05 nov 2026 · Carlos Rojas</small></figcaption>
+              </figure>
+              <figure class="thumb" role="listitem" tabindex="0" aria-label="Ampliar foto: test de elevación de pierna recta, 05 nov 2026">
+                <svg viewBox="0 0 160 110" role="img" aria-label="Test"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#f0f6ff"/></linearGradient></defs><rect width="160" height="110" fill="url(#g3)"/><rect x="46" y="60" width="68" height="10" rx="5" fill="#0b3d95" opacity=".18"/><path d="M110 60 L134 44" stroke="#0b3d95" stroke-width="7" stroke-linecap="round" opacity=".28"/><text x="80" y="26" text-anchor="middle" font-size="9" fill="#0b3d95">test-epr.jpg</text></svg>
+                <span class="thumb__zoom" aria-hidden="true">⤢</span>
+                <figcaption class="thumb__cap"><b>Test EPR</b><small>05 nov 2026 · Carlos Rojas</small></figcaption>
+              </figure>
+              <div class="thumb" role="listitem" tabindex="0" aria-label="Adjuntar imagen a Fotos pre-tratamiento" style="display:flex;align-items:center;justify-content:center;min-height:104px;border-style:dashed;color:#0b3d95">
+                + Agregar
+              </div>
+            </div>
+            <p class="hint">⤢ Click para ampliar · flechas para navegar · Esc para cerrar</p>
+          </div>
+        </dl>
+      </article>
+
+      <article class="record">
+        <div class="record__head">
+          <h2 class="record__title">Sesión 3 · evolución</h2>
+          <span class="record__meta">19 nov 2026 · Carlos Rojas</span>
+        </div>
+        <dl class="fields">
+          <div class="field"><dt>AVD sesión</dt><dd>Flexión 75° sin dolor. Se agrega gimnasia radial.</dd></div>
+          <div class="imggroup field">
+            <div class="imggroup__label">
+              <span>Evolución semana 3</span>
+              <small>2 archivos · fichas/17.234.567-8/sesion-3/</small>
+            </div>
+            <div class="thumbs">
+              <figure class="thumb" tabindex="0" aria-label="Ampliar foto: movilidad flexión, 19 nov 2026">
+                <svg viewBox="0 0 160 110" role="img" aria-label="Movilidad"><rect width="160" height="110" fill="#f0f6ff"/><path d="M30 84 C60 84 66 40 96 40" stroke="#0b3d95" stroke-width="6" stroke-linecap="round" fill="none" opacity=".28"/><circle cx="100" cy="40" r="5" fill="#046af4"/><text x="80" y="26" text-anchor="middle" font-size="9" fill="#0b3d95">movilidad-75.jpg</text></svg>
+                <span class="thumb__zoom" aria-hidden="true">⤢</span>
+                <figcaption class="thumb__cap"><b>Flexión 75°</b><small>19 nov 2026 · Carlos Rojas</small></figcaption>
+              </figure>
+              <figure class="thumb" tabindex="0" aria-label="Ampliar foto: gimnasia radial, 19 nov 2026">
+                <svg viewBox="0 0 160 110" role="img" aria-label="Gimnasia"><rect width="160" height="110" fill="#f0f6ff"/><circle cx="80" cy="58" r="26" fill="none" stroke="#0b3d95" stroke-width="6" opacity=".22"/><circle cx="80" cy="58" r="9" fill="#046af4" opacity=".6"/><text x="80" y="26" text-anchor="middle" font-size="9" fill="#0b3d95">gimnasia-radial.jpg</text></svg>
+                <span class="thumb__zoom" aria-hidden="true">⤢</span>
+                <figcaption class="thumb__cap"><b>Gimnasia radial</b><small>19 nov 2026 · Carlos Rojas</small></figcaption>
+              </figure>
+            </div>
+          </div>
+        </dl>
+      </article>
+    </div>
+  </div>
+</section>
+</body>
+</html>

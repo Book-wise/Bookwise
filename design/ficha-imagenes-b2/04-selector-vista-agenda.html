@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calendario — selector de vista en la cabecera</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --r-md:6px; --r-lg:8px; --r-pill:999px; --sh-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04); --sh-popover:0 4px 12px rgba(0,0,0,.15);
+    --font:'Roboto', system-ui, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; }
+  .stage-label { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); padding:16px 20px 8px; }
+  .stage-sub { font-size:.8125rem; color:var(--text-secondary); padding:0 20px 14px; max-width:1100px; }
+  /* app chrome */
+  .app { max-width:1360px; margin:0 auto 28px; border:1px solid var(--surface-border); border-radius:var(--r-lg); overflow:hidden; background:var(--surface-card); box-shadow:var(--sh-card); }
+  .topbar { height:67px; background:var(--bw-900); color:#fff; display:flex; align-items:center; gap:28px; padding:0 20px; position:relative; }
+  .brand { font-weight:700; letter-spacing:.02em; display:flex; align-items:center; gap:10px; }
+  .brand i { width:26px; height:26px; border-radius:6px; background:var(--bw-300); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; font-style:normal; }
+  .topnav { display:flex; gap:4px; }
+  .topnav a { color:rgba(255,255,255,.68); text-decoration:none; font-size:.875rem; padding:8px 12px; border-radius:var(--r-md); position:relative; }
+  .topnav a[aria-current] { color:#fff; font-weight:600; background:rgba(255,255,255,.14); }
+  .topnav a.pinned { display:inline-flex; align-items:center; gap:6px; }
+  .topnav a.pinned::before { content:"📅"; font-size:.8125rem; }
+  .top-actions { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; }
+  .main { display:flex; min-height:560px; }
+  .rail { width:56px; background:linear-gradient(180deg,var(--bw-900),var(--bw-600)); display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 0; }
+  .rail i { width:36px; height:36px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:15px; color:rgba(255,255,255,.68); }
+  .rail i[aria-current] { background:rgba(255,255,255,.14); color:#fff; box-shadow:inset 3px 0 0 var(--bw-300); }
+  .content { flex:1; padding:14px 18px; background:var(--bw-50); }
+  .cal-bar { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .nav { display:flex; align-items:center; gap:8px; }
+  .nav button { width:30px; height:30px; border:1px solid var(--surface-border); background:#fff; border-radius:var(--r-md); cursor:pointer; color:var(--text-color); }
+  .nav b { font-size:.875rem; color:var(--text-heading); font-weight:500; min-width:150px; text-align:center; }
+  .today { font-size:.8125rem; color:var(--bw-500); font-weight:600; background:#fff; border:1px solid var(--surface-border); padding:6px 12px; border-radius:var(--r-pill); cursor:pointer; }
+  .spacer { flex:1; }
+  /* El selector: pill con dos botones de icono, el activo con fondo blanco y sombra */
+  .seg { display:inline-flex; background:var(--bw-surface-muted); border:1px solid var(--surface-border); border-radius:10px; padding:3px; }
+  .seg button { width:34px; height:30px; border:none; background:transparent; border-radius:8px; cursor:pointer; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; transition:background .15s; }
+  .seg button[aria-pressed="true"] { background:#fff; color:var(--text-color); box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08); }
+  .seg button:hover { color:var(--text-color); }
+  .seg:focus-within { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .filters { display:flex; gap:8px; }
+  .filters span { font-size:.8125rem; padding:6px 12px; border:1px solid var(--surface-border); border-radius:var(--r-md); background:#fff; color:var(--text-label); }
+  /* grid del calendario */
+  .cal { height:430px; border:1px solid var(--surface-border); border-radius:var(--r-lg); background:repeating-linear-gradient(90deg, var(--surface-card) 0 62px, var(--bw-surface-muted) 62px 63px); position:relative; overflow:hidden; }
+  .cal .ev { position:absolute; border-radius:var(--r-md); padding:4px 8px; font-size:.75rem; color:var(--text-heading); border-left:3px solid; background:var(--surface-card); box-shadow:var(--sh-card); }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<p class="stage-label">Dirección 01 — el selector vive en la cabecera de la agenda, junto a los controles de fecha</p>
+<p class="stage-sub">Píldora segmentada de dos iconos (agenda ‣ lista), igual al patrón del screenshot: activo con fondo blanco + sombra. «Agenda» sube a la barra superior como enlace directo siempre visible; el rail queda para secciones de nivel inferior.</p>
+
+<section class="app" aria-label="App Bookwise con selector de vista">
+  <header class="topbar">
+    <span class="brand"><i>BW</i> Bookwise</span>
+    <nav class="topnav" aria-label="Navegación superior">
+      <a href="#" aria-current="page" class="pinned">Agenda</a>
+      <a href="#">Clientes</a>
+      <a href="#">Packs</a>
+      <a href="#">Facturación</a>
+    </nav>
+    <div class="top-actions"><span class="avatar" aria-hidden="true">CQ</span></div>
+  </header>
+
+  <div class="main">
+    <nav class="rail" aria-label="Secciones agendadas rápidas">
+      <i aria-current="page" title="Agenda">▦</i>
+      <i title="Nueva reserva">＋</i>
+      <i title="Bloqueos">🔒</i>
+    </nav>
+    <div class="content">
+      <div class="cal-bar">
+        <div class="nav">
+          <button aria-label="Semana anterior">‹</button>
+          <b>18 — 24 nov 2026</b>
+          <button aria-label="Semana siguiente">›</button>
+        </div>
+        <button class="today">Hoy</button>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Tipo de vista de la agenda">
+          <button aria-pressed="true" title="Vista agenda" aria-label="Vista agenda">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button aria-pressed="false" title="Vista lista" aria-label="Vista lista">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div class="filters"><span>Todas las sedes</span><span>Todos los profesionales</span></div>
+      </div>
+      <div class="cal">
+        <div class="ev" style="left:70px;top:30px;width:220px;border-color:#77D0FA">09:30 · Camila Rojas Fuentes</div>
+        <div class="ev" style="left:70px;top:110px;width:220px;border-color:#1FB27C">10:30 · Nicolás Herrera</div>
+        <div class="ev" style="left:70px;top:210px;width:220px;border-color:#ECBE51">11:30 · Valentina Soto</div>
+        <div class="ev" style="left:360px;top:60px;width:220px;border-color:#77D0FA">09:00 · Matías Fuentes</div>
+        <div class="ev" style="left:360px;top:170px;width:220px;border-color:#FD8991">11:00 · José Pérez (pend.)</div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

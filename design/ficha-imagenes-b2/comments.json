@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "ev7cpuw7",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > header > div:nth-of-type(1) > span",
+      "excerpt": "BW",
+      "comment": "este seria el logo que ponga la empresa o negocio",
+      "createdAt": "2026-11-22T04:39:38.730Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:39:38.767Z",
+      "resolvedAt": "2026-11-22T04:40:09.818Z",
+      "resolution": "El recuadro \"BW\" ahora representa el logo del negocio: SVG placeholder de marca con nota de que en producción carga business.logo_url (el mismo logo subido en datos de facturación, servido desde B2). Nombre y tagline marcados con data-bind del negocio."
+    },
+    {
+      "id": "kzc3yqjk",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > header > div:nth-of-type(1) > div > b",
+      "excerpt": "Kinesilk",
+      "comment": "nombre de la empresa o negocio o cliente persona natural",
+      "createdAt": "2026-11-22T04:39:57.451Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:39:57.470Z",
+      "resolvedAt": "2026-11-22T04:40:40.286Z",
+      "resolution": "El nombre del header del documento resuelve según el tipo de tenant: si es persona natural muestra el nombre del dueño (con su RUT como subtítulo); si es negocio, el nombre de firma con tagline. data-bind documentado en el HTML."
+    },
+    {
+      "id": "t3qmvynz",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > header > div:nth-of-type(2) > h1",
+      "excerpt": "Ficha clínica",
+      "comment": "Ficha",
+      "createdAt": "2026-11-22T04:40:13.892Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:40:13.949Z",
+      "resolvedAt": "2026-11-22T04:41:04.584Z",
+      "resolution": "El título del documento pasa de «Ficha clínica» a «Ficha»."
+    },
+    {
+      "id": "5epvl43g",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > section > div:nth-of-type(5)",
+      "excerpt": "PLAN Kinesiología deportiva",
+      "comment": "no existe en nuestro sistema",
+      "createdAt": "2026-11-22T04:41:24.770Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:41:24.793Z",
+      "resolvedAt": "2026-11-22T04:42:07.353Z",
+      "resolution": "Eliminado el campo «Plan» (no existe en el sistema); en su lugar la identidad muestra «Sucursal: Kinesilk Las Condes». Nota: el rótulo interior «Plan de tratamiento» de cada registro SÍ es un campo de ficha y se mantiene."
+    },
+    {
+      "id": "enz269nw",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > header",
+      "excerpt": "Kinesilk Kinesiología y rehabilitación deportiva Ficha Generado el 22 nov 2026, 10:42 · página 1 de 1",
+      "comment": "añade, direccion y telefono del negocio",
+      "createdAt": "2026-11-22T04:41:57.291Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:41:57.310Z",
+      "resolvedAt": "2026-11-22T04:42:38.207Z",
+      "resolution": "El bloque de marca del header ahora incluye dirección y teléfono del negocio (data-bind business.address / business.phone), debajo del nombre y tagline. Conteúdo del pie ajustado para no repetir: mantiene el contacto a pedido del mantenedor."
+    },
+    {
+      "id": "2w1ezdko",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > section",
+      "excerpt": "PACIENTE Camila Rojas Fuentes RUT 17.234.567-8 TELÉFONO +56 9 8765 4321 PROFESIONAL TRATANTE Carlos Rojas · Kinesiólogo SUCURSAL Kinesilk Las Condes HISTORIA CLÍNICA #000421 VERIFICADA",
+      "comment": "añade uno igual a este pero con los datos de quien atiende al paciente",
+      "createdAt": "2026-11-22T04:42:58.544Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:42:58.570Z",
+      "resolvedAt": "2026-11-22T04:43:06.902Z",
+      "resolution": "Añadida una segunda franja identity dedicada a quien atiende: nombre del profesional, título, RUT, teléfono profesional, registro profesional y sucursal de atención (data-bind del provider de la reserva)."
+    },
+    {
+      "id": "hzdqenb8",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main > article:nth-of-type(1) > div:nth-of-type(1)",
+      "excerpt": "EVALUACIÓN KINESICA INICIAL 05 nov 2026 · Carlos Rojas",
+      "comment": "aqui puede que hayan otras atenciones mas adelante/abajo",
+      "createdAt": "2026-11-22T04:44:39.167Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:44:39.196Z",
+      "resolvedAt": "2026-11-22T04:45:07.593Z",
+      "resolution": "El documento ahora muestra tres atenciones (evaluación inicial + sesiones 2 y 3) para evidenciar que la historia sigue hacia abajo; paginación del PDF a «página 1 de 2» y nota de que Imprimir pagina automáticamente repitiendo la identidad en cada página."
+    },
+    {
+      "id": "8v9nazki",
+      "file": "03-impresion-a4.html",
+      "selector": "body > main",
+      "excerpt": "Kinesilk Kinesiología y rehabilitación deportiva Av. Apoquindo 4700, Las Condes, Santiago +56 2 2345 6789 Ficha Generado el 22 nov 2026, 10:42 · página 1 de 2 PACIENTE Camila Rojas Fuentes RUT 17.234.567-8 TELÉFONO +56 9 8765 4321 PROFESIONAL TRATANTE Carlos Rojas · Kinesiólogo SUCURSAL Kinesilk Las",
+      "comment": "si se vuelve muy extenso debe separarse en paginas, respetamos el tamaño A4",
+      "createdAt": "2026-11-22T04:45:56.128Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:45:56.163Z",
+      "resolvedAt": "2026-11-22T04:47:02.025Z",
+      "resolution": "El documento ahora son DOS páginas A4 (794px c/u): la página 1 termina la atención cortada con «Continúa en la página 2» y la página 2 repite el header completo (logo, nombre del negocio, dirección, teléfono) + identidad mínima (paciente, RUT, atiende), continúa la sesión 3 y cierra. @media print con page-break-after en cada .page: lo que ves es exactamente lo que sale por la impresora."
+    },
+    {
+      "id": "g7p9muza",
+      "file": "02-panel-visual-lateral.html",
+      "selector": "body > section > header > span",
+      "excerpt": "🖼 5 imágenes",
+      "comment": "dejalo en estado de la reserva, conservamos lo que tenemos en eso",
+      "createdAt": "2026-11-22T04:47:32.337Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:47:32.364Z",
+      "resolvedAt": "2026-11-22T04:48:32.282Z",
+      "resolution": "El contador «5 imágenes» fue reemplazado por el chip de estado de la reserva («Reservado» con dot, el mismo del header real del sheet/dialogo); conservamos lo que ya existe."
+    },
+    {
+      "id": "dpd4tov6",
+      "file": "02-panel-visual-lateral.html",
+      "selector": "body > section > div > aside",
+      "excerpt": "IMÁGENES almacenadas en Backblaze B2 19 nov 2026 — Sesión 3 Última movilidad-75.jpg Flexión 75° 19 nov · Carlos Rojas gimnasia-radial.jpg Gimnasia radial 19 nov · Carlos Rojas 05 nov 2026 — Evaluación inicial frontal.jpg Vista frontal 05 nov · Carlos Rojas lateral-izq.jpg Vista lateral izq. 05 nov ·",
+      "comment": "Me gusta esto, usa muy bien el espacio, donde normalmente agendapro tiene algo en blanco.",
+      "createdAt": "2026-11-22T04:48:28.663Z",
+      "status": "resolved",
+      "sentAt": "2026-11-22T04:48:28.717Z",
+      "resolvedAt": "2026-11-22T04:48:51.724Z",
+      "resolution": "Feedback positivo del mantenedor: la timeline visual lateral (02) es la dirección elegida para el detalle de la ficha — aprovecha el espacio que AgendaPro deja en blanco. El artboard queda como está (no pedía cambios); 01 queda como alternativa. Con esto el brief está cerrado y la implementación de B2 puede partir."
+    },
+    {
+      "id": "j8crvfct",
+      "file": "02-panel-visual-lateral.html",
+      "selector": "body > section > div > aside > div:nth-of-type(2) > figure:nth-of-type(1) > svg > rect",
+      "excerpt": "",
+      "comment": "al clickearlas podemos hacer zoom, o verlas en otra pestaña",
+      "createdAt": "2026-11-22T04:56:39.868Z",
+      "status": "open",
+      "sentAt": "2026-11-22T04:56:39.915Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "k6i9b9c1",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > div > div",
+      "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales 09:30 · Camila Rojas Fuentes 10:30 · Nicolás Herrera 11:30 · Valentina Soto 09:00 · Matías Fuentes 11:00 · José Pérez (pend.)",
+      "comment": "dale bordes redondos como en google",
+      "createdAt": "2026-11-22T04:58:04.422Z",
+      "status": "open",
+      "sentAt": "2026-11-22T04:58:04.578Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "s87pu3oa",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > div > div",
+      "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales 09:30 · Camila Rojas Fuentes 10:30 · Nicolás Herrera 11:30 · Valentina Soto 09:00 · Matías Fuentes 11:00 · José Pérez (pend.)",
+      "comment": "la esquina superior derecha y la esquina inferior derecha, redondas por favor, estilo google, y muestrame otro panel donde el side-menu esta abierto",
+      "createdAt": "2026-11-22T05:01:08.115Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:01:08.445Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "a0inx8et",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > div > div > div:nth-of-type(1)",
+      "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales",
+      "comment": "adicion el filtro de todos los estados",
+      "createdAt": "2026-11-22T05:01:31.756Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:01:31.780Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "r0c6fsda",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > div > div > div:nth-of-type(1)",
+      "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales",
+      "comment": "adiciona el boton de nueva reserva y bloquear horario",
+      "createdAt": "2026-11-22T05:01:54.861Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:01:54.876Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "9mhjtcfg",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > div > div > div:nth-of-type(1)",
+      "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales",
+      "comment": "adiciona el indicador de slots y la guia de colores",
+      "createdAt": "2026-11-22T05:02:18.961Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:02:18.994Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "kfutrdnd",
+      "file": "05-vista-lista-agenda.html",
+      "selector": "body > main > section > div:nth-of-type(2) > div:nth-of-type(4) > button:nth-of-type(1)",
+      "excerpt": "$ Ver Pago",
+      "comment": "adiciona el boton ver ficha que llevaria directo al dialogo en su respectiva pestaña",
+      "createdAt": "2026-11-22T05:03:08.423Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:03:08.439Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "iqm68lzl",
+      "file": "05-vista-lista-agenda.html",
+      "selector": "body > main > div:nth-of-type(2)",
+      "excerpt": "Lista desagrupada + Nueva Reserva",
+      "comment": "añade el boton de bloquear horario",
+      "createdAt": "2026-11-22T05:03:25.278Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:03:25.305Z",
+      "resolvedAt": null
+    }
+  ]
+}

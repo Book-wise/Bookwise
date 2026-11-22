@@ -1,0 +1,21 @@
+{
+  "arrangement": "free",
+  "positions": {
+    "system": {
+      "x": 0,
+      "y": 382
+    },
+    "01-detalle-con-galeria.html": {
+      "x": 1565,
+      "y": 445
+    },
+    "02-panel-visual-lateral.html": {
+      "x": 3225,
+      "y": 420
+    },
+    "03-impresion-a4.html": {
+      "x": 4965,
+      "y": 291
+    }
+  }
+}

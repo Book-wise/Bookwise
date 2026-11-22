@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ficha con imágenes — panel visual lateral (dirección 02)</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --r-sm:4px; --r-md:6px; --r-lg:8px; --r-pill:999px;
+    --sh-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04); --sh-popover:0 4px 12px rgba(0,0,0,.15);
+    --font:'Roboto', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; min-height:100vh; padding:24px; }
+  .stage-label { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); margin-bottom:12px; }
+  .dialog { width:980px; max-width:100%; margin:0 auto; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--r-lg); box-shadow:var(--sh-popover); overflow:hidden; }
+  .dialog__head { display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid var(--surface-border); }
+  .dialog__title { font-size:1.125rem; font-weight:500; color:var(--text-heading); }
+  .dialog__sub { font-size:.75rem; color:var(--text-secondary); }
+  .dialog__body { display:grid; grid-template-columns:1fr 300px; min-height:560px; }
+  /* Panel izquierdo: datos puramente textuales, sin imágenes */
+  .data { padding:20px 24px; border-right:1px solid var(--surface-border); }
+  .return { display:inline-flex; gap:6px; font-size:.875rem; color:var(--bw-500); text-decoration:none; margin-bottom:16px; }
+  .record + .record { margin-top:14px; }
+  .record__title { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); }
+  .record__meta { font-size:.75rem; color:var(--text-secondary); font-weight:400; margin-left:8px; }
+  .field { display:grid; grid-template-columns:190px 1fr; gap:16px; padding:9px 0; border-bottom:1px solid var(--surface-border); }
+  .field dt { font-size:.875rem; color:var(--text-secondary); }
+  .field dd { font-size:.875rem; }
+  /* Panel derecho: IMÁGENES como columna protagonista (timeline visual) */
+  .gallery { background:var(--bw-surface-muted); padding:16px; display:flex; flex-direction:column; gap:12px; overflow:auto; max-height:640px; }
+  .gallery__title { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); display:flex; justify-content:space-between; }
+  .gallery__title small { font-weight:400; text-transform:none; letter-spacing:0; }
+  .day { display:grid; gap:8px; }
+  .day__head { display:flex; align-items:center; gap:8px; font-size:.75rem; font-weight:600; color:var(--text-label); }
+  .day__head::after { content:""; flex:1; height:1px; background:var(--surface-border); }
+  .shot { border:1px solid var(--surface-border); border-radius:var(--r-md); overflow:hidden; background:#fff; box-shadow:var(--sh-card); cursor:zoom-in; transition:box-shadow .15s; }
+  .shot:hover { box-shadow:var(--sh-popover); }
+  .shot svg { display:block; width:100%; height:auto; }
+  .shot__cap { padding:6px 10px; display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .shot__cap b { font-size:.75rem; font-weight:500; }
+  .shot__cap small { font-size:.6875rem; color:var(--text-secondary); white-space:nowrap; }
+  .big { position:relative; }
+  .big .badge { position:absolute; top:8px; left:8px; background:rgba(1,38,99,.78); color:#fff; font-size:.6875rem; padding:2px 8px; border-radius:var(--r-pill); }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<p class="stage-label">Dirección 02 — panel visual lateral · los datos quedan a la izquierda y las imágenes forman una columna timeline a la derecha</p>
+
+<section class="dialog" aria-label="Detalle de reserva">
+  <header class="dialog__head">
+    <div>
+      <h1 class="dialog__title">Camila Rojas Fuentes — Ficha</h1>
+      <p class="dialog__sub">Kinesiología deportiva · tratante Carlos Rojas</p>
+    </div>
+    <span class="chip" style="margin-left:auto; display:inline-flex; align-items:center; gap:6px; padding:2px 10px; border-radius:var(--r-pill); font-size:12px; font-weight:500; background:color-mix(in srgb,#77D0FA 18%,white); color:#1d4ed8"><span class="dot" style="width:7px;height:7px;border-radius:50%;background:#77D0FA"></span>Reservado</span>
+  </header>
+
+  <div class="dialog__body">
+    <div class="data">
+      <a class="return" href="#">← Volver a la ficha</a>
+
+      <article class="record">
+        <h2 class="record__title">Evaluación kinesica inicial<span class="record__meta">05 nov 2026 · Carlos Rojas</span></h2>
+        <dl>
+          <div class="field"><dt>Diagnóstico funcional</dt><dd>Dolor lumbar mecánico, deficiente estabilización de core.</dd></div>
+          <div class="field"><dt>Rango de movimiento</dt><dd>Flexión 60° (limitada por dolor), extensión 15°.</dd></div>
+          <div class="field"><dt>Plan de tratamiento</dt><dd>8 sesiones, 2 por semana: core stability + terapia manual.</dd></div>
+          <div class="field"><dt>Tests</dt><dd>EPR izq. 45° con tensión posterior.</dd></div>
+        </dl>
+      </article>
+
+      <article class="record">
+        <h2 class="record__title">Sesión 3 · evolución<span class="record__meta">19 nov 2026 · Carlos Rojas</span></h2>
+        <dl>
+          <div class="field"><dt>AVD sesión</dt><dd>Flexión 75° sin dolor. Se agrega gimnasia radial.</dd></div>
+          <div class="field"><dt>Escalas</dt><dd>EVA 6 → 3. Oswestry 42% → 30%.</dd></div>
+          <div class="field"><dt>Próxima sesión</dt><dd>Miércoles 25 nov, 10:00 — añadir ejercicios de carga axial progresiva.</dd></div>
+        </dl>
+      </article>
+    </div>
+
+    <aside class="gallery" aria-label="Imágenes de la ficha por fecha">
+      <div class="gallery__title"><span>Imágenes</span><small>almacenadas en Backblaze B2</small></div>
+
+      <div class="day">
+        <div class="day__head">19 nov 2026 — Sesión 3</div>
+        <figure class="shot big" tabindex="0" aria-label="Ampliar: flexión 75°, 19 nov 2026">
+          <span class="badge">Última</span>
+          <svg viewBox="0 0 268 150" role="img" aria-label="Flexión en progresión"><rect width="268" height="150" fill="#dbeafe"/><path d="M50 116 C110 116 120 48 178 48" stroke="#0b3d95" stroke-width="9" stroke-linecap="round" fill="none" opacity=".22"/><circle cx="184" cy="48" r="8" fill="#046af4"/><text x="134" y="30" text-anchor="middle" font-size="12" fill="#0b3d95">movilidad-75.jpg</text></svg>
+          <figcaption class="shot__cap"><b>Flexión 75°</b><small>19 nov · Carlos Rojas</small></figcaption>
+        </figure>
+        <figure class="shot" tabindex="0" aria-label="Ampliar: gimnasia radial, 19 nov 2026">
+          <svg viewBox="0 0 268 120" role="img" aria-label="Gimnasia radial"><rect width="268" height="120" fill="#f0f6ff"/><circle cx="134" cy="62" r="34" fill="none" stroke="#0b3d95" stroke-width="8" opacity=".2"/><circle cx="134" cy="62" r="11" fill="#046af4" opacity=".6"/><text x="134" y="28" text-anchor="middle" font-size="12" fill="#0b3d95">gimnasia-radial.jpg</text></svg>
+          <figcaption class="shot__cap"><b>Gimnasia radial</b><small>19 nov · Carlos Rojas</small></figcaption>
+        </figure>
+      </div>
+
+      <div class="day">
+        <div class="day__head">05 nov 2026 — Evaluación inicial</div>
+        <figure class="shot" tabindex="0" aria-label="Ampliar: vista frontal, 05 nov 2026">
+          <svg viewBox="0 0 268 120" role="img" aria-label="Vista frontal"><rect width="268" height="120" fill="#dbeafe"/><circle cx="134" cy="40" r="17" fill="#0b3d95" opacity=".18"/><path d="M98 108 C98 70 170 70 170 108" fill="#0b3d95" opacity=".18"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">frontal.jpg</text></svg>
+          <figcaption class="shot__cap"><b>Vista frontal</b><small>05 nov · Carlos Rojas</small></figcaption>
+        </figure>
+        <figure class="shot" tabindex="0" aria-label="Ampliar: vista lateral izquierda, 05 nov 2026">
+          <svg viewBox="0 0 268 120" role="img" aria-label="Vista lateral izquierda"><rect width="268" height="120" fill="#f0f6ff"/><circle cx="108" cy="40" r="17" fill="#0b3d95" opacity=".18"/><path d="M80 108 C80 70 145 70 145 108" fill="#0b3d95" opacity=".18"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">lateral-izq.jpg</text></svg>
+          <figcaption class="shot__cap"><b>Vista lateral izq.</b><small>05 nov · Carlos Rojas</small></figcaption>
+        </figure>
+        <figure class="shot" tabindex="0" aria-label="Ampliar: test de elevación de pierna recta, 05 nov 2026">
+          <svg viewBox="0 0 268 120" role="img" aria-label="Test EPR"><rect width="268" height="120" fill="#dbeafe"/><rect x="80" y="70" width="108" height="12" rx="6" fill="#0b3d95" opacity=".18"/><path d="M176 70 L216 46" stroke="#0b3d95" stroke-width="10" stroke-linecap="round" opacity=".28"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">test-epr.jpg</text></svg>
+          <figcaption class="shot__cap"><b>Test EPR 45°</b><small>05 nov · Carlos Rojas</small></figcaption>
+        </figure>
+      </div>
+    </aside>
+  </div>
+</section>
+</body>
+</html>
