@@ -6,6 +6,7 @@ import { ChartModule } from 'primeng/chart';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Router, RouterModule } from '@angular/router';
+import { PaymentMethodCardComponent } from './payment-method-card/payment-method-card.component';
 import { AuthService } from '@services/auth.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
@@ -76,7 +77,7 @@ function hexToRgba(hex: string, alpha: number): string {
   selector: 'bw-billing',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, ChartModule, ProgressBarModule, SkeletonModule, RouterModule],
+  imports: [CommonModule, CardModule, ButtonModule, ChartModule, ProgressBarModule, SkeletonModule, RouterModule, PaymentMethodCardComponent],
   templateUrl: './billing.component.html',
   styleUrls: ['./billing.component.scss'],
 })
