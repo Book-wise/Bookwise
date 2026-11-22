@@ -1059,12 +1059,13 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       );
 
       expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Ver ficha',
         'Abonar',
         'Ver pago',
         'Editar',
       ]);
-      // Iconos del footer: plus para Abonar, dollar para Ver pago, lápiz para Editar.
-      for (const icon of ['pi-plus', 'pi-dollar', 'pi-pencil']) {
+      // Iconos del footer: ficha para Ver ficha, plus para Abonar, dollar para Ver pago, lápiz para Editar.
+      for (const icon of ['pi-id-card', 'pi-plus', 'pi-dollar', 'pi-pencil']) {
         expect(scope.querySelectorAll(`.bw-sheet__foot-actions .${icon}`).length).toBe(1);
       }
     });
@@ -1082,6 +1083,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
 
       expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pagado']);
       expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Ver ficha',
         'Ver pago',
         'Editar',
       ]);
@@ -1094,9 +1096,33 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(textsOf(scope, '.bw-sheet__pay-row .bw-chip')).toEqual(['Pago pendiente']);
       expect(textsOf(scope, '.bw-sheet__pay-note')).toEqual(['Sin pagos registrados']);
       expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
+        'Ver ficha',
         'Abonar',
         'Editar',
       ]);
+    });
+
+    it('Ver ficha abre el diálogo de detalle directo en la pestaña ficha y cierra el card', async () => {
+      const booking = bookingFixture('partial', {
+        id: 9,
+        total_amount: 38000,
+        paid_amount: 20000,
+        remaining_amount: 18000,
+        status: 'partial',
+      });
+      const scope = openSheet(booking);
+      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toContain('Ver ficha');
+
+      const openSpy = vi.spyOn(component.bookingDetailDialog, 'open');
+      const btn = Array.from(
+        scope.querySelectorAll<HTMLButtonElement>('.bw-sheet__foot-actions .p-button'),
+      ).find((b) => (b.querySelector('.p-button-label')?.textContent ?? '').includes('Ver ficha'))!;
+      btn.click();
+      fixture.detectChanges();
+
+      expect(component.showEventDialog()).toBe(false);
+      await new Promise((r) => setTimeout(r, 150));
+      expect(openSpy).toHaveBeenCalledWith(booking, 'ficha');
     });
   });
 
