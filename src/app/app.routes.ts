@@ -72,6 +72,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/clients/clients-list.component').then(m => m.ClientsListComponent)
       },
       {
+        path: 'clients/:clientId/ficha-print',
+        canActivate: [abilityGuard(ABILITIES.clientsView)],
+        loadComponent: () => import('./features/admin/clients/record-print/record-print.component').then(m => m.RecordPrintComponent)
+      },
+      {
         path: 'packs',
         loadComponent: () => import('./features/admin/packs/packs-list.component').then(m => m.PacksListComponent)
       },

@@ -18,6 +18,16 @@
       <span class="ficha__section">{{ t('ficha.associated') }}</span>
 
       <div class="ficha__actions">
+        @if (clientId(); as cid) {
+          <button
+            type="button"
+            class="ficha__link"
+            data-testid="print-history"
+            (click)="printHistory(cid)"
+          >
+            {{ t('ficha.print_history') }}
+          </button>
+        }
         <p-menu #typeMenu [popup]="true" [model]="typeMenuItems()" appendTo="body" />
 
         <button

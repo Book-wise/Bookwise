@@ -118,6 +118,12 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
     this.router.navigate(['/admin/configuraciones']);
   }
 
+  /** «Imprimir ficha (historia completa)»: cierra el overlay y abre la vista de impresión. */
+  printFichaHistory(clientId: number): void {
+    this.close();
+    setTimeout(() => this.router.navigate(['/admin/clients', clientId, 'ficha-print']), 100);
+  }
+
   readonly fichaServiceLabel = computed(() => {
     const booking = this.booking();
     if (!booking) return '';

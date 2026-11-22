@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "chosen": "02-panel-visual-lateral.html",
+  "handoffs": {
+    "03-impresion-a4.html": {
+      "status": "in_progress",
+      "queued": true,
+      "sentAt": "2026-11-22T04:55:42.919Z",
+      "startedAt": "2026-11-22T04:57:22.371Z",
+      "implementedAt": null,
+      "note": "Implementing the A4 print view (Ficha document) in the real Angular stack: entry from the ficha tab, business/patient/provider identity, records + embedded images, A4 page-break print CSS."
+    },
+    "02-panel-visual-lateral.html": {
+      "status": "sent",
+      "queued": true,
+      "sentAt": "2026-11-22T04:55:50.075Z",
+      "startedAt": null,
+      "implementedAt": null
+    }
+  }
+}

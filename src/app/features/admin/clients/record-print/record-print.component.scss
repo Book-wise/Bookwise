@@ -1,0 +1,272 @@
+:host {
+  display: block;
+}
+
+// Pantalla: fondo gris de estudio y la hoja A4 centrada (794px @96dpi).
+.print-stage {
+  padding: 16px 24px 40px;
+  background: var(--surface-ground);
+  min-height: 100vh;
+}
+
+.print-stage__bar {
+  max-width: 794px;
+  margin: 0 auto 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.print-stage__label {
+  font-family: var(--font-family);
+  font-size: var(--bw-font-overline);
+  letter-spacing: var(--bw-tracking-overline);
+  text-transform: uppercase;
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.print-stage__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.print-loading {
+  max-width: 794px;
+  margin: 48px auto;
+  color: var(--text-secondary);
+  font-size: var(--bw-font-body);
+}
+
+// Hoja A4 físca: 794x1123 @96dpi.
+.print-page {
+  width: 794px;
+  min-height: 1123px;
+  margin: 0 auto;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--bw-shadow-popover);
+  padding: 52px 56px;
+  display: flex;
+  flex-direction: column;
+}
+
+// Encabezado del documento, repetido por página vía position: fixed en impresión.
+.doc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  border-bottom: 3px solid var(--bw-900);
+  padding-bottom: 16px;
+}
+
+.doc-head__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doc-head__logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: var(--bw-radius-lg);
+}
+
+.doc-head__logo--fallback {
+  background: var(--bw-900);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--bw-weight-bold);
+  font-size: var(--bw-font-caption);
+}
+
+.doc-head__name {
+  display: block;
+  font-size: var(--bw-font-title);
+  font-weight: var(--bw-weight-bold);
+  color: var(--bw-900);
+  letter-spacing: var(--bw-tracking-tight);
+}
+
+.doc-head__line {
+  display: block;
+  font-size: var(--bw-font-caption);
+  color: var(--text-secondary);
+}
+
+.doc-head__doc {
+  text-align: right;
+
+  h1 {
+    font-size: var(--bw-font-lg);
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-heading);
+    margin: 0;
+  }
+
+  p {
+    font-size: var(--bw-font-caption);
+    color: var(--text-secondary);
+  }
+}
+
+// Franja de identidad del paciente.
+.id-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  background: var(--bw-100);
+  border-radius: var(--bw-radius-md);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+
+  div b {
+    display: block;
+    font-size: var(--bw-font-overline);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-secondary);
+    font-weight: var(--bw-weight-semibold);
+  }
+
+  div span {
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-medium);
+    color: var(--text-heading);
+  }
+}
+
+// Una atención: banda de título + tabla de campos + fotos.
+.attendance {
+  margin-bottom: 22px;
+}
+
+.attendance__head {
+  background: var(--bw-900);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: var(--bw-radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+
+  b {
+    font-size: var(--bw-font-table);
+    font-weight: var(--bw-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  small {
+    font-size: var(--bw-font-caption);
+    opacity: 0.85;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+
+  th {
+    text-align: left;
+    font-size: var(--bw-font-overline);
+    text-transform: uppercase;
+    letter-spacing: var(--bw-tracking-overline);
+    color: var(--text-secondary);
+    font-weight: var(--bw-weight-semibold);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--surface-border);
+    width: 180px;
+    vertical-align: top;
+  }
+
+  td {
+    font-size: var(--bw-font-table);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--bw-surface-muted);
+    vertical-align: top;
+    color: var(--text-color);
+  }
+}
+
+// Fotos embebidas: grilla 2 columnas con caption (archivo y campo).
+.photos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.photo {
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-sm);
+  overflow: hidden;
+  margin: 0;
+
+  img {
+    display: block;
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+  }
+
+  figcaption {
+    font-size: var(--bw-font-overline);
+    color: var(--text-secondary);
+    padding: 5px 8px;
+    border-top: 1px solid var(--surface-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+
+    b {
+      color: var(--text-heading);
+      font-weight: var(--bw-weight-medium);
+    }
+  }
+}
+
+// ── Impresión: cada página es una hoja física; el chrome de la app se oculta. ──
+// Regla global: cuando este componente está en el DOM, el shell admin no se
+// imprime (el resto de la app vive en .main-content).
+@media print {
+  :host {
+    display: contents;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  app-header,
+  app-side-nav,
+  .admin-shell__sidebar,
+  .topbar {
+    display: none !important;
+  }
+
+  .print-stage {
+    padding: 0;
+    background: none;
+  }
+
+  .print-page {
+    width: auto;
+    min-height: auto;
+    border: none;
+    box-shadow: none;
+    page-break-after: always;
+    margin: 0;
+
+    &:last-child {
+      page-break-after: auto;
+    }
+  }
+}

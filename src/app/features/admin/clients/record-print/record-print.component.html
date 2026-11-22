@@ -1,0 +1,73 @@
+<div class="print-stage">
+  <div class="print-stage__bar no-print">
+    <span class="print-stage__label">{{ lang.t('ficha.print_stage_label') }}</span>
+    <span class="print-stage__actions">
+      <p-button [label]="lang.t('ficha.back')" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="goBack()" />
+      <p-button [label]="lang.t('ficha.print_action')" icon="pi pi-print" (onClick)="print()" [disabled]="loading()" />
+    </span>
+  </div>
+
+  @if (loading()) {
+    <p class="print-loading">{{ lang.t('ficha.print_loading') }}</p>
+  } @else {
+    <!-- Página 1: encabezado completo + identidad + primera tanda de atenciones -->
+    <article class="print-page">
+      <header class="doc-head">
+        <div class="doc-head__brand">
+          @if (business()?.logo_url; as logo) {
+            <img class="doc-head__logo" [src]="logo" [alt]="business()?.name ?? ''" />
+          } @else {
+            <span class="doc-head__logo doc-head__logo--fallback" aria-hidden="true">BW</span>
+          }
+          <div>
+            <b class="doc-head__name">{{ business()?.name }}</b>
+            @if (business()?.address; as addr) {
+              <small class="doc-head__line">{{ addr }}</small>
+            }
+            @if (business()?.phone; as phone) {
+              <small class="doc-head__line">{{ phone }}</small>
+            }
+          </div>
+        </div>
+        <div class="doc-head__doc">
+          <h1>{{ lang.t('ficha.print_doc_title') }}</h1>
+          <p>{{ lang.t('ficha.print_generated_at') }} {{ generatedAt | date: 'dd MMM yyyy, HH:mm' }}</p>
+        </div>
+      </header>
+
+      <section class="id-strip">
+        <div><b>{{ lang.t('ficha.print_patient') }}</b><span>{{ client()?.first_name }} {{ client()?.last_name }}</span></div>
+        <div><b>{{ lang.t('ficha.print_rut') }}</b><span>{{ client()?.rut }}</span></div>
+        <div><b>{{ lang.t('ficha.print_phone') }}</b><span>{{ client()?.phone }}</span></div>
+      </section>
+
+      @for (record of sortedRecords(); track record.id) {
+        <article class="attendance">
+          <div class="attendance__head">
+            <b>{{ recordTitle(record) }}</b>
+            <small>{{ record.created_at | date: 'dd MMM yyyy' }}@if (record.author_name) { · {{ record.author_name }}}</small>
+          </div>
+          <table>
+            <tbody>
+              @for (field of valueFields(record); track field.key) {
+                <tr><th scope="row">{{ field.label }}</th><td>{{ fieldValue(record, field) }}</td></tr>
+              }
+            </tbody>
+          </table>
+          @if (imageFields(record).length > 0) {
+            <div class="photos">
+              @for (field of imageFields(record); track field.key) {
+                @if (imageUrl(record, field); as url) {
+                  <figure class="photo">
+                    <img [src]="url" [alt]="field.label" />
+                    <figcaption><b>{{ field.label }}</b><span>{{ fileName(record.images?.[field.key]) }}</span></figcaption>
+                  </figure>
+                }
+              }
+            </div>
+          }
+        </article>
+      }
+    </article>
+  }
+</div>

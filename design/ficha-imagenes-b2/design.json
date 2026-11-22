@@ -1,0 +1,11 @@
+{
+  "title": "Ficha con imágenes (Backblaze B2): detalle en diálogo e impresión A4",
+  "brief": "Cómo se visualiza la ficha clínica cuando ya tiene imágenes almacenadas en Backblaze B2: (a) dentro de «Ver más detalles» del diálogo de reserva, y (b) el documento A4 que produce «Imprimir ficha».",
+  "artboards": [
+    { "file": "01-detalle-con-galeria.html", "title": "Galería por campo", "tradeoff": "Las imágenes viven dentro del dl como una fila más de cada registro: contexto inmediato por campo, pero el detalle se estira verticalmente", "width": 1440, "height": 900 },
+    { "file": "02-panel-visual-lateral.html", "title": "Panel visual lateral", "tradeoff": "Los datos quedan textuales a la izquierda y las imágenes forman una timeline a la derecha: la ficha es compacta, pero la imagen queda separada de su campo origen", "width": 1440, "height": 900 },
+    { "file": "03-impresion-a4.html", "title": "Impresión A4 (PDF)", "tradeoff": "Documento formal de una columna con fotos embebidas y captions: fiel a lo que sale por la impresora, no navegable como UI", "width": 1440, "height": 1200 },
+    { "file": "04-selector-vista-agenda.html", "title": "Selector de vista en la cabecera de la agenda", "tradeoff": "Pill segmentada calendario/lista junto a los controles de fecha y «Agenda» fijada en la topbar: contexto en un clic; la cabecera gana un control", "width": 1440, "height": 900 },
+    { "file": "05-vista-lista-agenda.html", "title": "Vista lista de la agenda (resultado)", "tradeoff": "Día colapsable + filas densas con acciones: máxima información por pantalla; pierde la percepción espacial del calendario", "width": 1440, "height": 900 }
+  ]
+}

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ficha con imágenes — vista de impresión A4 (PDF)</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-500:#0b3d95; --bw-300:#046af4; --bw-100:#dbeafe;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb;
+    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --font:'Roboto', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; min-height:100vh; padding:24px; display:block; }
+  .stage-bar { max-width:794px; margin:0 auto 12px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .stage-label { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:6px; font-size:.875rem; font-weight:500; border:1px solid var(--surface-border); background:#fff; color:var(--bw-500); cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .btn--primary { background:var(--bw-300); color:#fff; border-color:transparent; }
+  /* A4 @96dpi = 794 x 1123 px */
+  .page { width:794px; min-height:1123px; margin:0 auto 24px; background:#fff; border:1px solid var(--surface-border); box-shadow:0 4px 12px rgba(0,0,0,.15); padding:52px 56px; display:flex; flex-direction:column; }
+  .page__top { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; border-bottom:3px solid var(--bw-900); padding-bottom:16px; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand__logo { width:44px; height:44px; border-radius:8px; overflow:hidden; flex:none; }
+  .brand__logo svg { display:block; }
+  .brand b { font-size:1.25rem; font-weight:700; color:var(--bw-900); letter-spacing:-0.01em; }
+  .brand small { display:block; font-size:.75rem; color:var(--text-secondary); }
+  .doc__title { text-align:right; }
+  .doc__title h1 { font-size:1.125rem; font-weight:500; color:var(--text-heading); }
+  .doc__title p { font-size:.75rem; color:var(--text-secondary); }
+  .identity { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; background:var(--bw-100); border-radius:6px; padding:12px 16px; margin:20px 0 24px; }
+  .identity div b { display:block; font-size:.6875rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); font-weight:600; }
+  .identity div span { font-size:.875rem; font-weight:500; color:var(--text-heading); }
+  .record { margin-bottom:22px; }
+  .record__head { background:var(--bw-900); color:#fff; padding:8px 14px; border-radius:4px; display:flex; justify-content:space-between; align-items:baseline; }
+  .record__head b { font-size:.8125rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
+  .record__head small { font-size:.75rem; opacity:.85; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; }
+  th { text-align:left; font-size:.6875rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--surface-border); width:180px; vertical-align:top; }
+  td { font-size:.875rem; padding:6px 8px; border-bottom:1px solid #eef1f5; vertical-align:top; }
+  /* Imágenes en el documento: bloques grandes con caption, estilo informe */
+  .photo-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; }
+  figure.photo { border:1px solid var(--surface-border); border-radius:4px; overflow:hidden; }
+  figure.photo svg { display:block; width:100%; height:auto; }
+  figcaption { font-size:.6875rem; color:var(--text-secondary); padding:5px 8px; border-top:1px solid var(--surface-border); display:flex; justify-content:space-between; }
+  figcaption b { color:var(--text-heading); font-weight:500; }
+  .page__foot { margin-top:auto; border-top:1px solid var(--surface-border); padding-top:12px; display:flex; justify-content:space-between; font-size:.6875rem; color:var(--text-secondary); }
+  /* Continuación de una atención cortada por paginación. */
+  .continued { margin-top:14px; font-size:.75rem; color:var(--text-secondary); font-style:italic; }
+  /* En pantalla las páginas apiladas; al imprimir cada .page salta de página física. */
+  @media print { .stage-bar { display:none; } .page { box-shadow:none; border:none; page-break-after:always; margin:0; } .page:last-child { page-break-after:auto; } }
+  .confirmed { display:inline-block; font-size:.625rem; text-transform:uppercase; letter-spacing:.08em; color:#166534; border:1px solid #1FB27C; border-radius:999px; padding:1px 8px; }
+</style>
+</head>
+<body>
+  <div class="stage-bar">
+    <span class="stage-label">Dirección 03 — documento A4 para imprimir (preview de «Imprimir ficha»)</span>
+    <span><button class="btn">Volver</button> <button class="btn btn--primary">Imprimir / Guardar PDF</button></span>
+  </div>
+
+  <main class="page" aria-label="Documento de ficha clínica para impresión">
+    <header class="page__top">
+      <div class="brand">
+        <span class="brand__logo" aria-hidden="true" title="Logo del negocio (Kinesilk)">
+          <!-- En producción: <img [src]="business.logo_url" alt="Logo del negocio"> →
+               el mismo logo que se sube en /admin/facturacion/datos (biz.logo), servido desde Backblaze B2. -->
+          <svg viewBox="0 0 44 44" width="44" height="44" role="img" aria-label="Logo del negocio">
+            <rect width="44" height="44" rx="8" fill="#dbeafe"/>
+            <path d="M14 30 L22 12 L30 30" fill="none" stroke="#0b3d95" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="22" cy="30" r="2.5" fill="#046af4"/>
+          </svg>
+        </span>
+        <div>
+          <b data-bind="business.type === 'persona_natural' ? business.owner_name : business.name">Kinesilk</b>
+          <small data-bind="business.type === 'persona_natural' ? business.rut : business.tagline">Kinesiología y rehabilitación deportiva</small>
+          <small data-bind="business.address" style="display:block">Av. Apoquindo 4700, Las Condes, Santiago</small>
+          <small data-bind="business.phone" style="display:block">+56 2 2345 6789</small>
+        </div>
+      </div>
+      <div class="doc__title">
+        <h1>Ficha</h1>
+        <p>Generado el 22 nov 2026, 10:42 · página 1 de 2</p>
+      </div>
+    </header>
+
+    <section class="identity">
+      <div><b>Paciente</b><span>Camila Rojas Fuentes</span></div>
+      <div><b>RUT</b><span>17.234.567-8</span></div>
+      <div><b>Teléfono</b><span>+56 9 8765 4321</span></div>
+      <div><b>Profesional tratante</b><span>Carlos Rojas · Kinesiólogo</span></div>
+      <div><b>Sucursal</b><span>Kinesilk Las Condes</span></div>
+      <div><b>Historia clínica</b><span>#000421 <span class="confirmed">verificada</span></span></div>
+    </section>
+
+    <section class="identity" aria-label="Datos del profesional que atiende">
+      <div><b>Atiende</b><span>Carlos Rojas</span></div>
+      <div><b>Título</b><span>Kinesiólogo</span></div>
+      <div><b>RUT</b><span>15.876.543-2</span></div>
+      <div><b>Teléfono profesional</b><span>+56 9 6543 2109</span></div>
+      <div><b>Registro profesional</b><span>K-14.221</span></div>
+      <div><b>Sucursal de atención</b><span>Kinesilk Las Condes</span></div>
+    </section>
+
+    <article class="record">
+      <div class="record__head"><b>Evaluación kinesica inicial</b><small>05 nov 2026 · Carlos Rojas</small></div>
+      <table>
+        <tbody>
+          <tr><th scope="row">Diagnóstico funcional</th><td>Dolor lumbar mecánico con deficiente estabilización de core. Sin radiculopatía asociada.</td></tr>
+          <tr><th scope="row">Rango de movimiento</th><td>Flexión 60° (limitada por dolor) · Extensión 15° · Rotación izq. 30°.</td></tr>
+          <tr><th scope="row">Tests</th><td>EPR izquierda 45° con tensión isquiotibial. Straight leg raise negativo bilateral.</td></tr>
+          <tr><th scope="row">Plan de tratamiento</th><td>8 sesiones, frecuencia 2/semana: core stability, terapia manual y reeducación postural.</td></tr>
+        </tbody>
+      </table>
+      <div class="photo-row">
+        <figure class="photo">
+          <svg viewBox="0 0 330 220" role="img" aria-label="Foto: vista frontal"><rect width="330" height="220" fill="#dbeafe"/><circle cx="165" cy="70" r="30" fill="#0b3d95" opacity=".18"/><path d="M110 200 C110 130 220 130 220 200" fill="#0b3d95" opacity=".18"/><text x="165" y="34" text-anchor="middle" font-size="14" fill="#0b3d95">frontal.jpg</text></svg>
+          <figcaption><b>Vista frontal</b><span>05 nov 2026 · Carlos Rojas</span></figcaption>
+        </figure>
+        <figure class="photo">
+          <svg viewBox="0 0 330 220" role="img" aria-label="Foto: vista lateral izquierda"><rect width="330" height="220" fill="#f0f6ff"/><circle cx="130" cy="70" r="30" fill="#0b3d95" opacity=".18"/><path d="M85 200 C85 130 195 130 195 200" fill="#0b3d95" opacity=".18"/><text x="165" y="34" text-anchor="middle" font-size="14" fill="#0b3d95">lateral-izq.jpg</text></svg>
+          <figcaption><b>Vista lateral izq.</b><span>05 nov 2026 · Carlos Rojas</span></figcaption>
+        </figure>
+        <figure class="photo">
+          <svg viewBox="0 0 330 220" role="img" aria-label="Foto: test de elevación de pierna recta"><rect width="330" height="220" fill="#dbeafe"/><rect x="100" y="130" width="130" height="16" rx="8" fill="#0b3d95" opacity=".18"/><path d="M212 130 L262 96" stroke="#0b3d95" stroke-width="14" stroke-linecap="round" opacity=".28"/><text x="165" y="34" text-anchor="middle" font-size="14" fill="#0b3d95">test-epr.jpg</text></svg>
+          <figcaption><b>Test EPR 45°</b><span>05 nov 2026 · Carlos Rojas</span></figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <article class="record">
+      <div class="record__head"><b>Sesión 2 · evolución</b><small>12 nov 2026 · Carlos Rojas</small></div>
+      <table>
+        <tbody>
+          <tr><th scope="row">AVD sesión</th><td>Flexión 68°, dolor en carga final. Terapia manual lumbopélvica.</td></tr>
+          <tr><th scope="row">Escalas</th><td>EVA 6 → 5 · Oswestry 42% → 38%.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.75rem;color:var(--text-secondary);margin-top:8px">El documento incluye todas las atenciones de la historia, una tras otra en orden cronológico; si no entran en una página, «Imprimir» pagína automáticamente (encabezado de identidad repetido en cada página).</p>
+    </article>
+
+    <article class="record">
+      <div class="record__head"><b>Sesión 3 · evolución</b><small>19 nov 2026 · Carlos Rojas</small></div>
+      <table>
+        <tbody>
+          <tr><th scope="row">AVD sesión</th><td>Flexión 75° sin dolor. Se agrega gimnasia radial progresiva.</td></tr>
+          <tr><th scope="row">Escalas</th><td>EVA 6 → 3 · Oswestry 42% → 30%.</td></tr>
+          <tr><th scope="row">Órdenes</th><td>Añadir próxima sesión ejercicios de carga axial progresiva.</td></tr>
+        </tbody>
+      </table>
+      <div class="photo-row">
+        <figure class="photo">
+          <svg viewBox="0 0 330 220" role="img" aria-label="Foto: movilidad flexión 75°"><rect width="330" height="220" fill="#f0f6ff"/><path d="M60 170 C130 170 140 80 220 80" stroke="#0b3d95" stroke-width="12" stroke-linecap="round" fill="none" opacity=".22"/><circle cx="226" cy="80" r="10" fill="#046af4"/><text x="165" y="34" text-anchor="middle" font-size="14" fill="#0b3d95">movilidad-75.jpg</text></svg>
+          <figcaption><b>Flexión 75°</b><span>19 nov 2026 · Carlos Rojas</span></figcaption>
+        </figure>
+      </div>
+      <p class="continued">Continúa en la página 2 →</p>
+    </article>
+
+    <footer class="page__foot">
+      <span>Documento clínico generado por Bookwise · página 1 de 2</span>
+      <span>Kinesilk · Av. Apoquindo 4700, Las Condes</span>
+    </footer>
+  </main>
+
+  <main class="page" aria-label="Documento de ficha clínica para impresión — página 2">
+    <header class="page__top">
+      <div class="brand">
+        <span class="brand__logo" aria-hidden="true" title="Logo del negocio (Kinesilk)">
+          <svg viewBox="0 0 44 44" width="44" height="44" role="img" aria-label="Logo del negocio">
+            <rect width="44" height="44" rx="8" fill="#dbeafe"/>
+            <path d="M14 30 L22 12 L30 30" fill="none" stroke="#0b3d95" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="22" cy="30" r="2.5" fill="#046af4"/>
+          </svg>
+        </span>
+        <div>
+          <b data-bind="business.type === 'persona_natural' ? business.owner_name : business.name">Kinesilk</b>
+          <small data-bind="business.type === 'persona_natural' ? business.rut : business.tagline">Kinesiología y rehabilitación deportiva</small>
+          <small data-bind="business.address" style="display:block">Av. Apoquindo 4700, Las Condes, Santiago</small>
+          <small data-bind="business.phone" style="display:block">+56 2 2345 6789</small>
+        </div>
+      </div>
+      <div class="doc__title">
+        <h1>Ficha</h1>
+        <p>Generado el 22 nov 2026, 10:42 · página 2 de 2</p>
+      </div>
+    </header>
+
+    <div class="identity" style="margin:16px 0 18px">
+      <div><b>Paciente</b><span>Camila Rojas Fuentes</span></div>
+      <div><b>RUT</b><span>17.234.567-8</span></div>
+      <div><b>Atiende</b><span>Carlos Rojas · Kinesiólogo</span></div>
+    </div>
+
+    <!-- Continuación de la atención cortada en la página 1 -->
+    <article class="record" style="margin-top:0">
+      <div class="record__head"><b>Sesión 3 · evolución (continuación)</b><small>19 nov 2026 · Carlos Rojas</small></div>
+      <table>
+        <tbody>
+          <tr><th scope="row">Órdenes</th><td>Añadir ejercicios de carga axial progresiva. Control en 2 semanas.</td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <article class="record">
+      <div class="record__head"><b>Disponibilidad del paciente para próxima agenda</b><small>—</small></div>
+      <table>
+        <tbody>
+          <tr><th scope="row">Observaciones</th><td>Prefiere horario de mañana. Asiste acompañada. Aceptó continuar plan de 5 sesiones restantes.</td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <footer class="page__foot">
+      <span>Documento clínico generado por Bookwise · contenido respaldado en almacenamiento Backblaze B2</span>
+      <span>Kinesilk · Av. Apoquindo 4700, Las Condes · +56 2 2345 6789</span>
+    </footer>
+  </main>
+</body>
+</html>

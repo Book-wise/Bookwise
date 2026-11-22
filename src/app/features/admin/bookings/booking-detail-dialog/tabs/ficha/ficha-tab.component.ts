@@ -44,6 +44,14 @@ export class FichaTabComponent {
   /** El usuario quiere configurar los tipos de ficha (pantalla de Configuraciones). */
   readonly configureTypes = output<void>();
 
+  /** El usuario quiere imprimir la ficha completa del paciente (vista de impresión). */
+  readonly printHistoryRequested = output<number>();
+
+  /** Navega a la vista de impresión de la ficha del paciente. */
+  printHistory(clientId: number): void {
+    this.printHistoryRequested.emit(clientId);
+  }
+
   readonly bookingId = computed(() => this.dialogStore.booking()?.id ?? null);
   readonly clientId = computed(() => this.dialogStore.booking()?.client?.id ?? null);
 
