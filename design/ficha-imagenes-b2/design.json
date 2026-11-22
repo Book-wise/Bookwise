@@ -7,6 +7,8 @@
     { "file": "03-impresion-a4.html", "title": "Impresión A4 (PDF)", "tradeoff": "Documento formal de una columna con fotos embebidas y captions: fiel a lo que sale por la impresora, no navegable como UI", "width": 1440, "height": 1200 },
     { "file": "04-selector-vista-agenda.html", "title": "Selector de vista en la cabecera de la agenda", "tradeoff": "Pill segmentada calendario/lista junto a los controles de fecha y «Agenda» fijada en la topbar: contexto en un clic; la cabecera gana un control", "width": 1440, "height": 900 },
     { "file": "05-vista-lista-agenda.html", "title": "Vista lista de la agenda (resultado)", "tradeoff": "Día colapsable + filas densas con acciones: máxima información por pantalla; pierde la percepción espacial del calendario", "width": 1440, "height": 900 },
-    { "file": "06-side-menu-abierto.html", "title": "Agenda con el side-menu abierto", "tradeoff": "Muestra cómo se comporta el selector/esquinas con el panel de navegación empujando el contenido: el :rail desaparece y la grilla nace del panel", "width": 1440, "height": 900 }
+    { "file": "06-side-menu-abierto.html", "title": "Agenda con el side-menu abierto", "tradeoff": "Muestra cómo se comporta el selector/esquinas con el panel de navegación empujando el contenido: el rail desaparece y la grilla nace del panel", "width": 1440, "height": 900 },
+    { "file": "07-mobile-agenda.html", "title": "Mobile 390px", "tradeoff": "Vista lista por defecto y toolbar en dos líneas apiladas: máxima legibilidad al pulgar; la grilla semanal no cabe y queda como vista secondaria", "width": 390, "height": 760 },
+    { "file": "08-tablet-agenda.html", "title": "Tablet 820px", "tradeoff": "La grilla semanal completa cabe con toolbar en dos líneas: conserva la percepción espacial; la densidad de cada evento es menor que en desktop", "width": 820, "height": 1100 }
   ]
 }
