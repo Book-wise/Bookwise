@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Agenda — selector de vista con el side-menu abierto</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --r-md:6px; --r-lg:8px; --r-pill:999px; --sh-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04); --sh-popover:0 4px 12px rgba(0,0,0,.15);
+    --font:'Roboto', system-ui, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; }
+  .stage-label { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); padding:16px 20px 8px; }
+  .stage-sub { font-size:.8125rem; color:var(--text-secondary); padding:0 20px 14px; max-width:1100px; }
+  .app { max-width:1360px; margin:0 auto 28px; border:1px solid var(--surface-border); border-radius:var(--r-lg); overflow:hidden; background:var(--surface-card); box-shadow:var(--sh-card); }
+  .topbar { height:67px; background:var(--bw-900); color:#fff; display:flex; align-items:center; gap:24px; padding:0 20px; }
+  .brand { font-weight:700; letter-spacing:.02em; display:flex; align-items:center; gap:10px; }
+  .brand i { width:26px; height:26px; border-radius:6px; background:var(--bw-300); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; font-style:normal; }
+  .burger { border:1px solid rgba(255,255,255,.25); background:var(--bw-700); color:rgba(255,255,255,.85); width:34px; height:34px; border-radius:50%; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .top-actions { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; }
+  .main { display:flex; min-height:560px; }
+  /* Side-menu ABIERTO: panel de navegación que empuja el contenido (patrón sidemenu redesign) */
+  .sidenav { width:224px; background:linear-gradient(180deg,var(--bw-900),var(--bw-600)); padding:16px 10px; display:flex; flex-direction:column; gap:2px; }
+  .sidenav .group { font-size:.625rem; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.45); padding:14px 12px 6px; font-weight:600; }
+  .sidenav a { display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.68); text-decoration:none; font-size:.875rem; padding:9px 12px; border-radius:var(--r-md); }
+  .sidenav a i { font-style:normal; width:18px; text-align:center; }
+  .sidenav a[aria-current] { background:rgba(255,255,255,.14); color:#fff; font-weight:600; box-shadow:inset 3px 0 0 var(--bw-300); }
+  .sidenav a:hover { background:rgba(255,255,255,.08); color:#fff; }
+  .sidenav .foot { margin-top:auto; border-top:1px solid rgba(255,255,255,.1); padding-top:10px; }
+  .content { flex:1; padding:14px 18px; background:var(--bw-50); min-width:0; }
+  .cal-bar { display:flex; align-items:center; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
+  .nav { display:flex; align-items:center; gap:8px; }
+  .nav button { width:30px; height:30px; border:1px solid var(--surface-border); background:#fff; border-radius:var(--r-pill); cursor:pointer; color:var(--text-color); }
+  .nav b { font-size:.875rem; color:var(--text-heading); font-weight:500; min-width:150px; text-align:center; }
+  .today { font-size:.8125rem; color:var(--bw-500); font-weight:600; background:#fff; border:1px solid var(--surface-border); padding:6px 12px; border-radius:var(--r-pill); cursor:pointer; }
+  .action-btn { display:inline-flex; align-items:center; gap:6px; font-size:.8125rem; font-weight:500; padding:6px 14px; border-radius:var(--r-pill); border:1px solid var(--surface-border); background:#fff; color:var(--text-color); cursor:pointer; }
+  .action-btn--primary { background:var(--bw-300); border-color:transparent; color:#fff; }
+  .spacer { flex:1; }
+  .seg { display:inline-flex; background:var(--bw-surface-muted); border:1px solid var(--surface-border); border-radius:10px; padding:3px; }
+  .seg button { width:34px; height:30px; border:none; background:transparent; border-radius:8px; cursor:pointer; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; }
+  .seg button[aria-pressed="true"] { background:#fff; color:var(--text-color); box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08); }
+  .filters { display:flex; gap:8px; }
+  .filters span { font-size:.8125rem; padding:6px 12px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; color:var(--text-label); }
+  /* Esquinas derechas redondeadas: la izquierda nace del sidenav (cuadrada) */
+  .cal { height:430px; border:1px solid var(--surface-border); border-radius:0 var(--r-lg) var(--r-lg) 0; background:repeating-linear-gradient(90deg, var(--surface-card) 0 62px, var(--bw-surface-muted) 62px 63px); position:relative; overflow:hidden; }
+  .cal .ev { position:absolute; border-radius:var(--r-pill); padding:4px 12px; font-size:.75rem; color:var(--text-heading); border-left:3px solid; background:var(--surface-card); box-shadow:var(--sh-card); }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<p class="stage-label">Dirección 06 — el mismo layout con el side-menu ABIERTO (panel que empuja)</p>
+<p class="stage-sub">La hamburguesa de la cabecera abre el panel de navegación completo (secciones agrupadas, agenda activa); el contenido se comprime y la grilla mantiene sus esquinas derechas redondeadas, naciendo cuadrada desde el panel.</p>
+
+<section class="app" aria-label="App Bookwise con side-menu abierto">
+  <header class="topbar">
+    <button class="burger" aria-label="Cerrar menú" aria-expanded="true">‹</button>
+    <span class="brand"><i>BW</i> Bookwise</span>
+    <div class="top-actions"><span class="avatar" aria-hidden="true">CQ</span></div>
+  </header>
+
+  <div class="main">
+    <nav class="sidenav" aria-label="Navegación principal">
+      <span class="group">Operación</span>
+      <a href="#" aria-current="page"><i>▦</i> Agenda</a>
+      <a href="#"><i>👥</i> Clientes</a>
+      <a href="#"><i>📦</i> Packs</a>
+      <a href="#"><i>💳</i> Facturación</a>
+      <span class="group">Gestión</span>
+      <a href="#"><i>⚙️</i> Configuraciones</a>
+      <div class="foot"><a href="#"><i>↩</i> Cerrar sesión</a></div>
+    </nav>
+
+    <div class="content">
+      <div class="cal-bar">
+        <div class="nav">
+          <button aria-label="Semana anterior">‹</button>
+          <b>18 — 24 nov 2026</b>
+          <button aria-label="Semana siguiente">›</button>
+        </div>
+        <button class="today">Hoy</button>
+        <span style="width:8px"></span>
+        <button class="action-btn action-btn--primary">＋ Nueva reserva</button>
+        <button class="action-btn">🔒 Bloquear horario</button>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Tipo de vista de la agenda">
+          <button aria-pressed="true" title="Vista agenda" aria-label="Vista agenda">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button aria-pressed="false" title="Vista lista" aria-label="Vista lista">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div class="filters"><span>Todas las sedes</span><span>Todos los profesionales</span><span>Todos los estados</span></div>
+      </div>
+      <div class="cal">
+        <div class="ev" style="left:14px;top:30px;width:190px;border-color:#77D0FA">09:30 · Camila Rojas Fuentes</div>
+        <div class="ev" style="left:14px;top:110px;width:190px;border-color:#1FB27C">10:30 · Nicolás Herrera</div>
+        <div class="ev" style="left:14px;top:210px;width:190px;border-color:#ECBE51">11:30 · Valentina Soto</div>
+        <div class="ev" style="left:240px;top:60px;width:190px;border-color:#77D0FA">09:00 · Matías Fuentes</div>
+        <div class="ev" style="left:240px;top:170px;width:190px;border-color:#FD8991">11:00 · José Pérez (pend.)</div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

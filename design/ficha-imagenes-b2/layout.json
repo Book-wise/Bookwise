@@ -16,6 +16,18 @@
     "03-impresion-a4.html": {
       "x": 4965,
       "y": 291
+    },
+    "04-selector-vista-agenda.html": {
+      "x": 6485,
+      "y": 291
+    },
+    "05-vista-lista-agenda.html": {
+      "x": 8005,
+      "y": 291
+    },
+    "06-side-menu-abierto.html": {
+      "x": 9681,
+      "y": 307
     }
   }
 }
