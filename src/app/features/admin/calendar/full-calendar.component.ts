@@ -1525,7 +1525,10 @@ export class FullCalendarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => this.bookingDetailDialog.open(booking, 'pago', scrollToTxn), 100);
   }
 
-  /** «Ver ficha» del card: salta directo al detalle en la pestaña ficha del paciente. */
+  /** «Ver ficha» del card: salta directo al detalle en la pestaña ficha del paciente.
+   *  Oculto sin `clients.view`, el gating confirmado por el BE (baselines de roles). */
+  readonly canViewClients = computed(() => this.auth.hasPermission('clients.view'));
+
   openBookingFicha(): void {
     const booking = this.store.selectedBooking();
     if (!booking) return;
