@@ -31,12 +31,15 @@
   .rail { width:56px; background:linear-gradient(180deg,var(--bw-900),var(--bw-600)); display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 0; }
   .rail i { width:36px; height:36px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:15px; color:rgba(255,255,255,.68); }
   .rail i[aria-current] { background:rgba(255,255,255,.14); color:#fff; box-shadow:inset 3px 0 0 var(--bw-300); }
-  .content { flex:1; padding:14px 18px; background:var(--bw-50); }
+  .content { flex:1; padding:14px 18px 14px 18px; background:var(--bw-50); }
   .cal-bar { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
   .nav { display:flex; align-items:center; gap:8px; }
-  .nav button { width:30px; height:30px; border:1px solid var(--surface-border); background:#fff; border-radius:var(--r-md); cursor:pointer; color:var(--text-color); }
+  .nav button { width:30px; height:30px; border:1px solid var(--surface-border); background:#fff; border-radius:var(--r-pill); cursor:pointer; color:var(--text-color); }
+  .nav b { border-radius:var(--r-pill); }
   .nav b { font-size:.875rem; color:var(--text-heading); font-weight:500; min-width:150px; text-align:center; }
   .today { font-size:.8125rem; color:var(--bw-500); font-weight:600; background:#fff; border:1px solid var(--surface-border); padding:6px 12px; border-radius:var(--r-pill); cursor:pointer; }
+  .action-btn { display:inline-flex; align-items:center; gap:6px; font-size:.8125rem; font-weight:500; padding:6px 14px; border-radius:var(--r-pill); border:1px solid var(--surface-border); background:#fff; color:var(--text-color); cursor:pointer; }
+  .action-btn--primary { background:var(--bw-300); border-color:transparent; color:#fff; }
   .spacer { flex:1; }
   /* El selector: pill con dos botones de icono, el activo con fondo blanco y sombra */
   .seg { display:inline-flex; background:var(--bw-surface-muted); border:1px solid var(--surface-border); border-radius:10px; padding:3px; }
@@ -45,10 +48,17 @@
   .seg button:hover { color:var(--text-color); }
   .seg:focus-within { outline:2px solid var(--bw-300); outline-offset:2px; }
   .filters { display:flex; gap:8px; }
-  .filters span { font-size:.8125rem; padding:6px 12px; border:1px solid var(--surface-border); border-radius:var(--r-md); background:#fff; color:var(--text-label); }
+  .filters span { font-size:.8125rem; padding:6px 12px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; color:var(--text-label); }
   /* grid del calendario */
-  .cal { height:430px; border:1px solid var(--surface-border); border-radius:var(--r-lg); background:repeating-linear-gradient(90deg, var(--surface-card) 0 62px, var(--bw-surface-muted) 62px 63px); position:relative; overflow:hidden; }
-  .cal .ev { position:absolute; border-radius:var(--r-md); padding:4px 8px; font-size:.75rem; color:var(--text-heading); border-left:3px solid; background:var(--surface-card); box-shadow:var(--sh-card); }
+  /* Esquinas derechas redondeadas estilo Google Calendar: la izquierda queda
+     cuadrada porque ahí la grilla nace del borde del shell/rail. */
+  .cal { height:430px; border:1px solid var(--surface-border); border-radius:0 var(--r-lg) var(--r-lg) 0; background:repeating-linear-gradient(90deg, var(--surface-card) 0 62px, var(--bw-surface-muted) 62px 63px); position:relative; overflow:hidden; }
+  .cal .ev { position:absolute; border-radius:var(--r-pill); padding:4px 12px; font-size:.75rem; color:var(--text-heading); border-left:3px solid; background:var(--surface-card); box-shadow:var(--sh-card); }
+  .legend { display:flex; align-items:center; gap:14px; margin-top:10px; flex-wrap:wrap; }
+  .legend__title { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--text-secondary); }
+  .legend__item { display:inline-flex; align-items:center; gap:6px; font-size:.75rem; color:var(--text-label); }
+  .legend__item i { width:12px; height:12px; border-radius:4px; display:inline-block; }
+  .legend__sep { width:1px; height:16px; background:var(--surface-border); margin:0 4px; }
   @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
 </style>
 </head>
@@ -82,6 +92,9 @@
           <button aria-label="Semana siguiente">›</button>
         </div>
         <button class="today">Hoy</button>
+        <span style="width:8px"></span>
+        <button class="action-btn action-btn--primary">＋ Nueva reserva</button>
+        <button class="action-btn">🔒 Bloquear horario</button>
         <span class="spacer"></span>
         <div class="seg" role="group" aria-label="Tipo de vista de la agenda">
           <button aria-pressed="true" title="Vista agenda" aria-label="Vista agenda">
@@ -91,7 +104,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
           </button>
         </div>
-        <div class="filters"><span>Todas las sedes</span><span>Todos los profesionales</span></div>
+        <div class="filters"><span>Todas las sedes</span><span>Todos los profesionales</span><span>Todos los estados</span></div>
       </div>
       <div class="cal">
         <div class="ev" style="left:70px;top:30px;width:220px;border-color:#77D0FA">09:30 · Camila Rojas Fuentes</div>
@@ -99,7 +112,19 @@
         <div class="ev" style="left:70px;top:210px;width:220px;border-color:#ECBE51">11:30 · Valentina Soto</div>
         <div class="ev" style="left:360px;top:60px;width:220px;border-color:#77D0FA">09:00 · Matías Fuentes</div>
         <div class="ev" style="left:360px;top:170px;width:220px;border-color:#FD8991">11:00 · José Pérez (pend.)</div>
+        <div class="ev ev--block" style="left:360px;top:260px;width:220px;border-color:#E3E7ED;background:repeating-linear-gradient(135deg,#eef1f5 0 8px,#f8fafd 8px 16px)">Bloqueo · Administrativo</div>
       </div>
+      <footer class="legend" aria-label="Guía de colores e indicadores">
+        <span class="legend__title">Guía de colores</span>
+        <span class="legend__item"><i style="background:#77D0FA"></i>Reservado</span>
+        <span class="legend__item"><i style="background:#ECBE51"></i>Confirmado</span>
+        <span class="legend__item"><i style="background:#1FB27C"></i>Asiste</span>
+        <span class="legend__item"><i style="background:#FD8991"></i>Pendiente de pago</span>
+        <span class="legend__item"><i style="background:#FCCAC2"></i>No asistió</span>
+        <span class="legend__item"><i style="background:#E3E7ED"></i>Cancelado / Bloqueo</span>
+        <span class="legend__sep"></span>
+        <span class="legend__item"><i class="slot-sample"></i>Clic en un slot vacío = nueva reserva en esa hora · Arrastrar = mover</span>
+      </footer>
     </div>
   </div>
 </section>

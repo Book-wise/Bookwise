@@ -36,7 +36,9 @@
   .day { display:grid; gap:8px; }
   .day__head { display:flex; align-items:center; gap:8px; font-size:.75rem; font-weight:600; color:var(--text-label); }
   .day__head::after { content:""; flex:1; height:1px; background:var(--surface-border); }
-  .shot { border:1px solid var(--surface-border); border-radius:var(--r-md); overflow:hidden; background:#fff; box-shadow:var(--sh-card); cursor:zoom-in; transition:box-shadow .15s; }
+  .shot { position:relative; border:1px solid var(--surface-border); border-radius:var(--r-md); overflow:hidden; background:#fff; box-shadow:var(--sh-card); cursor:zoom-in; transition:box-shadow .15s; }
+  .shot__hint { position:absolute; bottom:8px; right:8px; background:rgba(1,38,99,.78); color:#fff; font-size:.625rem; padding:2px 8px; border-radius:var(--r-pill); opacity:0; transition:opacity .15s; }
+  .shot:hover .shot__hint, .shot:focus-visible .shot__hint { opacity:1; }
   .shot:hover { box-shadow:var(--sh-popover); }
   .shot svg { display:block; width:100%; height:auto; }
   .shot__cap { padding:6px 10px; display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
@@ -90,11 +92,11 @@
         <div class="day__head">19 nov 2026 — Sesión 3</div>
         <figure class="shot big" tabindex="0" aria-label="Ampliar: flexión 75°, 19 nov 2026">
           <span class="badge">Última</span>
-          <svg viewBox="0 0 268 150" role="img" aria-label="Flexión en progresión"><rect width="268" height="150" fill="#dbeafe"/><path d="M50 116 C110 116 120 48 178 48" stroke="#0b3d95" stroke-width="9" stroke-linecap="round" fill="none" opacity=".22"/><circle cx="184" cy="48" r="8" fill="#046af4"/><text x="134" y="30" text-anchor="middle" font-size="12" fill="#0b3d95">movilidad-75.jpg</text></svg>
+          <svg viewBox="0 0 268 150" role="img" aria-label="Flexión en progresión"><rect width="268" height="150" fill="#dbeafe"/><path d="M50 116 C110 116 120 48 178 48" stroke="#0b3d95" stroke-width="9" stroke-linecap="round" fill="none" opacity=".22"/><circle cx="184" cy="48" r="8" fill="#046af4"/><text x="134" y="30" text-anchor="middle" font-size="12" fill="#0b3d95">movilidad-75.jpg</text></svg><span class="shot__hint">Click: abrir en pestaña nueva</span>
           <figcaption class="shot__cap"><b>Flexión 75°</b><small>19 nov · Carlos Rojas</small></figcaption>
         </figure>
         <figure class="shot" tabindex="0" aria-label="Ampliar: gimnasia radial, 19 nov 2026">
-          <svg viewBox="0 0 268 120" role="img" aria-label="Gimnasia radial"><rect width="268" height="120" fill="#f0f6ff"/><circle cx="134" cy="62" r="34" fill="none" stroke="#0b3d95" stroke-width="8" opacity=".2"/><circle cx="134" cy="62" r="11" fill="#046af4" opacity=".6"/><text x="134" y="28" text-anchor="middle" font-size="12" fill="#0b3d95">gimnasia-radial.jpg</text></svg>
+          <svg viewBox="0 0 268 120" role="img" aria-label="Gimnasia radial"><rect width="268" height="120" fill="#f0f6ff"/><circle cx="134" cy="62" r="34" fill="none" stroke="#0b3d95" stroke-width="8" opacity=".2"/><circle cx="134" cy="62" r="11" fill="#046af4" opacity=".6"/><text x="134" y="28" text-anchor="middle" font-size="12" fill="#0b3d95">gimnasia-radial.jpg</text></svg><span class="shot__hint">Click: abrir en pestaña nueva</span>
           <figcaption class="shot__cap"><b>Gimnasia radial</b><small>19 nov · Carlos Rojas</small></figcaption>
         </figure>
       </div>
@@ -102,15 +104,15 @@
       <div class="day">
         <div class="day__head">05 nov 2026 — Evaluación inicial</div>
         <figure class="shot" tabindex="0" aria-label="Ampliar: vista frontal, 05 nov 2026">
-          <svg viewBox="0 0 268 120" role="img" aria-label="Vista frontal"><rect width="268" height="120" fill="#dbeafe"/><circle cx="134" cy="40" r="17" fill="#0b3d95" opacity=".18"/><path d="M98 108 C98 70 170 70 170 108" fill="#0b3d95" opacity=".18"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">frontal.jpg</text></svg>
+          <svg viewBox="0 0 268 120" role="img" aria-label="Vista frontal"><rect width="268" height="120" fill="#dbeafe"/><circle cx="134" cy="40" r="17" fill="#0b3d95" opacity=".18"/><path d="M98 108 C98 70 170 70 170 108" fill="#0b3d95" opacity=".18"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">frontal.jpg</text></svg><span class="shot__hint">Click: abrir en pestaña nueva</span>
           <figcaption class="shot__cap"><b>Vista frontal</b><small>05 nov · Carlos Rojas</small></figcaption>
         </figure>
         <figure class="shot" tabindex="0" aria-label="Ampliar: vista lateral izquierda, 05 nov 2026">
-          <svg viewBox="0 0 268 120" role="img" aria-label="Vista lateral izquierda"><rect width="268" height="120" fill="#f0f6ff"/><circle cx="108" cy="40" r="17" fill="#0b3d95" opacity=".18"/><path d="M80 108 C80 70 145 70 145 108" fill="#0b3d95" opacity=".18"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">lateral-izq.jpg</text></svg>
+          <svg viewBox="0 0 268 120" role="img" aria-label="Vista lateral izquierda"><rect width="268" height="120" fill="#f0f6ff"/><circle cx="108" cy="40" r="17" fill="#0b3d95" opacity=".18"/><path d="M80 108 C80 70 145 70 145 108" fill="#0b3d95" opacity=".18"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">lateral-izq.jpg</text></svg><span class="shot__hint">Click: abrir en pestaña nueva</span>
           <figcaption class="shot__cap"><b>Vista lateral izq.</b><small>05 nov · Carlos Rojas</small></figcaption>
         </figure>
         <figure class="shot" tabindex="0" aria-label="Ampliar: test de elevación de pierna recta, 05 nov 2026">
-          <svg viewBox="0 0 268 120" role="img" aria-label="Test EPR"><rect width="268" height="120" fill="#dbeafe"/><rect x="80" y="70" width="108" height="12" rx="6" fill="#0b3d95" opacity=".18"/><path d="M176 70 L216 46" stroke="#0b3d95" stroke-width="10" stroke-linecap="round" opacity=".28"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">test-epr.jpg</text></svg>
+          <svg viewBox="0 0 268 120" role="img" aria-label="Test EPR"><rect width="268" height="120" fill="#dbeafe"/><rect x="80" y="70" width="108" height="12" rx="6" fill="#0b3d95" opacity=".18"/><path d="M176 70 L216 46" stroke="#0b3d95" stroke-width="10" stroke-linecap="round" opacity=".28"/><text x="134" y="24" text-anchor="middle" font-size="12" fill="#0b3d95">test-epr.jpg</text></svg><span class="shot__hint">Click: abrir en pestaña nueva</span>
           <figcaption class="shot__cap"><b>Test EPR 45°</b><small>05 nov · Carlos Rojas</small></figcaption>
         </figure>
       </div>

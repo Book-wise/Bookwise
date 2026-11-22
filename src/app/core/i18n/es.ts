@@ -1057,6 +1057,8 @@ export const ES: Record<string, string> = {
   'ficha.detail.back': 'Volver a las fichas',
   'ficha.detail.edit': 'Editar ficha',
   'ficha.detail.print': 'Imprimir ficha',
+  'ficha.detail.gallery_title': 'Imágenes',
+  'ficha.detail.image_latest': 'Última',
   'ficha.print_stage_label': 'Vista de impresión de la ficha',
   'ficha.back': 'Volver',
   'ficha.print_action': 'Imprimir / Guardar PDF',

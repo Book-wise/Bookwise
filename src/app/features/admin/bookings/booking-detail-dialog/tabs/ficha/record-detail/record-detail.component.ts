@@ -319,6 +319,11 @@ export class RecordDetailComponent {
     return formatDateTime(iso);
   }
 
+  /** Fecha (sin hora) que encabeza la galería lateral: la del registro. */
+  galleryDay(): string {
+    return formatDate(this.record().created_at);
+  }
+
   t(key: string): string {
     return this.lang.t(key);
   }

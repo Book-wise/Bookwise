@@ -128,9 +128,10 @@
       "excerpt": "",
       "comment": "al clickearlas podemos hacer zoom, o verlas en otra pestaña",
       "createdAt": "2026-11-22T04:56:39.868Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T04:56:39.915Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:27:36.841Z",
+      "resolution": "Las tarjetas de imagen ahora muestran la intención de click: cursor zoom-in + hint flotante «Click: abrir en pestaña nueva» al hover/focus. En la implementación (PR #65) los blobs ya se abren en pestaña nueva con «Ver imagen»; el zoom inline queda disponible como mejora si la piden más adelante."
     },
     {
       "id": "k6i9b9c1",
@@ -139,9 +140,10 @@
       "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales 09:30 · Camila Rojas Fuentes 10:30 · Nicolás Herrera 11:30 · Valentina Soto 09:00 · Matías Fuentes 11:00 · José Pérez (pend.)",
       "comment": "dale bordes redondos como en google",
       "createdAt": "2026-11-22T04:58:04.422Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T04:58:04.578Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:28:34.323Z",
+      "resolution": "Bordes redondos estilo Google: botones de navegación ‹ › y chips de filtros ahora pill (999px), y las cards de eventos en la grilla pasan a cápsula con padding más holgado. El selector ya era pill."
     },
     {
       "id": "s87pu3oa",
@@ -150,9 +152,10 @@
       "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales 09:30 · Camila Rojas Fuentes 10:30 · Nicolás Herrera 11:30 · Valentina Soto 09:00 · Matías Fuentes 11:00 · José Pérez (pend.)",
       "comment": "la esquina superior derecha y la esquina inferior derecha, redondas por favor, estilo google, y muestrame otro panel donde el side-menu esta abierto",
       "createdAt": "2026-11-22T05:01:08.115Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T05:01:08.445Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:30:08.361Z",
+      "resolution": "Grilla con esquinas derechas redondeadas y izquierda cuadrada (estilo Google Calendar: nace del borde del rail/sidenav) + artboard 06 nuevo con el side-menu ABIERTO mostrando cómo se comporta todo el layout con el panel empujando el contenido."
     },
     {
       "id": "a0inx8et",
@@ -161,9 +164,10 @@
       "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales",
       "comment": "adicion el filtro de todos los estados",
       "createdAt": "2026-11-22T05:01:31.756Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T05:01:31.780Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:31:05.784Z",
+      "resolution": "Añadido el filtro «Todos los estados» a la cabecera de la agenda, en la misma línea pill que sedes y profesionales (aplicado también al artboard 06 con side-menu abierto para consistencia)."
     },
     {
       "id": "r0c6fsda",
@@ -172,9 +176,10 @@
       "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales",
       "comment": "adiciona el boton de nueva reserva y bloquear horario",
       "createdAt": "2026-11-22T05:01:54.861Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T05:01:54.876Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:32:22.895Z",
+      "resolution": "Añadidos a la cabecera de la agenda «+ Nueva reserva» (primario, fondo --bw-300) y «Bloquear horario» (secundario pill), después de Hoy; replicado en el artboard 06 con side-menu abierto."
     },
     {
       "id": "9mhjtcfg",
@@ -183,9 +188,10 @@
       "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales",
       "comment": "adiciona el indicador de slots y la guia de colores",
       "createdAt": "2026-11-22T05:02:18.961Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T05:02:18.994Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:33:58.116Z",
+      "resolution": "Añadida la guía de colores bajo la grilla (Reservado/Confirmado/Asiste/Pendiente/No asistió/Cancelado/Bloqueo con las paleta AgendaPro de los chips) + indicador de slots como nota de interacción (clic en slot vacío = nueva reserva, arrastrar = mover) y un evento de bloqueo rayado dentro de la grilla de ejemplo."
     },
     {
       "id": "kfutrdnd",
@@ -194,9 +200,10 @@
       "excerpt": "$ Ver Pago",
       "comment": "adiciona el boton ver ficha que llevaria directo al dialogo en su respectiva pestaña",
       "createdAt": "2026-11-22T05:03:08.423Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T05:03:08.439Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-22T05:34:44.487Z",
+      "resolution": "Cada fila de reserva ahora tiene «Ver ficha» antes de «$ Ver Pago»: lleva directo al detalle en su pestaña ficha (el mismo atajo ya implementado en el card del calendario). Las filas de bloqueo no lo llevan (no tienen paciente)."
     },
     {
       "id": "iqm68lzl",
@@ -205,9 +212,33 @@
       "excerpt": "Lista desagrupada + Nueva Reserva",
       "comment": "añade el boton de bloquear horario",
       "createdAt": "2026-11-22T05:03:25.278Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-22T05:03:25.305Z",
+      "resolvedAt": "2026-11-22T05:35:27.162Z",
+      "resolution": "Añadido «🔒 Bloquear horario» (secundario pill) junto a «+ Nueva Reserva» en la toolbar de la vista lista — la misma pareja de acciones que la cabecera de la agenda en el panel 04."
+    },
+    {
+      "id": "0dgfxoen",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > header",
+      "excerpt": "BW Bookwise Agenda Clientes Packs Facturación CQ",
+      "comment": "aqui integra los elementos que ya existen, y te habia pedido inicialmente mover unicamente agenda hacia arriba",
+      "createdAt": "2026-11-22T05:09:37.409Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:09:37.465Z",
       "resolvedAt": null
+    },
+    {
+      "id": "20458sdy",
+      "file": "04-selector-vista-agenda.html",
+      "selector": "body > section > div > div",
+      "excerpt": "‹ 18 — 24 nov 2026 › Hoy Todas las sedes Todos los profesionales 09:30 · Camila Rojas Fuentes 10:30 · Nicolás Herrera 11:30 · Valentina Soto 09:00 · Matías Fuentes 11:00 · José Pérez (pend.)",
+      "comment": "me referia a que esta zona entera...te dejo una referencia de google calendar , ahi el limite de lo que ocupa el calendario esta con borde redondo",
+      "createdAt": "2026-11-22T05:30:27.897Z",
+      "status": "open",
+      "sentAt": "2026-11-22T05:30:27.921Z",
+      "resolvedAt": null,
+      "screenshot": ".screenshots/20458sdy.png"
     }
   ]
 }

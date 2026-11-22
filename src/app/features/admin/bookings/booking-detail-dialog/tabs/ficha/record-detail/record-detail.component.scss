@@ -149,6 +149,94 @@
   padding: 0 var(--bw-space-md) var(--bw-space-md);
 }
 
+// ── Panel visual lateral (dirección ficha-imagenes-b2/02, elegida) ────────
+// Lectura: datos textuales a la izquierda, imágenes como timeline a la
+// derecha. En pantallas angostas se apila: datos primero, galería después.
+.detail__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 19rem;
+  gap: var(--bw-space-lg);
+  align-items: start;
+  padding: 0 var(--bw-space-md) var(--bw-space-md);
+
+  > .detail__fields {
+    padding: 0;
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail__gallery {
+  background: var(--bw-surface-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-lg);
+  padding: var(--bw-space-md);
+  display: grid;
+  gap: var(--bw-space-sm);
+}
+
+.detail__gallery-title {
+  font-family: var(--font-family);
+  font-size: var(--bw-font-overline);
+  letter-spacing: var(--bw-tracking-overline);
+  text-transform: uppercase;
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.detail__gallery-day {
+  display: grid;
+  gap: var(--bw-space-sm);
+}
+
+.detail__gallery-date {
+  display: flex;
+  align-items: center;
+  gap: var(--bw-space-sm);
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-semibold);
+  color: var(--text-label);
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--surface-border);
+  }
+}
+
+.detail__gallery-badge {
+  justify-self: start;
+  background: var(--bw-900);
+  color: #fff;
+  font-size: var(--bw-font-overline);
+  padding: 1px 8px;
+  border-radius: var(--bw-radius-pill);
+}
+
+.detail__label--gallery {
+  font-size: var(--bw-font-caption);
+  font-weight: var(--bw-weight-medium);
+  color: var(--text-heading);
+}
+
+// Dentro del panel angosto, la card de imagen se apila y el thumb ocupa el ancho.
+.detail__gallery .detail__image {
+  grid-template-columns: 1fr;
+  border-top: none;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--bw-radius-md);
+  box-shadow: var(--bw-shadow-card);
+  padding: var(--bw-space-sm);
+}
+
+.detail__gallery .detail__thumb {
+  width: 100%;
+}
+
 .detail__image {
   display: grid;
   grid-template-columns: 9.375rem 1fr;
