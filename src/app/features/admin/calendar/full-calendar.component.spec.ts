@@ -63,7 +63,6 @@ beforeAll(() => {
 });
 
 describe('FullCalendarComponent — calendar navigation integration', () => {
-  const specPerms = { clientsView: true };
   let fixture: ReturnType<typeof TestBed.createComponent<FullCalendarComponent>>;
   let component: FullCalendarComponent;
   let calNav: CalendarNavigationService;
@@ -214,7 +213,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
         },
         // Minimally mocked AuthService — the component and BookingStore only
         // read `user()` in these flows.
-        { provide: AuthService, useValue: { user: computed(() => mockAuthUser()), userRole: computed(() => mockAuthUser()?.role ?? null), hasPermission: (p: string) => p === 'clients.view' && specPerms.clientsView } },
+        { provide: AuthService, useValue: { user: computed(() => mockAuthUser()), userRole: computed(() => mockAuthUser()?.role ?? null) } },
         { provide: TenantSwitchService, useValue: mockTenantSwitch },
         { provide: LocationsApiService, useValue: mockLocationsApi },
         { provide: ProvidersApiService, useValue: mockProvidersApi },
@@ -1104,7 +1103,6 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
     });
 
     it('Ver ficha abre el diálogo de detalle directo en la pestaña ficha y cierra el card', async () => {
-      specPerms.clientsView = true;
       const booking = bookingFixture('partial', {
         id: 9,
         total_amount: 38000,
@@ -1125,23 +1123,6 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       expect(component.showEventDialog()).toBe(false);
       await new Promise((r) => setTimeout(r, 150));
       expect(openSpy).toHaveBeenCalledWith(booking, 'ficha');
-    });
-
-    it('Ver ficha se oculta sin el permiso clients.view (gating BE aprobado)', () => {
-      specPerms.clientsView = false;
-      const scope = openSheet(bookingFixture('partial', {
-        id: 9,
-        total_amount: 38000,
-        paid_amount: 20000,
-        remaining_amount: 18000,
-        status: 'partial',
-      }));
-
-      expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toEqual([
-        'Abonar',
-        'Ver pago',
-        'Editar',
-      ]);
     });
   });
 
