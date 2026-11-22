@@ -7,15 +7,12 @@ import { TabsModule } from 'primeng/tabs';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SelectModule } from 'primeng/select';
 import { MessageService } from 'primeng/api';
-import { Booking, Client } from '@models';
+import { Booking } from '@models';
 import { ClientDetailStore } from '@core/stores/client-detail.store';
 import { BookingDialogStore } from '@core/stores/booking-dialog.store';
 import { PatientDetailContentComponent } from '@shared/components/patient-card/patient-detail-content.component';
 import { PatientTab } from '@core/stores/client-detail.store';
 import { BookingsApiService } from '@services/api/bookings-api.service';
-import { AuthService } from '@services/auth.service';
-import { ABILITIES } from '@shared/config/abilities.config';
-import { ClientDetailDialogComponent } from '@features/admin/clients/client-detail-dialog/client-detail-dialog.component';
 import { ClientsApiService } from '@services/api/clients-api.service';
 import { HttpErrorService } from '@services/http-error.service';
 import { LanguageService } from '@services/language.service';
@@ -47,7 +44,6 @@ export type BookingTab = 'reserva' | 'pago' | 'recordatorios' | 'paciente' | 'fi
     HistorialTabComponent,
     FichaTabComponent,
     PatientDetailContentComponent,
-    ClientDetailDialogComponent,
   ],
   providers: [ClientDetailStore, BookingDialogStore],
   templateUrl: './booking-detail-dialog.component.html',
@@ -61,18 +57,12 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
   readonly lang = inject(LanguageService);
   readonly store = inject(BookingStore);
   readonly detailStore = inject(ClientDetailStore);
-  private auth = inject(AuthService);
   readonly dialogStore = inject(BookingDialogStore);
   readonly recordsStore = inject(ClinicalRecordsStore);
   readonly typesStore = inject(ClinicalRecordTypesStore);
 
   visible = signal(false);
   activeTab = signal<BookingTab>('pago');
-  /** Footer «Ver ficha»: estado del dialogo de ficha del paciente. */
-  readonly fichaVisible = signal(false);
-  readonly fichaClient = signal<Client | null>(null);
-  /** Mismo gating que la ruta de clientes (`clients.view`). */
-  readonly canOpenFicha = computed(() => this.auth.hasPermission(ABILITIES.clientsView));
   scrollToTxn = signal(false);
   selectedStatusId = signal<number>(0);
 
@@ -288,16 +278,6 @@ export class BookingDetailDialogComponent implements AfterViewInit, OnDestroy {
     this.visible.set(false);
     this.scrollToTxn.set(false);
     if (booking) this.backToDetail.emit(booking);
-  }
-
-  /** Footer «Ver ficha»: abre el dialogo de ficha del paciente y cierra el de reserva,
-   *  para no dejar el overlay de reserva abierto detras (patron acordado con el BE). */
-  openFicha(): void {
-    const client = this.booking()?.client ?? null;
-    if (!client) return;
-    this.fichaClient.set(client);
-    this.fichaVisible.set(true);
-    this.close();
   }
 
   close(): void {

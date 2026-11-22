@@ -206,14 +206,6 @@
         />
       }
       <p-button label="Cerrar" severity="secondary" [outlined]="true" (onClick)="close()" />
-      @if (canOpenFicha()) {
-        <p-button label="Ver ficha" icon="pi pi-id-card" severity="secondary" [text]="true" (onClick)="openFicha()" />
-      }
     </div>
   </ng-template>
 </p-dialog>
-
-<bw-client-detail-dialog
-  [visible]="fichaVisible()"
-  [client]="fichaClient()"
-  (closed)="fichaVisible.set(false)" />
