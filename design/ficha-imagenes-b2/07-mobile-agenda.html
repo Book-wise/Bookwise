@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Agenda — mobile (390px), selector de vista interactivo</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --st-reservado:#77D0FA; --st-asiste:#1FB27C; --st-pendiente:#FD8991;
+    --r-md:6px; --r-lg:8px; --r-pill:999px; --sh-card:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --font:'Roboto', system-ui, sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:#2a3342; color:var(--text-color); padding:24px 0; display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
+  .stage-label { width:100%; text-align:center; font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:#aeb9c9; margin-bottom:6px; }
+  .phone { width:390px; height:760px; background:var(--surface-ground); border-radius:28px; border:8px solid #1c212b; overflow:hidden; display:flex; flex-direction:column; }
+  .topbar { height:56px; background:var(--bw-900); color:#fff; display:flex; align-items:center; gap:10px; padding:0 12px; flex:none; }
+  .burger { width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.25); background:var(--bw-700); color:rgba(255,255,255,.85); display:inline-flex; align-items:center; justify-content:center; }
+  .brand { font-weight:700; font-size:.875rem; }
+  .account { margin-left:auto; display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.08); border-radius:var(--r-md); padding:4px 8px 4px 5px; }
+  .account .av { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-size:.625rem; font-weight:600; }
+  .account b { font-size:.75rem; }
+  .account i { font-style:normal; font-size:.5625rem; color:rgba(255,255,255,.55); }
+  .bar { background:var(--surface-card); border-bottom:1px solid var(--surface-border); padding:10px 12px; display:grid; gap:8px; flex:none; }
+  .bar-row { display:flex; align-items:center; gap:8px; }
+  .seg { display:inline-flex; background:var(--bw-surface-muted); border:1px solid var(--surface-border); border-radius:10px; padding:3px; }
+  .seg button { width:38px; height:30px; border:none; background:transparent; border-radius:8px; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s; }
+  .seg button[aria-pressed="true"] { background:#fff; color:var(--text-color); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .seg:focus-within { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .daterow { display:flex; align-items:center; justify-content:space-between; flex:1; }
+  .daterow b { font-size:.875rem; color:var(--text-heading); font-weight:500; }
+  .today { font-size:.75rem; color:var(--bw-500); font-weight:600; padding:4px 10px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; }
+  .filters { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
+  .filters span { font-size:.75rem; padding:5px 10px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; color:var(--text-label); white-space:nowrap; }
+  .period { display:inline-flex; background:var(--bw-surface-muted); border:1px solid var(--surface-border); border-radius:10px; padding:3px; justify-self:start; }
+  .period button { border:none; background:transparent; border-radius:8px; font-size:.75rem; padding:5px 12px; color:var(--text-secondary); cursor:pointer; font-family:var(--font); }
+  .period button[aria-pressed="true"] { background:#fff; color:var(--text-color); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .row2 { display:flex; align-items:center; gap:8px; }
+  .spacer { flex:1; }
+  .tools { display:inline-flex; gap:6px; }
+  .tools button { width:30px; height:30px; border:1px solid var(--surface-border); background:#fff; border-radius:var(--r-pill); color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; }
+  .fabbar { display:flex; gap:8px; }
+  .fab-primary { flex:1; background:var(--bw-300); color:#fff; border:none; border-radius:var(--r-pill); padding:9px 0; font-size:.8125rem; font-weight:600; }
+  .fab-second { flex:1; background:#fff; color:var(--text-color); border:1px solid var(--surface-border); border-radius:var(--r-pill); padding:9px 0; font-size:.8125rem; font-weight:500; }
+  .list { flex:1; overflow:auto; padding:12px; display:grid; gap:10px; align-content:start; }
+  .day-group b { font-size:.8125rem; color:var(--text-heading); font-weight:600; display:block; margin:6px 2px; }
+  .status-filter { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin:0 2px 4px; }
+  .status-chip { display:inline-flex; align-items:center; gap:5px; font-size:.6875rem; padding:4px 10px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; color:var(--text-label); white-space:nowrap; flex:none; cursor:pointer; font-family:var(--font); }
+  .status-chip i { width:8px; height:8px; border-radius:50%; flex:none; }
+  .status-chip[aria-pressed="true"] { border-color:var(--bw-300); color:var(--bw-500); font-weight:600; background:var(--bw-50); }
+  .card { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--r-lg); box-shadow:var(--sh-card); padding:10px 12px; display:grid; grid-template-columns:44px 1fr auto; gap:10px; align-items:center; }
+  .time { font-size:.75rem; font-weight:600; color:var(--bw-500); line-height:1.3; }
+  .svc b { font-size:.8125rem; display:block; line-height:1.25; color:var(--text-heading); }
+  .svc small { font-size:.6875rem; color:var(--text-secondary); display:block; margin-top:2px; }
+  .dot { width:14px; height:14px; border-radius:50%; }
+  .card.block { background:repeating-linear-gradient(135deg,#eef1f5 0 8px,#f8fafd 8px 16px); }
+  .card.block .svc b { color:var(--text-secondary); }
+  /* Vista agenda (day-grid del dia): cards REALES del producto — estructura
+     `.fc .ev` de calendar-event-content.ts + _calendar.scss (no prototipo). */
+  .daygrid { flex:1; overflow:auto; padding:12px; }
+  .dg-grid { display:grid; grid-template-columns:52px 1fr; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:12px; overflow:hidden; }
+  .dg-hours { border-right:1px solid var(--surface-border); }
+  .dg-hours span { display:block; height:56px; font-size:.625rem; color:var(--text-secondary); text-align:right; padding:2px 6px 0 0; }
+  .dg-col { position:relative; }
+  .dg-col::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(180deg, transparent 0 55px, var(--surface-border) 55px 56px); }
+  /* ---- card real: .fc .ev (flex, banda de pago + fila1 nombre+hora) ----
+     el relleno es el pastel del ESTADO (var(--ev-c)), la banda de pago lleva su
+     color sólido, nombre semibold y hora bold tabular — igual que en prod. */
+  .ev { position:relative; display:flex; align-items:stretch; gap:0; padding:0 0.4375rem 0 0; overflow:hidden;
+        background:var(--ev-c, transparent); color:var(--bw-900); }
+  .ev__pay { align-self:stretch; width:20px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; color:#fff; }
+  .ev__pay--paid { background:var(--bw-payment-paid); }
+  .ev__pay--partial { background:#65a30d; }
+  .ev__main { min-width:0; flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding:0 0 0 0.4375rem; line-height:1.2; overflow:hidden; }
+  .ev__row1 { display:flex; align-items:baseline; gap:.3125rem; min-width:0; margin-top:3px; }
+  .ev__name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.875rem; font-weight:500; }
+  .ev__time { flex-shrink:0; margin-left:.25rem; font-size:.6875rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+  .ev__row2 { display:flex; align-items:center; gap:.3125rem; min-width:0; }
+  .ev__ctx { font-size:.6875rem; color:var(--bw-900); opacity:.8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ev--blocked { background:#E3E7ED; }
+  [hidden] { display:none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<p class="stage-label">Dirección 07 — mobile 390px · selector interactivo: alterná agenda ⇄ lista</p>
+
+<section class="phone" aria-label="Agenda en mobile con cambio de vista">
+  <header class="topbar">
+    <button class="burger" aria-label="Abrir menú">☰</button>
+    <span class="brand">Bookwise</span>
+    <span class="account"><span class="av">CQ</span><b>Camila</b><i>▼</i></span>
+  </header>
+
+  <div class="bar">
+    <div class="bar-row">
+      <div class="seg" role="group" aria-label="Tipo de vista">
+        <button id="btn-agenda" aria-pressed="false" aria-label="Vista agenda" onclick="setView('agenda')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </button>
+        <button id="btn-lista" aria-pressed="true" aria-label="Vista lista" onclick="setView('lista')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+        </button>
+      </div>
+      <div class="daterow"><b id="range-label">18 — 24 nov 2026</b><span class="today">Hoy</span></div>
+    </div>
+    <div class="row2">
+      <div class="period" role="group" aria-label="Periodo de la agenda">
+        <button aria-pressed="false">Mes</button>
+        <button aria-pressed="true">Semana</button>
+        <button aria-pressed="false">Día</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="tools" role="group" aria-label="Herramientas de la agenda">
+        <button type="button" title="Duración del slot" aria-label="Duración del slot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></button>
+        <button type="button" title="Guía de colores" aria-label="Guía de colores"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.4 2.4 0 1 1 3.4 2.3c-.9.45-1.2.9-1.2 1.9"/><circle cx="12" cy="16.6" r="0.9" fill="currentColor"/></svg></button>
+      </div>
+    </div>
+    <div class="filters"><span>Todas las sedes</span><span>Profesionales</span><span>Estados</span></div>
+    <div class="fabbar">
+      <button class="fab-primary">＋ Nueva reserva</button>
+      <button class="fab-second">🔒 Bloquear</button>
+    </div>
+  </div>
+
+  <!-- Vista lista (default) -->
+  <div class="list" id="view-lista">
+    <div class="day-group"><b>Hoy · domingo 22</b></div>
+    <div class="status-filter" aria-label="Filtrar por estado">
+      <button class="status-chip" aria-pressed="true">Todos</button>
+      <button class="status-chip" aria-pressed="false"><i style="background:#77D0FA"></i>Reservado</button>
+      <button class="status-chip" aria-pressed="false"><i style="background:#ECBE51"></i>Confirmado</button>
+      <button class="status-chip" aria-pressed="false"><i style="background:#1FB27C"></i>Asiste</button>
+      <button class="status-chip" aria-pressed="false"><i style="background:#FD8991"></i>Pendiente</button>
+      <button class="status-chip" aria-pressed="false"><i style="background:#FCCAC2"></i>No asistió</button>
+      <button class="status-chip" aria-pressed="false"><i style="background:#E3E7ED"></i>Cancelado</button>
+    </div>
+    <div class="card">
+      <span class="time">09:30–<br>10:00</span>
+      <span class="svc"><b>Kinesiología deportiva</b><small>Camila Rojas · Las Condes</small></span>
+      <span class="dot" style="background:var(--st-reservado)"></span>
+    </div>
+    <div class="card">
+      <span class="time">10:30–<br>11:15</span>
+      <span class="svc"><b>Rebaje completo (Pack bikini)</b><small>Rebeca Fernández · Las Condes</small></span>
+      <span class="dot" style="background:var(--st-asiste)"></span>
+    </div>
+    <div class="card block">
+      <span class="time">13:00–<br>15:00</span>
+      <span class="svc"><b>almuerzo</b><small>bloqueo personal</small></span>
+      <span class="dot" style="background:#E3E7ED"></span>
+    </div>
+    <div class="card">
+      <span class="time">15:00–<br>16:00</span>
+      <span class="svc"><b>Piernas completas + gluteos</b><small>Jennifer Aibar · Las Condes</small></span>
+      <span class="dot" style="background:var(--st-pendiente)"></span>
+    </div>
+  </div>
+
+  <!-- Vista agenda: day-grid del día con timeline de horas -->
+  <div class="daygrid" id="view-agenda" hidden>
+    <div class="dg-grid">
+      <div class="dg-hours">
+        <span>06:00</span><span>07:00</span><span>08:00</span><span>09:00</span><span>10:00</span>
+        <span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span><span>15:00</span>
+        <span>16:00</span><span>17:00</span>
+      </div>
+      <div class="dg-col">
+        <span class="ev" style="position:absolute;left:6px;right:6px;top:198px;height:56px;--ev-c:#77D0FA"><span class="ev__pay ev__pay--none"></span><span class="ev__main"><span class="ev__row1"><span class="ev__name">Camila Rojas</span><span class="ev__time">09:30</span></span><span class="ev__row2"><span class="ev__ctx">Kinesiología deportiva</span></span></span></span>
+        <span class="ev" style="position:absolute;left:6px;right:6px;top:310px;height:80px;--ev-c:#ECBE51"><span class="ev__pay ev__pay--partial">$</span><span class="ev__main"><span class="ev__row1"><span class="ev__name">Rebeca Fernández</span><span class="ev__time">10:30</span></span><span class="ev__row2"><span class="ev__ctx">Rebaje completo (Pack bikini)</span></span></span></span>
+        <span class="ev ev--blocked" style="position:absolute;left:6px;right:6px;top:548px;height:112px"><span class="ev__main"><span class="ev__row1"><span class="ev__name">almuerzo</span><span class="ev__time">13:00–15:00</span></span></span></span>
+        <span class="ev" style="position:absolute;left:6px;right:6px;top:686px;height:56px;--ev-c:#FD8991"><span class="ev__pay ev__pay--none"></span><span class="ev__main"><span class="ev__row1"><span class="ev__name">Jennifer Aibar</span><span class="ev__time">15:00</span></span><span class="ev__row2"><span class="ev__ctx">Piernas completas + gluteos</span></span></span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function setView(view) {
+    const isAgenda = view === 'agenda';
+    document.getElementById('btn-agenda').setAttribute('aria-pressed', String(isAgenda));
+    document.getElementById('btn-lista').setAttribute('aria-pressed', String(!isAgenda));
+    document.getElementById('view-agenda').hidden = !isAgenda;
+    document.getElementById('view-lista').hidden = isAgenda;
+    document.getElementById('range-label').textContent = isAgenda ? 'Domingo 22 nov 2026' : '18 — 24 nov 2026';
+  }
+</script>
+</body>
+</html>
