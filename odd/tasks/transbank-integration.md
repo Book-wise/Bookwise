@@ -49,7 +49,7 @@ Branch `feat/transbank-integration` (worktree Bookwise-transbank). El backend ya
 
 **Cobro recurrente (fuera de alcance P1, S10):** el scheduler del BE cobra al método default; el FE no participa. Verificación FE: tras un cobro, `GET /v1/subscription` refleja el nuevo período en "Mi plan".
 - T5 [S14] Adaptación FE al contrato P2: consume `GET /v1/payment-methods/enrollment-result?n=` (auth Sanctum) como fuente de verdad única desde el redirect; estados derivados del endpoint; polling corto ante `{status: processing}` (410/nonce gastado → estado neutral con CTA); 410 nunca tratado como error app. DONE en `1128938` (getEnrollmentResult + EnrollmentResultResponse + página reescrita; specs 18/18, build verde).
-- T6 [S15] FE checkout P2: consumir `POST /v1/subscriptions/{id}/checkout` (Sanctum); pantalla "tarjeta activa / cobro fallido: reintentá" con CTA reintentar cobro idempotente para la sub `pending` + payment `recurring/failed`; reflejar pending→active en "Mi plan". PENDIENTE (siguiente work-unit).
+- T6 [S15] FE checkout P2: consumir `POST /v1/subscriptions/{id}/checkout` (Sanctum); pantalla "tarjeta activa / cobro fallido: reintentá" con CTA reintentar cobro idempotente para la sub `pending` + payment `recurring/failed`; reflejar pending→active en "Mi plan". T6a (checkout client + modelo + spec) DONE en `9bc0cd6`. T6b (UI) bloqueado por confirmación del BE (path exacto de checkout + cómo detectar payment_failed).
 
 ## Log
 
