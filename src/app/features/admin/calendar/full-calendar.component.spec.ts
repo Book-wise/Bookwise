@@ -1113,7 +1113,7 @@ describe('FullCalendarComponent — calendar navigation integration', () => {
       const scope = openSheet(booking);
       expect(textsOf(scope, '.bw-sheet__foot-actions .p-button')).toContain('Ver ficha');
 
-      const openSpy = vi.spyOn(component.bookingDetailDialog, 'open');
+      const openSpy = vi.spyOn(component.bookingDetailDialog, 'open').mockImplementation(() => undefined);
       const btn = Array.from(
         scope.querySelectorAll<HTMLButtonElement>('.bw-sheet__foot-actions .p-button'),
       ).find((b) => (b.querySelector('.p-button-label')?.textContent ?? '').includes('Ver ficha'))!;
