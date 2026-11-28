@@ -75,9 +75,14 @@ export class EnrollmentResultComponent implements OnDestroy {
     this.meta.addTag({ name: 'robots', content: 'noindex, nofollow' });
 
     this.nonce = this.route.snapshot.queryParamMap.get('n');
+    const statusHint = this.route.snapshot.queryParamMap.get('status');
     if (!this.nonce) {
-      // URL directa sin nonce (poking de URL): neutral, nunca error inventado.
-      this.state.set({ kind: 'neutral', reason: null });
+      // El BE conserva el PRIMER nonce en retornos concurrentes: un retorno duplicado
+      // puede llegar sin `n`. Si la URL trae un status, el flujo existió → por confirmar
+      // (nunca afirmamos nada sin la verdad del endpoint); sin status, es un poke de URL.
+      this.state.set(
+        statusHint ? { kind: 'unconfirmed', reason: null } : { kind: 'neutral', reason: null },
+      );
     } else if (!this.auth.isAuthenticated()) {
       // Sin sesión no podemos consultar el endpoint (Sanctum): por confirmar.
       this.state.set({ kind: 'unconfirmed', reason: null });

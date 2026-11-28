@@ -78,6 +78,15 @@ describe('EnrollmentResultComponent (pública: resultado de inscripción de medi
     );
   });
 
+  it('renders unconfirmed (not neutral) when a concurrent return carries no nonce', async () => {
+    // El BE conserva el primer nonce: un retorno duplicado puede llegar sin `n`.
+    const fixture = await createComponent({ status: 'ok' }, { authenticated: true });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.vm().kind).toBe('unconfirmed');
+    expect(api.getEnrollmentResult).not.toHaveBeenCalled();
+  });
+
   it('renders unconfirmed and skips the endpoint without a session', async () => {
     const fixture = await createComponent({ n: 'deadbeef' }, { authenticated: false });
     fixture.detectChanges();

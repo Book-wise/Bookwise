@@ -1,6 +1,7 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { MyPlanComponent } from './my-plan.component';
 import { SubscriptionStore } from '@core/stores/subscription.store';
 import type { Subscription } from '@models';
@@ -42,13 +43,28 @@ function makeSubscription(): Subscription {
 describe('MyPlanComponent — Mi plan (read-only)', () => {
   let subscription: ReturnType<typeof signal<Subscription | null>>;
   let loadSubscription: ReturnType<typeof vi.fn>;
+  let checkout: ReturnType<typeof vi.fn>;
   let router: { navigate: ReturnType<typeof vi.fn> };
   let component: MyPlanComponent;
+  let fixture: ComponentFixture<MyPlanComponent>;
 
-  function setup(sub: Subscription | null): void {
+  /**
+   * El mock de checkout imita al store real: en éxito parchea la señal de la
+   * suscripción con la respuesta canónica (pending→active).
+   */
+  function setup(
+    sub: Subscription | null,
+    opts: { checkoutResult?: Subscription; checkoutError?: unknown } = {},
+  ): void {
     subscription = signal<Subscription | null>(sub);
     loadSubscription = vi.fn();
     router = { navigate: vi.fn() };
+    checkout = vi.fn(() => {
+      if (opts.checkoutError) return throwError(() => opts.checkoutError);
+      const next = opts.checkoutResult ?? makeSubscription();
+      subscription.set(next);
+      return of({ data: next });
+    });
 
     TestBed.configureTestingModule({
       imports: [MyPlanComponent],
@@ -60,14 +76,17 @@ describe('MyPlanComponent — Mi plan (read-only)', () => {
             subscription,
             loading: signal({ subscription: false, plans: false, usage: false }),
             loadSubscription,
+            checkout,
           },
         },
         { provide: Router, useValue: router },
       ],
     });
 
-    component = TestBed.createComponent(MyPlanComponent).componentInstance;
-    component.ngOnInit();
+    fixture = TestBed.createComponent(MyPlanComponent);
+    component = fixture.componentInstance;
+    // detectChanges dispara ngOnInit una sola vez (el componente lo implementa).
+    fixture.detectChanges();
   }
 
   it('loads the subscription once and exposes plan price and total', () => {
@@ -118,5 +137,67 @@ describe('MyPlanComponent — Mi plan (read-only)', () => {
     expect(component.currentPlan()).toBeNull();
     expect(component.planName()).toBe('');
     expect(component.planPrice()).toBe(0);
+  });
+
+  // ── Primer cobro pendiente (S15) ────────────────────────────────────────────
+
+  it('shows the pending-charge banner and the retry CTA while the subscription is pending', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending);
+
+    expect(component.isPending()).toBe(true);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.pending-charge')).toBeTruthy();
+    expect(el.textContent).toContain(component.lang.t('plans.pending_cta'));
+  });
+
+  it('hides the banner for an active subscription: pending is the only trigger', () => {
+    setup(makeSubscription());
+
+    expect(component.isPending()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeNull();
+  });
+
+  it('retries the first-month charge through the store when the CTA is used', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending);
+
+    component.retryCheckout();
+
+    expect(checkout).toHaveBeenCalledTimes(1);
+    expect(component.checkingOut()).toBe(false);
+  });
+
+  it('drops the banner once the retried charge activates the subscription', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { checkoutResult: makeSubscription() });
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeTruthy();
+
+    component.retryCheckout();
+    fixture.detectChanges();
+
+    expect(component.isPending()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeNull();
+  });
+
+  it('surfaces a declined charge (402) and keeps the subscription pending', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, {
+      checkoutError: { status: 402, error: { error: 'first_month_charge_rejected' } },
+    });
+
+    component.retryCheckout();
+    fixture.detectChanges();
+
+    expect(component.checkoutError()).toBe(true);
+    expect(component.isPending()).toBe(true);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.pending-charge')).toBeTruthy();
+    expect(el.textContent).toContain(component.lang.t('plans.pending_error'));
   });
 });

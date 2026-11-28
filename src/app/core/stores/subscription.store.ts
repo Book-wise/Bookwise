@@ -8,7 +8,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { inject, computed } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { EMPTY, catchError, of, pipe, switchMap, tap } from 'rxjs';
+import { EMPTY, catchError, of, pipe, switchMap, tap, throwError } from 'rxjs';
 import { SubscriptionApiService } from '@services/api/subscription-api.service';
 import { PlanCatalogGroup, Subscription, UsageData } from '@models';
 
@@ -185,6 +185,28 @@ export const SubscriptionStore = signalStore(
        */
       setAddon(type: 'email' | 'whatsapp', quantity: number) {
         return subscriptionApi.updateAddons(type, quantity).pipe(
+          tap((res) =>
+            patchState(store, {
+              subscription: res.data,
+              loaded: { ...store.loaded(), subscription: true },
+              error: { ...store.error(), subscription: null },
+            }),
+          ),
+        );
+      },
+
+      /**
+       * POST /subscriptions/{id}/checkout — cobro de la primera mensualidad (S15).
+       * Éxito: parchea la suscripción con la respuesta canónica (pending→active).
+       * Rechazo (402 first_month_charge_rejected) u otro error: re-throw para que
+       * el componente muestre el aviso; la suscripción queda `pending`.
+       */
+      checkout() {
+        const sub = store.subscription();
+        if (!sub) {
+          return throwError(() => new Error('no_subscription'));
+        }
+        return subscriptionApi.checkout(sub.id).pipe(
           tap((res) =>
             patchState(store, {
               subscription: res.data,

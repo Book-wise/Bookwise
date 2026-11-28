@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -43,6 +43,21 @@ export class MyPlanComponent implements OnInit {
   readonly planPrice = computed(() => this.currentPlan()?.price_clp ?? 0);
   readonly nextBillingAt = computed(() => this.store.subscription()?.next_billing_at ?? null);
 
+  /**
+   * Primer cobro pendiente (S15): el BE deja la suscripción en `pending` cuando el
+   * cobro de la primera mensualidad se rechaza, con la tarjeta ya inscripta.
+   * Es el ÚNICO trigger del banner de reintento.
+   */
+  readonly isPending = computed(() => this.store.subscription()?.status === 'pending');
+
+  private readonly charging = signal(false);
+  /** true mientras el POST de checkout está en vuelo (evita doble cobro por click). */
+  readonly checkingOut = this.charging.asReadonly();
+
+  private readonly checkoutFailed = signal(false);
+  /** true cuando el último intento de cobro fue rechazado (402) o falló. */
+  readonly checkoutError = this.checkoutFailed.asReadonly();
+
   ngOnInit(): void {
     this.store.loadSubscription();
   }
@@ -83,5 +98,23 @@ export class MyPlanComponent implements OnInit {
 
   goToBilling(): void {
     this.router.navigate(['/admin/facturacion']);
+  }
+
+  /**
+   * Reintenta el cobro de la primera mensualidad. El endpoint es idempotente por
+   * inscripción (S15): reintentar no puede cobrar dos veces. En éxito el store
+   * reemplaza la suscripción (→ active) y el banner desaparece solo.
+   */
+  retryCheckout(): void {
+    if (this.charging()) return;
+    this.charging.set(true);
+    this.checkoutFailed.set(false);
+    this.store.checkout().subscribe({
+      next: () => this.charging.set(false),
+      error: () => {
+        this.charging.set(false);
+        this.checkoutFailed.set(true);
+      },
+    });
   }
 }

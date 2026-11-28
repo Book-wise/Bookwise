@@ -6,6 +6,30 @@
     </div>
   </header>
 
+  <!-- Primer cobro pendiente (S15): tarjeta inscripta, cobro no acreditado.
+       Va fuera del bloque de plan para que se muestre aunque el plan no venga. -->
+  @if (!loading() && isPending()) {
+    <section class="pending-charge" role="status">
+      <span class="bw-chip pending-charge__chip">
+        <i class="pi pi-exclamation-triangle"></i> {{ lang.t('plans.pending_chip') }}
+      </span>
+      <div class="pending-charge__row">
+        <div class="pending-charge__text">
+          <h2 class="pending-charge__title">{{ lang.t('plans.pending_title') }}</h2>
+          <p class="pending-charge__body">{{ lang.t('plans.pending_body') }}</p>
+        </div>
+        <p-button
+          [label]="lang.t('plans.pending_cta')"
+          icon="pi pi-refresh"
+          [loading]="checkingOut()"
+          (onClick)="retryCheckout()" />
+      </div>
+      @if (checkoutError()) {
+        <p class="pending-charge__error" role="alert">{{ lang.t('plans.pending_error') }}</p>
+      }
+    </section>
+  }
+
   @if (loading()) {
     <div class="my-plan__skeleton">
       <p-skeleton height="8rem" borderRadius="10px" />
