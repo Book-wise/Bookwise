@@ -733,6 +733,13 @@ export interface SubscriptionResponse {
   data: Subscription | null;
 }
 
+/** Respuesta de `POST /v1/subscriptions/{id}/checkout` (S15): cobro de la primera mensualidad. */
+export interface SubscriptionCheckoutResponse {
+  message?: string;
+  /** Suscripción actualizada (pending→active en éxito). */
+  data: Subscription;
+}
+
 // ── Payment methods (P1 Transbank Oneclick Mall) ─────────────────────────────
 /**
  * Medio de pago inscripto de la cuenta (GET /v1/payment-methods).

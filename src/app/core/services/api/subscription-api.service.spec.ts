@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { SubscriptionApiService } from './subscription-api.service';
 import { environment } from '@env/environment';
-import { UsageData } from '@models';
+import { Subscription, UsageData } from '@models';
 
 describe('SubscriptionApiService', () => {
   let service: SubscriptionApiService;
@@ -61,5 +61,44 @@ describe('SubscriptionApiService', () => {
     const req = httpMock.expectOne(`${environment.apiUrl}/subscription/usage`);
     expect(req.request.method).toBe('GET');
     req.flush({ data: usageData });
+  });
+
+  const activeSub: Subscription = {
+    id: 9,
+    status: 'active',
+    plan: null,
+    scheduled_plan: null,
+    cancel_at_period_end: false,
+    current_period_start: '2026-11-28T00:00:00+00:00',
+    current_period_end: '2026-12-28T00:00:00+00:00',
+    next_billing_at: '2026-12-28T00:00:00+00:00',
+    activated_at: '2026-11-28T00:00:00+00:00',
+    paused_at: null,
+    cancelled_at: null,
+  };
+
+  it('checkout calls POST /subscriptions/{id}/checkout and returns the updated subscription', () => {
+    service.checkout(9).subscribe((res) => {
+      expect(res.data.status).toBe('active');
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/subscriptions/9/checkout`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({ message: 'Pago confirmado.', data: activeSub });
+  });
+
+  it('surfaces the 402 first_month_charge_rejected on checkout rejection', () => {
+    service.checkout(9).subscribe({
+      error: (err: { error?: { error: string } }) => {
+        expect(err.error?.error).toBe('first_month_charge_rejected');
+      },
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/subscriptions/9/checkout`);
+    req.flush(
+      { error: 'first_month_charge_rejected', detail: 'El cobro de la primera mensualidad fue rechazado.' },
+      { status: 402, statusText: 'Payment Required' },
+    );
   });
 });
