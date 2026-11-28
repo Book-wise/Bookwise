@@ -451,7 +451,9 @@
       <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="closeDialog()" />
 
       <div class="bw-sheet__foot-actions">
-        <p-button label="Ver ficha" icon="pi pi-id-card" severity="secondary" [text]="true" (onClick)="openBookingFicha()" />
+        @if (canViewClients()) {
+          <p-button label="Ver ficha" icon="pi pi-id-card" severity="secondary" [text]="true" (onClick)="openBookingFicha()" />
+        }
         @if (store.selectedBooking()?.payment_status !== 'paid') {
           <p-button
             label="Abonar"
