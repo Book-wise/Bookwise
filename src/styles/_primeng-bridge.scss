@@ -1,0 +1,112 @@
+// ============================================
+// Bookwise ← PrimeNG bridge (etapa 1)
+// ============================================
+// Único lugar donde los tokens semánticos de PrimeNG (`--p-*`) resuelven a
+// NUESTROS tokens (`--bw-*` / `--surface-*` / `--text-*`). Objetivo: autoridad —
+// los componentes dejan de leer la paleta de Aura y leen la de Bookwise.
+//
+// Orden de carga: el tema que genera PrimeNG aterriza DESPUÉS de nuestro
+// `:root`, así que los overrides de modo claro necesitan `!important`.
+// `body.dark-theme` gana por especificidad (no necesita `!important`), y sus
+// `var(--surface-*)`/`var(--text-*)` ya resuelven a los valores oscuros que
+// redefinió `_tokens.scss` dentro del mismo selector.
+// ============================================
+
+:root {
+  // ── Primary (marca): botones, focus ring, selección, estados activos ──────
+  --p-primary-color: var(--primary-color) !important;              // #046af4
+  --p-primary-contrast-color: var(--bw-text-on-brand) !important;  // #fff
+  --p-primary-hover-color: var(--bw-fc-btn-hover-bg) !important;   // #2563eb
+  --p-primary-active-color: var(--bw-fc-btn-active-bg) !important; // #1d4ed8
+
+  // ── Radius → nuestra escala ───────────────────────────────────────────────
+  --p-content-border-radius: var(--bw-radius-lg) !important;      // 8px
+  --p-form-field-border-radius: var(--bw-radius-md) !important;   // 6px
+
+  // ── Surfaces (rampa de grises → nuestras superficies/texto) ────────────────
+  --p-surface-0: var(--surface-card) !important;               // card / blanco
+  --p-surface-50: var(--bw-50) !important;                     // tint
+  --p-surface-100: var(--bw-surface-muted) !important;         // fondo de hover
+  --p-surface-200: var(--surface-border) !important;           // borde
+  --p-surface-300: var(--surface-border) !important;           // borde (hover)
+  --p-surface-500: var(--text-color-secondary) !important;     // texto atenuado
+  --p-surface-700: var(--text-color) !important;               // texto
+  --p-surface-800: var(--text-heading) !important;             // texto de título
+
+  // ── Text ──────────────────────────────────────────────────────────────────
+  --p-text-color: var(--text-color) !important;
+  --p-text-hover-color: var(--text-heading) !important;
+  --p-text-muted-color: var(--text-color-secondary) !important;
+  --p-text-hover-muted-color: var(--text-color) !important;
+
+  // ── Content (cards, paneles) ──────────────────────────────────────────────
+  --p-content-background: var(--surface-card) !important;
+  --p-content-hover-background: var(--bw-surface-muted) !important;
+  --p-content-border-color: var(--surface-border) !important;
+  --p-content-color: var(--text-color) !important;
+
+  // ── Form fields ───────────────────────────────────────────────────────────
+  --p-form-field-background: var(--surface-card) !important;
+  --p-form-field-color: var(--text-color) !important;
+  --p-form-field-border-color: var(--surface-border) !important;
+  --p-form-field-hover-border-color: var(--text-color-secondary) !important;
+  --p-form-field-focus-border-color: var(--primary-color) !important;
+  --p-form-field-placeholder-color: var(--text-color-secondary) !important;
+
+  // ── Component-specific (PrimeNG no los expone vía tokens semánticos) ──────
+  --p-dialog-footer-padding: 1.25rem !important;
+  --p-dialog-border-radius: var(--bw-radius-xl) !important;      // 12px, sin cambio visual
+}
+
+body.dark-theme {
+  --p-primary-color: var(--primary-color);
+  --p-primary-contrast-color: var(--bw-text-on-brand);
+  --p-primary-hover-color: var(--bw-fc-btn-hover-bg);
+  --p-primary-active-color: var(--bw-fc-btn-active-bg);
+
+  --p-surface-0: var(--surface-card);
+  --p-surface-50: var(--bw-50);
+  --p-surface-100: var(--bw-surface-muted);
+  --p-surface-200: var(--surface-border);
+  --p-surface-300: var(--surface-border);
+  --p-surface-500: var(--text-color-secondary);
+  --p-surface-700: var(--text-color);
+  --p-surface-800: var(--text-heading);
+
+  --p-text-color: var(--text-color);
+  --p-text-hover-color: var(--text-heading);
+  --p-text-muted-color: var(--text-color-secondary);
+  --p-text-hover-muted-color: var(--text-color);
+
+  --p-content-background: var(--surface-card);
+  --p-content-hover-background: var(--bw-surface-muted);
+  --p-content-border-color: var(--surface-border);
+  --p-content-color: var(--text-color);
+
+  --p-form-field-background: var(--surface-card);
+  --p-form-field-color: var(--text-color);
+  --p-form-field-border-color: var(--surface-border);
+  --p-form-field-hover-border-color: var(--text-color-secondary);
+  --p-form-field-focus-border-color: var(--primary-color);
+  --p-form-field-placeholder-color: var(--text-color-secondary);
+
+  // Component-specific: preset fijado en claro, así que el skeleton no cambia
+  // solo y los tabs resuelven a fondo blanco. Se atan a nuestros tokens.
+  --p-skeleton-background: #334155;
+  --p-skeleton-animation-background: #3f4d63;
+  --p-tabs-tablist-background: transparent;
+  --p-tabs-tablist-border-color: var(--surface-border);
+  --p-tabs-tabpanel-background: transparent;
+  --p-tabs-tabpanel-color: var(--text-color);
+  --p-tabs-tab-color: var(--text-color-secondary);
+  --p-tabs-tab-hover-color: var(--text-color);
+  --p-tabs-tab-active-color: var(--bw-tab-color);
+  --p-tabs-tab-active-border-color: var(--bw-tab-color);
+  --p-tabs-active-bar-background: var(--bw-tab-color);
+}
+
+body.theme-kinesilk {
+  // Esqueletos de carga en la paleta crema (el preset de PrimeNG es claro).
+  --p-skeleton-background: #ece4cb;
+  --p-skeleton-animation-background: #f5f1de;
+}

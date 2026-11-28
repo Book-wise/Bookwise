@@ -2,112 +2,286 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bookwise — Design System</title>
 <style>
   :root {
-    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-900:#012663; --bw-800:#042661; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
     --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
     --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
-    --text-color:#1a2744; --text-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
-    --bw-success:#22c55e; --bw-warning:#f59e0b;
-    --st-reservado:#77D0FA; --st-confirmado:#ECBE51; --st-asiste:#1FB27C; --st-noasistio:#FCCAC2;
-    --st-pendiente:#FD8991; --st-cancelado:#E3E7ED;
-    --font:'Roboto', system-ui, -apple-system, sans-serif;
-    --r-sm:4px; --r-md:6px; --r-lg:8px; --r-pill:999px;
-    --sh-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-    --sh-popover:0 4px 12px rgba(0,0,0,.15);
-    --sp-xs:4px; --sp-sm:8px; --sp-md:16px; --sp-lg:24px; --sp-xl:32px;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff; --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-cancelado:#E3E7ED;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-dialog-header-shadow:0 6px 10px -6px rgba(0,0,0,.08);
+    --bw-dialog-content-shadow:inset 0 -18px 14px -14px rgba(0,0,0,.07);
+    --font: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
   }
   * { box-sizing:border-box; margin:0; }
-  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--sp-lg); }
-  h1 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
-  h2 { font-size:1.125rem; font-weight:600; margin:var(--sp-xl) 0 var(--sp-md); color:var(--text-heading); border-bottom:1px solid var(--surface-border); padding-bottom:var(--sp-sm); }
-  .card { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--r-lg); box-shadow:var(--sh-card); padding:var(--sp-md); }
-  .grid { display:grid; gap:var(--sp-sm); }
-  .swatches { grid-template-columns:repeat(9,1fr); }
-  .sw { border-radius:var(--r-md); padding:var(--sp-sm); font-size:11px; color:#fff; min-height:64px; display:flex; flex-direction:column; justify-content:flex-end; }
-  .sw small { opacity:.85; }
-  .row { display:flex; align-items:baseline; gap:var(--sp-md); padding:6px 0; border-bottom:1px dashed var(--surface-border); }
-  .role { color:var(--text-secondary); font-size:12px; width:220px; flex:none; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:64ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; }
+  .meta code, .lead code, td code, .note code { font-family:var(--mono); font-size:.72rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:4px; }
+  h2 { font-size:1.125rem; font-weight:600; color:var(--text-heading); margin:var(--bw-space-xl) 0 var(--bw-space-md); display:flex; align-items:center; gap:10px; }
+  h2 .n { font-family:var(--mono); font-size:.7rem; font-weight:500; color:var(--bw-500); background:var(--bw-100); border-radius:var(--bw-radius-pill); padding:2px 8px; }
+  .card { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); padding:var(--bw-space-md); }
+  .grid { display:grid; gap:var(--bw-space-sm); }
+  .swatches { grid-template-columns:repeat(10,1fr); }
+  .sw { border-radius:var(--bw-radius-md); padding:var(--bw-space-sm); font-size:.6875rem; font-family:var(--mono); min-height:68px; display:flex; flex-direction:column; justify-content:flex-end; line-height:1.35; }
+  .sw small { opacity:.85; font-size:.625rem; }
+  .trio { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--bw-space-md); }
+  .skin { border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); overflow:hidden; font-size:.75rem; }
+  .skin .hd { padding:6px 10px; font-weight:600; font-size:.75rem; border-bottom:1px solid var(--surface-border); }
+  .skin .row { display:flex; align-items:center; gap:8px; padding:6px 10px; }
+  .skin .chip { width:22px; height:22px; border-radius:6px; border:1px solid rgba(0,0,0,.08); flex:none; }
+  .skin .lbl { font-family:var(--mono); font-size:.65rem; color:var(--text-color-secondary); }
+  .row-line { display:flex; align-items:baseline; gap:var(--bw-space-md); padding:6px 0; border-bottom:1px dashed var(--surface-border); }
+  .row-line:last-child { border-bottom:0; }
+  .role { color:var(--text-color-secondary); font-size:.75rem; font-family:var(--mono); width:230px; flex:none; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--bw-radius-pill); font-size:.75rem; font-weight:500; }
+  .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:var(--bw-control-height); padding:0 16px; border-radius:var(--bw-radius-md); font-size:.875rem; font-weight:500; font-family:var(--font); border:1px solid transparent; cursor:pointer; }
+  .btn-primary { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .btn-outline { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn-ghost { background:transparent; color:var(--bw-500); }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:.75rem; font-weight:500; color:var(--text-label); }
+  .field .control { height:var(--bw-control-height); border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); display:flex; align-items:center; padding:0 12px; font-size:.875rem; }
+  .field .hint { font-size:.75rem; color:var(--text-color-secondary); }
+  .tree { display:grid; gap:6px; font-family:var(--mono); font-size:.72rem; color:var(--text-color-secondary); }
+  .tree b { color:var(--text-color); font-weight:600; }
+  table.map { width:100%; border-collapse:collapse; font-size:.8125rem; }
+  table.map th { text-align:left; font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--surface-border); }
+  table.map td { padding:6px 8px; border-bottom:1px solid var(--surface-border); vertical-align:top; }
+  table.map td:first-child { font-family:var(--mono); font-size:.75rem; white-space:nowrap; }
+  .note { font-size:.75rem; color:var(--text-color-secondary); margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); }
+  .av { width:36px; height:36px; border-radius:50%; background:var(--bw-100); color:var(--bw-500); display:inline-flex; align-items:center; justify-content:center; font-size:.8125rem; font-weight:600; }
+  .dlg { border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); overflow:hidden; box-shadow:var(--bw-shadow-popover); background:var(--surface-card); }
+  .dlg .h { padding:16px 20px; font-size:1.125rem; font-weight:500; color:var(--text-heading); box-shadow:var(--bw-dialog-header-shadow); display:flex; justify-content:space-between; }
+  .dlg .c { background:var(--surface-ground); padding:20px; font-size:.875rem; box-shadow:var(--bw-dialog-content-shadow); }
+  .dlg .f { padding:1.25rem 20px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--surface-border); }
   .t-2xs{font-size:.6875rem} .t-xs{font-size:.75rem} .t-sm{font-size:.875rem} .t-base{font-size:1rem}
   .t-lg{font-size:1.125rem} .t-xl{font-size:1.25rem} .t-2xl{font-size:1.5rem} .t-3xl{font-size:1.875rem} .t-4xl{font-size:2.25rem}
-  .cols { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-md); }
-  .chip { display:inline-flex; align-items:center; gap:6px; padding:2px 10px; border-radius:var(--r-pill); font-size:12px; font-weight:500; }
-  .chip .dot { width:7px; height:7px; border-radius:50%; }
-  .spacing span { display:inline-block; background:var(--bw-100); border:1px solid var(--bw-300); height:18px; vertical-align:middle; margin-right:8px; }
-  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--r-md); font-size:.875rem; font-weight:500; border:1px solid transparent; cursor:pointer; }
-  .btn-primary { background:var(--bw-300); color:#fff; }
-  .btn-outlined { border-color:var(--surface-border); color:var(--text-color); background:var(--surface-card); }
-  .btn-ghost { color:var(--bw-500); background:transparent; }
-  .rad { width:72px; height:44px; background:var(--bw-100); border:1px solid var(--bw-300); display:inline-flex; align-items:center; justify-content:center; font-size:11px; color:var(--bw-500); margin-right:12px; }
+  .sh { display:inline-flex; align-items:center; justify-content:center; width:150px; height:44px; background:var(--surface-card); border-radius:var(--bw-radius-lg); font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); }
 </style>
 </head>
 <body>
-<h1>Bookwise Design System</h1>
-<p style="color:var(--text-secondary)">Tokens desde <code>src/styles/_tokens.scss</code> + light/dark de <code>src/styles.scss</code>. Artboard solo referencia — valores de las fuentes.</p>
 
-<h2>Brand palette</h2>
+<header class="top">
+  <div>
+    <div class="overline">Bookwise · design system</div>
+    <h1>Tokens, superficies y componentes base</h1>
+    <p class="lead">Valores tomados de <code>src/styles/_tokens.scss</code>, <code>src/styles.scss</code> y <code>src/styles/_primeng-bridge.scss</code>. Este tablero es referencia: no inventa tokens.</p>
+  </div>
+  <div class="meta">3 skins: light · <code>body.dark-theme</code> · <code>body.theme-kinesilk</code><br>base 16 px · Roboto variable · radios 4/6/8/pill</div>
+</header>
+
+<h2><span class="n">01</span>Marca y semánticos</h2>
 <div class="grid swatches">
-  <div class="sw" style="background:#012663">--bw-900<br><small>#012663</small></div>
-  <div class="sw" style="background:#0a2862">--bw-700<br><small>#0a2862</small></div>
-  <div class="sw" style="background:#083d96">--bw-600<br><small>#083d96</small></div>
-  <div class="sw" style="background:#0b3d95">--bw-500<br><small>#0b3d95</small></div>
-  <div class="sw" style="background:#0e3b8b">--bw-400<br><small>#0e3b8b</small></div>
-  <div class="sw" style="background:#046af4">--bw-300<br><small>#046af4</small></div>
-  <div class="sw" style="background:#60a7f0">--bw-200<br><small>#60a7f0</small></div>
+  <div class="sw" style="background:#012663;color:#fff">--bw-900<br><small>#012663</small></div>
+  <div class="sw" style="background:#042661;color:#fff">--bw-800<br><small>#042661</small></div>
+  <div class="sw" style="background:#0a2862;color:#fff">--bw-700<br><small>#0a2862</small></div>
+  <div class="sw" style="background:#083d96;color:#fff">--bw-600<br><small>#083d96</small></div>
+  <div class="sw" style="background:#0b3d95;color:#fff">--bw-500<br><small>#0b3d95</small></div>
+  <div class="sw" style="background:#0e3b8b;color:#fff">--bw-400<br><small>#0e3b8b</small></div>
+  <div class="sw" style="background:#046af4;color:#fff">--bw-300<br><small>#046af4 · CTA</small></div>
+  <div class="sw" style="background:#60a7f0;color:#042661">--bw-200<br><small>#60a7f0</small></div>
   <div class="sw" style="background:#dbeafe;color:#0b3d95">--bw-100<br><small>#dbeafe</small></div>
   <div class="sw" style="background:#f0f6ff;color:#0b3d95;border:1px solid #e5e7eb">--bw-50<br><small>#f0f6ff</small></div>
 </div>
+<p style="font-size:.75rem;color:var(--text-color-secondary);margin-top:8px">En <code>body.theme-kinesilk</code> cambian 50–300 y los aliases de marca: ver el skin más abajo.</p>
 
-<h2>Status &amp; payment (AgendaPro)</h2>
-<div class="card">
-  <span class="chip" style="background:color-mix(in srgb,#77D0FA 18%,white);color:#1d4ed8"><span class="dot" style="background:#77D0FA"></span>Reservado</span>
-  <span class="chip" style="background:color-mix(in srgb,#ECBE51 18%,white);color:#92400e"><span class="dot" style="background:#ECBE51"></span>Confirmado</span>
-  <span class="chip" style="background:color-mix(in srgb,#1FB27C 18%,white);color:#166534"><span class="dot" style="background:#1FB27C"></span>Asiste · Paid</span>
-  <span class="chip" style="background:color-mix(in srgb,#FD8991 18%,white);color:#991b1b"><span class="dot" style="background:#FD8991"></span>Pendiente · Unpaid</span>
-  <span class="chip" style="background:color-mix(in srgb,#ECBE51 18%,white);color:#92400e"><span class="dot" style="background:#ECBE51"></span>Partial</span>
-  <span class="chip" style="background:color-mix(in srgb,#E3E7ED 18%,white);color:#374151"><span class="dot" style="background:#E3E7ED"></span>Cancelado</span>
-</div>
-
-<h2>Type scale (Roboto, base 16)</h2>
-<div class="card">
-  <div class="row"><span class="role">--bw-font-display 36</span><span class="t-4xl" style="font-weight:500">$1.240.000</span></div>
-  <div class="row"><span class="role">--bw-font-kpi 30</span><span class="t-3xl" style="font-weight:500">128 reservas</span></div>
-  <div class="row"><span class="role">--bw-font-subtotal 24</span><span class="t-2xl" style="font-weight:500">Subtotal $180.000</span></div>
-  <div class="row"><span class="role">--bw-font-amount 20</span><span class="t-xl" style="font-weight:500">$40.000</span></div>
-  <div class="row"><span class="role">--bw-font-title 18</span><span class="t-lg" style="font-weight:500">Detalle de la reserva</span></div>
-  <div class="row"><span class="role">--bw-font-body 16</span><span class="t-base">Texto de lectura estándar del sistema.</span></div>
-  <div class="row"><span class="role">--bw-font-table 14</span><span class="t-sm">Celdas de tabla, texto denso en diálogos.</span></div>
-  <div class="row"><span class="role">--bw-font-caption 12</span><span class="t-xs" style="color:var(--text-secondary)">Helper text y descripciones.</span></div>
-  <div class="row"><span class="role">--bw-font-overline 11</span><span class="t-2xs" style="letter-spacing:.06em;text-transform:uppercase;font-weight:600">Detalle</span></div>
-</div>
-
-<h2>Components</h2>
-<div class="cols">
-  <div class="card">
-    <strong style="font-size:12px;color:var(--text-label)">Botones</strong><br><br>
-    <button class="btn btn-primary">Editar</button>
-    <button class="btn btn-outlined">Abonar</button>
-    <button class="btn btn-ghost">Ver ficha</button>
-    <button class="btn btn-ghost" style="color:#991b1b">Eliminar reserva</button>
+<h2><span class="n">02</span>Superficies por skin</h2>
+<div class="trio">
+  <div class="skin" style="background:#f0f5ff">
+    <div class="hd" style="background:#fff;color:#111827">Light</div>
+    <div class="row"><span class="chip" style="background:#f0f5ff"></span><span class="lbl">--surface-ground #f0f5ff</span></div>
+    <div class="row"><span class="chip" style="background:#ffffff"></span><span class="lbl">--surface-card #ffffff</span></div>
+    <div class="row"><span class="chip" style="background:#e5e7eb"></span><span class="lbl">--surface-border #e5e7eb</span></div>
+    <div class="row"><span class="chip" style="background:#f3f4f6"></span><span class="lbl">--bw-surface-muted #f3f4f6</span></div>
   </div>
-  <div class="card">
-    <strong style="font-size:12px;color:var(--text-label)">Radios</strong><br><br>
-    <span class="rad" style="border-radius:4px">4 sm</span>
-    <span class="rad" style="border-radius:6px">6 md</span>
-    <span class="rad" style="border-radius:8px">8 lg</span>
-    <span class="rad" style="border-radius:999px">pill</span>
-    <br><br><strong style="font-size:12px;color:var(--text-label)">Sombras</strong>
-    <div style="margin-top:8px"><span style="display:inline-block;width:120px;height:40px;background:#fff;border-radius:8px;box-shadow:var(--sh-card)"></span>
-    <span style="display:inline-block;width:120px;height:40px;background:#fff;border-radius:8px;box-shadow:var(--sh-popover);margin-left:12px"></span></div>
+  <div class="skin" style="background:#0f172a;color:#e4e4e7">
+    <div class="hd" style="background:#1e293b;color:#e4e4e7;border-color:#334155">Dark</div>
+    <div class="row" style="border-color:#334155"><span class="chip" style="background:#0f172a"></span><span class="lbl" style="color:#94a3b8">--surface-ground #0f172a</span></div>
+    <div class="row" style="border-color:#334155"><span class="chip" style="background:#1e293b"></span><span class="lbl" style="color:#94a3b8">--surface-card #1e293b</span></div>
+    <div class="row" style="border-color:#334155"><span class="chip" style="background:#334155"></span><span class="lbl" style="color:#94a3b8">--surface-border #334155</span></div>
+    <div class="row" style="border-color:#334155"><span class="chip" style="background:#263449"></span><span class="lbl" style="color:#94a3b8">--bw-surface-muted #263449</span></div>
+  </div>
+  <div class="skin" style="background:#fcf9ea">
+    <div class="hd" style="background:#fffdf7;color:#2f2f26;border-color:#ece4cb">Kinesilk</div>
+    <div class="row" style="border-color:#ece4cb"><span class="chip" style="background:#fcf9ea"></span><span class="lbl">--surface-ground #fcf9ea</span></div>
+    <div class="row" style="border-color:#ece4cb"><span class="chip" style="background:#fffdf7"></span><span class="lbl">--surface-card #fffdf7</span></div>
+    <div class="row" style="border-color:#ece4cb"><span class="chip" style="background:#ece4cb"></span><span class="lbl">--surface-border #ece4cb</span></div>
+    <div class="row" style="border-color:#ece4cb"><span class="chip" style="background:#f5f1de"></span><span class="lbl">--bw-surface-muted #f5f1de</span></div>
   </div>
 </div>
 
-<h2>Spacing</h2>
-<div class="card spacing">
-  <span style="width:4px"></span>xs 4 · <span style="width:8px"></span>sm 8 · <span style="width:16px"></span>md 16 · <span style="width:24px"></span>lg 24 · <span style="width:32px"></span>xl 32
+<h2><span class="n">02b</span>Skin Kinesilk: rosado, salmón y menta</h2>
+<div class="grid" style="grid-template-columns:repeat(8,1fr)">
+  <div class="sw" style="background:#fea4a4;color:#2f2f26">--bw-300<br><small>#fea4a4 · CTA</small></div>
+  <div class="sw" style="background:#ffbdbe;color:#2f2f26">--bw-200<br><small>#ffbdbe · rosa</small></div>
+  <div class="sw" style="background:#e08f8f;color:#fff">--color-primary<br><small>#e08f8f</small></div>
+  <div class="sw" style="background:#87e9ce;color:#2f2f26">--color-accent<br><small>#87e9ce · menta</small></div>
+  <div class="sw" style="background:#badede;color:#2f2f26">--bw-100<br><small>#badede · powder</small></div>
+  <div class="sw" style="background:#eaf5f4;color:#2f2f26;border:1px solid #badede">--bw-50<br><small>#eaf5f4</small></div>
+  <div class="sw" style="background:#f79090;color:#2f2f26">hover<br><small>#f79090</small></div>
+  <div class="sw" style="background:#e97b7b;color:#2f2f26">active<br><small>#e97b7b</small></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">CTA: salmón con texto oscuro</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn" style="background:#fea4a4;color:#2f2f26">Guardar reserva</button>
+      <button class="btn" style="background:#f79090;color:#2f2f26">Hover</button>
+      <button class="btn" style="background:#e97b7b;color:#2f2f26">Active</button>
+    </div>
+    <div style="font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-top:10px">--bw-text-on-brand #2f2f26 · --bw-fc-btn-bg/hover/active</div>
+  </div>
+  <div class="card" style="background:#badede;border-color:#a9d3d2;color:#2f2f26">
+    <div style="font-size:.75rem;font-weight:600;margin-bottom:10px">Sidebar powder blue · texto oscuro</div>
+    <div style="display:grid;gap:6px;font-size:.8125rem">
+      <span style="display:flex;justify-content:space-between;padding:6px 10px;border-radius:6px;background:rgba(47,47,38,.12);border-left:3px solid #2f5d5a"><b>Agenda</b><span style="font-size:.6875rem">activo</span></span>
+      <span style="padding:6px 10px;border-radius:6px;color:rgba(47,47,38,.72)">Clientes</span>
+      <span style="padding:6px 10px;border-radius:6px;color:rgba(47,47,38,.72)">Servicios y packs</span>
+    </div>
+    <div style="font-size:.6875rem;font-family:var(--mono);margin-top:10px;color:rgba(47,47,38,.72)">#badede → #a9d3d2 · control #2f5d5a</div>
+  </div>
+</div>
+<p style="font-size:.75rem;color:var(--text-color-secondary);margin-top:10px">Estados de reserva y pago intactos. <code>#ec4899</code> vive en <code>location-palette.util.ts</code>, no en el skin: Kinesilk no define fucsia; su rosa es <code>#ffbdbe</code> / <code>#e08f8f</code> y su CTA <code>#fea4a4</code>.</p>
+
+<h2><span class="n">03</span>Estados de reserva, pagos y chips</h2>
+<div class="card" style="display:flex;flex-wrap:wrap;gap:10px">
+  <span class="chip" style="background:color-mix(in srgb,#77D0FA 18%,white);color:var(--bw-chip-text-online)"><span class="dot" style="background:#77D0FA"></span>Reservado</span>
+  <span class="chip" style="background:color-mix(in srgb,#ECBE51 18%,white);color:var(--bw-chip-text-warning)"><span class="dot" style="background:#ECBE51"></span>Confirmado</span>
+  <span class="chip" style="background:color-mix(in srgb,#1FB27C 18%,white);color:var(--bw-chip-text-success)"><span class="dot" style="background:#1FB27C"></span>Asiste</span>
+  <span class="chip" style="background:color-mix(in srgb,#FCCAC2 18%,white);color:var(--bw-chip-text-danger)"><span class="dot" style="background:#FCCAC2"></span>No asistió</span>
+  <span class="chip" style="background:color-mix(in srgb,#FD8991 18%,white);color:var(--bw-chip-text-danger)"><span class="dot" style="background:#FD8991"></span>Pendiente · Unpaid</span>
+  <span class="chip" style="background:color-mix(in srgb,#ECBE51 18%,white);color:var(--bw-chip-text-remaining)"><span class="dot" style="background:#ECBE51"></span>Partial</span>
+  <span class="chip" style="background:color-mix(in srgb,#E3E7ED 18%,white);color:var(--bw-chip-text-secondary)"><span class="dot" style="background:#E3E7ED"></span>Cancelado</span>
+  <span class="chip" style="background:color-mix(in srgb,#1FB27C 18%,white);color:var(--bw-chip-text-success)"><span class="dot" style="background:#1FB27C"></span>Paid</span>
 </div>
 
-<p style="color:var(--text-secondary);font-size:12px;margin-top:24px">Dark theme: <code>body.dark-theme</code> — surfaces #0f172a/#1e293b, border #334155, text #e4e4e7/#94a3b8, chips con texto claro. Sidebar siempre oscuro. Fuente self-hosted Roboto variable.</p>
+<h2><span class="n">04</span>Escala tipográfica</h2>
+<div class="card">
+  <div class="row-line"><span class="role">--bw-font-display 36</span><span class="t-4xl" style="font-weight:500">$1.240.000</span></div>
+  <div class="row-line"><span class="role">--bw-font-kpi 30</span><span class="t-3xl" style="font-weight:500">128 reservas</span></div>
+  <div class="row-line"><span class="role">--bw-font-subtotal 24</span><span class="t-2xl" style="font-weight:500">Subtotal $180.000</span></div>
+  <div class="row-line"><span class="role">--bw-font-amount 20</span><span class="t-xl" style="font-weight:500">$40.000</span></div>
+  <div class="row-line"><span class="role">--bw-font-title 18</span><span class="t-lg" style="font-weight:500">Detalle de la reserva</span></div>
+  <div class="row-line"><span class="role">--bw-font-body 16</span><span class="t-base">Texto de lectura estándar del sistema.</span></div>
+  <div class="row-line"><span class="role">--bw-font-table 14</span><span class="t-sm">Celdas de tabla, texto denso en diálogos.</span></div>
+  <div class="row-line"><span class="role">--bw-font-caption 12</span><span class="t-xs" style="color:var(--text-color-secondary)">Helper text y descripciones.</span></div>
+  <div class="row-line"><span class="role">--bw-font-overline 11</span><span class="t-2xs" style="letter-spacing:.06em;text-transform:uppercase;font-weight:600">Detalle</span></div>
+</div>
+
+<h2><span class="n">05</span>Espaciado, radios, sombras y z</h2>
+<div class="trio">
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">Espaciado (rem)</div>
+    <div style="display:flex;align-items:flex-end;gap:10px;height:70px">
+      <span style="display:inline-block;width:4px;height:4px;background:var(--bw-300)"></span>
+      <span style="display:inline-block;width:8px;height:8px;background:var(--bw-300)"></span>
+      <span style="display:inline-block;width:16px;height:16px;background:var(--bw-300)"></span>
+      <span style="display:inline-block;width:24px;height:24px;background:var(--bw-300)"></span>
+      <span style="display:inline-block;width:32px;height:32px;background:var(--bw-300)"></span>
+      <span style="font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-left:6px">xs · sm · md · lg · xl</span>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">Radios</div>
+    <div style="display:flex;gap:10px">
+      <span style="width:56px;height:40px;background:var(--bw-100);border-radius:4px"></span>
+      <span style="width:56px;height:40px;background:var(--bw-100);border-radius:6px"></span>
+      <span style="width:56px;height:40px;background:var(--bw-100);border-radius:8px"></span>
+      <span style="width:56px;height:40px;background:var(--bw-100);border-radius:12px"></span>
+      <span style="width:56px;height:40px;background:var(--bw-100);border-radius:999px"></span>
+    </div>
+    <div style="font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-top:8px">4 · 6 · 8 · 12 · pill</div>
+  </div>
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">Sombras</div>
+    <span class="sh" style="box-shadow:var(--bw-shadow-card)">card</span>
+    <span class="sh" style="box-shadow:var(--bw-shadow-popover)">popover</span>
+    <div style="font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-top:8px">z: base 1 · overlay 10 · float 150 · backdrop 300 · drawer 400 · topbar 500</div>
+  </div>
+</div>
+
+<h2><span class="n">06</span>Puente PrimeNG</h2>
+<div class="card">
+  <table class="map">
+    <thead><tr><th>Token PrimeNG</th><th>Apunta a</th><th>Grupo</th></tr></thead>
+    <tbody>
+      <tr><td>--p-primary-color</td><td><code>var(--primary-color)</code></td><td>marca</td></tr>
+      <tr><td>--p-content-border-radius</td><td><code>var(--bw-radius-lg)</code></td><td>radio</td></tr>
+      <tr><td>--p-surface-0 / 100 / 200</td><td><code>--surface-card</code> / <code>--bw-surface-muted</code> / <code>--surface-border</code></td><td>superficies</td></tr>
+      <tr><td>--p-text-color</td><td><code>var(--text-color)</code></td><td>texto</td></tr>
+      <tr><td>--p-form-field-border-color</td><td><code>var(--surface-border)</code></td><td>formularios</td></tr>
+      <tr><td>--p-dialog-footer-padding</td><td><code>1.25rem</code></td><td>dialog</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:.75rem;color:var(--text-color-secondary);margin-top:10px">Los overrides claros necesitan <code>!important</code> porque el preset de PrimeNG aterriza después de <code>:root</code>.</p>
+</div>
+
+<h2><span class="n">07</span>Componentes base</h2>
+<div class="trio">
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">Botones · 2.5rem</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary">Guardar reserva</button>
+      <button class="btn btn-outline">Abonar</button>
+      <button class="btn btn-ghost">Ver ficha</button>
+    </div>
+    <div style="font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-top:10px">primary · outline · ghost</div>
+  </div>
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">Campo · label + control</div>
+    <div class="field">
+      <label for="sys-name">Nombre del paciente</label>
+      <div class="control" id="sys-name">Camila Rojas</div>
+      <span class="hint">Aparece en la agenda y en la ficha.</span>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:.75rem;color:var(--text-label);font-weight:600;margin-bottom:10px">Avatar · 36 px</div>
+    <span class="av">CR</span>
+    <span class="av" style="background:#e3e7ed;color:#374151">MJ</span>
+    <span class="av" style="background:#dbeafe;color:#0b3d95">+4</span>
+    <div style="font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-top:10px">iniciales · 12/500</div>
+  </div>
+</div>
+
+<h2><span class="n">08</span>Anatomía del dialog</h2>
+<div class="card">
+  <div class="dlg">
+    <div class="h"><span>Editar paciente</span><span style="color:var(--text-color-secondary);font-size:1rem">✕</span></div>
+    <div class="c">
+      <div class="field" style="max-width:320px">
+        <label for="dlg-name">Nombre completo</label>
+        <div class="control" id="dlg-name">Camila Rojas</div>
+      </div>
+    </div>
+    <div class="f"><button class="btn btn-outline">Cancelar</button><button class="btn btn-primary">Guardar</button></div>
+  </div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:.6875rem;font-family:var(--mono);color:var(--text-color-secondary);margin-top:12px">
+    <span>header: 18/500 + --bw-dialog-header-shadow</span>
+    <span>content: --surface-ground + --bw-dialog-content-shadow</span>
+    <span>footer: 1.25rem + acciones a la derecha</span>
+    <span>radio: --bw-radius-lg</span>
+  </div>
+</div>
+
+<p class="note">Fuentes: <code>src/styles/_tokens.scss</code> · <code>src/styles.scss</code> · <code>src/styles/_primeng-bridge.scss</code>. Dark y Kinesilk solo re-declaran superficies, texto y acentos de skin; el sidebar no participa. Fuente Roboto variable self-hosted.</p>
 </body>
 </html>
