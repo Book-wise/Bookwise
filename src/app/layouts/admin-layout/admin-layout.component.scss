@@ -15,6 +15,9 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  // Color sólido (provisional): rellena las esquinas redondeadas del contenido
+  // con el tono superior del panel, sin gradiente.
+  background: var(--sidebar-bg-from);
 }
 
 // ── Panel ────────────────────────────────────────────────────────────────────
@@ -31,7 +34,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: linear-gradient(175deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+  background: var(--sidebar-bg-from);
   position: relative;
   z-index: var(--z-drawer);
   // Recorta el contenido (que mantiene su ancho) durante la transición de ancho.
@@ -42,24 +45,10 @@
     width var(--bw-transition-slow) ease,
     transform var(--bw-transition-slow) ease;
 
-  // Glow decorativo arriba a la derecha. (`top` negativo no agranda el área de
-  // scroll: el origen del scroll está en 0.)
-  &::before {
-    content: '';
-    position: absolute;
-    top: -60px;
-    right: -60px;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(96, 167, 240, 0.18) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  // Sin `::after` inferior: el círculo usaba `bottom: -60px` y, al ser un
-  // posicionado absoluto dentro de un contenedor con `overflow-y: auto`,
-  // agrandaba el área scrolleable y dejaba ~60px muertos debajo del footer.
-  // La identidad del panel ya la da el gradiente de marca.
+  // Sin glows decorativos (`::before`/`::after`): el `::after` inferior usaba
+  // `bottom: -60px` y, al ser un posicionado absoluto dentro de un contenedor
+  // con `overflow-y: auto`, agrandaba el área scrolleable y dejaba ~60px
+  // muertos debajo del footer. El glow superior circular también se quitó.
 }
 
 // Cerrado en desktop: el panel mide 0px y el contenido ocupa todo el ancho.
@@ -237,10 +226,19 @@
   // La cabecera ya no vive acá: el padding superior reemplaza su margen.
   padding: var(--bw-space-lg) 1.25rem 1.25rem;
   background: var(--surface-ground);
-  transition: background var(--bw-transition-base);
+  transition: background var(--bw-transition-base), border-radius var(--bw-transition-base);
 
   @media (max-width: 991px) {
     padding: var(--bw-space-md) 1rem 1rem;
+  }
+}
+
+// Desktop, panel abierto: el CONTENIDO redondea sus esquinas izquierdas
+// (superior e inferior), así el panel oscuro «abraza» la esquina en forma de C.
+// Cerrado: cuadrado, full-bleed.
+@media (min-width: 992px) {
+  .layout.panel-open .main-content {
+    border-radius: 16px 0 0 16px;
   }
 }
 
