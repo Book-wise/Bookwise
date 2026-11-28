@@ -27,6 +27,13 @@
       @if (checkoutError()) {
         <p class="pending-charge__error" role="alert">{{ lang.t('plans.pending_error') }}</p>
       }
+      <p-button
+        [label]="lang.t('plans.pending_history')"
+        icon="pi pi-list"
+        severity="secondary"
+        [text]="true"
+        styleClass="pending-charge__history"
+        (onClick)="goToHistory()" />
     </section>
   }
 

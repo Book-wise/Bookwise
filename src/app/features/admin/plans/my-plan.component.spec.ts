@@ -150,6 +150,8 @@ describe('MyPlanComponent — Mi plan (read-only)', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.pending-charge')).toBeTruthy();
     expect(el.textContent).toContain(component.lang.t('plans.pending_cta'));
+    // El motivo del rechazo vive en el historial: el banner da el camino, no un código crudo.
+    expect(el.textContent).toContain(component.lang.t('plans.pending_history'));
   });
 
   it('hides the banner for an active subscription: pending is the only trigger', () => {

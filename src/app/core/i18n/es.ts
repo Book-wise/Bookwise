@@ -569,6 +569,7 @@ export const ES: Record<string, string> = {
   'plans.pending_body': 'Tu tarjeta quedó registrada, pero el cobro de la primera mensualidad no se acreditó. Reintentá el cobro o revisá tu tarjeta en Facturación.',
   'plans.pending_cta': 'Reintentar cobro',
   'plans.pending_error': 'El cobro fue rechazado. Reintentá o revisá tu tarjeta.',
+  'plans.pending_history': 'Ver el detalle del cobro',
   'plans.manage': 'Administrar plan',
   'plans.breakdown': 'Ver desglose',
   'plans.breakdown_title': 'Desglose de tu plan',

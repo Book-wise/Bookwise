@@ -100,6 +100,11 @@ export class MyPlanComponent implements OnInit {
     this.router.navigate(['/admin/facturacion']);
   }
 
+  /** Lleva al historial de cargos, donde el código del proveedor explica el rechazo. */
+  goToHistory(): void {
+    this.router.navigate(['/admin/facturacion/historial']);
+  }
+
   /**
    * Reintenta el cobro de la primera mensualidad. El endpoint es idempotente por
    * inscripción (S15): reintentar no puede cobrar dos veces. En éxito el store

@@ -570,6 +570,7 @@ export const EN: Record<string, string> = {
   'plans.pending_body': 'Your card is registered, but the first month charge was not settled. Retry the charge or check your card in Billing.',
   'plans.pending_cta': 'Retry charge',
   'plans.pending_error': 'The charge was declined. Try again or check your card.',
+  'plans.pending_history': 'See the charge details',
   'plans.manage': 'Manage plan',
   'plans.breakdown': 'View breakdown',
   'plans.breakdown_title': 'Your plan breakdown',
