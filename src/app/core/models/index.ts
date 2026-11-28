@@ -758,3 +758,51 @@ export interface EnrollmentStartResponse {
   message?: string;
   data: { redirect_url: string };
 }
+
+// ── Historial de billing (GET /v1/payments) ──────────────────────────────────
+/**
+ * Cargo de plataforma de la cuenta activa (`GET /v1/payments`).
+ * Es un dominio distinto del `Payment` de reservas (unpaid/partial/paid):
+ * acá el estado es el del cobro en el proveedor.
+ */
+export interface BillingPayment {
+  id: number;
+  /** `recurring` | `manual` | `refund` | `adjustment`. */
+  kind: string;
+  provider: string;
+  /** Correlato del proveedor (dato de facturación del cliente); nunca token/PAN. */
+  provider_transaction_id: string | null;
+  amount_clp: number;
+  currency: string;
+  /** `pending` | `succeeded` | `failed` | `refunded` | `requires_action`. */
+  status: string;
+  /** Código del proveedor cuando el cargo falló; null si no falló. */
+  failure_code: string | null;
+  /** Null cuando el cargo no se pagó (failed/pending). */
+  paid_at: string | null;
+  created_at: string;
+}
+
+/** Meta del paginator de Laravel (25 por página). */
+export interface PaginatorMeta {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
+/** Respuesta paginada de `GET /v1/payments`. */
+export interface BillingPaymentsResponse {
+  data: BillingPayment[];
+  meta: PaginatorMeta;
+}
+
+/** Filtros opcionales del historial de cargos. */
+export interface BillingPaymentsQuery {
+  page?: number;
+  status?: string;
+  from?: string;
+  to?: string;
+}

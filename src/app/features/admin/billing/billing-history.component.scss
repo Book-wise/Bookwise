@@ -123,3 +123,51 @@
     gap: 1.5rem;
   }
 }
+
+// ── Estados (cargando / vacío / error) ──────────────────────────────────────
+
+.history__state {
+  margin: 0;
+  color: var(--text-color-secondary, #888);
+  font-size: 0.9rem;
+
+  &--error {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.25rem;
+    border-radius: var(--bw-radius-lg, 8px);
+    background: color-mix(in srgb, #dc2626 8%, var(--surface-card, #fff));
+    border: 1px solid color-mix(in srgb, #dc2626 26%, transparent);
+    color: #b91c1c;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+// Código del proveedor cuando el cargo falló (nunca se traduce).
+.invoice-table__failure {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary, #888);
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Paginación server-side ──────────────────────────────────────────────────
+
+.history__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.history__pager-info {
+  color: var(--text-color-secondary, #888);
+  font-size: 0.85rem;
+}

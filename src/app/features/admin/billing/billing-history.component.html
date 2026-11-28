@@ -12,34 +12,68 @@
       (onClick)="goBack()" />
   </header>
 
-  <div class="table-wrap">
-    <table class="invoice-table">
-      <thead>
-        <tr>
-          <th>{{ lang.t('billing.invoice') }}</th>
-          <th>{{ lang.t('billing.date') }}</th>
-          <th>{{ lang.t('billing.plan_col') }}</th>
-          <th>{{ lang.t('billing.amount') }}</th>
-          <th>{{ lang.t('billing.status') }}</th>
-          <th class="invoice-table__action-col">{{ lang.t('billing.action') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (invoice of invoices; track invoice.id) {
+  @if (loading()) {
+    <p class="history__state">{{ lang.t('billing.history.loading') }}</p>
+  } @else if (failed()) {
+    <div class="history__state history__state--error" role="alert">
+      <p>{{ lang.t('billing.history.error') }}</p>
+      <p-button
+        [label]="lang.t('billing.history.retry')"
+        icon="pi pi-refresh"
+        severity="secondary"
+        (onClick)="load(page())" />
+    </div>
+  } @else if (payments().length === 0) {
+    <p class="history__state">{{ lang.t('billing.history.empty') }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="invoice-table">
+        <thead>
           <tr>
-            <td class="invoice-table__id">#{{ invoice.id }}</td>
-            <td>{{ invoice.date }}</td>
-            <td>{{ invoice.plan }}</td>
-            <td class="invoice-table__amount">{{ price(invoice.amount) }}</td>
-            <td><span class="bw-chip" [class]="statusChipClass(invoice.status)">{{ lang.t(statusKey(invoice.status)) }}</span></td>
-            <td class="invoice-table__action">
-              <button type="button" class="invoice-download" [attr.aria-label]="lang.t('billing.action')">
-                <i class="pi pi-download"></i>
-              </button>
-            </td>
+            <th>{{ lang.t('billing.invoice') }}</th>
+            <th>{{ lang.t('billing.date') }}</th>
+            <th>{{ lang.t('billing.concept') }}</th>
+            <th>{{ lang.t('billing.amount') }}</th>
+            <th>{{ lang.t('billing.status') }}</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          @for (payment of payments(); track payment.id) {
+            <tr>
+              <td class="invoice-table__id">#{{ payment.id }}</td>
+              <td>{{ date(payment.created_at) }}</td>
+              <td>{{ lang.t(kindKey(payment.kind)) }}</td>
+              <td class="invoice-table__amount">{{ price(payment.amount_clp) }}</td>
+              <td>
+                <span class="bw-chip" [class]="statusChipClass(payment.status)">{{ lang.t(statusKey(payment.status)) }}</span>
+                @if (payment.failure_code) {
+                  <span class="invoice-table__failure">{{ payment.failure_code }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (paginated()) {
+      <nav class="history__pager" [attr.aria-label]="lang.t('billing.history.pagination')">
+        <p-button
+          icon="pi pi-chevron-left"
+          severity="secondary"
+          [text]="true"
+          [disabled]="page() <= 1 || loading()"
+          [attr.aria-label]="lang.t('billing.history.previous')"
+          (onClick)="previousPage()" />
+        <span class="history__pager-info">{{ lang.t('billing.history.page_of', { page: page().toString(), last: lastPage().toString(), total: total().toString() }) }}</span>
+        <p-button
+          icon="pi pi-chevron-right"
+          severity="secondary"
+          [text]="true"
+          [disabled]="page() >= lastPage() || loading()"
+          [attr.aria-label]="lang.t('billing.history.next')"
+          (onClick)="nextPage()" />
+      </nav>
+    }
+  }
 </div>
