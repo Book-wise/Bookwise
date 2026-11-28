@@ -1,0 +1,5 @@
+// El overlay lo posiciona PrimeNG (`position: fixed`, z-index propio); el host
+// solo transporta la proyección y no debe crear un contexto de layout propio.
+:host {
+  display: contents;
+}
