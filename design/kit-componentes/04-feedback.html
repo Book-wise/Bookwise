@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · Feedback: mensajes, toasts, skeletons y progreso</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-text-2xs:.6875rem; --bw-text-xs:.75rem; --bw-text-sm:.875rem; --bw-text-lg:1.125rem;
+    --bw-transition-fast:.15s;
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:66ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+  .mono { font-family:var(--mono); font-size:.6875rem; }
+
+  .contracts { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--bw-space-sm); margin-top:var(--bw-space-md); }
+  .contract { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:10px 12px; font-size:.75rem; color:var(--text-color-secondary); }
+  .contract b { display:block; font-family:var(--mono); font-size:.75rem; color:var(--text-color); margin-bottom:3px; }
+  .contract em { font-style:normal; color:var(--bw-500); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:62ch; }
+  .fam-contract { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); text-align:right; }
+  .fam-contract b { color:var(--bw-500); }
+
+  .specs { display:grid; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .two { grid-template-columns:1fr 1fr; }
+  .three { grid-template-columns:repeat(3,1fr); }
+  figure.spec { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .live { padding:var(--bw-space-lg); display:flex; flex-wrap:wrap; align-items:center; gap:12px; min-height:96px; }
+  .live.tint { background:var(--surface-ground); }
+  .live.stack { display:grid; gap:14px; align-items:stretch; }
+  figcaption { border-top:1px solid var(--surface-border); padding:9px 14px; font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  figcaption b { color:var(--text-color); font-weight:600; }
+
+  .note { margin-top:var(--bw-space-md); background:var(--bw-50); border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-md); padding:10px 14px; font-size:.8125rem; color:var(--text-label); }
+  .note b { font-weight:600; }
+
+  /* Botones (subconjunto del artboard 01) */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:var(--bw-control-height); padding:0 16px; border-radius:var(--bw-radius-md); font-family:var(--font); font-size:.875rem; font-weight:500; border:1px solid transparent; cursor:pointer; transition:background var(--bw-transition-fast) ease, border-color var(--bw-transition-fast) ease; white-space:nowrap; }
+  .btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .btn-primary { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .btn-primary:hover { background:color-mix(in srgb, var(--bw-300) 85%, var(--bw-200)); }
+  .btn-primary:active { background:color-mix(in srgb, var(--bw-300) 80%, var(--bw-900)); }
+  .btn-outline { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn-outline:hover { background:var(--bw-surface-muted); }
+  .btn-ghost { background:transparent; color:var(--bw-500); }
+  .btn-ghost:hover { background:var(--bw-100); }
+  .btn-sm { height:2rem; padding:0 12px; font-size:.8125rem; }
+  .btn-icon { width:var(--bw-control-height); padding:0; }
+  .btn-icon.btn-sm { width:2rem; }
+
+  /* Mensajes inline */
+  .msgs { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; width:100%; }
+  .msg { display:grid; grid-template-columns:32px 1fr auto; gap:12px; padding:12px 14px; background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:0 1px 2px color-mix(in srgb, var(--bw-900) 6%, transparent); }
+  .msg-ico { width:28px; height:28px; border-radius:var(--bw-radius-lg); display:flex; align-items:center; justify-content:center; font-size:.8125rem; font-weight:700; flex:none; }
+  .msg-title { font-size:.875rem; font-weight:600; color:var(--text-heading); letter-spacing:-.005em; }
+  .msg-desc { font-size:.8125rem; color:var(--text-color-secondary); margin-top:2px; line-height:1.45; }
+  .msg-actions { display:flex; gap:8px; margin-top:9px; }
+  .msg-link { display:inline-flex; align-items:center; gap:4px; height:26px; padding:0 9px; border:1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius:var(--bw-radius-md); background:var(--surface-card); font-family:var(--font); font-size:.75rem; font-weight:600; cursor:pointer; color:var(--bw-500); }
+  .msg-link:hover { background:color-mix(in srgb, currentColor 8%, var(--surface-card)); }
+  .msg-link:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .msg-x { width:24px; height:24px; padding:0; background:none; border:0; border-radius:var(--bw-radius-md); color:var(--text-color-secondary); font-size:1rem; line-height:1; cursor:pointer; }
+  .msg-x:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .msg-x:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+
+  .msg-info { background:var(--bw-100); border-color:var(--bw-200); border-left-color:var(--bw-300); }
+  .msg-info .msg-ico { background:var(--surface-card); color:var(--bw-500); }
+  .msg-info .msg-desc { color:var(--bw-chip-text-primary); }
+  .msg-info .msg-link { color:var(--bw-500); }
+  .msg-success { background:color-mix(in srgb, var(--bw-status-asiste) 10%, white); border-color:color-mix(in srgb, var(--bw-status-asiste) 30%, white); border-left-color:var(--bw-status-asiste); }
+  .msg-success .msg-ico { background:var(--surface-card); color:var(--bw-chip-text-success); }
+  .msg-success .msg-desc { color:var(--text-color); }
+  .msg-success .msg-link { color:var(--bw-chip-text-success); }
+  .msg-warn { background:color-mix(in srgb, var(--bw-status-confirmado) 14%, white); border-color:color-mix(in srgb, var(--bw-status-confirmado) 34%, white); border-left-color:var(--bw-status-confirmado); }
+  .msg-warn .msg-ico { background:var(--surface-card); color:var(--bw-chip-text-warning); }
+  .msg-warn .msg-desc { color:var(--text-color); }
+  .msg-warn .msg-link { color:var(--bw-chip-text-warning); }
+  .msg-error { background:color-mix(in srgb, var(--bw-status-pendiente) 10%, white); border-color:color-mix(in srgb, var(--bw-status-pendiente) 30%, white); border-left-color:var(--bw-status-pendiente); }
+  .msg-error .msg-ico { background:var(--surface-card); color:var(--bw-chip-text-danger); }
+  .msg-error .msg-desc { color:var(--text-color); }
+  .msg-error .msg-link { color:var(--bw-chip-text-danger); }
+
+  /* Toasts */
+  .toast-stage { width:100%; background:var(--surface-ground); border:1px dashed var(--surface-border); border-radius:var(--bw-radius-lg); padding:16px; display:flex; justify-content:flex-end; }
+  .toast-col { width:320px; display:grid; gap:10px; }
+  .toast { display:grid; grid-template-columns:20px 1fr 24px; gap:10px; padding:11px 12px; background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-popover); }
+  .toast .msg-ico { width:18px; height:18px; font-size:.625rem; }
+  .toast-title { font-size:var(--bw-text-sm); font-weight:600; color:var(--text-heading); }
+  .toast-desc { font-size:var(--bw-text-xs); color:var(--text-color-secondary); margin-top:1px; }
+  .toast-act { margin-top:7px; }
+  .toast-success { border-left-color:var(--bw-status-asiste); }
+  .toast-success .msg-ico { background:var(--bw-status-asiste); color:var(--bw-text-on-brand); }
+  .toast-error { border-left-color:var(--bw-status-pendiente); }
+  .toast-error .msg-ico { background:var(--bw-status-pendiente); color:var(--bw-900); }
+  .toast-error .btn-ghost { color:var(--bw-chip-text-danger); }
+  .toast-error .btn-ghost:hover { background:color-mix(in srgb, var(--bw-status-pendiente) 18%, white); }
+  .toast-info { border-left-color:var(--bw-300); }
+  .toast-info .msg-ico { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .toast-note { width:320px; font-size:var(--bw-text-2xs); color:var(--text-color-secondary); margin-top:2px; }
+
+  /* Skeletons */
+  .sk { background:linear-gradient(90deg, var(--bw-surface-muted) 0%, var(--bw-100) 50%, var(--bw-surface-muted) 100%); background-size:200% 100%; border-radius:var(--bw-radius-sm); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer { 0% { background-position:120% 0; } 100% { background-position:-20% 0; } }
+  .sk-card { display:grid; grid-template-columns:40px 1fr; gap:12px; align-items:center; width:100%; }
+  .sk-card .sk-av { width:40px; height:40px; border-radius:50%; grid-row:span 2; }
+  .sk-line { height:10px; }
+  .sk-line.w70 { width:70%; }
+  .sk-line.w45 { width:45%; }
+  .sk-table { width:100%; display:grid; gap:9px; }
+  .sk-row { display:grid; grid-template-columns:1.4fr 1fr .8fr 22px; gap:10px; align-items:center; height:22px; }
+  .sk-list { width:100%; display:grid; gap:12px; }
+  .sk-item { display:grid; grid-template-columns:24px 1fr 54px; gap:10px; align-items:center; }
+  .sk-item .sk-av { width:24px; height:24px; border-radius:50%; }
+
+  /* Progreso */
+  .prog { width:100%; display:grid; gap:6px; }
+  .prog-top { display:flex; justify-content:space-between; align-items:baseline; font-size:var(--bw-text-sm); }
+  .prog-top b { font-weight:500; color:var(--text-heading); }
+  .prog-top span { font-size:var(--bw-text-xs); color:var(--text-color-secondary); font-variant-numeric:tabular-nums; }
+  .bar { height:8px; border-radius:var(--bw-radius-pill); background:var(--bw-surface-muted); overflow:hidden; }
+  .bar > i { display:block; height:100%; border-radius:inherit; background:var(--bw-300); }
+  .bar.indet > i { width:38%; animation:indet 1.6s ease-in-out infinite; }
+  @keyframes indet { 0% { transform:translateX(-110%); } 100% { transform:translateX(300%); } }
+  .bar.indet { position:relative; }
+
+  .lifecycle { display:grid; gap:4px; margin-top:6px; }
+  .lc { display:flex; align-items:baseline; gap:6px; font-size:.6875rem; color:var(--text-color-secondary); border-left:2px solid var(--surface-border); padding-left:8px; }
+  .lc b { color:var(--text-color); font-weight:600; flex:none; }
+  .lc-done { border-left-color:var(--bw-success); }
+  .lc-err { border-left-color:var(--bw-status-pendiente); }
+  .lc-wait { border-left-color:var(--bw-300); }
+  .steps { display:flex; align-items:center; gap:10px; width:100%; flex-wrap:wrap; }
+  .step { display:flex; align-items:center; gap:7px; font-size:.8125rem; color:var(--text-color-secondary); }
+  .step-dot { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.6875rem; font-weight:600; background:var(--bw-surface-muted); color:var(--text-color-secondary); flex:none; }
+  .step-done .step-dot { background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success); }
+  .step-done { color:var(--bw-chip-text-success); }
+  .step-now .step-dot { background:var(--bw-500); color:var(--bw-text-on-brand); }
+  .step-now { color:var(--text-heading); font-weight:500; }
+  .step-line { flex:1 1 32px; min-width:24px; height:2px; background:var(--surface-border); }
+  .step-line.done { background:var(--bw-status-asiste); }
+
+  /* Estado vacío */
+  .empty-live { display:flex; justify-content:center; background:var(--surface-ground); }
+  .empty { display:grid; justify-items:center; text-align:center; gap:6px; padding:28px 24px; background:var(--surface-card); border:1px dashed var(--surface-border); border-radius:var(--bw-radius-lg); max-width:520px; }
+  .empty-ico { width:44px; height:44px; border-radius:50%; background:var(--bw-100); color:var(--bw-500); display:flex; align-items:center; justify-content:center; font-size:1.125rem; margin-bottom:6px; }
+  .empty h3 { font-size:var(--bw-text-lg); font-weight:500; color:var(--text-heading); }
+  .empty p { font-size:var(--bw-text-sm); color:var(--text-color-secondary); }
+  .empty .btn { margin-top:12px; }
+
+  /* Reglas */
+  .rules { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-lg); }
+  .rule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-status-asiste); border-radius:var(--bw-radius-md); padding:12px 16px; font-size:.8125rem; }
+  .rule.no { border-left-color:var(--bw-status-pendiente); }
+  .rule h3 { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; margin-bottom:6px; }
+  .rule ul { padding-left:16px; display:grid; gap:4px; }
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer code { font-size:.6875rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sk { animation:none; background:var(--bw-surface-muted); }
+    .bar.indet > i { animation:none; width:38%; transform:none; }
+    .btn, .msg-x, .msg-link { transition:none; }
+  }
+
+  .ds-band { margin-top:var(--bw-space-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); font-size:.75rem; color:var(--text-color-secondary); }
+  .ds-band__tag { background:var(--bw-100); color:var(--bw-500); border-radius:var(--bw-radius-pill); padding:2px 9px; font-size:.6875rem; font-weight:600; }
+  .ds-band__link { margin-left:auto; color:var(--bw-500); font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 04</div>
+    <h1>Feedback: mensajes, toasts, skeletons y progreso</h1>
+    <p class="lead">El sistema habla cuando hay algo que resolver. Mensaje inline para el contexto que queda, toast para lo efímero, skeleton para la espera y barra para el avance. Ningún spinner suelto: la espera se dibuja con la forma de lo que va a llegar.</p>
+  </div>
+  <div class="meta">1440 × 1080<br>light · tokens del 2026-11-27</div>
+</header>
+<div class="ds-band">
+  <span class="ds-band__tag">Contrato, no rediseño</span>
+  <span>Componentes propios con transición paulatina: un consumidor por vez. El formato existente manda.</span>
+  <a class="ds-band__link" href="00-estado-y-transicion.html">Estado y transición →</a>
+</div>
+
+
+<div class="contracts">
+  <div class="contract"><b>bw-message</b><em>severity</em> info | success | warn | error<br><em>title</em> · <em>action</em> · <em>dismissible</em></div>
+  <div class="contract"><b>bw-toast</b><em>stack</em> arriba a la derecha · 320 px<br>auto-dismiss 5 s · pausa al hover</div>
+  <div class="contract"><b>bw-skeleton</b>native shimmer<br>respeta <code>prefers-reduced-motion</code></div>
+  <div class="contract"><b>bw-progress</b><em>value</em> 0–100 · <em>indeterminate</em><br><em>label</em> opcional · 8 px</div>
+</div>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Mensajes inline</h2>
+      <p class="fam-sub">Quedan en la página porque el problema sigue abierto. Cuatro severidades, siempre con ícono, título, una línea de qué pasó y la acción que lo resuelve. El error no se queda sin salida.</p>
+    </div>
+    <div class="fam-contract"><b>bw-message</b> · <em>severity</em><br>hoy: <b>p-message</b> · etapa 3 nativo</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live">
+        <div class="msgs">
+          <div class="msg msg-info" role="status">
+            <span class="msg-ico" aria-hidden="true">i</span>
+            <div>
+              <p class="msg-title">Sincronización con el SII en curso</p>
+              <p class="msg-desc">Estamos enviando las boletas de ayer. Podés seguir trabajando: los folios se actualizan al terminar.</p>
+              <div class="msg-actions">
+                <button class="msg-link">Ver detalle</button>
+              </div>
+            </div>
+            <button class="msg-x" aria-label="Cerrar mensaje de información">×</button>
+          </div>
+
+          <div class="msg msg-success" role="status">
+            <span class="msg-ico" aria-hidden="true">✓</span>
+            <div>
+              <p class="msg-title">Reserva confirmada</p>
+              <p class="msg-desc">Camila Rojas · Depilación láser piernas completas · mar 2 dic, 10:30. Se envió el recordatorio por WhatsApp.</p>
+              <div class="msg-actions">
+                <button class="msg-link">Ver detalle</button>
+              </div>
+            </div>
+            <button class="msg-x" aria-label="Cerrar mensaje de confirmación" aria-hidden="true">×</button>
+          </div>
+
+          <div class="msg msg-warn" role="status">
+            <span class="msg-ico" aria-hidden="true">!</span>
+            <div>
+              <p class="msg-title">Abono parcial vencido</p>
+              <p class="msg-desc">Matías Fuentes mantiene un saldo de $17.000 desde el 24 de noviembre.</p>
+              <div class="msg-actions">
+                <button class="msg-link">Registrar pago</button>
+                <button class="msg-link">Ver detalle</button>
+              </div>
+            </div>
+            <button class="msg-x" aria-label="Cerrar aviso de abono vencido">×</button>
+          </div>
+
+          <div class="msg msg-error" role="alert">
+            <span class="msg-ico" aria-hidden="true">✕</span>
+            <div>
+              <p class="msg-title">No se pudo cargar la ficha</p>
+              <p class="msg-desc">Se cortó la conexión con el servidor de fichas clínicas. No se modificó ningún dato.</p>
+              <div class="msg-actions">
+                <button class="msg-link">Reintentar</button>
+                <button class="msg-link">Ver detalle</button>
+              </div>
+            </div>
+            <button class="msg-x" aria-label="Cerrar mensaje de error">×</button>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Cuatro severidades</b> — superficie tintada por severidad, medallón claro, título 14/600 y acción pill; el color no es el único mensaje</span><span>radius 8 · acento 3 · tinte 10–14%</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Toast stack</h2>
+      <p class="fam-sub">Tres como máximo, apilados arriba a la derecha, con el ancho fijo de 320 px para que el texto no baile. Se van solos a los 5 s; si el mouse está encima, esperan. La X siempre está.</p>
+    </div>
+    <div class="fam-contract"><b>bw-toast</b> · <em>stack</em> · <em>duration</em> 5000<br>hoy: <b>p-toast</b> + <b>MessageService</b></div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live tint toast-stage">
+        <div class="toast-col" role="region" aria-label="Notificaciones de la aplicación">
+          <div class="toast toast-success" role="status">
+            <span class="msg-ico" aria-hidden="true">✓</span>
+            <div>
+              <p class="toast-title">Reserva confirmada</p>
+              <p class="toast-desc">Camila Rojas · mar 2 dic, 10:30 · Box 2</p>
+            </div>
+            <button class="msg-x" aria-label="Cerrar notificación de reserva confirmada">×</button>
+          </div>
+
+          <div class="toast toast-error" role="alert">
+            <span class="msg-ico" aria-hidden="true">✕</span>
+            <div>
+              <p class="toast-title">No se pudo registrar el pago</p>
+              <p class="toast-desc">Transbank rechazó la transacción. La reserva sigue sin abono.</p>
+              <div class="toast-act"><button class="btn btn-ghost btn-sm">Reintentar</button></div>
+            </div>
+            <button class="msg-x" aria-label="Cerrar notificación de pago rechazado">×</button>
+          </div>
+
+          <div class="toast toast-info" role="status">
+            <span class="msg-ico" aria-hidden="true">i</span>
+            <div>
+              <p class="toast-title">Sincronizando agenda</p>
+              <p class="toast-desc">3 profesionales · última sync 09:58</p>
+            </div>
+            <button class="msg-x" aria-label="Cerrar notificación de sincronización">×</button>
+          </div>
+
+          <p class="toast-note">5 s · pausa al hover</p>
+        </div>
+      </div>
+      <figcaption><span><b>Stack de tres</b> — columna 320, gap 10; el error conserva su acción dentro del toast</span><span>radio 8 · shadow <code>--bw-shadow-popover</code></span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>Auto-dismiss 5 s</b> — el timer se pausa con hover y con foco de teclado. Los toasts con acción destructiva o de pago no se descartan solos: esperan un click explícito.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Skeletons</h2>
+      <p class="fam-sub">La espera tiene la forma de lo que viene: card, fila de tabla y lista. Shimmer nativo, sin librería, de <code>--bw-surface-muted</code> a <code>--bw-100</code>. Nunca un spinner de página completa.</p>
+    </div>
+    <div class="fam-contract"><b>bw-skeleton</b> · <em>variant</em> card | row | list<br>hoy: <b>p-skeleton</b></div>
+  </div>
+
+  <div class="specs three">
+    <figure class="spec">
+      <div class="live" role="status" aria-label="Cargando ficha de la paciente">
+        <div class="sk-card" aria-hidden="true">
+          <span class="sk sk-av"></span>
+          <span class="sk sk-line w70"></span>
+          <span class="sk sk-line w45"></span>
+        </div>
+      </div>
+      <figcaption><span><b>Card</b> — avatar 40 + 2 líneas de 10 px</span><span>radio 4 · shimmer 1.4 s</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live" role="status" aria-label="Cargando reservas de hoy">
+        <div class="sk-table" aria-hidden="true">
+          <div class="sk-row"><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span></div>
+          <div class="sk-row"><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span></div>
+          <div class="sk-row"><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span></div>
+          <div class="sk-row"><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span></div>
+          <div class="sk-row"><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span><span class="sk sk-line"></span></div>
+        </div>
+      </div>
+      <figcaption><span><b>Tabla</b> — 5 filas de 22 px, línea 10 px</span><span>radio 4 · mismo ritmo que el dato real</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live" role="status" aria-label="Cargando lista de pacientes">
+        <div class="sk-list" aria-hidden="true">
+          <div class="sk-item"><span class="sk sk-av"></span><span class="sk sk-line w70"></span><span class="sk sk-line"></span></div>
+          <div class="sk-item"><span class="sk sk-av"></span><span class="sk sk-line w45"></span><span class="sk sk-line"></span></div>
+          <div class="sk-item"><span class="sk sk-av"></span><span class="sk sk-line w70"></span><span class="sk sk-line"></span></div>
+        </div>
+      </div>
+      <figcaption><span><b>Lista</b> — avatar 24 + texto + cifra</span><span>radio 4 · gap 12</span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>Con <code>prefers-reduced-motion: reduce</code></b> el shimmer se apaga y el bloque queda estático en <code>--bw-surface-muted</code>. La forma se mantiene: no hay pulso ni gradiente en movimiento.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Progreso</h2>
+      <p class="fam-sub">Determinado cuando el sistema sabe cuánto falta (perfil fiscal, subida de documentos), indeterminado cuando no. La barra es de 8 px y va sobre la superficie, nunca encima de una card de dato.</p>
+    </div>
+    <div class="fam-contract"><b>bw-progress</b> · <em>value</em> · <em>indeterminate</em><br>hoy: <b>p-progressBar</b> / <b>p-progressSpinner</b></div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live stack">
+        <div class="prog">
+          <div class="prog-top"><b>Perfil fiscal</b><span>72%</span></div>
+          <div class="bar" role="progressbar" aria-label="Perfil fiscal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="72"><i style="width:72%"></i></div>
+          <span class="mono">value 72 · label “Perfil fiscal”</span>
+        </div>
+        <div class="prog">
+          <div class="prog-top"><b>Enviando boletas al SII</b><span>indeterminado</span></div>
+          <div class="bar indet" role="progressbar" aria-label="Enviando boletas al SII" aria-valuetext="En curso"><i></i></div>
+          <span class="mono">indeterminate · sin aria-valuenow · loop hasta que la promesa resuelve</span>
+          <div class="lifecycle" role="group" aria-label="Qué pasa cuando termina">
+            <span class="lc lc-done"><b>Listo</b> la barra llega a 100% con check y se va; queda el toast “12 boletas enviadas”.</span>
+            <span class="lc lc-err"><b>Falla</b> la barra desaparece y entra el error con “Reintentar”.</span>
+            <span class="lc lc-wait"><b>Demora</b> sigue el loop, pero con “Puede tardar unos minutos” y un Cancelar.</span>
+          </div>
+          <span class="mono">aria-live en el texto de estado, no en la barra</span>
+        </div>
+      </div>
+      <figcaption><span><b>Determinado e indeterminado</b> — el indeterminado no “termina” solo: al resolver se reemplaza por el estado final; con reduced motion se congela pero el texto sostiene el significado</span><span><code>--bw-300</code> sobre <code>--bw-surface-muted</code></span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live stack">
+        <div class="steps" role="group" aria-label="Onboarding fiscal: 1 de 3 completado">
+          <div class="step step-done"><span class="step-dot" aria-hidden="true">✓</span>Datos del emisor</div>
+          <span class="step-line done" aria-hidden="true"></span>
+          <div class="step step-now" aria-current="step"><span class="step-dot" aria-hidden="true">2</span>Actividad económica</div>
+          <span class="step-line" aria-hidden="true"></span>
+          <div class="step"><span class="step-dot" aria-hidden="true">3</span>Documentos</div>
+        </div>
+        <div class="prog">
+          <div class="prog-top"><b>Onboarding fiscal</b><span>1 de 3 completado</span></div>
+          <div class="bar" role="progressbar" aria-label="Onboarding fiscal" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1" aria-valuetext="1 de 3 completado"><i style="width:33.33%"></i></div>
+          <span class="mono">3 pasos · paso actual con aria-current</span>
+        </div>
+      </div>
+      <figcaption><span><b>Progreso por pasos</b> — el paso cumplido no usa blanco sobre verde</span><span>dot 24 · tinte 18% + <code>--bw-chip-text-success</code></span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Estado vacío</h2>
+      <p class="fam-sub">Un vacío no es un error: es una invitación. Título, una línea que explique el contexto y la acción primaria. Si depende de un filtro, se dice en la segunda línea.</p>
+    </div>
+    <div class="fam-contract"><b>bw-empty-state</b> · <em>title</em> · <em>description</em> · <em>action</em><br>hoy: markup suelto en agenda</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live empty-live">
+        <div class="empty">
+          <span class="empty-ico" aria-hidden="true">▦</span>
+          <h3>Sin reservas para hoy</h3>
+          <p>No hay citas agendadas para el martes 2 de diciembre en la sucursal Providencia.</p>
+          <button class="btn btn-primary">Nueva reserva</button>
+        </div>
+      </div>
+      <figcaption><span><b>Vacío de agenda</b> — texto + acción primaria, nunca solo ilustración</span><span>card 520 · dashed <code>--surface-border</code></span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="rules">
+  <div class="rule">
+    <h3>Hacé</h3>
+    <ul>
+      <li>Skeleton para la carga de lista y de detalle; el spinner vive dentro del botón que disparó la acción.</li>
+      <li>Todo error ofrece una acción: Reintentar, Ver detalle o Registrar pago.</li>
+      <li>Decí qué no se modificó: “No se modificó ningún dato”.</li>
+      <li>Un toast por evento; el stack no pasa de tres.</li>
+    </ul>
+  </div>
+  <div class="rule no">
+    <h3>No hagas</h3>
+    <ul>
+      <li>Validación de formulario con toast: el error va en el campo, con texto y borde.</li>
+      <li>Auto-dismiss en confirmaciones destructivas: esperan un click explícito.</li>
+      <li>Skeleton para un botón o un label: ahí va spinner o nada.</li>
+      <li>Mensaje de error sin ícono ni severidad: el color solo no alcanza.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <span>Tokens usados: <code>--bw-300</code> <code>--bw-500</code> <code>--bw-100</code> <code>--bw-50</code> <code>--bw-200</code> <code>--bw-surface-muted</code> <code>--bw-status-asiste</code> <code>--bw-status-confirmado</code> <code>--bw-status-pendiente</code> <code>--bw-chip-text-*</code> <code>--bw-radius-sm/md/lg/pill</code> <code>--bw-text-2xs/xs/sm/lg</code> <code>--bw-shadow-popover</code></span>
+  <span>04 / 08 · fuentes: <code>_tokens.scss</code> · <code>_primeng-bridge.scss</code></span>
+</footer>
+
+</body>
+</html>

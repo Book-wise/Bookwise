@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · Navegación y datos: tabs, acordeón, tabla y paginación</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-success:#22c55e; --bw-warning:#f59e0b;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-tab-color:var(--bw-500);
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-text-2xs:.6875rem; --bw-text-xs:.75rem; --bw-text-sm:.875rem; --bw-text-lg:1.125rem;
+    --bw-transition-fast:.15s;
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bw-tracking-tight:-0.01em;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:66ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+  .mono { font-family:var(--mono); font-size:.6875rem; }
+
+  .contracts { display:grid; grid-template-columns:repeat(5,1fr); gap:var(--bw-space-sm); margin-top:var(--bw-space-md); }
+  .contract { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:10px 12px; font-size:.75rem; color:var(--text-color-secondary); }
+  .contract b { display:block; font-family:var(--mono); font-size:.75rem; color:var(--text-color); margin-bottom:3px; }
+  .contract em { font-style:normal; color:var(--bw-500); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:62ch; }
+  .fam-contract { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); text-align:right; }
+  .fam-contract b { color:var(--bw-500); }
+
+  .specs { display:grid; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .two { grid-template-columns:1fr 1fr; }
+  figure.spec { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .live { padding:var(--bw-space-lg); display:flex; flex-wrap:wrap; align-items:center; gap:12px; min-height:96px; }
+  .live.tint { background:var(--surface-ground); }
+  .live.wide { padding:0; display:block; }
+  figcaption { border-top:1px solid var(--surface-border); padding:9px 14px; font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  figcaption b { color:var(--text-color); font-weight:600; }
+
+  .note { margin-top:var(--bw-space-md); background:var(--bw-50); border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-md); padding:10px 14px; font-size:.8125rem; color:var(--text-label); }
+  .note b { font-weight:600; }
+
+  /* Botones (subconjunto del artboard 01) */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:var(--bw-control-height); padding:0 16px; border-radius:var(--bw-radius-md); font-family:var(--font); font-size:.875rem; font-weight:500; border:1px solid transparent; cursor:pointer; transition:background var(--bw-transition-fast) ease, border-color var(--bw-transition-fast) ease; white-space:nowrap; }
+  .btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .btn-primary { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .btn-primary:hover { background:color-mix(in srgb, var(--bw-300) 85%, var(--bw-200)); }
+  .btn-outline { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn-outline:hover { background:var(--bw-surface-muted); }
+  .btn-ghost { background:transparent; color:var(--bw-500); }
+  .btn-ghost:hover { background:var(--bw-100); }
+  .btn-sm { height:2rem; padding:0 12px; font-size:.8125rem; }
+  .btn-xs { height:1.75rem; padding:0 8px; font-size:.75rem; gap:4px; }
+
+  /* Avatares y chips (subconjunto del artboard 01) */
+  .av { border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:600; flex:none; }
+  .av-24 { width:24px; height:24px; font-size:.625rem; }
+  .av-alt { background:var(--bw-surface-muted); color:var(--text-label); }
+  .av-brand { background:var(--bw-100); color:var(--bw-500); }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--bw-radius-pill); font-size:.75rem; font-weight:500; white-space:nowrap; }
+  .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+
+  /* Tabs */
+  .tablist { display:flex; gap:26px; border-bottom:1px solid var(--surface-border); background:transparent; width:100%; flex-wrap:wrap; row-gap:0; }
+  .tab { position:relative; display:inline-flex; align-items:center; gap:7px; padding:10px 2px 12px; background:none; border:0; font-family:var(--font); font-size:var(--bw-text-sm); font-weight:500; color:var(--text-color-secondary); cursor:pointer; white-space:nowrap; transition:color var(--bw-transition-fast) ease; }
+  .tab:hover { color:var(--bw-500); }
+  .tab.is-active { color:var(--bw-tab-color); }
+  .tab.is-active::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--bw-tab-color); border-radius:2px 2px 0 0; }
+  .tab:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; border-radius:var(--bw-radius-sm); }
+  .tab-count { min-width:20px; height:20px; padding:0 6px; border-radius:var(--bw-radius-pill); background:var(--bw-surface-muted); color:var(--text-color-secondary); font-size:.6875rem; font-weight:600; display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
+  .tab.is-active .tab-count { background:var(--bw-100); color:var(--bw-500); }
+  .tabpanel { padding-top:14px; display:grid; gap:4px; flex:1 0 100%; }
+  .tabpanel[hidden] { display:none; }
+  .tabpanel .tp-line { font-size:var(--bw-text-sm); }
+  .tabpanel .tp-meta { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+
+  /* Acordeón */
+  .acc { width:100%; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); overflow:hidden; }
+  .acc-item + .acc-item { border-top:1px solid var(--surface-border); }
+  .acc-head { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; background:none; border:0; font-family:var(--font); font-size:var(--bw-text-sm); font-weight:500; color:var(--text-color); text-align:left; cursor:pointer; transition:background var(--bw-transition-fast) ease; }
+  .acc-head:hover { background:var(--bw-surface-muted); }
+  .acc-head:focus-visible { outline:2px solid var(--bw-300); outline-offset:-2px; }
+  .chev { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; flex:none; border-radius:var(--bw-radius-pill); background:var(--bw-surface-muted); color:var(--text-label); transition:transform var(--bw-transition-fast) ease, background var(--bw-transition-fast) ease, color var(--bw-transition-fast) ease; }
+  .chev svg { display:block; }
+  .acc-head:hover .chev { background:var(--bw-100); color:var(--bw-500); }
+  .acc-head[aria-expanded="true"] .chev { transform:rotate(180deg); background:var(--bw-100); color:var(--bw-500); }
+  .acc-body { padding:0 16px 14px; }
+  .acc-body[hidden] { display:none; }
+  .acc-dl { display:grid; grid-template-columns:132px 1fr; gap:5px 12px; font-size:.8125rem; margin:0; }
+  .acc-dl dt { color:var(--text-color-secondary); }
+  .acc-dl dd { color:var(--text-color); margin:0; }
+
+  /* Tabla */
+  .table-wrap { overflow-x:auto; }
+  table.bwt { width:100%; border-collapse:collapse; font-size:var(--bw-text-sm); }
+  table.bwt caption { text-align:left; padding:14px 16px 10px; font-size:var(--bw-text-xs); color:var(--text-color-secondary); caption-side:top; }
+  table.bwt th { height:36px; padding:0 12px; text-align:left; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-color-secondary); background:var(--bw-surface-muted); border-bottom:1px solid var(--surface-border); white-space:nowrap; }
+  table.bwt th:first-child, table.bwt td:first-child { padding-left:16px; }
+  table.bwt th:last-child, table.bwt td:last-child { padding-right:16px; text-align:right; }
+  table.bwt td { height:44px; padding:0 12px; border-bottom:1px solid var(--surface-border); vertical-align:middle; white-space:nowrap; }
+  table.bwt tbody tr { transition:background var(--bw-transition-fast) ease; }
+  table.bwt tbody tr:hover { background:var(--bw-surface-muted); }
+  table.bwt tbody tr:last-child td { border-bottom:0; }
+  .cell-pac { display:flex; align-items:center; gap:8px; }
+  .cell-date { font-variant-numeric:tabular-nums; }
+  .cell-date span { color:var(--text-color-secondary); font-size:var(--bw-text-xs); margin-left:4px; }
+  .cell-pay { font-variant-numeric:tabular-nums; font-size:var(--bw-text-xs); }
+  .cell-pay small { display:block; color:var(--text-color-secondary); font-size:var(--bw-text-2xs); }
+  .pay-paid { color:var(--bw-chip-text-success); }
+  .pay-partial { color:var(--bw-chip-text-remaining); }
+  .pay-unpaid { color:var(--bw-chip-text-danger); }
+
+  /* Paginador */
+  .pager { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; width:100%; }
+  .pager-info { font-size:.8125rem; color:var(--text-color-secondary); font-variant-numeric:tabular-nums; }
+  .pager-ctrls { display:flex; align-items:center; gap:4px; }
+  .pg { min-width:32px; height:32px; padding:0 8px; border:1px solid transparent; border-radius:var(--bw-radius-sm); background:transparent; font-family:var(--font); font-size:.8125rem; font-weight:500; color:var(--text-color); cursor:pointer; font-variant-numeric:tabular-nums; }
+  .pg:hover { background:var(--bw-surface-muted); }
+  .pg[disabled] { color:var(--text-color-secondary); opacity:.45; cursor:not-allowed; background:transparent; }
+  .pg:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .pg.is-current { background:var(--bw-500); border-color:var(--bw-500); color:var(--bw-text-on-brand); }
+  .pg.is-current:hover { background:var(--bw-500); }
+  .pg-sep { min-width:24px; text-align:center; color:var(--text-color-secondary); font-size:.8125rem; }
+
+  /* Card */
+  .bw-card { width:360px; padding:16px; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); display:grid; gap:5px; }
+  .bw-card .ov { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  .bw-card h3 { font-size:var(--bw-text-lg); font-weight:500; line-height:1.35; color:var(--text-heading); }
+  .bw-card .cmeta { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .bw-card .cbody { font-size:.8125rem; margin-top:4px; }
+  .bw-card .cfoot { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:11px; margin-top:9px; border-top:1px solid var(--surface-border); }
+  .cprice { font-size:var(--bw-text-lg); font-weight:500; font-variant-numeric:tabular-nums; }
+  .cprice small { display:block; font-size:var(--bw-text-2xs); font-weight:400; color:var(--text-color-secondary); }
+
+  /* Reglas */
+  .rules { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-lg); }
+  .rule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-status-asiste); border-radius:var(--bw-radius-md); padding:12px 16px; font-size:.8125rem; }
+  .rule.no { border-left-color:var(--bw-status-pendiente); }
+  .rule h3 { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; margin-bottom:6px; }
+  .rule ul { padding-left:16px; display:grid; gap:4px; }
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer code { font-size:.6875rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tab, .acc-head, .chev, .btn, .pg, table.bwt tbody tr { transition:none; }
+  }
+
+  /* Card de servicio (app-owned, no PrimeNG) */
+  .svc-card { width:360px; display:flex; flex-direction:column; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .svc-media { position:relative; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; background:radial-gradient(120% 120% at 20% 0%, var(--bw-50) 0%, var(--bw-100) 60%, color-mix(in srgb, var(--bw-100) 70%, var(--bw-200)) 100%); }
+  .svc-media--muted { background:repeating-linear-gradient(45deg, var(--bw-surface-muted) 0 12px, var(--bw-50) 12px 24px); }
+  .svc-initials { font-size:1.875rem; font-weight:700; letter-spacing:var(--bw-tracking-tight); color:var(--bw-500); opacity:.5; }
+  .svc-initials--muted { font-size:.75rem; font-weight:500; letter-spacing:0; opacity:.85; color:var(--text-color-secondary); }
+  .svc-pick { position:absolute; top:10px; right:10px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--surface-border); border-radius:var(--bw-radius-sm); background:var(--surface-card); box-shadow:var(--bw-shadow-card); color:transparent; font-size:.75rem; cursor:pointer; }
+  .svc-pick[aria-checked="true"] { background:var(--bw-300); border-color:var(--bw-300); color:var(--bw-text-on-brand); }
+  .svc-image-btn { position:absolute; left:10px; bottom:10px; display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 8px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); box-shadow:var(--bw-shadow-card); color:var(--text-color-secondary); font-family:var(--font); font-size:.75rem; font-weight:500; cursor:pointer; }
+  .svc-image-btn:hover { border-color:var(--bw-300); color:var(--bw-500); }
+  .svc-image-btn svg { width:13px; height:13px; flex:none; }
+  .svc-duration { position:absolute; right:10px; bottom:10px; padding:2px 8px; border-radius:var(--bw-radius-sm); background:color-mix(in srgb, var(--bw-900) 72%, transparent); color:var(--surface-card); font-size:.75rem; }
+  .svc-body { display:grid; gap:10px; padding:14px 16px 16px; flex:1; }
+  .svc-title { display:flex; align-items:flex-start; gap:8px; }
+  .svc-title h3 { font-size:1rem; font-weight:500; line-height:1.3; color:var(--text-color); }
+  .svc-title .chip { margin-left:auto; flex:none; }
+  .svc-terms { list-style:none; display:grid; gap:6px; margin:0; padding:0; }
+  .svc-term { display:flex; align-items:center; gap:8px; padding:7px 10px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); font-size:.875rem; }
+  .svc-term b { margin-left:auto; font-weight:500; font-variant-numeric:tabular-nums; }
+  .svc-term--off { color:var(--text-color-secondary); }
+  .svc-no-terms { font-size:.8125rem; color:var(--text-color-secondary); }
+  .svc-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 16px; border-top:1px solid var(--surface-border); }
+  .woo { font-size:.75rem; color:var(--bw-chip-text-success); }
+  .woo--off { color:var(--text-color-secondary); }
+
+  .svc-term__per { color:var(--text-color-secondary); font-size:.75rem; }
+  .svc-woo { display:inline-flex; align-items:center; gap:5px; font-size:.75rem; color:var(--text-color-secondary); white-space:nowrap; }
+  .svc-woo::before { content:''; width:8px; height:8px; border-radius:var(--bw-radius-pill); background:var(--text-color-secondary); flex:none; }
+  .svc-woo--synced::before { background:var(--bw-success); }
+  .svc-woo--changed::before { background:var(--bw-warning); }
+  .svc-woo--new::before { background:var(--text-color-secondary); }
+  .svc-pick--on { background:var(--bw-300); border-color:var(--bw-300); color:var(--bw-text-on-brand); }
+  .svc-warn { margin:0; padding:6px 10px; border:1px dashed color-mix(in srgb, var(--bw-warning) 45%, transparent); border-radius:var(--bw-radius-sm); background:color-mix(in srgb, var(--bw-warning) 10%, transparent); color:var(--bw-chip-text-warning); font-size:.75rem; }
+  .sp-sync { display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); }
+  .sp-sync__dot { width:8px; height:8px; border-radius:50%; background:var(--bw-success); flex:none; }
+  .sp-sync__text { display:grid; gap:2px; font-size:.8125rem; }
+  .sp-sync__text strong { font-weight:600; }
+  .sp-sync__text small { color:var(--text-color-secondary); font-size:.75rem; }
+  .sp-sync__actions { margin-left:auto; }
+  .sp-selbar { display:flex; align-items:center; gap:12px; width:100%; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 35%, var(--surface-border)); border-radius:var(--bw-radius-lg); }
+  .sp-selbar__text { display:grid; gap:2px; font-size:.8125rem; }
+  .sp-selbar__text small { color:var(--text-color-secondary); font-size:.75rem; }
+  .sp-selbar__actions { margin-left:auto; display:flex; gap:6px; }
+
+  .ds-band { margin-top:var(--bw-space-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); font-size:.75rem; color:var(--text-color-secondary); }
+  .ds-band__tag { background:var(--bw-100); color:var(--bw-500); border-radius:var(--bw-radius-pill); padding:2px 9px; font-size:.6875rem; font-weight:600; }
+  .ds-band__link { margin-left:auto; color:var(--bw-500); font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); }
+
+  .row-tools { display:inline-flex; align-items:center; gap:6px; color:var(--text-color-secondary); font-size:.75rem; }
+  .row-check { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border:1px solid var(--surface-border); border-radius:3px; background:var(--surface-card); font-size:.625rem; color:var(--bw-500); }
+  .svc-cell { display:inline-flex; align-items:center; gap:8px; }
+  .svc-cell b { display:block; font-weight:500; }
+  .svc-cell small { display:block; font-size:.6875rem; color:var(--text-color-secondary); }
+  .terms-cell { white-space:normal; padding-top:6px; padding-bottom:6px; display:table-cell; }
+  .term-line { display:flex; align-items:baseline; gap:8px; font-size:.75rem; }
+  .term-line b { font-weight:500; font-variant-numeric:tabular-nums; }
+  .warn-inline { color:var(--bw-chip-text-warning); font-size:.6875rem; }
+  .no-variations { color:var(--bw-status-pendiente); font-size:.8125rem; }
+  .estado-cell { display:grid; gap:3px; justify-items:start; }
+  .woo-dot { display:inline-flex; align-items:center; gap:5px; font-size:.6875rem; color:var(--text-color-secondary); }
+  .woo-dot::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--text-color-secondary); }
+  .woo-dot.is-changed::before { background:var(--bw-warning); }
+  .cell-price { font-variant-numeric:tabular-nums; font-weight:500; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 05</div>
+    <h1>Navegación y datos: tabs, acordeón, tabla y paginación</h1>
+    <p class="lead">Mover y mirar. Los tabs cambian de contexto dentro de la misma reserva, el acordeón abre una sección, la lista muestra el mantenedor y el paginador dice dónde estás. Todo con la fila de 44 px y el ghost de fila: el primario vive en la barra, no en cada renglón.</p>
+  </div>
+  <div class="meta">1440 × 1320<br>light · tokens del 2026-11-27</div>
+</header>
+<div class="ds-band">
+  <span class="ds-band__tag">Contrato, no rediseño</span>
+  <span>Componentes propios con transición paulatina: un consumidor por vez. El formato existente manda.</span>
+  <a class="ds-band__link" href="00-estado-y-transicion.html">Estado y transición →</a>
+</div>
+
+
+<div class="contracts">
+  <div class="contract"><b>bw-tabs</b><em>active = model('reserva')</em><br>por id, no por índice · tablist transparente</div>
+  <div class="contract"><b>bw-accordion</b><em>open = model()</em><br>una sección abierta a la vez</div>
+  <div class="contract"><b>bw-table</b><em>columns</em> · <em>rows</em> · <em>dense</em><br>fila 44 px · sin zebra</div>
+  <div class="contract"><b>bw-paginator</b><em>page = model()</em> · <em>total</em><br>“Mostrando 1–10 de 128”</div>
+  <div class="contract"><b>bw-card</b> nativo<br>padding 16 · radius 8 · <code>--bw-shadow-card</code></div>
+</div>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Tabs</h2>
+      <p class="fam-sub">Subrayado, no píldora: el tablist es transparente y el activo se marca con <code>--bw-tab-color</code> y una línea de 2 px. Los conteos son parte del tab, no un badge aparte. Acá se cambia de contexto, no de paso.</p>
+    </div>
+    <div class="fam-contract"><b>bw-tabs</b> · <em>active</em> · <em>items</em><br>hoy: <b>p-tabs</b> / <b>p-tabMenu</b></div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live">
+        <div class="tablist" role="tablist" aria-label="Detalle de la reserva de Camila Rojas">
+          <button class="tab is-active" role="tab" id="tab-reserva" aria-selected="true" aria-controls="panel-reserva" tabindex="0">Reserva <span class="tab-count">12</span></button>
+          <button class="tab" role="tab" id="tab-ficha" aria-selected="false" aria-controls="panel-ficha" tabindex="-1">Ficha <span class="tab-count">3</span></button>
+          <button class="tab" role="tab" id="tab-pagos" aria-selected="false" aria-controls="panel-pagos" tabindex="-1">Pagos <span class="tab-count">2</span></button>
+          <button class="tab" role="tab" id="tab-historial" aria-selected="false" aria-controls="panel-historial" tabindex="-1">Historial <span class="tab-count">8</span></button>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="panel-reserva" aria-labelledby="tab-reserva" tabindex="0">
+          <p class="tp-line">Camila Rojas · Depilación láser piernas completas</p>
+          <p class="tp-meta">mar 2 dic, 10:30 · Box 2 · Valentina Soto · $48.000</p>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="panel-ficha" aria-labelledby="tab-ficha" tabindex="0" hidden>
+          <p class="tp-line">Ficha dermatológica · 3 documentos</p>
+          <p class="tp-meta">Consentimiento firmado · ficha de sesión 2 · control post 14 días</p>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="panel-pagos" aria-labelledby="tab-pagos" tabindex="0" hidden>
+          <p class="tp-line">2 movimientos · saldo $28.000</p>
+          <p class="tp-meta">Abono $20.000 el 24 nov · saldo pendiente al 2 dic</p>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="panel-historial" aria-labelledby="tab-historial" tabindex="0" hidden>
+          <p class="tp-line">8 sesiones desde marzo 2026</p>
+          <p class="tp-meta">Última: 14 nov · próxima: 2 dic, 10:30</p>
+        </div>
+      </div>
+      <figcaption><span><b>Cuatro contextos</b> — activo con línea de 2 px; el conteo va al lado del label</span><span>alto 42 · 14/500 · tablist transparente · <code>--bw-tab-color</code></span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>activeIndex de PrimeNG se traduce a <code>active = model(id)</code></b> — “reserva”, “ficha”, “pagos”, “historial”. Si se reordena la lista, el tab activo sigue siendo el mismo: el índice nunca se guarda.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Acordeón</h2>
+      <p class="fam-sub">Para datos que se consultan de a uno: la reserva abierta y las notas cerradas. Chevron que gira, <code>aria-expanded</code> real y una sola sección abierta a la vez.</p>
+    </div>
+    <div class="fam-contract"><b>bw-accordion</b> · <em>open = model()</em><br>hoy: <b>p-accordion</b> + <b>p-accordionTab</b></div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live">
+        <div class="acc">
+          <div class="acc-item">
+            <button class="acc-head" id="acc-h-1" aria-expanded="true" aria-controls="acc-1">Datos de la reserva <span class="chev" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l5 5 5-5"/></svg></span></button>
+            <div class="acc-body" id="acc-1" role="region" aria-labelledby="acc-h-1">
+              <dl class="acc-dl">
+                <dt>Paciente</dt><dd>Camila Rojas · 18.442.190-7</dd>
+                <dt>Servicio</dt><dd>Depilación láser piernas completas</dd>
+                <dt>Profesional</dt><dd>Valentina Soto</dd>
+                <dt>Fecha</dt><dd>martes 2 de diciembre, 10:30–11:30</dd>
+                <dt>Precio</dt><dd>$48.000 · abono $20.000</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="acc-item">
+            <button class="acc-head" id="acc-h-2" aria-expanded="false" aria-controls="acc-2">Notas de la sesión <span class="chev" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l5 5 5-5"/></svg></span></button>
+            <div class="acc-body" id="acc-2" role="region" aria-labelledby="acc-h-2" hidden>
+              <p>Piel sin irritación en la sesión anterior. Se bajó la potencia a 12 J/cm² en zona inguinal.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Un abierto, uno cerrado</b> — el cerrado conserva su contenido en el DOM con <code>hidden</code></span><span>header 44 · radius 8 · chevron 26 px · stroke 2.2</span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>Una sección abierta a la vez</b> — abrir “Notas de la sesión” cierra “Datos de la reserva”. El acordeón no se usa para pasos ni para filtros.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Tabla de servicios (vista Lista)</h2>
+      <p class="fam-sub">La grilla de servicios conmuta entre <b>Tarjetas</b> y <b>Lista</b>; esta es la vista Lista real. Columnas: selección, servicio con duración y cantidad de variaciones, sesiones y precios, precio base, estado (Activo + Woo) y acciones. La fila se expande para ver las variaciones.</p>
+    </div>
+    <div class="fam-contract"><b>sp-table</b> app-owned · no PrimeNG<br>fila 44 · sin zebra · estado Woo en la columna Estado</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live wide">
+        <div class="table-wrap">
+          <table class="bwt">
+            <caption>Servicios y packs · 5 servicios · 3 variaciones</caption>
+            <thead>
+              <tr>
+                <th scope="col"><span class="sr-only">Seleccionar y expandir</span></th>
+                <th scope="col">Servicio</th>
+                <th scope="col">Sesiones y precios</th>
+                <th scope="col">Precio base</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="row-tools"><span class="row-check" aria-hidden="true">✓</span><span class="row-chev" aria-hidden="true">▸</span></span></td>
+                <td><span class="svc-cell"><span class="av av-24 av-brand" aria-hidden="true">CD</span><span><b>Consulta de Evaluación Inicial</b><small>30 min · 0 variaciones</small></span></span></td>
+                <td class="terms-cell"><span class="no-variations">Sin variaciones: solo se vende suelta</span></td>
+                <td class="cell-price">$0</td>
+                <td><span class="estado-cell"><span class="chip" style="background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success)">Activo</span><span class="woo-dot">Sin exportar</span></span></td>
+                <td><button class="btn btn-ghost btn-xs" type="button">Editar</button></td>
+              </tr>
+              <tr>
+                <td><span class="row-tools"><span class="row-check" aria-hidden="true">✓</span><span class="row-chev" aria-hidden="true">▸</span></span></td>
+                <td><span class="svc-cell"><span class="av av-24 av-alt" aria-hidden="true">DL</span><span><b>Drenaje Linfático</b><small>90 min · 1 variación</small></span></span></td>
+                <td class="terms-cell">
+                  <span class="term-line">4 sesiones <b>$40.000 /sesión</b> <b>$160.000</b></span>
+                  <span class="warn-inline">Sin término «1 sesión»: se exporta sin precio unitario</span>
+                </td>
+                <td class="cell-price">$45.000</td>
+                <td><span class="estado-cell"><span class="chip" style="background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success)">Activo</span><span class="woo-dot">Sin exportar</span></span></td>
+                <td><button class="btn btn-ghost btn-xs" type="button">Editar</button></td>
+              </tr>
+              <tr>
+                <td><span class="row-tools"><span class="row-check" aria-hidden="true">✓</span><span class="row-chev" aria-hidden="true">▸</span></span></td>
+                <td><span class="svc-cell"><span class="av av-24 av-brand" aria-hidden="true">KI</span><span><b>Kinesiología</b><small>60 min · 2 variaciones</small></span></span></td>
+                <td class="terms-cell">
+                  <span class="term-line">8 sesiones <b>$36.000 /sesión</b> <b>$288.000</b></span>
+                  <span class="warn-inline">Sin término «1 sesión»: se exporta sin precio unitario</span>
+                </td>
+                <td class="cell-price">$60.000</td>
+                <td><span class="estado-cell"><span class="chip" style="background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success)">Activo</span><span class="woo-dot is-changed">Con cambios</span></span></td>
+                <td><button class="btn btn-ghost btn-xs" type="button">Editar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figcaption><span><b>Lista real de servicios</b> — selección + chevron para expandir, servicio con duración y variaciones, términos con precio por sesión, precio base y estado Woo</span><span>fila 44 · sin zebra · <code>Tarjetas | Lista</code></span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Paginador</h2>
+      <p class="fam-sub">Siempre dice el total y el rango visible. Anterior y siguiente con <code>aria-label</code>, la página actual con <code>aria-current="page"</code> y las lejanas con elipsis. 13 páginas de 10 sobre 128 reservas.</p>
+    </div>
+    <div class="fam-contract"><b>bw-paginator</b> · <em>page = model()</em> · <em>total</em><br>hoy: <b>p-paginator</b></div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live">
+        <nav class="pager" aria-label="Paginación de reservas">
+          <span class="pager-info">Mostrando 1–10 de 128</span>
+          <div class="pager-ctrls">
+            <button class="pg" aria-label="Página anterior" disabled aria-disabled="true">‹</button>
+            <button class="pg is-current" aria-current="page" aria-label="Página 1">1</button>
+            <button class="pg" aria-label="Página 2">2</button>
+            <button class="pg" aria-label="Página 3">3</button>
+            <span class="pg-sep" aria-hidden="true">…</span>
+            <button class="pg" aria-label="Página 13">13</button>
+            <button class="pg" aria-label="Página siguiente">›</button>
+          </div>
+        </nav>
+      </div>
+      <figcaption><span><b>Rango + total + páginas</b> — la primera página deshabilita “anterior”</span><span>botón 32 · radius 4 · 13/500</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Card de servicio</h2>
+      <p class="fam-sub">No es PrimeNG: la grilla de servicios es propia, conmuta entre <b>Tarjetas</b> y <b>Lista</b>, y la card ya resuelve imagen, variaciones y export a Woo. La imagen se cambia desde la misma card (botón siempre visible, en touch no hay hover) y cada término es una variación con su precio por sesión.</p>
+    </div>
+    <div class="fam-contract"><b>sp-card</b> app-owned · no PrimeNG<br>media 16:9 · variaciones = términos · estado Woo · radius 8</div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live tint">
+        <article class="svc-card">
+          <div class="svc-media">
+            <button class="svc-pick" type="button" role="checkbox" aria-checked="false" aria-label="Seleccionar Depilación láser piernas completas"><span aria-hidden="true">✓</span></button>
+            <span class="svc-initials" aria-hidden="true">DL</span>
+            <button class="svc-image-btn" type="button" aria-label="Cambiar imagen de Depilación láser piernas completas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+              Cambiar imagen
+            </button>
+            <span class="svc-duration">60 min</span>
+          </div>
+          <div class="svc-body">
+            <div class="svc-title">
+              <h3>Depilación láser piernas completas</h3>
+              <span class="chip" style="background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success)"><span class="dot" style="background:var(--bw-status-asiste)" aria-hidden="true"></span>Activo</span>
+            </div>
+            <ul class="svc-terms">
+              <li class="svc-term"><span>1 sesión</span><span class="svc-term__per">$48.000 /sesión</span><b>$48.000</b></li>
+              <li class="svc-term"><span>6 sesiones</span><span class="svc-term__per">$40.800 /sesión</span><b>$244.800</b></li>
+              <li class="svc-term svc-term--off"><span>10 sesiones · pausado</span><span class="svc-term__per">$36.000 /sesión</span><b>$360.000</b><span class="chip" style="background:color-mix(in srgb, var(--bw-status-pendiente) 18%, white); color:var(--bw-chip-text-danger)">Inactivo</span></li>
+            </ul>
+          </div>
+          <div class="svc-foot">
+            <span class="svc-woo svc-woo--synced">Al día</span>
+            <button class="btn btn-ghost btn-sm" type="button">Editar</button>
+          </div>
+        </article>
+      </div>
+      <figcaption><span><b>Card real de la grilla</b> — media 16:9 con iniciales y “Cambiar imagen” siempre visible; términos con precio y estado Woo</span><span>360 ancho · media 202 · radius 8 · <code>sp-card</code></span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live tint">
+        <article class="svc-card">
+          <div class="svc-media svc-media--muted">
+            <button class="svc-pick" type="button" role="checkbox" aria-checked="false" aria-label="Seleccionar Limpieza facial profunda"><span aria-hidden="true">✓</span></button>
+            <span class="svc-initials svc-initials--muted">Sin imagen · se usa la inicial</span>
+            <button class="svc-image-btn" type="button" aria-label="Cambiar imagen de Limpieza facial profunda">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+              Cambiar imagen
+            </button>
+            <span class="svc-duration">50 min</span>
+          </div>
+          <div class="svc-body">
+            <div class="svc-title">
+              <h3>Limpieza facial profunda</h3>
+              <span class="chip" style="background:color-mix(in srgb, var(--bw-status-pendiente) 18%, white); color:var(--bw-chip-text-danger)"><span class="dot" style="background:var(--bw-status-pendiente)" aria-hidden="true"></span>Inactivo</span>
+            </div>
+            <p class="svc-no-terms">Sin variaciones: solo se vende suelta</p>
+          </div>
+          <div class="svc-foot">
+            <span class="svc-woo svc-woo--new">Sin exportar</span>
+            <button class="btn btn-ghost btn-sm" type="button">Editar</button>
+          </div>
+        </article>
+      </div>
+      <figcaption><span><b>Sin imagen y sin términos</b> — patrón rayado + “se usa la inicial”; el botón de imagen sigue ahí para resolverlo</span><span>estado vacío real de la grilla</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live tint">
+        <article class="svc-card">
+          <div class="svc-media">
+            <button class="svc-pick svc-pick--on" type="button" role="checkbox" aria-checked="true" aria-label="Seleccionar Depilación láser axilas para exportar"><span aria-hidden="true">✓</span></button>
+            <span class="svc-initials" aria-hidden="true">DA</span>
+            <button class="svc-image-btn" type="button" aria-label="Cambiar imagen de Depilación láser axilas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+              Cambiar imagen
+            </button>
+            <span class="svc-duration">30 min</span>
+          </div>
+          <div class="svc-body">
+            <div class="svc-title">
+              <h3>Depilación láser axilas</h3>
+              <span class="chip" style="background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success)"><span class="dot" style="background:var(--bw-status-asiste)" aria-hidden="true"></span>Activo</span>
+            </div>
+            <ul class="svc-terms">
+              <li class="svc-term"><span>4 sesiones</span><span class="svc-term__per">$25.200 /sesión</span><b>$100.800</b></li>
+              <li class="svc-term"><span>8 sesiones</span><span class="svc-term__per">$23.800 /sesión</span><b>$190.400</b></li>
+            </ul>
+            <p class="svc-warn">Sin término «1 sesión»: se exporta sin precio unitario</p>
+          </div>
+          <div class="svc-foot">
+            <span class="svc-woo svc-woo--changed">Con cambios</span>
+            <button class="btn btn-ghost btn-sm" type="button">Editar</button>
+          </div>
+        </article>
+      </div>
+      <figcaption><span><b>Seleccionada y con cambios</b> — el checkbox alimenta la barra de export; el aviso §7 aparece cuando no hay variación de 1 sesión</span><span>estado Woo: con cambios</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live tint" style="display:grid;align-content:center;gap:10px">
+        <div class="sp-sync">
+          <span class="sp-sync__dot" aria-hidden="true"></span>
+          <span class="sp-sync__text"><strong>Nunca se exportó</strong><small>8 servicios · 21 variaciones exportables</small></span>
+          <span class="sp-sync__actions"><button class="btn btn-outline btn-sm" type="button">Exportar cambios (3)</button></span>
+        </div>
+        <div class="sp-selbar" role="status">
+          <span class="sp-selbar__text"><strong>3 servicios seleccionados · 12 variaciones</strong><small>Se exportan solo estos, con sus términos.</small></span>
+          <span class="sp-selbar__actions"><button class="btn btn-ghost btn-sm" type="button">Limpiar selección</button><button class="btn btn-primary btn-sm" type="button">Exportar seleccionados</button></span>
+        </div>
+      </div>
+      <figcaption><span><b>Barra de sincronización y selección</b> — el resumen cuenta variaciones, no solo servicios; seleccionar cambia lo que se exporta</span><span>8 servicios · 21 variaciones · 3 seleccionados</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Media 16:9 con iniciales cuando no hay foto.</li>
+        <li>Botón de imagen siempre visible (touch), con <code>aria-label</code> que nombra el servicio.</li>
+        <li>Cada término es una variación de Woo: etiqueta de sesiones + precio por sesión + total.</li>
+        <li>El estado de Woo (Al día · Con cambios · Sin exportar) va en el pie, con dot.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Mostrar la afinidad de imagen solo en hover.</li>
+        <li>Poner un botón primario en cada card (el primario vive en la barra).</li>
+        <li>Convertir el estado de Woo en un botón.</li>
+        <li>Rehacerla con PrimeNG: esta card es app-owned.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="rules">
+  <div class="rule">
+    <h3>Hacé</h3>
+    <ul>
+      <li>Tabs para cambiar de contexto dentro de la misma reserva, nunca para avanzar pasos.</li>
+      <li>Tabla densa con 44 px de alto mínimo y hover en toda la fila.</li>
+      <li>Paginador siempre con total y rango: “Mostrando 1–10 de 128”.</li>
+      <li>Acción de fila ghost; el primario vive una sola vez, en la barra.</li>
+    </ul>
+  </div>
+  <div class="rule no">
+    <h3>No hagas</h3>
+    <ul>
+      <li>Un botón primario repetido en cada fila de la tabla.</li>
+      <li>Dos secciones abiertas a la vez en el acordeón.</li>
+      <li>Paginador solo con flechas, sin total ni página actual.</li>
+      <li>Zebra en la tabla: el borde de 1 px y el hover alcanzan.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <span>Tokens usados: <code>--bw-tab-color</code> <code>--bw-300</code> <code>--bw-500</code> <code>--bw-100</code> <code>--bw-50</code> <code>--bw-surface-muted</code> <code>--bw-status-*</code> <code>--bw-chip-text-*</code> <code>--bw-radius-sm/md/lg/pill</code> <code>--bw-shadow-card</code> <code>--bw-text-2xs/xs/sm/lg</code> <code>--surface-border</code></span>
+  <span>05 / 08 · fuentes: <code>_tokens.scss</code> · <code>_primeng-bridge.scss</code></span>
+</footer>
+
+</body>
+</html>

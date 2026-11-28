@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "w9a3ko48",
+      "file": "05-navegacion-datos.html",
+      "selector": "#acc-h-1 > span",
+      "excerpt": "⌄",
+      "comment": "mejora esas flechas, esta esta muy debil",
+      "createdAt": "2026-11-28T00:03:04.726Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T00:03:04.826Z",
+      "resolvedAt": "2026-11-28T00:03:20.727Z",
+      "resolution": "Chevron del acordeón: glifo débil reemplazado por SVG 16px con stroke 2.2 dentro de un medallón de 26px (fondo muted, azul al abrir/hover)."
+    },
+    {
+      "id": "s0pt5xcf",
+      "file": "03-overlays.html",
+      "selector": "body > main > section:nth-of-type(2) > div:nth-of-type(2) > figure > div > div:nth-of-type(1) > div:nth-of-type(2) > p",
+      "excerpt": "420 · confirmación · closable=false",
+      "comment": "que pasa cuando es closable = true?",
+      "createdAt": "2026-11-28T00:05:16.116Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T00:05:16.148Z",
+      "resolvedAt": "2026-11-28T00:05:42.527Z",
+      "resolution": "Agregué el par 420 con closable=true (X en el header + nota de que cierra sin confirmar y emite dismissed) junto al de closable=false, y actualicé la caption."
+    },
+    {
+      "id": "9fbc0yjg",
+      "file": "04-feedback.html",
+      "selector": "body > section:nth-of-type(4) > div:nth-of-type(2) > figure:nth-of-type(1) > div > div:nth-of-type(2)",
+      "excerpt": "Enviando boletas al SII indeterminado indeterminate · sin aria-valuenow",
+      "comment": "que pasa con esta animacion cuando termina?",
+      "createdAt": "2026-11-28T00:07:11.080Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T00:07:11.114Z",
+      "resolvedAt": "2026-11-28T00:07:26.111Z",
+      "resolution": "El indeterminado no termina solo: agregué el ciclo de vida (listo / falla / demora) bajo la barra, con aria-live en el texto de estado y la nota de reduced motion."
+    },
+    {
+      "id": "xoq0bxph",
+      "file": "05-navegacion-datos.html",
+      "selector": "body > section:nth-of-type(5) > div:nth-of-type(2) > figure > div > article",
+      "excerpt": "LÁSER · SESIÓN INDIVIDUAL Depilación láser piernas completas 60 min · Valentina Soto · Box 2 Incluye enfriamiento con aire y crema post sesión. Pack de 6 sesiones con 15% de descuento. $48.000 por sesión Ver ficha Reservar",
+      "comment": "en la grilla de servicios me gustaria que te aferres un poco mas al diseño actual, este no le pertenece a primeng y ya contiene hasta gestion de imagen",
+      "createdAt": "2026-11-28T01:57:31.351Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T01:57:31.391Z",
+      "resolvedAt": "2026-11-28T01:58:18.592Z",
+      "resolution": "La card de servicio ahora refleja la real (sp-card): media 16:9 con iniciales, botón “Cambiar imagen” siempre visible, duración, términos con precio, estado Woo y checkbox de selección; segunda variante sin imagen ni términos."
+    },
+    {
+      "id": "j93kgan3",
+      "file": "05-navegacion-datos.html",
+      "selector": "body > section:nth-of-type(5) > div:nth-of-type(2) > figure > div",
+      "excerpt": "LÁSER · SESIÓN INDIVIDUAL Depilación láser piernas completas 60 min · Valentina Soto · Box 2 Incluye enfriamiento con aire y crema post sesión. Pack de 6 sesiones con 15% de descuento. $48.000 por sesión Ver ficha Reservar",
+      "comment": "ademas esa seccio ya presenta coherencia con la integracion de wordpress y sus etiquetas de variacion y demas",
+      "createdAt": "2026-11-28T01:58:04.860Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T01:58:04.876Z",
+      "resolvedAt": "2026-11-28T01:59:08.064Z",
+      "resolution": "La sección ahora muestra la coherencia con Woo: cada término es una variación (1/6/10 sesiones) con precio por sesión, estados Al día / Con cambios / Sin exportar, aviso §7 sin término de 1 sesión, y las barras de sincronización y selección con conteo de variaciones."
+    },
+    {
+      "id": "uwnlf5ta",
+      "file": "07-estados-sistema.html",
+      "selector": "body > section:nth-of-type(6) > div:nth-of-type(2) > figure:nth-of-type(1) > div > div:nth-of-type(2)",
+      "excerpt": "CR Camila Rojas Láser axilas · 40 min 10:30 Confirmado Ver ficha MF Matías Fuentes Depilación láser piernas · 45 min 11:00 Asiste Ver ficha JV Javiera Vergara Limpieza facial profunda · 60 min 11:45 Reservado Ver ficha",
+      "comment": "esta vista tenia un switch en un design previo, pude ir a revisarlo hay un toggle de vista de calendario a vista de lista, mas todos los selects de filtros guia de colores, selector de slot, por favor se estericto e apegarte y revisar los estados actuales de las vistas para que no rompas el trabajo de meses.",
+      "createdAt": "2026-11-28T02:11:11.463Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T02:11:12.849Z",
+      "resolvedAt": "2026-11-28T02:11:49.110Z",
+      "resolution": "La vista mobile ahora conserva los controles reales de la agenda: selector Calendario/Lista, filtros de sucursal/profesional/estado con guía de colores, densidad de slot y las acciones Ver ficha / Ver Pago en cada fila."
+    },
+    {
+      "id": "z1x1ebfq",
+      "file": "06-seleccion-avanzada.html",
+      "selector": "#ac-opt-1",
+      "excerpt": "CR Camila Rojas Fuentes 18.442.190-7 ↵",
+      "comment": "quiza datos relevantes como telefono e email, recuerda que podemos editarlos en el flujo de la tarjeta de reserva, pon atencion en las features importantes que ya existan, quiza no sea estrictamente aqui que eso cualifica pero siempre manten atencion del uso actual de los componentes",
+      "createdAt": "2026-11-28T02:45:06.353Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T03:00:02.792Z",
+      "resolvedAt": "2026-11-28T03:01:04.719Z",
+      "resolution": "Autocomplete: cada sugerencia suma email y teléfono (editables en el flujo de la reserva) junto a RUT. Tabla: nuevo estado “con datos” que muestra el reemplazo del skeleton por filas reales, con header y alto intactos."
+    },
+    {
+      "id": "n5vfcka3",
+      "file": "06-seleccion-avanzada.html",
+      "selector": "#ac-opt-1",
+      "excerpt": "CR Camila Rojas Fuentes 18.442.190-7 ↵",
+      "comment": "quiza datos relevantes como telefono e email, recuerda que podemos editarlos en el flujo de la tarjeta de reserva, pon atencion en las features importantes que ya existan, quiza no sea estrictamente aqui que eso cualifica pero siempre manten atencion del uso actual",
+      "createdAt": "2026-11-28T02:45:06.410Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T03:00:02.792Z",
+      "resolvedAt": "2026-11-28T03:01:04.719Z",
+      "resolution": "Autocomplete: cada sugerencia suma email y teléfono (editables en el flujo de la reserva) junto a RUT. Tabla: nuevo estado “con datos” que muestra el reemplazo del skeleton por filas reales, con header y alto intactos."
+    },
+    {
+      "id": "qomr1f79",
+      "file": "07-estados-sistema.html",
+      "selector": "body > section:nth-of-type(1) > div:nth-of-type(2)",
+      "excerpt": "loading aria-busy=\"true\" · 5 filas Reservas de hoy · martes 2 de diciembre PACIENTE SERVICIO HORA ESTADO ABONO Cargando las reservas de hoy. La tabla de cinco filas aparece en cuanto responde la agenda. loading — header real, 5 filas de 44 px con la forma del dato; sin spinner --bw-surface-muted → -",
+      "comment": "que pasa cuando si hay datos?",
+      "createdAt": "2026-11-28T02:59:59.480Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T03:00:02.792Z",
+      "resolvedAt": "2026-11-28T03:01:04.719Z",
+      "resolution": "Autocomplete: cada sugerencia suma email y teléfono (editables en el flujo de la reserva) junto a RUT. Tabla: nuevo estado “con datos” que muestra el reemplazo del skeleton por filas reales, con header y alto intactos."
+    },
+    {
+      "id": "dz5zr11n",
+      "file": "07-estados-sistema.html",
+      "selector": "body > section:nth-of-type(6) > div:nth-of-type(2) > figure:nth-of-type(2)",
+      "excerpt": "Nueva reserva × Paciente Camila Rojas Servicio Láser axilas · 40 min Profesional Javiera Vergara Fecha mar 2 dic 2026 Hora 15:30 Abono $48.000 Box Box 2 · láser Guardar reserva Cancelar b · diálogo full-screen — header y footer sticky; el footer queda sobre el teclado < 720 px · 100dvh",
+      "comment": "esto no es fiel al diseño actual, los datos son selects y hay mas componentes, revisalo",
+      "createdAt": "2026-11-28T03:03:03.028Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T03:03:09.926Z",
+      "resolvedAt": "2026-11-28T03:04:11.808Z",
+      "resolution": "Reemplacé el mock por el diálogo real a 390: modal 371×710 con radius 12 (no full-screen), header con selector de estado, campos como selects/datepicker (fecha, hora, paciente, sede, profesional) y footer fijo con Cancelar/Guardar."
+    },
+    {
+      "id": "7vg0bt5q",
+      "file": "01-base-botones-chips.html",
+      "selector": "body > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(2) > div",
+      "excerpt": "Guardar default Guardar hover Guardar active Guardar focus-visible Guardar disabled",
+      "comment": "mejora esto, hay poco contraste o cambio en el hover, dale mas vida considera interfaces modernas",
+      "createdAt": "2026-11-28T03:04:47.725Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T03:05:01.401Z",
+      "resolvedAt": "2026-11-28T03:05:53.975Z",
+      "resolution": "Primario con estados más marcados: hover azul profundo con elevación y 1px de lift, active pressed, focus con ring + glow; los tres usan solo tokens (color-mix de --bw-300 con --bw-900)."
+    },
+    {
+      "id": "493h0cmb",
+      "file": "04-feedback.html",
+      "selector": "body > section:nth-of-type(1) > div:nth-of-type(2) > figure > div > div > div:nth-of-type(1)",
+      "excerpt": "i Sincronización con el SII en curso Estamos enviando las boletas de ayer. Podés seguir trabajando: los folios se actualizan al terminar. Ver detalle ×",
+      "comment": "moderniza los mensajes",
+      "createdAt": "2026-11-28T03:06:34.263Z",
+      "status": "resolved",
+      "sentAt": "2026-11-28T03:06:49.820Z",
+      "resolvedAt": "2026-11-28T03:07:29.693Z",
+      "resolution": "Mensajes inline modernizados: superficie blanca, borde y medallón tintados por severidad, título 14/600, descripción 13 secundaria, acción pill y X ghost; el acento izquierdo mantiene la severidad."
+    }
+  ]
+}

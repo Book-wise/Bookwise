@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · Estados de sistema: tabla, toasts, tooltip y chart</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-success:#22c55e;
+    --bw-fc-btn-hover-bg:#2563eb; --bw-fc-btn-active-bg:#1d4ed8;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-tab-color:var(--bw-500);
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-xl:12px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-shadow-dialog-header:0 6px 10px -6px rgba(0,0,0,.08);
+    --bw-text-2xs:.6875rem; --bw-text-xs:.75rem; --bw-text-sm:.875rem; --bw-text-base:1rem;
+    --bw-text-lg:1.125rem; --bw-text-xl:1.25rem;
+    --bw-transition-fast:.15s;
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:66ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+  .mono { font-family:var(--mono); font-size:.6875rem; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  .contracts { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--bw-space-sm); margin-top:var(--bw-space-md); }
+  .contract { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:10px 12px; font-size:.75rem; color:var(--text-color-secondary); }
+  .contract b { display:block; font-family:var(--mono); font-size:.75rem; color:var(--text-color); margin-bottom:3px; }
+  .contract em { font-style:normal; color:var(--bw-500); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:62ch; }
+  .fam-contract { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); text-align:right; }
+  .fam-contract b { color:var(--bw-500); }
+
+  .specs { display:grid; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .two { grid-template-columns:1fr 1fr; }
+  figure.spec { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .live { padding:var(--bw-space-lg); display:flex; flex-wrap:wrap; align-items:center; gap:12px; min-height:96px; }
+  .live.tint { background:var(--surface-ground); }
+  .live.center { justify-content:center; }
+  figcaption { border-top:1px solid var(--surface-border); padding:9px 14px; font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  figcaption b { color:var(--text-color); font-weight:600; }
+
+  .note { margin-top:var(--bw-space-md); background:var(--bw-50); border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-md); padding:10px 14px; font-size:.8125rem; color:var(--text-label); }
+  .note b { font-weight:600; }
+
+  /* Botones (subconjunto del artboard 01) */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:var(--bw-control-height); padding:0 16px; border-radius:var(--bw-radius-md); font-family:var(--font); font-size:.875rem; font-weight:500; border:1px solid transparent; cursor:pointer; transition:background var(--bw-transition-fast) ease, border-color var(--bw-transition-fast) ease; white-space:nowrap; }
+  .btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .btn-primary { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .btn-primary:hover { background:var(--bw-fc-btn-hover-bg); }
+  .btn-primary:active { background:var(--bw-fc-btn-active-bg); }
+  .btn-outline { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn-outline:hover { background:var(--bw-surface-muted); }
+  .btn-ghost { background:transparent; color:var(--bw-500); }
+  .btn-ghost:hover { background:var(--bw-100); }
+  .btn-sm { height:2rem; padding:0 12px; font-size:.8125rem; }
+  .btn-icon { width:var(--bw-control-height); padding:0; }
+  .btn-icon.btn-sm { width:2rem; }
+  .btn[disabled] { background:var(--bw-surface-muted); color:var(--text-color-secondary); border-color:var(--surface-border); cursor:not-allowed; opacity:.7; }
+  .btn svg { display:block; }
+
+  /* Chips y avatares (subconjunto del artboard 01) */
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--bw-radius-pill); font-size:.75rem; font-weight:500; white-space:nowrap; }
+  .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  .chip-ok { background:color-mix(in srgb, var(--bw-status-asiste) 18%, var(--surface-card)); color:var(--bw-chip-text-success); }
+  .chip-warn { background:color-mix(in srgb, var(--bw-status-confirmado) 18%, var(--surface-card)); color:var(--bw-chip-text-warning); }
+  .chip-brand { background:color-mix(in srgb, var(--bw-status-reservado) 18%, var(--surface-card)); color:var(--bw-chip-text-online); }
+  .av { border-radius:50%; background:var(--bw-100); color:var(--bw-500); display:inline-flex; align-items:center; justify-content:center; font-weight:600; flex:none; }
+  .av-24 { width:24px; height:24px; font-size:.625rem; }
+  .av-36 { width:36px; height:36px; font-size:.8125rem; }
+
+  /* Tabla */
+  .frames { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  figure.frame { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; display:flex; flex-direction:column; }
+  .frame-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:9px 16px 8px; border-bottom:1px solid var(--surface-border); }
+  .frame-top b { font-family:var(--mono); font-size:.6875rem; font-weight:600; color:var(--bw-500); letter-spacing:.03em; }
+  .frame-top span { font-family:var(--mono); font-size:.6875rem; color:var(--text-color-secondary); }
+  .frame-body { flex:1 1 auto; }
+
+  table.bwt { width:100%; border-collapse:collapse; font-size:var(--bw-text-sm); }
+  table.bwt caption { text-align:left; padding:12px 16px 9px; font-size:var(--bw-text-xs); color:var(--text-color-secondary); caption-side:top; }
+  table.bwt th { height:36px; padding:0 12px; text-align:left; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-color-secondary); background:var(--bw-surface-muted); border-bottom:1px solid var(--surface-border); white-space:nowrap; }
+  table.bwt th:first-child, table.bwt td:first-child { padding-left:16px; }
+  table.bwt th:last-child, table.bwt td:last-child { padding-right:16px; text-align:right; }
+  table.bwt td { height:44px; padding:0 12px; border-bottom:1px solid var(--surface-border); vertical-align:middle; white-space:nowrap; }
+  table.bwt tbody tr:last-child td { border-bottom:0; }
+  table.bwt tbody tr:hover { background:var(--bw-surface-muted); }
+  .cell-pac { display:flex; align-items:center; gap:8px; }
+  .cell-date { font-variant-numeric:tabular-nums; }
+  .cell-pay { font-variant-numeric:tabular-nums; font-size:var(--bw-text-xs); }
+  .cell-pay small { display:block; color:var(--text-color-secondary); font-size:var(--bw-text-2xs); }
+  .pay-paid { color:var(--bw-chip-text-success); }
+
+  /* Skeleton: misma forma que el dato real */
+  .sk { display:block; background:linear-gradient(90deg, var(--bw-surface-muted) 0%, var(--bw-100) 50%, var(--bw-surface-muted) 100%); background-size:200% 100%; border-radius:var(--bw-radius-sm); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer { 0% { background-position:120% 0; } 100% { background-position:-20% 0; } }
+  .sk-line { height:10px; border-radius:var(--bw-radius-sm); }
+  .w35 { width:35%; } .w45 { width:45%; } .w55 { width:55%; } .w65 { width:65%; } .w75 { width:75%; }
+  .sk-av { width:24px; height:24px; border-radius:50%; flex:none; }
+  .sk-pill { width:72px; height:20px; border-radius:var(--bw-radius-pill); }
+
+  /* Estados vacío / sin resultados / error dentro de la tabla */
+  table.bwt td.state-cell { padding:0; white-space:normal; }
+  .state { display:grid; justify-items:center; text-align:center; gap:5px; padding:34px 24px 38px; }
+  .state-ico { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:6px; background:var(--bw-surface-muted); color:var(--text-color-secondary); }
+  .state-ico.brand { background:var(--bw-100); color:var(--bw-500); }
+  .state-ico.danger { background:color-mix(in srgb, var(--bw-status-pendiente) 18%, var(--surface-card)); color:var(--bw-chip-text-danger); }
+  .state-title { font-size:var(--bw-text-base); font-weight:500; color:var(--text-heading); }
+  .state-desc { font-size:var(--bw-text-sm); color:var(--text-color-secondary); max-width:44ch; }
+  .state-quote { color:var(--text-color); }
+  .state-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:12px; }
+
+  /* Toasts */
+  .toast-stage { align-items:stretch; justify-content:flex-start; background:var(--surface-ground); }
+  .toast-col { width:320px; display:grid; gap:10px; align-content:start; }
+  .toast-stack { display:grid; gap:10px; }
+  .toast { display:grid; grid-template-columns:20px 1fr 24px; gap:10px; padding:11px 12px; background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-popover); }
+  .msg-ico { width:18px; height:18px; margin-top:1px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.625rem; font-weight:700; flex:none; background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .toast-title { font-size:var(--bw-text-sm); font-weight:600; color:var(--text-heading); }
+  .toast-desc { font-size:var(--bw-text-xs); color:var(--text-color-secondary); margin-top:1px; }
+  .toast-act { margin-top:7px; }
+  .toast-success { border-left-color:var(--bw-status-asiste); }
+  .toast-success .msg-ico { background:var(--bw-status-asiste); color:var(--bw-text-on-brand); }
+  .toast-error { border-left-color:var(--bw-status-pendiente); }
+  .toast-error .msg-ico { background:var(--bw-status-pendiente); color:var(--bw-900); }
+  .toast-error .btn-ghost { color:var(--bw-chip-text-danger); height:1.75rem; padding:0 8px; }
+  .toast-error .btn-ghost:hover { background:color-mix(in srgb, var(--bw-status-pendiente) 18%, var(--surface-card)); }
+  .toast-info { border-left-color:var(--bw-300); }
+  .msg-x { width:24px; height:24px; padding:0; background:none; border:0; border-radius:var(--bw-radius-sm); color:var(--text-color-secondary); font-size:1rem; line-height:1; cursor:pointer; font-family:var(--font); }
+  .msg-x:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .msg-x:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .queue-sep { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:.6875rem; color:var(--text-color-secondary); }
+  .queue-sep::before, .queue-sep::after { content:''; height:1px; background:var(--surface-border); flex:1; }
+  .toast-queued { border-left-color:var(--surface-border); border-style:dashed; box-shadow:none; opacity:.72; grid-template-columns:20px 1fr auto; }
+  .q-num { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:.625rem; font-weight:700; background:var(--bw-surface-muted); color:var(--text-color-secondary); }
+  .q-tag { align-self:start; font-family:var(--mono); font-size:.625rem; letter-spacing:.04em; text-transform:uppercase; color:var(--text-color-secondary); background:var(--bw-surface-muted); border-radius:var(--bw-radius-sm); padding:2px 5px; }
+  .qspec { display:grid; gap:0; width:100%; margin:0; }
+  .qspec > div { display:grid; grid-template-columns:150px 1fr; gap:12px; padding:8px 0; border-bottom:1px solid var(--surface-border); align-items:baseline; }
+  .qspec > div:last-child { border-bottom:0; }
+  .qspec dt { font-size:var(--bw-text-xs); font-weight:600; color:var(--text-color); }
+  .qspec dd { margin:0; font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .qspec code { font-size:.625rem; }
+
+  /* Tooltip */
+  .tipwrap { position:relative; display:inline-flex; }
+  .tip { position:absolute; left:50%; bottom:calc(100% + 9px); transform:translateX(-50%); width:max-content; max-width:240px; z-index:5;
+         background:var(--bw-900); color:var(--bw-text-on-brand); font-size:var(--bw-text-xs); line-height:1.35; text-align:left;
+         padding:4px 8px; border-radius:var(--bw-radius-md); box-shadow:var(--bw-shadow-popover);
+         opacity:0; visibility:hidden; transition:opacity var(--bw-transition-fast) ease, visibility var(--bw-transition-fast) ease; }
+  .tip::after { content:''; position:absolute; top:100%; left:50%; margin-left:-5px; width:0; height:0; border:5px solid transparent; border-top-color:var(--bw-900); }
+  .tipwrap:hover .tip, .tipwrap:focus-within .tip, .tip.is-on { opacity:1; visibility:visible; }
+  .tip-2 { -webkit-line-clamp:2; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
+
+  .ana-live { display:block; }
+  .ana-row { display:flex; flex-direction:column; align-items:flex-start; }
+  .ana-tip { position:relative; display:inline-block; background:var(--bw-900); color:var(--bw-text-on-brand); font-size:var(--bw-text-xs); line-height:1.35; padding:4px 8px; border-radius:var(--bw-radius-md); box-shadow:var(--bw-shadow-popover); max-width:230px; }
+  .ana-tip::after { content:''; position:absolute; top:100%; left:16px; width:0; height:0; border:5px solid transparent; border-top-color:var(--bw-900); }
+  .ana-btn { margin-top:12px; width:32px; height:32px; border-radius:var(--bw-radius-md); background:var(--surface-card); border:1px solid var(--surface-border); color:var(--text-color-secondary); display:flex; align-items:center; justify-content:center; box-shadow:var(--bw-shadow-card); }
+  .ana-marks { list-style:none; padding:14px 0 0; margin:20px 0 0; border-top:1px solid var(--surface-border); display:flex; flex-wrap:wrap; gap:6px 16px; }
+  .ana-marks li { font-size:.6875rem; color:var(--text-color-secondary); display:flex; align-items:baseline; gap:5px; }
+  .ana-marks b { font-family:var(--mono); font-size:.6875rem; color:var(--text-color); font-weight:600; }
+  .tips-demo { display:grid; gap:16px; width:100%; padding-top:30px; }
+  .tips-demo > div { display:grid; gap:4px; }
+  .tips-demo .tl { font-family:var(--mono); font-size:.625rem; color:var(--text-color-secondary); }
+  .name-btn { background:none; border:0; padding:2px 0; font-family:var(--font); font-size:var(--bw-text-sm); color:var(--text-color); cursor:default; display:inline-flex; max-width:132px; }
+  .name-btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; border-radius:var(--bw-radius-sm); }
+  .trunc { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .helper { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .helper b { color:var(--text-label); font-weight:500; }
+
+  /* Chart */
+  .chart-live { display:block; padding:var(--bw-space-lg); }
+  .chart-card { background:var(--surface-card); display:grid; gap:10px; }
+  .chart-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .chart-title { font-size:var(--bw-text-base); font-weight:500; color:var(--text-heading); }
+  .chart-sub { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .chart-kpi { text-align:right; font-variant-numeric:tabular-nums; }
+  .chart-kpi b { display:block; font-size:var(--bw-text-xl); font-weight:500; color:var(--text-heading); line-height:1.1; }
+  .chart-kpi span { font-size:var(--bw-text-2xs); color:var(--text-color-secondary); text-transform:uppercase; letter-spacing:.04em; }
+  svg.chart { display:block; width:100%; height:auto; overflow:visible; }
+  svg.chart text { font-family:var(--font); font-size:11px; fill:var(--text-color-secondary); }
+  .legend { display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .lg { display:inline-flex; align-items:center; gap:6px; }
+  .lg i { width:10px; height:10px; border-radius:2px; flex:none; }
+  .nodata { display:grid; justify-items:center; text-align:center; gap:5px; width:100%; max-width:340px; padding:26px 22px; border:1px dashed var(--surface-border); border-radius:var(--bw-radius-lg); background:var(--surface-card); }
+  .nd-meta { font-family:var(--mono); font-size:.625rem; color:var(--text-color-secondary); }
+
+  /* Dark: mismos componentes, tokens re-declarados */
+  .dark {
+    --surface-ground:#0f172a; --surface-card:#1e293b; --surface-border:#334155; --bw-surface-muted:#263449;
+    --text-color:#e4e4e7; --text-color-secondary:#94a3b8; --text-heading:#e4e4e7; --text-label:#cbd5e1;
+    --bw-tab-color:#60a5fa;
+    background:var(--surface-ground); color:var(--text-color);
+  }
+  .strip { margin-top:var(--bw-space-md); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:var(--bw-space-lg); display:grid; gap:var(--bw-space-md); }
+  .dark-grid { display:grid; grid-template-columns:1fr 320px; gap:var(--bw-space-lg); align-items:start; }
+  .dark-col { display:grid; gap:var(--bw-space-md); }
+  .dark-table { border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); overflow:hidden; }
+  .dark table.bwt caption { color:var(--text-color-secondary); }
+  .dark .av { background:var(--bw-surface-muted); color:var(--text-label); }
+  .dark .chip-ok, .dark .chip-warn, .dark .chip-brand { color:var(--text-color); }
+  .dark .btn-primary { color:var(--bw-text-on-brand); }
+  .dark .btn-ghost { color:var(--bw-tab-color); }
+  .dark .btn-ghost:hover { background:var(--bw-surface-muted); }
+  .dark .tip { background:var(--bw-surface-muted); color:var(--text-color); border:1px solid var(--surface-border); }
+  .dark .tip::after { border-top-color:var(--surface-border); }
+  .dark .msg-x { color:var(--text-color-secondary); }
+  .dark .msg-x:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .dark .pay-paid { color:var(--bw-status-asiste); }
+  .dark-tips { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding-top:36px; }
+  .dark-note { font-size:var(--bw-text-xs); color:var(--text-color-secondary); border-top:1px solid var(--surface-border); padding-top:10px; }
+  .dark-note b { color:var(--text-color); font-weight:600; }
+  .dark-note.inline { border-top:0; padding-top:0; }
+
+  /* Mobile: 390 px */
+  .phones { display:grid; grid-template-columns:repeat(3,390px); gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  figure.phone { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; display:flex; flex-direction:column; }
+  .phone-screen { height:512px; overflow:hidden; background:var(--surface-ground); display:flex; flex-direction:column; }
+  .ph-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; background:var(--surface-card); border-bottom:1px solid var(--surface-border); }
+  .ph-ov { font-family:var(--mono); font-size:.625rem; letter-spacing:.05em; text-transform:uppercase; color:var(--text-color-secondary); }
+  .ph-title { font-size:var(--bw-text-base); font-weight:500; color:var(--text-heading); }
+  .ph-count { font-size:var(--bw-text-2xs); color:var(--text-color-secondary); background:var(--bw-surface-muted); border-radius:var(--bw-radius-pill); padding:3px 8px; font-variant-numeric:tabular-nums; }
+  .mcards { display:grid; gap:8px; padding:12px; overflow:hidden; }
+  .mcards.tight { padding-top:0; }
+  .mcard { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:11px 12px; display:grid; gap:9px; box-shadow:var(--bw-shadow-card); }
+  .mcard-top { display:grid; grid-template-columns:36px 1fr auto; gap:9px; align-items:center; }
+  .mcard-name { font-size:var(--bw-text-sm); font-weight:500; color:var(--text-heading); }
+  .mcard-svc { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .mcard-time { font-size:var(--bw-text-sm); font-weight:500; font-variant-numeric:tabular-nums; color:var(--text-color); }
+  .mcard-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:8px; border-top:1px solid var(--surface-border); }
+  .mcard-foot .btn-ghost { height:1.75rem; padding:0 6px; font-size:.75rem; }
+
+  .mdialog { margin:8px; height:calc(100% - 16px); display:flex; flex-direction:column; background:var(--surface-card); border-radius:var(--bw-radius-xl); overflow:hidden; box-shadow:var(--bw-shadow-popover); }
+  .mdialog-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-bottom:1px solid var(--surface-border); box-shadow:var(--bw-shadow-dialog-header); position:relative; z-index:1; }
+  .mdialog-head h3 { font-size:var(--bw-text-lg); font-weight:500; color:var(--text-heading); }
+  .mdialog-body { flex:1 1 auto; overflow-y:auto; padding:12px 14px; display:grid; gap:9px; align-content:start; }
+  .mrow { display:grid; grid-template-columns:88px 1fr; gap:8px; font-size:var(--bw-text-xs); padding-bottom:9px; border-bottom:1px solid var(--surface-border); }
+  .mrow span:first-child { color:var(--text-color-secondary); }
+  .mrow span:last-child { color:var(--text-color); }
+  .mrow:last-child { border-bottom:0; padding-bottom:0; }
+  .mamount { font-variant-numeric:tabular-nums; font-weight:500; }
+  .mdialog-foot { position:sticky; bottom:0; display:flex; justify-content:space-between; gap:8px; padding:10px 14px; background:var(--surface-card); border-top:1px solid var(--surface-border); box-shadow:var(--bw-shadow-card); }
+  .mdialog-foot .btn { flex:none; height:34px; font-size:.75rem; }
+  .mhead-right { display:flex; align-items:center; gap:8px; }
+  .mstatus { display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 8px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); font-size:.6875rem; color:var(--text-color); }
+  .mstatus .dot { width:6px; height:6px; border-radius:50%; background:var(--bw-status-reservado); }
+  .mstatus b { color:var(--text-color-secondary); font-weight:400; }
+  .mfield { display:grid; gap:4px; }
+  .mfield label { font-size:.625rem; font-weight:500; color:var(--text-label); }
+  .mcontrol { display:flex; align-items:center; justify-content:space-between; gap:6px; height:32px; padding:0 8px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); font-size:.75rem; color:var(--text-color); }
+  .mcontrol.is-mut { color:var(--text-color-secondary); }
+  .mrow2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .mchip-btn { justify-self:start; height:30px; padding:0 8px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); font-family:var(--font); font-size:.6875rem; color:var(--bw-500); cursor:pointer; }
+
+  .tabscroll { position:relative; background:var(--surface-card); border-bottom:1px solid var(--surface-border); }
+  .tabscroll .tablist { display:flex; gap:20px; padding:0 14px; overflow-x:auto; scrollbar-width:none; }
+  .tabscroll .tablist::-webkit-scrollbar { display:none; }
+  .tab { position:relative; display:inline-flex; align-items:center; gap:6px; padding:11px 1px 12px; background:none; border:0; font-family:var(--font); font-size:var(--bw-text-sm); font-weight:500; color:var(--text-color-secondary); cursor:pointer; white-space:nowrap; }
+  .tab:hover { color:var(--bw-500); }
+  .tab.is-active { color:var(--bw-tab-color); }
+  .tab.is-active::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--bw-tab-color); border-radius:2px 2px 0 0; }
+  .tab:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; border-radius:var(--bw-radius-sm); }
+  .tab-fade { position:absolute; top:0; right:0; bottom:1px; width:44px; pointer-events:none; background:linear-gradient(90deg, transparent, var(--surface-card)); }
+  .m-panel { padding:14px; display:grid; gap:4px; }
+  .m-panel p { font-size:var(--bw-text-sm); }
+  .m-panel .pm { font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+
+  .mobrules { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .mobrule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-300); border-radius:var(--bw-radius-md); padding:10px 14px; font-size:var(--bw-text-xs); color:var(--text-color-secondary); }
+  .mobrule b { display:block; font-family:var(--mono); font-size:.625rem; color:var(--text-color); margin-bottom:2px; }
+
+  /* Reglas */
+  .rules { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-lg); }
+  .rule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-success); border-radius:var(--bw-radius-md); padding:12px 16px; font-size:.8125rem; }
+  .rule.no { border-left-color:var(--bw-status-pendiente); }
+  .rule h3 { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; margin-bottom:6px; }
+  .rule ul { padding-left:16px; display:grid; gap:4px; }
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer code { font-size:.6875rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sk { animation:none; background:var(--bw-surface-muted); }
+    .tip { transition:none; }
+    .btn, .msg-x, .tab { transition:none; }
+    table.bwt tbody tr { transition:none; }
+  }
+
+  .ds-band { margin-top:var(--bw-space-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); font-size:.75rem; color:var(--text-color-secondary); }
+  .ds-band__tag { background:var(--bw-100); color:var(--bw-500); border-radius:var(--bw-radius-pill); padding:2px 9px; font-size:.6875rem; font-weight:600; }
+  .ds-band__link { margin-left:auto; color:var(--bw-500); font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); }
+
+  .ph-agbar { padding:10px 12px; background:var(--surface-card); border-bottom:1px solid var(--surface-border); display:grid; gap:8px; }
+  .seg { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; }
+  .seg button { height:30px; border:0; background:var(--surface-card); color:var(--text-color-secondary); font-family:var(--font); font-size:.75rem; font-weight:500; cursor:pointer; }
+  .seg button.is-active { background:var(--bw-100); color:var(--bw-500); }
+  .ph-filters { display:flex; gap:6px; overflow:hidden; }
+  .fpill { display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 8px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); font-size:.6875rem; color:var(--text-color-secondary); white-space:nowrap; }
+  .fpill b { color:var(--text-color); font-weight:500; }
+  .fpill .dots { display:inline-flex; gap:2px; }
+  .fpill .d { width:6px; height:6px; border-radius:50%; }
+  .ph-tools { display:flex; align-items:center; justify-content:space-between; font-size:.6875rem; color:var(--text-color-secondary); }
+  .ph-tools .t { display:inline-flex; align-items:center; gap:4px; }
+  .tbtn { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); color:var(--text-color-secondary); font-size:.75rem; }
+  .ag-list { display:grid; gap:6px; padding:10px 12px; overflow:hidden; }
+  .ag-row { display:grid; grid-template-columns:40px 1fr 8px; gap:9px; align-items:start; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:9px 10px; box-shadow:var(--bw-shadow-card); }
+  .ag-time { font-size:.75rem; font-weight:600; font-variant-numeric:tabular-nums; color:var(--text-color); line-height:1.25; }
+  .ag-time span { display:block; font-weight:400; color:var(--text-color-secondary); font-size:.6875rem; }
+  .ag-svc { font-size:.75rem; font-weight:500; color:var(--text-heading); }
+  .ag-meta { font-size:.6875rem; color:var(--text-color-secondary); }
+  .ag-actions { display:flex; gap:8px; margin-top:3px; }
+  .ag-act { border:0; background:none; padding:0; font-family:var(--font); font-size:.6875rem; font-weight:500; color:var(--bw-500); cursor:pointer; }
+  .ag-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; }
+
+  .ph-select { display:flex; align-items:center; justify-content:space-between; gap:8px; height:34px; padding:0 10px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); font-size:.75rem; color:var(--text-color); }
+  .ph-select b { color:var(--text-color-secondary); font-weight:400; }
+  .ph-toolrow { display:flex; align-items:center; justify-content:center; gap:8px; }
+  .ph-navrow { display:flex; align-items:center; gap:6px; }
+  .navbtn { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 6px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-sm); background:var(--surface-card); font-size:.75rem; color:var(--bw-500); }
+  .navbtn.is-off { color:var(--text-color-secondary); background:var(--bw-surface-muted); }
+  .ph-date { margin-left:auto; font-size:.8125rem; font-weight:600; color:var(--text-heading); }
+  .ph-actrow { display:flex; align-items:center; gap:6px; }
+  .mini-primary { height:28px; padding:0 9px; border:0; border-radius:var(--bw-radius-md); background:var(--bw-300); color:var(--bw-text-on-brand); font-family:var(--font); font-size:.6875rem; font-weight:600; }
+  .mini-ghost { height:28px; padding:0 9px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); color:var(--text-color); font-family:var(--font); font-size:.6875rem; font-weight:500; }
+  .viewseg { margin-left:auto; display:inline-flex; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; }
+  .viewseg span { padding:0 7px; height:26px; display:inline-flex; align-items:center; font-size:.6875rem; color:var(--text-color-secondary); background:var(--surface-card); }
+  .viewseg span.is-on { background:color-mix(in srgb, var(--bw-300) 16%, var(--surface-card)); color:var(--bw-500); font-weight:600; }
+  .ph-grid { margin:10px 12px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); overflow:hidden; background:var(--surface-card); }
+  .ph-grid__head, .ph-grid__row { display:grid; grid-template-columns:34px repeat(7,1fr); }
+  .ph-grid__head span { padding:5px 2px; text-align:center; font-size:.5625rem; font-family:var(--mono); color:var(--text-color-secondary); border-bottom:1px solid var(--surface-border); }
+  .ph-grid__head span.is-today { color:var(--bw-500); background:color-mix(in srgb, var(--bw-300) 8%, transparent); }
+  .ph-grid__head span.is-off { background:var(--bw-surface-muted); }
+  .ph-grid__row span { padding:6px 4px; font-size:.5625rem; font-family:var(--mono); color:var(--text-color-secondary); border-top:1px solid var(--surface-border); }
+  .ph-grid__row i { border-top:1px solid var(--surface-border); border-left:1px solid var(--surface-border); min-height:26px; }
+  .ph-grid__row i.is-today { background:color-mix(in srgb, var(--bw-300) 6%, transparent); }
+  .ph-grid__row i.is-off { background:var(--bw-surface-muted); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 07</div>
+    <h1>Estados de sistema: tabla, toasts, tooltip y chart</h1>
+    <p class="lead">Una pantalla no está terminada hasta que existen los cuatro estados: cargando, vacío, sin resultados y error. Si falta uno, aparece en producción. Acá van los cuatro sobre la misma tabla de la agenda, la cola de toasts con techo de tres y la ayuda que acompaña el dato pero nunca lo reemplaza.</p>
+  </div>
+  <div class="meta">1440 × ~4400<br>light + dark + mobile · tokens del 2026-11-27</div>
+</header>
+<div class="ds-band">
+  <span class="ds-band__tag">Contrato, no rediseño</span>
+  <span>Componentes propios con transición paulatina: un consumidor por vez. El formato existente manda.</span>
+  <a class="ds-band__link" href="00-estado-y-transicion.html">Estado y transición →</a>
+</div>
+
+
+<div class="contracts">
+  <div class="contract"><b>bw-table</b><em>state</em> ready | loading | empty | noResults | error<br>Cambia el cuerpo, no el header.</div>
+  <div class="contract"><b>bw-toast</b><em>queue</em> máx 3 · FIFO · 5 s<br>Pausa al hover y al foco; el error con acción no se va solo.</div>
+  <div class="contract"><b>bw-tooltip</b>suplementario · máx 2 líneas<br>Nunca el único lugar de un dato ni de una validación.</div>
+  <div class="contract"><b>chart</b>chart.js, no PrimeNG<br>Los tokens definen las series; el loading es skeleton.</div>
+</div>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Los estados de la tabla (y el estado con datos)</h2>
+      <p class="fam-sub">La tabla no cambia de componente entre estados: mismos headers, misma caption, mismo alto de fila. Cambia el cuerpo. Con datos es el estado normal: el skeleton se reemplaza por filas reales y el header no se mueve. El skeleton copia la forma del dato —avatar, nombre, servicio, hora, chip y monto— para que el salto sea mínimo.</p>
+    </div>
+    <div class="fam-contract"><b>bw-table</b> · <em>state</em><br>hoy: <b>p-table</b> + template por estado</div>
+  </div>
+
+  <div class="frames">
+    <figure class="frame">
+      <div class="frame-top"><b>loading</b><span>aria-busy="true" · 5 filas</span></div>
+      <div class="frame-body" role="status" aria-label="Cargando las reservas de hoy">
+        <table class="bwt" aria-hidden="true">
+          <caption>Reservas de hoy · martes 2 de diciembre</caption>
+          <thead>
+            <tr><th scope="col">Paciente</th><th scope="col">Servicio</th><th scope="col">Hora</th><th scope="col">Estado</th><th scope="col">Abono</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="cell-pac"><span class="sk sk-av"></span><span class="sk sk-line w65"></span></span></td>
+              <td><span class="sk sk-line w75"></span></td>
+              <td><span class="sk sk-line w45"></span></td>
+              <td><span class="sk sk-pill"></span></td>
+              <td><span class="sk sk-line w55"></span></td>
+            </tr>
+            <tr>
+              <td><span class="cell-pac"><span class="sk sk-av"></span><span class="sk sk-line w45"></span></span></td>
+              <td><span class="sk sk-line w55"></span></td>
+              <td><span class="sk sk-line w35"></span></td>
+              <td><span class="sk sk-pill"></span></td>
+              <td><span class="sk sk-line w45"></span></td>
+            </tr>
+            <tr>
+              <td><span class="cell-pac"><span class="sk sk-av"></span><span class="sk sk-line w75"></span></span></td>
+              <td><span class="sk sk-line w65"></span></td>
+              <td><span class="sk sk-line w45"></span></td>
+              <td><span class="sk sk-pill"></span></td>
+              <td><span class="sk sk-line w55"></span></td>
+            </tr>
+            <tr>
+              <td><span class="cell-pac"><span class="sk sk-av"></span><span class="sk sk-line w55"></span></span></td>
+              <td><span class="sk sk-line w75"></span></td>
+              <td><span class="sk sk-line w35"></span></td>
+              <td><span class="sk sk-pill"></span></td>
+              <td><span class="sk sk-line w45"></span></td>
+            </tr>
+            <tr>
+              <td><span class="cell-pac"><span class="sk sk-av"></span><span class="sk sk-line w65"></span></span></td>
+              <td><span class="sk sk-line w45"></span></td>
+              <td><span class="sk sk-line w45"></span></td>
+              <td><span class="sk sk-pill"></span></td>
+              <td><span class="sk sk-line w55"></span></td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="sr-only">Cargando las reservas de hoy. La tabla de cinco filas aparece en cuanto responde la agenda.</span>
+      </div>
+      <figcaption><span><b>loading</b> — header real, 5 filas de 44 px con la forma del dato; sin spinner</span><span class="mono">--bw-surface-muted → --bw-100 · 1,4 s</span></figcaption>
+    </figure>
+    <figure class="frame">
+      <div class="frame-top"><b>con datos</b><span>el estado normal · 3 filas</span></div>
+      <div class="frame-body">
+        <table class="bwt">
+          <caption>Reservas de hoy · martes 2 de diciembre</caption>
+          <thead>
+            <tr><th scope="col">Paciente</th><th scope="col">Servicio</th><th scope="col">Hora</th><th scope="col">Estado</th><th scope="col">Abono</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="cell-pac"><span class="av av-24" aria-hidden="true">CR</span>Camila Rojas</span></td>
+              <td>Depilación láser · piernas</td>
+              <td class="cell-date">10:30</td>
+              <td><span class="chip chip-warn">Confirmado</span></td>
+              <td class="cell-pay">$48.000</td>
+            </tr>
+            <tr>
+              <td><span class="cell-pac"><span class="av av-24 av-alt" aria-hidden="true">MF</span>Matías Fuentes</span></td>
+              <td>Limpieza facial profunda</td>
+              <td class="cell-date">11:15</td>
+              <td><span class="chip chip-ok">Asiste</span></td>
+              <td class="cell-pay">$32.000<small>Abono $15.000</small></td>
+            </tr>
+            <tr>
+              <td><span class="cell-pac"><span class="av av-24" aria-hidden="true">JV</span>Javiera Vergara</span></td>
+              <td>Microneedling · dermapen</td>
+              <td class="cell-date">12:00</td>
+              <td><span class="chip chip-brand">Reservado</span></td>
+              <td class="cell-pay">Sin pago</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><span><b>con datos</b> — el skeleton se reemplaza por estas filas; header, caption y alto de fila no se mueven</span><span class="mono">mismo componente · 44 px · chip por fila</span></figcaption>
+    </figure>
+
+    <figure class="frame">
+      <div class="frame-top"><b>empty</b><span>0 registros · día sin reservas</span></div>
+      <div class="frame-body">
+        <table class="bwt">
+          <caption>Reservas de hoy · martes 2 de diciembre</caption>
+          <thead>
+            <tr><th scope="col">Paciente</th><th scope="col">Servicio</th><th scope="col">Hora</th><th scope="col">Estado</th><th scope="col">Abono</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="state-cell" colspan="5">
+                <div class="state">
+                  <span class="state-ico brand" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  </span>
+                  <p class="state-title">Sin reservas para hoy</p>
+                  <p class="state-desc">Creá la primera del día y la agenda arranca sola.</p>
+                  <div class="state-actions"><button class="btn btn-primary btn-sm">Nueva reserva</button></div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><span><b>empty</b> — el día existe y está vacío: título + salida primaria</span><span class="mono">texto + acción, nunca solo ilustración</span></figcaption>
+    </figure>
+
+    <figure class="frame">
+      <div class="frame-top"><b>noResults</b><span>filtro activo · búsqueda "Camila"</span></div>
+      <div class="frame-body">
+        <table class="bwt">
+          <caption>Reservas de hoy · filtro de paciente aplicado</caption>
+          <thead>
+            <tr><th scope="col">Paciente</th><th scope="col">Servicio</th><th scope="col">Hora</th><th scope="col">Estado</th><th scope="col">Abono</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="state-cell" colspan="5">
+                <div class="state">
+                  <span class="state-ico" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>
+                  </span>
+                  <p class="state-title">Ningún resultado para <span class="state-quote">«Camila»</span></p>
+                  <p class="state-desc">Probá con el apellido o revisá cómo está escrito. El filtro sigue activo hasta que lo limpies.</p>
+                  <div class="state-actions"><button class="btn btn-outline btn-sm">Limpiar filtros</button></div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><span><b>noResults</b> — el query se repite literal y la salida es deshacer el filtro</span><span class="mono">no es lo mismo que empty: hay datos, no coinciden</span></figcaption>
+    </figure>
+
+    <figure class="frame">
+      <div class="frame-top"><b>error</b><span>HTTP 503 · agenda sin respuesta</span></div>
+      <div class="frame-body">
+        <table class="bwt">
+          <caption>Reservas de hoy · martes 2 de diciembre</caption>
+          <thead>
+            <tr><th scope="col">Paciente</th><th scope="col">Servicio</th><th scope="col">Hora</th><th scope="col">Estado</th><th scope="col">Abono</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="state-cell" colspan="5">
+                <div class="state">
+                  <span class="state-ico danger" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 7v7M12 18h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                  </span>
+                  <p class="state-title">No pudimos cargar la agenda</p>
+                  <p class="state-desc">Se cortó la conexión con el servidor. Las reservas del turno anterior siguen guardadas.</p>
+                  <div class="state-actions">
+                    <button class="btn btn-primary btn-sm">Reintentar</button>
+                    <button class="btn btn-outline btn-sm">Ver estado del servicio</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><span><b>error</b> — siempre hay una acción: reintentar primero, el status page después</span><span class="mono">el error no borra lo que ya estaba en pantalla</span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>El mismo componente, cuatro cuerpos.</b> Los headers, la caption y el alto de 44 px no se mueven; así el ojo no tiene que re-aprender la tabla al cambiar de estado. Con <code>prefers-reduced-motion: reduce</code> el shimmer se apaga y el skeleton queda quieto en <code>--bw-surface-muted</code>, con la misma forma.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Cola de toasts</h2>
+      <p class="fam-sub">Tres como máximo y en orden de llegada: el cuarto espera, no empuja. Cinco segundos por toast, el timer se pausa con el mouse encima o con el foco del teclado, y el error con acción se queda hasta que lo cierren.</p>
+    </div>
+    <div class="fam-contract"><b>bw-toast</b> · <em>stack</em> · <em>duration</em> 5000<br>hoy: <b>p-toast</b> + <b>MessageService</b></div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live tint toast-stage">
+        <div class="toast-col">
+          <div class="toast-stack" role="status" aria-live="polite" aria-label="Notificaciones de la agenda">
+            <div class="toast toast-success">
+              <span class="msg-ico" aria-hidden="true">✓</span>
+              <div>
+                <p class="toast-title">Reserva confirmada</p>
+                <p class="toast-desc">Camila Rojas · Láser axilas · mar 2 dic, 15:30 · $48.000</p>
+              </div>
+              <button class="msg-x" aria-label="Cerrar notificación de reserva confirmada">×</button>
+            </div>
+            <div class="toast toast-error">
+              <span class="msg-ico" aria-hidden="true">!</span>
+              <div>
+                <p class="toast-title">No pudimos registrar el abono</p>
+                <p class="toast-desc">Transbank rechazó los $48.000 de Camila Rojas. La reserva sigue sin abono.</p>
+                <div class="toast-act"><button class="btn btn-ghost btn-sm">Reintentar</button></div>
+              </div>
+              <button class="msg-x" aria-label="Cerrar notificación de abono rechazado">×</button>
+            </div>
+            <div class="toast toast-info">
+              <span class="msg-ico" aria-hidden="true">i</span>
+              <div>
+                <p class="toast-title">Sincronizando agenda</p>
+                <p class="toast-desc">3 profesionales · última sync 09:58</p>
+              </div>
+              <button class="msg-x" aria-label="Cerrar notificación de sincronización">×</button>
+            </div>
+          </div>
+          <p class="queue-sep">4.º en espera</p>
+          <div class="toast toast-queued">
+            <span class="q-num" aria-hidden="true">4</span>
+            <div>
+              <p class="toast-title">Recordatorios enviados</p>
+              <p class="toast-desc">12 pacientes de mañana · no entra hasta que se libere un slot</p>
+            </div>
+            <span class="q-tag">en espera</span>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Tres visibles + uno en cola</b> — columna de 320 px, gap 10; el cuarto espera con borde punteado</span><span class="mono">radio 8 · --bw-shadow-popover</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live">
+        <dl class="qspec">
+          <div><dt>Visibles a la vez</dt><dd>3 toasts de 320 px · el resto espera en cola</dd></div>
+          <div><dt>Orden</dt><dd>FIFO: el que llega primero entra primero y se va primero</dd></div>
+          <div><dt>Auto-dismiss</dt><dd>5 000 ms por toast, sin acumular en el siguiente</dd></div>
+          <div><dt>Hover y foco</dt><dd>pausan el timer; al salir, el tiempo restante se retoma</dd></div>
+          <div><dt>Error con acción o destructivo</dt><dd>sin auto-dismiss: se cierra con la X o con la acción</dd></div>
+          <div><dt>Acciones</dt><dd>una por toast, la primaria · la X no cuenta como acción</dd></div>
+        </dl>
+      </div>
+      <figcaption><span><b>Contrato de la cola</b> — el techo de tres protege la esquina de la pantalla</span><span class="mono">queue = máx 3 · FIFO · 5 s</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Tooltip</h2>
+      <p class="fam-sub">Explica lo que la etiqueta no alcanza: el nombre completo de una paciente truncada, el motivo de un botón deshabilitado. Es ayuda suplementaria: si la información no está también en el texto, el tooltip está de más. El foco del teclado lo muestra igual que el hover.</p>
+    </div>
+    <div class="fam-contract"><b>bw-tooltip</b> · <em>supplemental</em> · <em>maxLines</em> 2<br>hoy: <b>pTooltip</b> → nativo en la etapa 3</div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live tint ana-live">
+        <div class="ana-row">
+          <span class="ana-tip" aria-hidden="true">Camila Rojas Fernández · 32 años<br>Última visita: 14 nov · Láser axilas</span>
+          <span class="ana-btn" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.4"/></svg>
+          </span>
+        </div>
+        <ul class="ana-marks">
+          <li><b>12 px</b> texto</li>
+          <li><b>radius 6</b></li>
+          <li><b>4 / 8</b> padding</li>
+          <li><b>máx 2</b> líneas</li>
+          <li><b>flecha</b> 10 px</li>
+        </ul>
+      </div>
+      <figcaption><span><b>Anatomía</b> — superficie oscura, 12 px, radius 6, padding 4/8 y flecha apuntando al disparador</span><span class="mono">--bw-900 · sombra popover</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live">
+        <div class="tips-demo">
+          <div>
+            <span class="tl">icon-only · botón de fila</span>
+            <span class="tipwrap">
+              <button class="btn btn-outline btn-icon btn-sm" aria-label="Ver ficha de Camila Rojas" aria-describedby="tp-ficha">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.4"/></svg>
+              </button>
+              <span class="tip" role="tooltip" id="tp-ficha">Ver ficha</span>
+            </span>
+          </div>
+          <div>
+            <span class="tl">nombre truncado · hover y foco</span>
+            <span class="tipwrap">
+              <button class="name-btn">
+                <span class="trunc">Javiera Vergara Sanhueza</span>
+              </button>
+              <span class="tip" role="tooltip">Javiera Vergara Sanhueza</span>
+            </span>
+            <span class="helper">El truncado es CSS: el nombre completo ya está en el DOM.</span>
+          </div>
+          <div>
+            <span class="tl">disabled · el motivo también va en texto</span>
+            <span class="tipwrap">
+              <button class="btn btn-outline btn-sm" disabled aria-describedby="tp-disabled">Enviar recordatorio</button>
+              <span class="tip" role="tooltip" id="tp-disabled">Falta el consentimiento de marketing de la paciente</span>
+            </span>
+            <span class="helper"><b>Motivo a la vista:</b> la paciente no firmó el consentimiento de marketing.</span>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Tres usos legítimos</b> — icon-only, nombre truncado y motivo de un disabled</span><span class="mono">focus-within = hover</span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>Suplementa, no reemplaza.</b> El tooltip nunca es el único lugar de un dato ni el único lugar de un mensaje de validación: la etiqueta del campo y el texto de error viven en el formulario. Un botón deshabilitado tampoco recibe foco, por eso su motivo se escribe además como texto visible y el tooltip solo acompaña el hover.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Chart</h2>
+      <p class="fam-sub">chart.js ya está en el proyecto y PrimeNG no dibuja series. Los colores salen de los tokens, así el dark no necesita retocar el gráfico: se re-declaran las superficies y las barras siguen leyéndose. Mientras llegan los datos se muestra el skeleton de la card, no un spinner.</p>
+    </div>
+    <div class="fam-contract"><b>chart.js</b> · <em>series</em> <code>--bw-300</code> | <code>--bw-200</code><br>los tokens son la fuente de la serie</div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live chart-live">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div>
+              <p class="chart-title">Reservas por mes</p>
+              <p class="chart-sub">Ene–Jun 2026 · Clínica Providencia</p>
+            </div>
+            <div class="chart-kpi"><b>864</b><span>atendidas</span></div>
+          </div>
+          <svg class="chart" viewBox="0 0 560 220" role="img" aria-labelledby="chTitle chDesc">
+            <title id="chTitle">Reservas atendidas y canceladas por mes, enero a junio de 2026</title>
+            <desc id="chDesc">Atendidas: enero 128, febrero 142, marzo 118, abril 156, mayo 171, junio 149. Canceladas: enero 22, febrero 19, marzo 31, abril 24, mayo 18, junio 27.</desc>
+            <g stroke="var(--surface-border)" stroke-width="1">
+              <line x1="42" y1="12" x2="552" y2="12"/>
+              <line x1="42" y1="55.5" x2="552" y2="55.5"/>
+              <line x1="42" y1="99" x2="552" y2="99"/>
+              <line x1="42" y1="142.5" x2="552" y2="142.5"/>
+              <line x1="42" y1="186" x2="552" y2="186"/>
+            </g>
+            <g text-anchor="end">
+              <text x="34" y="16">180</text>
+              <text x="34" y="59.5">135</text>
+              <text x="34" y="103">90</text>
+              <text x="34" y="146.5">45</text>
+              <text x="34" y="190">0</text>
+            </g>
+            <g fill="var(--bw-300)">
+              <rect x="66.5" y="62.3" width="16" height="123.7" rx="2"/>
+              <rect x="151.5" y="48.7" width="16" height="137.3" rx="2"/>
+              <rect x="236.5" y="71.9" width="16" height="114.1" rx="2"/>
+              <rect x="321.5" y="35.2" width="16" height="150.8" rx="2"/>
+              <rect x="406.5" y="20.7" width="16" height="165.3" rx="2"/>
+              <rect x="491.5" y="42" width="16" height="144" rx="2"/>
+            </g>
+            <g fill="var(--bw-200)">
+              <rect x="86.5" y="164.7" width="16" height="21.3" rx="2"/>
+              <rect x="171.5" y="167.6" width="16" height="18.4" rx="2"/>
+              <rect x="256.5" y="156" width="16" height="30" rx="2"/>
+              <rect x="341.5" y="162.8" width="16" height="23.2" rx="2"/>
+              <rect x="426.5" y="168.6" width="16" height="17.4" rx="2"/>
+              <rect x="511.5" y="159.9" width="16" height="26.1" rx="2"/>
+            </g>
+            <g text-anchor="middle">
+              <text x="84.5" y="203">Ene</text>
+              <text x="169.5" y="203">Feb</text>
+              <text x="254.5" y="203">Mar</text>
+              <text x="339.5" y="203">Abr</text>
+              <text x="424.5" y="203">May</text>
+              <text x="509.5" y="203">Jun</text>
+            </g>
+          </svg>
+          <div class="legend">
+            <span class="lg"><i style="background:var(--bw-300)"></i>Reservas atendidas</span>
+            <span class="lg"><i style="background:var(--bw-200)"></i>Canceladas</span>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Barras agrupadas</b> — 6 meses, eje en 11 px, series <code>--bw-300</code> / <code>--bw-200</code></span><span class="mono">los números viven en el &lt;desc&gt;</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live tint center">
+        <div class="nodata">
+          <span class="state-ico" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19V9M12 19V5M19 19v-6"/></svg>
+          </span>
+          <p class="state-title">Sin datos</p>
+          <p class="state-desc">Todavía no hay reservas registradas para julio de 2026.</p>
+          <p class="nd-meta">01–31 jul · 0 registros</p>
+          <div class="state-actions"><button class="btn btn-outline btn-sm">Cambiar período</button></div>
+        </div>
+      </div>
+      <figcaption><span><b>Sin datos</b> — el rango es válido y está vacío: se dice y se ofrece salida</span><span class="mono">distinto de loading y de error</span></figcaption>
+    </figure>
+  </div>
+  <p class="note"><b>chart.js hoy, tokens mañana.</b> La serie se lee de los tokens, no de un array de colores: el dark y Kinesilk cambian la superficie y el gráfico sigue siendo legible. Loading = skeleton de la card (línea de ejes + 6 barras en <code>--bw-surface-muted</code>), nunca un spinner girando sobre el gráfico.</p>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>La misma pieza en dark</h2>
+      <p class="fam-sub">El dark no es otro componente: es el mismo markup con los tokens de superficie y texto re-declarados en un scope. La fila, el toast y el tooltip se ven igual de terminados, con el mismo alto y el mismo peso de borde.</p>
+    </div>
+    <div class="fam-contract"><b>.dark</b> · <em>scope</em><br>9 tokens re-declarados, cero hex nuevos</div>
+  </div>
+
+  <div class="dark strip">
+    <div class="dark-grid">
+      <div class="dark-col">
+        <div class="dark-table">
+          <table class="bwt">
+            <caption>Reservas de hoy · martes 2 de diciembre</caption>
+            <thead>
+              <tr><th scope="col">Paciente</th><th scope="col">Servicio</th><th scope="col">Hora</th><th scope="col">Estado</th><th scope="col">Abono</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="cell-pac"><span class="av av-24">MF</span>Matías Fuentes</span></td>
+                <td>Depilación láser piernas</td>
+                <td class="cell-date">11:00</td>
+                <td><span class="chip chip-ok"><span class="dot" style="background:var(--bw-status-asiste)"></span>Asiste</span></td>
+                <td class="cell-pay pay-paid">$72.000<small>Pagado</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dark-tips">
+          <span class="tipwrap">
+            <button class="btn btn-outline btn-sm" aria-label="Ver ficha de Matías Fuentes" aria-describedby="tp-dark">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.4"/></svg>
+              Ver ficha
+            </button>
+            <span class="tip is-on" role="tooltip" id="tp-dark">Ver ficha de Matías Fuentes</span>
+          </span>
+          <span class="dark-note inline">El tooltip sube a <code>--bw-surface-muted</code> con borde <code>--surface-border</code>: no usa azul de marca sobre azul de fondo.</span>
+        </div>
+      </div>
+
+      <div class="toast-stack" role="status" aria-live="polite" aria-label="Notificaciones de la agenda">
+        <div class="toast toast-success">
+          <span class="msg-ico" aria-hidden="true">✓</span>
+          <div>
+            <p class="toast-title">Reserva confirmada</p>
+            <p class="toast-desc">Matías Fuentes · Depilación láser piernas · 11:00 · $72.000</p>
+          </div>
+          <button class="msg-x" aria-label="Cerrar notificación de reserva confirmada">×</button>
+        </div>
+      </div>
+    </div>
+    <p class="dark-note"><b>Mismo contrato.</b> El chip cambia el tinte de blanco a <code>--surface-card</code> y el texto pasa a <code>--text-color</code>; el avatar deja <code>--bw-100</code> por <code>--bw-surface-muted</code>. Nada más se toca: <code>--surface-ground</code>, <code>--surface-card</code>, <code>--surface-border</code>, <code>--bw-surface-muted</code>, <code>--text-color</code>, <code>--text-color-secondary</code>, <code>--text-heading</code>, <code>--text-label</code> y <code>--bw-tab-color</code>.</p>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Mobile: 390 px</h2>
+      <p class="fam-sub">La agenda del celular apila los mismos filtros de escritorio (sucursal, profesional y estado), conserva las herramientas de densidad de slot y guía de colores, y cambia de vista con <b>Mes / Semana / Día</b> sobre la grilla. La vista lista es una dirección de diseño: todavía no está implementada.</p>
+    </div>
+    <div class="fam-contract"><b>390</b> · <em>breakpoint</em> 720 px<br>filtros apilados · Mes/Semana/Día · modal scroll · toasts abajo</div>
+  </div>
+
+  <div class="phones">
+    <figure class="phone">
+      <div class="phone-screen">
+        <div class="ph-head">
+          <div>
+            <p class="ph-ov">Agenda</p>
+            <p class="ph-title">Hoy · sáb 28 nov</p>
+          </div>
+          <span class="ph-count">8 reservas</span>
+        </div>
+
+        <div class="ph-agbar">
+          <span class="ph-select"><span>Kinesilk Las Condes</span><b aria-hidden="true">⌄</b></span>
+          <span class="ph-select"><span>Todos los profesionales</span><b aria-hidden="true">⌄</b></span>
+          <span class="ph-select"><span>Todos los estados</span><b aria-hidden="true">⌄</b></span>
+          <div class="ph-toolrow">
+            <span class="tbtn" aria-label="Densidad de slot: 30 min" title="Densidad de slot: 30 min"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <span class="tbtn" aria-label="Guía de colores" title="Guía de colores"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8"/><path d="M12 17h.01"/></svg></span>
+          </div>
+          <div class="ph-navrow">
+            <span class="navbtn" aria-hidden="true">‹</span>
+            <span class="navbtn" aria-hidden="true">›</span>
+            <span class="navbtn is-off">Hoy</span>
+            <b class="ph-date">23 – 29 nov 2026</b>
+          </div>
+          <div class="ph-actrow">
+            <button class="mini-primary" type="button">＋ Reserva</button>
+            <button class="mini-ghost" type="button">Bloquear</button>
+            <span class="viewseg" role="group" aria-label="Vista de la agenda">
+              <span>Mes</span><span class="is-on">Semana</span><span>Día</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="ph-grid" aria-hidden="true">
+          <div class="ph-grid__head"><span></span><span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span class="is-today">VIE</span><span>SÁB</span><span class="is-off">DOM</span></div>
+          <div class="ph-grid__row"><span>08:00</span><i></i><i></i><i></i><i></i><i class="is-today"></i><i></i><i class="is-off"></i></div>
+          <div class="ph-grid__row"><span>09:00</span><i></i><i></i><i></i><i></i><i class="is-today"></i><i></i><i class="is-off"></i></div>
+          <div class="ph-grid__row"><span>10:00</span><i></i><i></i><i></i><i></i><i class="is-today"></i><i></i><i class="is-off"></i></div>
+        </div>
+      </div>
+      <figcaption><span><b>a · Agenda mobile (real)</b> — tres filtros apilados, herramientas de slot y guía, acciones y vistas Mes/Semana/Día sobre la grilla</span><span class="mono">390 · sin toggle Lista en la app</span></figcaption>
+    </figure>
+
+    <figure class="phone">
+      <div class="phone-screen">
+        <div class="mdialog">
+          <div class="mdialog-head">
+            <h3>Nueva Reserva</h3>
+            <span class="mhead-right">
+              <span class="mstatus"><span class="dot" aria-hidden="true"></span>Reservado <b aria-hidden="true">⌄</b></span>
+              <button class="msg-x" aria-label="Cerrar diálogo de nueva reserva">×</button>
+            </span>
+          </div>
+          <div class="mdialog-body">
+            <div class="mfield"><label>Fecha</label><span class="mcontrol">sáb 28 de noviembre de 2026</span></div>
+            <div class="mfield"><label>Hora</label><div class="mrow2"><span class="mcontrol">23</span><span class="mcontrol">30</span></div></div>
+            <div class="mfield"><label>Paciente</label><span class="mcontrol is-mut">Buscar por nombre, apellido, email…</span></div>
+            <button class="mchip-btn" type="button">＋ Agregar paciente</button>
+            <div class="mfield"><label>Sede / Ubicación</label><span class="mcontrol">Kinesilk Las Condes</span></div>
+            <div class="mfield"><label>Profesional</label><span class="mcontrol is-mut">Sin asignar</span></div>
+          </div>
+          <div class="mdialog-foot">
+            <button class="btn btn-outline" type="button">Cancelar</button>
+            <button class="btn btn-primary" type="button">Guardar reserva</button>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>b · diálogo a 390</b> — no es full-screen: modal de 371×710 con header y footer fijos y body scrolleable; los campos son selects y datepickers</span><span class="mono">390 · radius 12 · body scroll</span></figcaption>
+    </figure>
+
+    <figure class="phone">
+      <div class="phone-screen">
+        <div class="ph-head">
+          <div>
+            <p class="ph-ov">Paciente</p>
+            <p class="ph-title">Camila Rojas</p>
+          </div>
+          <span class="ph-count">desde 2023</span>
+        </div>
+        <div class="tabscroll">
+          <div class="tablist" role="tablist" aria-label="Secciones de la ficha">
+            <button class="tab" role="tab" aria-selected="false">Agenda</button>
+            <button class="tab" role="tab" aria-selected="false">Ficha</button>
+            <button class="tab" role="tab" aria-selected="false">Pagos</button>
+            <button class="tab is-active" role="tab" aria-selected="true">Sesiones</button>
+            <button class="tab" role="tab" aria-selected="false">Fotos</button>
+            <button class="tab" role="tab" aria-selected="false">Consentimientos</button>
+          </div>
+          <span class="tab-fade" aria-hidden="true"></span>
+        </div>
+        <div class="m-panel">
+          <p>Sesiones del pack láser</p>
+          <p class="pm">3 de 8 usadas · próxima mar 16 dic, 15:30</p>
+          <p class="pm">Profesional: Javiera Vergara · Box 2</p>
+        </div>
+        <div class="mcards tight">
+          <article class="mcard">
+            <div class="mcard-top">
+              <span class="av av-36">CR</span>
+              <div>
+                <p class="mcard-name">Sesión 4 de 8</p>
+                <p class="mcard-svc">Láser axilas · mar 16 dic</p>
+              </div>
+              <span class="mcard-time">15:30</span>
+            </div>
+            <div class="mcard-foot">
+              <span class="chip chip-warn"><span class="dot" style="background:var(--bw-status-confirmado)"></span>Confirmado</span>
+              <button class="btn btn-ghost">Ver ficha</button>
+            </div>
+          </article>
+        </div>
+      </div>
+      <figcaption><span><b>c · tabs con overflow</b> — 6 tabs en 390 px, scroll horizontal y borde que se desvanece</span><span class="mono">sin wrap · fade 44 px</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="mobrules">
+    <div class="mobrule"><b>tabla</b>Sin scroll horizontal: si la tabla no entra, se convierte en cards. La card nunca repite las 5 columnas.</div>
+    <div class="mobrule"><b>dialog</b>Full-screen por debajo de 720 px, con header y footer sticky; el cuerpo scrollea solo.</div>
+    <div class="mobrule"><b>toast</b>Abajo y a lo ancho, nunca sobre el CTA primario; el footer de la vista queda libre.</div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Reglas de estados</h2>
+      <p class="fam-sub">Los cuatro estados se diseñan en el mismo ticket que la pantalla feliz. No son un extra de la etapa de QA ni un spinner provisorio: son parte del contrato del componente.</p>
+    </div>
+    <div class="fam-contract"><b>checklist</b> por pantalla<br>4 estados · acción en el error · skeleton con forma</div>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Toda lista tiene cinco estados: con datos, loading, empty, noResults y error, con su caption.</li>
+        <li>El error siempre ofrece una acción: “Reintentar” primero y la salida secundaria después.</li>
+        <li>El skeleton copia la forma del contenido real: avatar, líneas, chip y monto.</li>
+        <li>En listas y tablas, skeleton de filas. El spinner queda para acciones puntuales.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>No avises un error de validación con un toast: va en el campo, con texto y borde.</li>
+        <li>No pongas en el tooltip la única explicación de un dato o de un disabled.</li>
+        <li>No dejes que los toasts tapen la acción primaria en mobile.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Tokens usados: <code>--bw-300</code> <code>--bw-200</code> <code>--bw-100</code> <code>--bw-900</code> <code>--bw-status-*</code> <code>--bw-chip-text-*</code> <code>--surface-ground/card/border</code> <code>--bw-surface-muted</code> <code>--text-*</code> <code>--bw-tab-color</code> <code>--bw-radius-sm/md/lg/pill</code> <code>--bw-shadow-card/popover</code> <code>--bw-transition-fast</code></span>
+  <span>07 / 08 · fuentes: <code>_tokens.scss</code> · <code>design/system.md</code></span>
+</footer>
+
+</body>
+</html>

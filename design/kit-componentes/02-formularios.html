@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · 02 Formularios</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-transition-fast:.15s;
+    --bw-success:#22c55e;
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:66ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+  .mono { font-family:var(--mono); }
+
+  .contracts { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--bw-space-sm); margin-top:var(--bw-space-md); }
+  .contract { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:10px 12px; font-size:.75rem; color:var(--text-color-secondary); }
+  .contract b { display:block; font-family:var(--mono); font-size:.75rem; color:var(--text-color); margin-bottom:3px; }
+  .contract em { font-style:normal; color:var(--bw-500); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:62ch; }
+  .fam-contract { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); text-align:right; }
+  .fam-contract b { color:var(--bw-500); }
+
+  .specs { display:grid; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .two { grid-template-columns:1fr 1fr; }
+  figure.spec { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .live { padding:var(--bw-space-lg); display:flex; flex-wrap:wrap; align-items:center; gap:12px; min-height:96px; }
+  .live.tint { background:var(--surface-ground); }
+  .live.grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; align-items:start; }
+  figcaption { border-top:1px solid var(--surface-border); padding:9px 14px; font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  figcaption b { color:var(--text-color); font-weight:600; }
+  .st { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .st > .field { width:100%; }
+  .st span { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); }
+
+  /* Chips */
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--bw-radius-pill); font-size:.75rem; font-weight:500; white-space:nowrap; }
+  .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  .chip-success { background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success); }
+  .dot-success { background:var(--bw-status-asiste); }
+
+  /* --- Extensiones del tablero 02: formularios --- */
+  .ico { width:16px; height:16px; display:block; }
+
+  .field { display:flex; flex-direction:column; gap:6px; width:100%; }
+  .field > label { font-size:.75rem; font-weight:500; color:var(--text-label); line-height:1.4; }
+  .req { color:var(--bw-chip-text-danger); margin-left:2px; }
+
+  .control { height:var(--bw-control-height); width:100%; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); color:var(--text-color); font-family:var(--font); font-size:.875rem; padding:0 12px; transition:border-color var(--bw-transition-fast) ease; }
+  .control::placeholder { color:var(--text-color-secondary); }
+  .control:hover:not(:disabled):not(.is-focus):not(:focus-visible) { border-color:var(--bw-200); }
+  .control:focus-visible, .control.is-focus { outline:2px solid var(--bw-300); outline-offset:2px; border-color:var(--bw-300); }
+  .control:disabled { background:var(--bw-surface-muted); border-color:var(--surface-border); color:var(--text-color-secondary); cursor:not-allowed; }
+  .control[aria-invalid="true"] { border-color:var(--bw-status-pendiente); }
+  .control[type="password"] { letter-spacing:.08em; }
+
+  .hint { font-size:.75rem; color:var(--text-color-secondary); margin:0; }
+  .err { font-size:.75rem; color:var(--bw-chip-text-danger); margin:0; display:flex; align-items:center; gap:5px; }
+  .err::before { content:'!'; display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; flex:none; border-radius:50%; background:var(--bw-status-pendiente); color:var(--text-heading); font-size:.5625rem; font-weight:700; line-height:1; }
+
+  .input-wrap { position:relative; display:flex; align-items:center; width:100%; }
+  .input-wrap .control { padding-left:36px; }
+  .input-wrap .lead-ico { position:absolute; left:11px; display:flex; color:var(--text-color-secondary); pointer-events:none; }
+  .input-wrap .lead-txt { position:absolute; left:12px; font-size:.875rem; color:var(--text-color-secondary); pointer-events:none; }
+  .input-wrap .control.has-trail { padding-right:40px; }
+  .trail-btn { position:absolute; right:4px; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:0; background:transparent; border-radius:var(--bw-radius-sm); color:var(--text-color-secondary); cursor:pointer; }
+  .trail-btn:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .trail-btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+
+  /* Select + listbox */
+  .select-wrap { position:relative; display:flex; align-items:center; width:100%; }
+  .select-btn { text-align:left; padding-right:36px; cursor:pointer; }
+  .select-btn.is-placeholder { color:var(--text-color-secondary); }
+  .select-wrap .chev { position:absolute; right:11px; display:flex; color:var(--text-color-secondary); pointer-events:none; }
+  .listbox { width:100%; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-popover); padding:4px; }
+  .lb-search { display:flex; flex-direction:column; gap:6px; padding:6px 6px 8px; border-bottom:1px solid var(--surface-border); margin-bottom:4px; }
+  .lb-search .control { height:2rem; font-size:.8125rem; }
+  .opt { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:var(--bw-radius-md); font-size:.875rem; color:var(--text-color); }
+  .opt.is-hover { background:var(--bw-surface-muted); }
+  .opt.is-selected { background:var(--bw-50); color:var(--bw-500); font-weight:500; }
+  .opt .check { display:flex; color:var(--bw-300); }
+  .opt .sub { display:block; font-size:.6875rem; font-weight:400; color:var(--text-color-secondary); }
+
+  /* Checkbox / radio */
+  .choices { display:grid; gap:12px; width:100%; }
+  .choice { display:flex; align-items:center; gap:8px; font-size:.875rem; color:var(--text-color); }
+  .choice label { cursor:pointer; }
+  .choice .hint { margin-left:auto; text-align:right; }
+  .cbx { appearance:none; margin:0; width:16px; height:16px; flex:none; border:1px solid var(--text-color-secondary); border-radius:var(--bw-radius-sm); background:var(--surface-card); display:inline-grid; place-items:center; cursor:pointer; }
+  .cbx:checked, .cbx.is-indet { background:var(--bw-300); border-color:var(--bw-300); }
+  .cbx:checked::after { content:''; width:8px; height:4px; border-left:2px solid var(--bw-text-on-brand); border-bottom:2px solid var(--bw-text-on-brand); transform:rotate(-45deg) translate(1px,-1px); }
+  .cbx.is-indet::after { content:''; width:8px; height:2px; background:var(--bw-text-on-brand); border:0; transform:none; }
+  .cbx:disabled { background:var(--bw-surface-muted); border-color:var(--surface-border); cursor:not-allowed; }
+  .cbx:checked:disabled, .cbx.is-indet:disabled { background:var(--bw-200); border-color:var(--bw-200); }
+  .cbx:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .rdo { appearance:none; margin:0; width:16px; height:16px; flex:none; border:1px solid var(--text-color-secondary); border-radius:50%; background:var(--surface-card); cursor:pointer; }
+  .rdo:checked { border-color:var(--bw-300); background:radial-gradient(circle, var(--bw-300) 0 3px, var(--surface-card) 3.5px); }
+  .rdo:disabled { border-color:var(--surface-border); background:var(--bw-surface-muted); cursor:not-allowed; }
+  .rdo:disabled:checked { background:radial-gradient(circle, var(--bw-200) 0 3px, var(--bw-surface-muted) 3.5px); }
+  .rdo:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .fieldset { border:0; padding:0; margin:0; display:flex; flex-direction:column; gap:12px; }
+  .fieldset legend { font-size:.75rem; font-weight:500; color:var(--text-label); padding:0; margin-bottom:10px; }
+
+  /* Toggle */
+  .sw-input { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
+  .sw-field { display:inline-flex; align-items:center; gap:10px; font-size:.875rem; color:var(--text-color); cursor:pointer; }
+  .track { width:40px; height:22px; border-radius:var(--bw-radius-pill); background:var(--surface-border); position:relative; flex:none; transition:background var(--bw-transition-fast) ease; }
+  .track::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--surface-card); box-shadow:var(--bw-shadow-card); transition:transform var(--bw-transition-fast) ease; }
+  .sw-input:checked + .sw-field .track { background:var(--bw-300); }
+  .sw-input:checked + .sw-field .track::after { transform:translateX(18px); }
+  .sw-input:focus-visible + .sw-field .track { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .sw-input:disabled + .sw-field { color:var(--text-color-secondary); cursor:not-allowed; }
+  .sw-input:disabled + .sw-field .track { background:var(--bw-surface-muted); }
+  .sw-input:disabled:checked + .sw-field .track { background:var(--bw-200); }
+  .toggle-row { display:grid; grid-template-columns:1fr auto; align-items:start; gap:16px; width:100%; padding:12px 0; border-bottom:1px dashed var(--surface-border); }
+  .toggle-row:first-child { padding-top:0; }
+  .toggle-row:last-child { border-bottom:0; padding-bottom:0; }
+  .toggle-row .hint { margin-top:4px; }
+
+  /* Anatomía y anotaciones */
+  .anat { display:grid; grid-template-columns:minmax(280px, 340px) 1fr; gap:var(--bw-space-lg); align-items:start; }
+  .ann { list-style:none; display:grid; gap:7px; padding:0; margin:0; }
+  .ann li { font-size:.75rem; color:var(--text-color-secondary); display:grid; grid-template-columns:96px 1fr; gap:10px; align-items:baseline; }
+  .ann b { font-family:var(--mono); font-size:.6875rem; font-weight:600; color:var(--text-color); }
+
+  /* Reglas */
+  .rules { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-lg); }
+  .rule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-success); border-radius:var(--bw-radius-md); padding:12px 16px; font-size:.8125rem; }
+  .rule.no { border-left-color:var(--bw-status-pendiente); }
+  .rule h3 { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; margin-bottom:6px; }
+  .rule ul { padding-left:16px; display:grid; gap:4px; }
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer code { font-size:.6875rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .control, .track, .track::after { transition:none; }
+  }
+
+  .ds-band { margin-top:var(--bw-space-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); font-size:.75rem; color:var(--text-color-secondary); }
+  .ds-band__tag { background:var(--bw-100); color:var(--bw-500); border-radius:var(--bw-radius-pill); padding:2px 9px; font-size:.6875rem; font-weight:600; }
+  .ds-band__link { margin-left:auto; color:var(--bw-500); font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 02</div>
+    <h1>Formularios: campos, selección y validación</h1>
+    <p class="lead">Los formularios son la ficha: se leen de arriba abajo, con label visible y un error que se explica con texto, no con color. El estado es nuestro (<code>model()</code>); PrimeNG sigue rentando el posicionamiento del select y el ojo de la contraseña.</p>
+  </div>
+  <div class="meta">1440 × 1320<br>light · tokens del 2026-11-27</div>
+</header>
+<div class="ds-band">
+  <span class="ds-band__tag">Contrato, no rediseño</span>
+  <span>Componentes propios con transición paulatina: un consumidor por vez. El formato existente manda.</span>
+  <a class="ds-band__link" href="00-estado-y-transicion.html">Estado y transición →</a>
+</div>
+
+
+<div class="contracts">
+  <div class="contract"><b>bw-input</b><em>value</em> = model() · <em>invalid</em> · <em>hint</em><br>Hoy: <code>p-inputtext</code> + <code>iconfield</code></div>
+  <div class="contract"><b>bw-select</b><em>value</em> = model() · <em>options</em> · <em>searchable</em> · <em>invalid</em><br>Hoy alquila <code>p-select</code> (posicionamiento)</div>
+  <div class="contract"><b>bw-checkbox · bw-radio · bw-toggle</b><em>checked</em> = model()<br>Hoy: <code>p-checkbox</code> · <code>p-radiobutton</code> · <code>p-toggleswitch</code></div>
+  <div class="contract"><b>bw-inputnumber · bw-password</b><em>value</em> = model() · <em>reveal</em><br>CLP sin decimales · <code>aria-pressed</code> en el ojo</div>
+</div>
+
+<main>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Input</h2>
+      <p class="fam-sub">Un campo, una pregunta. El label va siempre arriba y visible; el placeholder es un ejemplo, nunca la etiqueta. El error aparece debajo y reemplaza al helper, con borde e ícono además del texto.</p>
+    </div>
+    <div class="fam-contract"><b>bw-input</b> · <em>value</em> · <em>invalid</em> · <em>hint</em><br>hoy: <b>p-inputtext</b> envuelto · iconfield nativo</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live anat">
+        <div class="field">
+          <label for="in-anat">Nombre de la clienta</label>
+          <input class="control" id="in-anat" type="text" value="Javiera Soto" autocomplete="name">
+          <p class="hint">Tal como figura en la ficha, sin abreviar.</p>
+        </div>
+        <ul class="ann">
+          <li><b>label</b><span>12 / 500 · arriba del control, siempre visible</span></li>
+          <li><b>control</b><span>40 de alto · radius 6 · 14 px · borde 1 px <code>--surface-border</code></span></li>
+          <li><b>helper</b><span>12 px <code>--text-color-secondary</code>, debajo del control</span></li>
+          <li><b>error</b><span>12 px <code>--bw-chip-text-danger</code> + borde <code>--bw-status-pendiente</code></span></li>
+          <li><b>ring</b><span>2 px <code>--bw-300</code> con offset 2, solo con teclado</span></li>
+        </ul>
+      </div>
+      <figcaption><span><b>Anatomía del campo</b> — label, control, helper, error y ring</span><span class="mono">40 alto · radius 6 · label 12/500 · helper 12</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live grid4 tint">
+        <div class="st">
+          <div class="field">
+            <label for="in-default">Teléfono</label>
+            <input class="control" id="in-default" type="tel" placeholder="+56 9 6123 4567">
+          </div>
+          <span>default</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="in-focus">Correo</label>
+            <input class="control is-focus" id="in-focus" type="email" value="javiera@correo.cl">
+          </div>
+          <span>focus-visible</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="in-filled">Dirección</label>
+            <input class="control" id="in-filled" type="text" value="Av. Providencia 1234, depto 52">
+          </div>
+          <span>filled</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="in-error">Correo de contacto</label>
+            <input class="control" id="in-error" type="email" value="javiera@" aria-invalid="true" aria-describedby="in-error-msg">
+            <p class="err" id="in-error-msg">El correo no tiene dominio. Ejemplo: javiera@correo.cl</p>
+          </div>
+          <span>error</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="in-disabled">RUT</label>
+            <input class="control" id="in-disabled" type="text" value="19.876.543-2" disabled>
+          </div>
+          <span>disabled</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="in-icon">Buscar clienta</label>
+            <div class="input-wrap">
+              <span class="lead-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+              <input class="control" id="in-icon" type="search" placeholder="Nombre o teléfono">
+            </div>
+          </div>
+          <span>con ícono guía</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="in-clear">Buscar por servicio</label>
+            <div class="input-wrap">
+              <span class="lead-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+              <input class="control has-trail" id="in-clear" type="search" value="láser">
+              <button class="trail-btn" type="button" aria-label="Limpiar búsqueda">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
+          </div>
+          <span>clearable</span>
+        </div>
+      </div>
+      <figcaption><span><b>Estados del input</b> — el foco no cambia el relleno; el error suma texto y borde</span><span class="mono">ring 2 px <code>--bw-300</code> · offset 2</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Select</h2>
+      <p class="fam-sub">Con menos de 7 opciones, un select está bien; con más, <code>searchable</code> y filtro dentro del listbox. La opción elegida se marca con check, no solo con fondo. El listbox es un mock estático: en producto lo posiciona PrimeNG.</p>
+    </div>
+    <div class="fam-contract"><b>bw-select</b> · <em>value</em> · <em>options</em> · <em>searchable</em> · <em>invalid</em><br>hoy: <b>p-select</b> (overlay + teclado)</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live grid4 tint">
+        <div class="st">
+          <div class="field">
+            <label for="sel-placeholder">Servicio</label>
+            <div class="select-wrap">
+              <button class="control select-btn is-placeholder" id="sel-placeholder" type="button" aria-haspopup="listbox" aria-expanded="false">Elegí un servicio</button>
+              <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </div>
+          </div>
+          <span>placeholder</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="sel-value">Servicio</label>
+            <div class="select-wrap">
+              <button class="control select-btn" id="sel-value" type="button" aria-haspopup="listbox" aria-expanded="false">Depilación láser · piernas</button>
+              <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </div>
+          </div>
+          <span>con valor</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="sel-disabled">Servicio</label>
+            <div class="select-wrap">
+              <button class="control select-btn" id="sel-disabled" type="button" aria-haspopup="listbox" aria-expanded="false" disabled>Limpieza facial profunda</button>
+              <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </div>
+          </div>
+          <span>disabled</span>
+        </div>
+        <div class="st">
+          <div class="field">
+            <label for="sel-error">Profesional</label>
+            <div class="select-wrap">
+              <button class="control select-btn is-placeholder" id="sel-error" type="button" aria-haspopup="listbox" aria-expanded="false" aria-invalid="true" aria-describedby="sel-error-msg">Elegí un profesional</button>
+              <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </div>
+            <p class="err" id="sel-error-msg">Camila Rojas no atiende los jueves.</p>
+          </div>
+          <span>error</span>
+        </div>
+      </div>
+      <figcaption><span><b>Estados cerrados</b> — placeholder en secundario; el error conserva el texto del campo</span><span class="mono">40 alto · radius 6 · 14/400</span></figcaption>
+    </figure>
+
+    <div class="specs two">
+      <figure class="spec">
+        <div class="live">
+          <div class="field" style="max-width:340px">
+            <label for="sel-open">Servicio</label>
+            <div class="select-wrap">
+              <button class="control select-btn is-focus" id="sel-open" type="button" aria-haspopup="listbox" aria-expanded="true" aria-controls="lb-open">Depilación láser · piernas</button>
+              <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </div>
+            <div class="listbox" id="lb-open" role="listbox" aria-label="Servicios de estética y láser">
+              <div class="opt is-selected" role="option" aria-selected="true"><span>Depilación láser · piernas</span><span class="check" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg></span></div>
+              <div class="opt is-hover" role="option" aria-selected="false"><span>Limpieza facial profunda</span></div>
+              <div class="opt" role="option" aria-selected="false"><span>Masaje descontracturante</span></div>
+              <div class="opt" role="option" aria-selected="false"><span>Manicure ruso</span></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><span><b>Listbox abierto</b> — 4 opciones, una elegida con check y una en hover; mock estático</span><span class="mono">listbox radius 8 · <code>--bw-shadow-popover</code></span></figcaption>
+      </figure>
+
+      <figure class="spec">
+        <div class="live">
+          <div class="field" style="max-width:340px">
+            <label for="sel-search">Servicio</label>
+            <div class="select-wrap">
+              <button class="control select-btn is-focus" id="sel-search" type="button" aria-haspopup="listbox" aria-expanded="true" aria-controls="lb-search">Depilación láser · piernas</button>
+              <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+            </div>
+            <div class="listbox" id="lb-search" role="listbox" aria-label="Servicios filtrados">
+              <div class="lb-search">
+                <label for="sel-search-input">Buscar servicio</label>
+                <input class="control" id="sel-search-input" type="search" value="lá" aria-describedby="sel-search-count">
+                <span class="hint" id="sel-search-count">2 resultados</span>
+              </div>
+              <div class="opt is-selected" role="option" aria-selected="true"><span>Depilación láser · piernas</span><span class="check" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg></span></div>
+              <div class="opt" role="option" aria-selected="false"><span>Láser facial fraccionado</span></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><span><b>Variante searchable</b> — el filtro vive dentro del listbox y conserva su label visible</span><span class="mono">filtro 32 · listbox radius 8 · 14/400</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Checkbox y radio</h2>
+      <p class="fam-sub">Checkbox para varias respuestas, radio para una sola. El estado indeterminado existe y se explica con un helper (“3 de 8”). El radio group lleva <code>fieldset</code> y <code>legend</code>: la pregunta también tiene label.</p>
+    </div>
+    <div class="fam-contract"><b>bw-checkbox</b> · <em>checked</em> · <em>indeterminate</em> · <em>disabled</em><br><b>bw-radio</b> · <em>checked</em> · <em>name</em> · hoy: <b>p-checkbox</b> / <b>p-radiobutton</b></div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live">
+        <div class="choices">
+          <div class="choice">
+            <input class="cbx" type="checkbox" id="cb-sin" name="avisos">
+            <label for="cb-sin">Acepta avisos por WhatsApp</label>
+          </div>
+          <div class="choice">
+            <input class="cbx" type="checkbox" id="cb-check" name="avisos" checked>
+            <label for="cb-check">Recordatorio 24 h antes</label>
+          </div>
+          <div class="choice">
+            <input class="cbx is-indet" type="checkbox" id="cb-indet" aria-checked="mixed" aria-describedby="cb-indet-hint">
+            <label for="cb-indet">Seleccionar todas las clientas</label>
+            <span class="hint" id="cb-indet-hint">3 de 8</span>
+          </div>
+          <div class="choice">
+            <input class="cbx" type="checkbox" id="cb-dis" checked disabled>
+            <label for="cb-dis">Enviar encuesta de satisfacción</label>
+            <span class="hint">Pack Premium</span>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Estados del checkbox</b> — sin marcar, marcado, indeterminado y deshabilitado</span><span class="mono">16 × 16 · radius 4 · check 2 px</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live">
+        <fieldset class="fieldset">
+          <legend>Modalidad</legend>
+          <div class="choice">
+            <input class="rdo" type="radio" id="mod-presencial" name="modalidad" value="presencial" checked>
+            <label for="mod-presencial">Presencial</label>
+            <span class="hint">Providencia · 15:30</span>
+          </div>
+          <div class="choice">
+            <input class="rdo" type="radio" id="mod-online" name="modalidad" value="online">
+            <label for="mod-online">Online</label>
+            <span class="hint">Videollamada · 30 min</span>
+          </div>
+          <p class="hint">La modalidad se confirma al agendar; después la cambia la profesional.</p>
+        </fieldset>
+      </div>
+      <figcaption><span><b>Radio group</b> — una sola opción, con la elegida visible y el contexto al lado</span><span class="mono">16 × 16 · dot 6 · radius pill</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Toggle</h2>
+      <p class="fam-sub">El toggle aplica al instante y por eso necesita un helper que diga qué cambia. Si hay que guardar para que tome efecto, no es toggle: es checkbox dentro del formulario.</p>
+    </div>
+    <div class="fam-contract"><b>bw-toggle</b> · <em>checked</em> = model() · <em>disabled</em><br>hoy: <b>p-toggleswitch</b> · el chip confirma el estado persistido</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live" style="flex-direction:column; align-items:stretch; gap:0">
+        <div class="toggle-row">
+          <div>
+            <div class="switch">
+              <input class="sw-input" type="checkbox" id="tog-off">
+              <label class="sw-field" for="tog-off"><span class="track" aria-hidden="true"></span><span>Recordatorio 24 h</span></label>
+            </div>
+            <p class="hint">Apagado: la clienta no recibe el aviso por WhatsApp.</p>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="switch">
+              <input class="sw-input" type="checkbox" id="tog-on" checked aria-describedby="tog-on-hint">
+              <label class="sw-field" for="tog-on"><span class="track" aria-hidden="true"></span><span>Recordatorio 24 h</span></label>
+            </div>
+            <p class="hint" id="tog-on-hint">Se envía a las 15:30 del día anterior, por WhatsApp.</p>
+          </div>
+          <span class="chip chip-success"><span class="dot dot-success" aria-hidden="true"></span>Activo</span>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="switch">
+              <input class="sw-input" type="checkbox" id="tog-dis" disabled>
+              <label class="sw-field" for="tog-dis"><span class="track" aria-hidden="true"></span><span>Recordatorio 48 h</span></label>
+            </div>
+            <p class="hint">Disponible desde el pack Premium.</p>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Off, on con helper y chip, disabled</b> — el chip “Activo” confirma el estado guardado</span><span class="mono">40 × 22 · radius pill · knob 18 · 14/500</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Número y contraseña</h2>
+      <p class="fam-sub">La plata se escribe en CLP, sin decimales y con separador de miles. La contraseña se revela con un ojo que anuncia su estado con <code>aria-pressed</code>; el error dice qué pasó, no “campo inválido”.</p>
+    </div>
+    <div class="fam-contract"><b>bw-inputnumber</b> · <em>value</em> · <em>mode</em> currency · <em>locale</em> CLP<br><b>bw-password</b> · <em>value</em> · <em>reveal</em> · hoy: <b>p-inputnumber</b> / <b>p-password</b></div>
+  </div>
+
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live" style="align-items:flex-start">
+        <div class="field" style="max-width:320px">
+          <label for="monto">Abono recibido<span class="req" aria-hidden="true">*</span></label>
+          <div class="input-wrap">
+            <span class="lead-txt" aria-hidden="true">$</span>
+            <input class="control" id="monto" type="text" inputmode="numeric" value="40.000" aria-describedby="monto-hint">
+          </div>
+          <p class="hint" id="monto-hint">CLP · sin decimales</p>
+        </div>
+      </div>
+      <figcaption><span><b>InputNumber</b> — prefijo fijo y valor con separador de miles</span><span class="mono">40 alto · radius 6 · 16/400 en la cifra</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live" style="align-items:flex-start">
+        <div style="display:grid; gap:18px; width:100%; max-width:320px">
+          <div class="field">
+            <label for="pass-hint">Contraseña</label>
+            <div class="input-wrap">
+              <input class="control has-trail" id="pass-hint" type="password" value="Laser2026" aria-describedby="pass-hint-msg">
+              <button class="trail-btn" type="button" aria-label="Mostrar contraseña" aria-pressed="false">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              </button>
+            </div>
+            <p class="hint" id="pass-hint-msg">Mínimo 8 caracteres.</p>
+          </div>
+          <div class="field">
+            <label for="pass-error">Repetí la contraseña</label>
+            <div class="input-wrap">
+              <input class="control has-trail" id="pass-error" type="password" value="Laser26" aria-invalid="true" aria-describedby="pass-error-msg">
+              <button class="trail-btn" type="button" aria-label="Mostrar contraseña" aria-pressed="false">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              </button>
+            </div>
+            <p class="err" id="pass-error-msg">La contraseña no coincide.</p>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Password</b> — reveal con ojo, helper de mínimo y error de coincidencia</span><span class="mono">40 alto · radius 6 · ojo 32 · hint 12</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Reglas del formulario</h2>
+      <p class="fam-sub">Cuatro acuerdos que valen para toda la app, incluso cuando el campo todavía lo dibuja PrimeNG.</p>
+    </div>
+    <div class="fam-contract"><b>bw-form-field</b> · label + control + helper/error<br>hoy: <b>p-inputtext</b> · <b>p-select</b> · <b>p-toggleswitch</b></div>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Label visible siempre; el placeholder es un ejemplo, nunca la etiqueta.</li>
+        <li>Error con texto: qué pasó y cómo se corrige, además del borde.</li>
+        <li>Una sola acción primaria por formulario: el resto es Cancelar o ghost.</li>
+        <li>Todo valor sale de un token <code>--bw-*</code>; el CLP se formatea sin decimales.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Campos que se identifican solo por el placeholder: desaparece al escribir.</li>
+        <li>Marcar error solo con rojo: sin texto ni ícono no se entiende.</li>
+        <li>Dos botones primarios compitiendo en el mismo footer.</li>
+        <li>Hex, <code>rgba()</code> sueltos ni tamaños mágicos fuera de los tokens.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>Tokens usados: <code>--bw-300</code> <code>--bw-200</code> <code>--bw-500</code> <code>--bw-50</code> <code>--bw-100</code> <code>--bw-chip-text-danger</code> <code>--bw-chip-text-success</code> <code>--bw-status-pendiente</code> <code>--bw-status-asiste</code> <code>--bw-radius-sm/md/lg/pill</code> <code>--bw-control-height</code> <code>--bw-shadow-popover</code> <code>--bw-transition-fast</code></span>
+  <span>02 / 08 · fuentes: <code>_tokens.scss</code> · <code>_primeng-bridge.scss</code></span>
+</footer>
+
+</body>
+</html>

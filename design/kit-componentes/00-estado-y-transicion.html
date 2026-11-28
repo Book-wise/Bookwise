@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · 00 Estado y transición</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-status-asiste:#1FB27C; --bw-status-confirmado:#ECBE51; --bw-status-pendiente:#FD8991;
+    --bw-chip-text-success:#166534; --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-tracking-tight:-0.01em;
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:var(--bw-tracking-tight); }
+  .lead { color:var(--text-color-secondary); font-size:.9375rem; max-width:74ch; margin-top:var(--bw-space-xs); }
+  .lead strong { color:var(--text-color); font-weight:500; }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+
+  .banner { margin-top:var(--bw-space-md); display:flex; align-items:flex-start; gap:12px; padding:14px 16px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); }
+  .banner b { color:var(--bw-500); }
+  .banner p { font-size:.875rem; color:var(--text-color-secondary); }
+  .banner p b { color:var(--text-color); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:72ch; }
+
+  .legend { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .leg { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); padding:14px 16px; }
+  .leg h3 { display:flex; align-items:center; gap:8px; font-size:.8125rem; font-weight:600; }
+  .leg p { font-size:.8125rem; color:var(--text-color-secondary); margin-top:6px; }
+  .tag { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:var(--bw-radius-pill); font-size:.6875rem; font-weight:600; letter-spacing:.02em; }
+  .tag-own { background:color-mix(in srgb, var(--bw-status-asiste) 16%, white); color:var(--bw-chip-text-success); }
+  .tag-rent { background:var(--bw-surface-muted); color:var(--text-label); }
+  .tag-facade { background:color-mix(in srgb, var(--bw-300) 14%, white); color:var(--bw-500); }
+  .tag-native { background:color-mix(in srgb, var(--bw-status-confirmado) 22%, white); color:var(--bw-chip-text-warning); }
+
+  table.map { width:100%; border-collapse:collapse; margin-top:var(--bw-space-md); background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); overflow:hidden; box-shadow:var(--bw-shadow-card); }
+  table.map th { text-align:left; font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; padding:10px 12px; border-bottom:1px solid var(--surface-border); background:var(--surface-card); }
+  table.map td { padding:10px 12px; border-bottom:1px solid var(--surface-border); font-size:.8125rem; vertical-align:top; }
+  table.map tr:last-child td { border-bottom:0; }
+  table.map td:first-child { font-weight:500; }
+  table.map td .path { display:block; font-family:var(--mono); font-size:.6875rem; color:var(--text-color-secondary); margin-top:2px; }
+
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .card { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); padding:16px; }
+  .card h3 { font-size:.9375rem; font-weight:600; margin-bottom:8px; }
+  .card ul { padding-left:18px; display:grid; gap:6px; font-size:.8125rem; color:var(--text-color-secondary); }
+  .card ul b { color:var(--text-color); font-weight:500; }
+
+  .steps { display:grid; gap:8px; margin-top:var(--bw-space-md); }
+  .step { display:grid; grid-template-columns:40px 1fr; gap:12px; align-items:start; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:12px 16px; }
+  .step__n { width:28px; height:28px; border-radius:var(--bw-radius-pill); background:var(--bw-100); color:var(--bw-500); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:600; }
+  .step b { font-size:.875rem; font-weight:600; }
+  .step p { font-size:.8125rem; color:var(--text-color-secondary); }
+  .step code { font-size:.6875rem; }
+
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 00</div>
+    <h1>Estado y transición: de PrimeNG a lo propio</h1>
+    <p class="lead">Este tablero <strong>no rediseña la app</strong>. Documenta de quién es cada pieza, qué se queda alquilado y cómo se cambia una por una <strong>sin tocar el formato ni los flujos que ya funcionan</strong>. Si un specimen de otro tablero difiere de la app, manda la app.</p>
+  </div>
+  <div class="meta">1440 × 1660<br>lectura: 5 minutos · tokens del 2026-11-27</div>
+</header>
+
+<div class="banner">
+  <span class="tag tag-own">Propio</span>
+  <p><b>La vista general no cambia en esta etapa.</b> La transición cambia el <b>dueño del componente</b>, no el layout: mismas rutas, mismos textos, mismos estados y mismos permisos. Cada fachada entra en una pantalla por vez y se puede revertir sin tocar el template del feature.</p>
+</div>
+
+<section class="fam">
+  <div class="fam-head">
+    <h2>Las cuatro categorías</h2>
+    <p class="fam-sub">Un componente puede ser nuestro aunque use un <code>p-button</code> adentro. La categoría describe quién es dueño del comportamiento y del markup, no si hay una importación de PrimeNG en el archivo.</p>
+  </div>
+  <div class="legend">
+    <div class="leg">
+      <h3><span class="tag tag-own">Propio</span></h3>
+      <p>Markup, estilos y estado nuestros. Se queda como está: no se rehace.</p>
+    </div>
+    <div class="leg">
+      <h3><span class="tag tag-rent">Alquilado</span></h3>
+      <p>PrimeNG resuelve algo caro (tabla, calendario, gráfico, posicionamiento). Se queda hasta que duela.</p>
+    </div>
+    <div class="leg">
+      <h3><span class="tag tag-facade">Fachada</span></h3>
+      <p>Capa <code>bw-*</code> nueva que envuelve el estado y el markup. Mismo look; el feature importa <code>bw-*</code>.</p>
+    </div>
+    <div class="leg">
+      <h3><span class="tag tag-native">Nativo</span></h3>
+      <p>Reemplazo 1:1 sin PrimeNG (button, card, chip, badge, avatar, skeleton). Cambia el dueño, no el diseño.</p>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <h2>Mapa de propiedad (lo que ya existe)</h2>
+    <p class="fam-sub">Cada fila nombra el archivo real. “Se queda” significa que no se toca en esta etapa.</p>
+  </div>
+  <table class="map">
+    <thead><tr><th>Familia</th><th>Hoy</th><th>Destino</th><th>Cuándo</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Sidebar, topbar y navegación<span class="path">layouts/* · app-header · agenda-navigator</span></td>
+        <td><span class="tag tag-own">Propio</span></td><td>Se queda</td><td>—</td>
+      </tr>
+      <tr>
+        <td>Grilla de servicios<span class="path">features/admin/packs · sp-card</span></td>
+        <td><span class="tag tag-own">Propio</span></td><td>Se queda (imagen, variaciones y Woo)</td><td>—</td>
+      </tr>
+      <tr>
+        <td>Calendario<span class="path">FullCalendar · .fc .ev__* · _calendar.scss</span></td>
+        <td><span class="tag tag-own">Propio</span></td><td>Se queda</td><td>—</td>
+      </tr>
+      <tr>
+        <td>Ficha y paciente<span class="path">patient-card · patient-detail-content · ficha-tab</span></td>
+        <td><span class="tag tag-own">Propio</span></td><td>Se queda (tabs y fichas propias)</td><td>—</td>
+      </tr>
+      <tr>
+        <td>Diálogo<span class="path">bw-dialog · capacity-limit-dialog</span></td>
+        <td><span class="tag tag-facade">Fachada</span></td><td><code>bw-dialog</code></td><td>Piloto hecho; resto opt-in</td>
+      </tr>
+      <tr>
+        <td>Select<span class="path">24 archivos · [(ngModel)]</span></td>
+        <td><span class="tag tag-rent">PrimeNG</span></td><td><code>bw-select</code></td><td>Siguiente</td>
+      </tr>
+      <tr>
+        <td>Tabs<span class="path">p-tabs · activeIndex</span></td>
+        <td><span class="tag tag-rent">PrimeNG</span></td><td><code>bw-tabs</code> por id</td><td>Después de select</td>
+      </tr>
+      <tr>
+        <td>Toggle, checkbox, radio, input<span class="path">p-toggleswitch · p-checkbox · pInputText</span></td>
+        <td><span class="tag tag-rent">PrimeNG</span></td><td>Fachadas <code>bw-*</code></td><td>Por demanda</td>
+      </tr>
+      <tr>
+        <td>Button, chip, card, badge, avatar<span class="path">159 p-button · 32 p-card · .bw-chip ya es propio</span></td>
+        <td><span class="tag tag-native">Nativo</span></td><td>Primitivas 1:1</td><td>Cuando haya revisión visual</td>
+      </tr>
+      <tr>
+        <td>Skeleton<span class="path">166 usos · .bw-sk-card ya existe</span></td>
+        <td><span class="tag tag-native">Nativo</span></td><td><code>.bw-sk-*</code></td><td>Por pantalla</td>
+      </tr>
+      <tr>
+        <td>Table, paginator, datepicker, chart, toast<span class="path">p-table · p-paginator · p-datepicker · p-chart · p-toast</span></td>
+        <td><span class="tag tag-rent">Alquilado</span></td><td>Se queda</td><td>—</td>
+      </tr>
+      <tr>
+        <td>Menu, confirm, message, progress<span class="path">p-menu · p-confirmdialog · p-message · p-progressbar</span></td>
+        <td><span class="tag tag-rent">PrimeNG</span></td><td>Fachadas</td><td>Después</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <h2>Cómo se leen los tableros 01–07</h2>
+    <p class="fam-sub">Son referencia de contrato, no un brief de rediseño.</p>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <h3>Qué documentan</h3>
+      <ul>
+        <li><b>El contrato</b>: qué entra, qué sale y qué estados existen por familia.</li>
+        <li><b>El formato que ya existe</b>: la card de servicio sale de <code>sp-card</code>, no de una idea nueva.</li>
+        <li><b>La deuda</b>: qué sigue en PrimeNG y qué archivos lo usan.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Qué NO son</h3>
+      <ul>
+        <li>No son un rediseño de pantallas ni una propuesta de layout nuevo.</li>
+        <li>No obligan a cambiar una pantalla que ya funciona.</li>
+        <li>No reemplazan la app: si el tablero y la app difieren, <b>gana la app</b> y se corrige el tablero.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <h2>Garantías de la transición</h2>
+    <p class="fam-sub">Compatibilizar, no refactorizar: el trabajo de meses queda donde está.</p>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <h3>No cambia</h3>
+      <ul>
+        <li>Rutas, permisos, modelos, stores, i18n y contratos HTTP.</li>
+        <li>FullCalendar, la exportación a Woo y la impresión A4.</li>
+        <li>El formato de las pantallas que ya están aprobadas.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Sí cambia</h3>
+      <ul>
+        <li>Quién importa qué: la feature importa <code>bw-*</code>, PrimeNG queda dentro del kit.</li>
+        <li>El estado: de <code>[(ngModel)]</code> / <code>[(visible)]</code> a <code>model()</code> + <code>output()</code>.</li>
+        <li>El punto de cambio: un consumidor por commit, reversible.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <h2>Orden, paso a paso</h2>
+    <p class="fam-sub">Cada paso es una rama con un consumidor. Ningún paso toca dos pantallas.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="step__n">1</span><div><b>Infraestructura</b><p>Cobertura, frontera en modo reporte y checklist. <code>docs/design-system-coverage.md</code></p></div></div>
+    <div class="step"><span class="step__n">2</span><div><b>Catálogo</b><p>Tableros 01–07: contrato y formato existente, sin tocar producción.</p></div></div>
+    <div class="step"><span class="step__n">3</span><div><b>Una fachada</b><p><code>bw-select</code> con matriz de paridad y un consumidor de bajo riesgo. El resto sigue con PrimeNG.</p></div></div>
+    <div class="step"><span class="step__n">4</span><div><b>Primitivas nativas</b><p>Button, chip, card, badge, avatar: mismos estilos, sin PrimeNG.</p></div></div>
+    <div class="step"><span class="step__n">5</span><div><b>Estricto</b><p><code>check:boundary --strict</code> recién cuando el conteo sea 0. Nunca antes.</p></div></div>
+  </div>
+</section>
+
+<footer>
+  <span>Fuentes: código implementado (<code>packs-list</code>, <code>layouts</code>, <code>patient-card</code>, <code>bw-dialog</code>) + <code>docs/design-system-coverage.md</code></span>
+  <span>00 / 08 · este tablero manda sobre los demás en materia de alcance</span>
+</footer>
+
+</body>
+</html>
