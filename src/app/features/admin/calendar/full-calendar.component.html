@@ -83,6 +83,7 @@
               icon="pi pi-clock"
               size="small"
               severity="secondary"
+              [ariaLabel]="lang.t('cal.slot_duration.help')"
               [pTooltip]="lang.t('cal.slot_duration.help')"
               tooltipPosition="top"
               (onClick)="slotDurationPopover.toggle($event)"
@@ -93,6 +94,7 @@
               size="small"
               severity="secondary"
               [text]="true"
+              [ariaLabel]="lang.t('cal.legend.help')"
               (onClick)="statusLegendPopover.toggle($event)"
             >
             </p-button>
