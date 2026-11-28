@@ -1,13 +1,14 @@
-// Widget de navegación por fecha — tarjeta clara que funciona sobre el sidebar.
+// Widget de navegación por fecha — glass oscuro sobre el gradiente del sidebar
+// (artboard 06: mini-cal del side-menu, días tappables).
 .navigator {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
   padding: 0.75rem;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #1a2744;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .navigator__nav {
@@ -23,7 +24,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   font-size: 0.6875rem;
   display: inline-flex;
@@ -32,8 +33,8 @@
   flex-shrink: 0;
 
   &:hover {
-    background: rgba(4, 106, 244, 0.08);
-    color: #046af4;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
   }
 }
 
@@ -46,14 +47,14 @@
   gap: 1px;
   line-height: 1.1;
   text-transform: capitalize;
-  color: #1a2744;
+  color: #fff;
   overflow: hidden;
 }
 
 .navigator__year {
   font-size: 0.625rem;
   font-weight: 500;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.55);
   text-transform: none;
   white-space: nowrap;
 }
@@ -70,7 +71,7 @@
 .navigator__today {
   border: none;
   background: transparent;
-  color: #046af4;
+  color: #93c5fd;
   font-family: var(--font-family);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -80,7 +81,7 @@
   flex-shrink: 0;
 
   &:hover {
-    background: rgba(4, 106, 244, 0.08);
+    background: rgba(255, 255, 255, 0.12);
   }
 }
 
@@ -94,7 +95,7 @@
   text-align: center;
   font-size: 0.625rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   padding: 2px 0;
 }
@@ -104,7 +105,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #1a2744;
+  color: #fff;
   font-size: 0.75rem;
   cursor: pointer;
   display: inline-flex;
@@ -112,8 +113,8 @@
   justify-content: center;
 
   &:hover {
-    background: rgba(4, 106, 244, 0.1);
-    color: #046af4;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
   }
 
   &--today {
@@ -123,10 +124,10 @@
   }
 
   &--selected {
-    background: rgba(4, 106, 244, 0.28);
-    color: #046af4;
+    background: rgba(96, 167, 240, 0.32);
+    color: #dbeafe;
     font-weight: 700;
-    box-shadow: inset 0 0 0 2px #046af4;
+    box-shadow: inset 0 0 0 2px #60a7f0;
   }
 
   &--empty {
