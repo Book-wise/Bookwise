@@ -728,16 +728,34 @@ export interface Subscription {
   addon_catalog?: AddonCatalogItem[];
 }
 
+/**
+ * Último cargo de la suscripción (`last_payment` en `GET /v1/subscription`).
+ * Es el registro de plataforma del cobro del período: trae el `failure_code`
+ * del proveedor cuando falló, sin exponer token/PAN.
+ */
+export interface LastPayment {
+  id: number;
+  /** `recurring` | `manual` | `refund` | `adjustment`. */
+  kind: string;
+  /** `pending` | `succeeded` | `failed` | `refunded` | `requires_action`. */
+  status: string;
+  /** Código del proveedor cuando el cobro falló; null si no falló. */
+  failure_code: string | null;
+  /** Null cuando el cargo no se pagó (failed/pending). */
+  paid_at: string | null;
+  amount_clp: number;
+}
+
 /** Respuesta de `GET /v1/subscription` (dentro del envoltorio `data`). */
 export interface SubscriptionResponse {
   data: Subscription | null;
-}
-
-/** Respuesta de `POST /v1/subscriptions/{id}/checkout` (S15): cobro de la primera mensualidad. */
-export interface SubscriptionCheckoutResponse {
-  message?: string;
-  /** Suscripción actualizada (pending→active en éxito). */
-  data: Subscription;
+  /**
+   * Último intento de cobro, hermano de `data`.
+   * - `null` con la suscripción `pending` → todavía no se intentó cobrar.
+   * - `status: 'failed'` → el cobro fue rechazado (`failure_code` trae el motivo).
+   * - `status: 'succeeded'` → el cobro se acreditó.
+   */
+  last_payment?: LastPayment | null;
 }
 
 // ── Payment methods (P1 Transbank Oneclick Mall) ─────────────────────────────

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { PlansCatalogResponse, Subscription, SubscriptionCheckoutResponse, SubscriptionResponse, UsageData } from '@models';
+import { PlansCatalogResponse, Subscription, SubscriptionResponse, UsageData } from '@models';
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionApiService {
@@ -45,15 +45,19 @@ export class SubscriptionApiService {
   }
 
   /**
-   * POST /subscriptions/{id}/checkout (Bearer, owner|billing) — cobro de la primera
-   * mensualidad (S15). Éxito → sub pending→active + payment recurring/succeeded.
-   * Rechazo → 402 first_month_charge_rejected (sub queda pending + payment
-   * recurring/failed con failure_code). Idempotente por inscripción.
+   * POST /subscription/checkout (Bearer, owner|billing) — cobro de la primera
+   * mensualidad (S15). Sin id: opera sobre la suscripción viva de la cuenta
+   * activa, igual que `/subscription` y `/subscription/addons`. Idempotente por
+   * inscripción.
+   *
+   * Respuestas: 200 sub `active`; 402 `first_month_charge_rejected` (sub sigue
+   * `pending`, reintentable); 404 `subscription_not_found` (no hay sub viva);
+   * 403 `insufficient_account_role`; 503 `payment_provider_unavailable`.
+   *
+   * El cuerpo no se consume: tras el intento el FE relee `GET /subscription`
+   * (`status` + `last_payment`), que es la verdad canónica de la suscripción.
    */
-  checkout(subscriptionId: number): Observable<SubscriptionCheckoutResponse> {
-    return this.http.post<SubscriptionCheckoutResponse>(
-      `${this.baseUrl}/subscriptions/${subscriptionId}/checkout`,
-      {},
-    );
+  checkout(): Observable<unknown> {
+    return this.http.post<unknown>(`${this.baseUrl}/subscription/checkout`, {});
   }
 }

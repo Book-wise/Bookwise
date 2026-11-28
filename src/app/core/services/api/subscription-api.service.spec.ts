@@ -77,28 +77,64 @@ describe('SubscriptionApiService', () => {
     cancelled_at: null,
   };
 
-  it('checkout calls POST /subscriptions/{id}/checkout and returns the updated subscription', () => {
-    service.checkout(9).subscribe((res) => {
-      expect(res.data.status).toBe('active');
+  it('reads last_payment alongside the subscription, which is how the UI detects a declined charge', () => {
+    service.getSubscription().subscribe((res) => {
+      expect(res.data?.status).toBe('pending');
+      expect(res.last_payment?.status).toBe('failed');
+      expect(res.last_payment?.failure_code).toBe('rejection');
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}/subscriptions/9/checkout`);
+    const req = httpMock.expectOne(`${environment.apiUrl}/subscription`);
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      data: { ...activeSub, status: 'pending' },
+      last_payment: {
+        id: 12,
+        kind: 'recurring',
+        status: 'failed',
+        failure_code: 'rejection',
+        paid_at: null,
+        amount_clp: 19990,
+      },
+    });
+  });
+
+  it('posts the checkout to the singular account subscription path, without an id', () => {
+    service.checkout().subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/subscription/checkout`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({});
     req.flush({ message: 'Pago confirmado.', data: activeSub });
   });
 
   it('surfaces the 402 first_month_charge_rejected on checkout rejection', () => {
-    service.checkout(9).subscribe({
-      error: (err: { error?: { error: string } }) => {
+    service.checkout().subscribe({
+      error: (err: { status: number; error?: { error: string } }) => {
+        expect(err.status).toBe(402);
         expect(err.error?.error).toBe('first_month_charge_rejected');
       },
     });
 
-    const req = httpMock.expectOne(`${environment.apiUrl}/subscriptions/9/checkout`);
+    const req = httpMock.expectOne(`${environment.apiUrl}/subscription/checkout`);
     req.flush(
       { error: 'first_month_charge_rejected', detail: 'El cobro de la primera mensualidad fue rechazado.' },
       { status: 402, statusText: 'Payment Required' },
+    );
+  });
+
+  it('surfaces 404 subscription_not_found so the UI can offer reactivation', () => {
+    service.checkout().subscribe({
+      error: (err: { status: number; error?: { error: string } }) => {
+        expect(err.status).toBe(404);
+        expect(err.error?.error).toBe('subscription_not_found');
+      },
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/subscription/checkout`);
+    req.flush(
+      { error: 'subscription_not_found', detail: 'No hay suscripción viva.' },
+      { status: 404, statusText: 'Not Found' },
     );
   });
 });

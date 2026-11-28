@@ -392,3 +392,9 @@
     font-size: 1.5rem;
   }
 }
+
+.pending-charge__code {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary, #888);
+  font-variant-numeric: tabular-nums;
+}
