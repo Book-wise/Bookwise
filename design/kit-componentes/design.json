@@ -1,0 +1,62 @@
+{
+  "title": "Kit de componentes Bookwise",
+  "brief": "Catálogo de contratos y propiedad del design system: qué ya es propio, qué sigue alquilado a PrimeNG y cómo se transiciona un consumidor por vez sin cambiar el formato ni los flujos existentes. No es un rediseño: la app manda sobre los specimens.",
+  "artboards": [
+    {
+      "file": "00-estado-y-transicion.html",
+      "title": "Estado y transición: de PrimeNG a lo propio",
+      "tradeoff": "Fija el alcance, la propiedad y el orden; no muestra componentes",
+      "width": 1440,
+      "height": 1660
+    },
+    {
+      "file": "01-base-botones-chips.html",
+      "title": "Base: botones, links, chips y avatares",
+      "tradeoff": "Fija la jerarquía atómica y los estados; no muestra composición de pantalla",
+      "width": 1440,
+      "height": 1480
+    },
+    {
+      "file": "02-formularios.html",
+      "title": "Formularios: campos, selección y validación",
+      "tradeoff": "Cubre todos los controles y sus estados; no resuelve la disposición de un formulario completo",
+      "width": 1440,
+      "height": 1320
+    },
+    {
+      "file": "03-overlays.html",
+      "title": "Overlays: diálogos, confirmaciones y menús",
+      "tradeoff": "Anatomía y salidas del diálogo; los frames son estáticos, no overlays interactivos",
+      "width": 1440,
+      "height": 1500
+    },
+    {
+      "file": "04-feedback.html",
+      "title": "Feedback: mensajes, toasts, skeletons y progreso",
+      "tradeoff": "Prioriza los estados del sistema; el error por campo vive en el tablero 02",
+      "width": 1440,
+      "height": 1180
+    },
+    {
+      "file": "05-navegacion-datos.html",
+      "title": "Navegación y datos: tabs, acordeón, tabla y paginación",
+      "tradeoff": "Densa y escaneable; no explora tarjetas para listas largas",
+      "width": 1440,
+      "height": 2000
+    },
+    {
+      "file": "06-seleccion-avanzada.html",
+      "title": "Selección avanzada: calendario, multi-selección y búsqueda",
+      "tradeoff": "Cubre los tres controles alquilados con sus popups abiertos; deja fuera la validación cruzada entre ellos",
+      "width": 1440,
+      "height": 2400
+    },
+    {
+      "file": "07-estados-sistema.html",
+      "title": "Estados de sistema: tabla, toasts, tooltip y chart",
+      "tradeoff": "Cierra los cuatro estados y la capa de apoyo; es el tablero más largo porque acumula tabla, cola, help, chart, dark y mobile",
+      "width": 1440,
+      "height": 4400
+    }
+  ]
+}

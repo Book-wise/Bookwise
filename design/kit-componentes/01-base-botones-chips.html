@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · Base: botones, chips y avatares</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-fc-btn-hover-bg:#2563eb; --bw-fc-btn-active-bg:#1d4ed8; --bw-success:#22c55e;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:66ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+
+  .contracts { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--bw-space-sm); margin-top:var(--bw-space-md); }
+  .contract { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:10px 12px; font-size:.75rem; color:var(--text-color-secondary); }
+  .contract b { display:block; font-family:var(--mono); font-size:.75rem; color:var(--text-color); margin-bottom:3px; }
+  .contract em { font-style:normal; color:var(--bw-500); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:62ch; }
+  .fam-contract { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); text-align:right; }
+  .fam-contract b { color:var(--bw-500); }
+
+  .specs { display:grid; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .two { grid-template-columns:1fr 1fr; }
+  .three { grid-template-columns:repeat(3,1fr); }
+  figure.spec { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .live { padding:var(--bw-space-lg); display:flex; flex-wrap:wrap; align-items:center; gap:12px; min-height:96px; }
+  .live.tint { background:var(--surface-ground); }
+  .live.grid5 { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; align-items:start; }
+  .live.grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; align-items:start; }
+  figcaption { border-top:1px solid var(--surface-border); padding:9px 14px; font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  figcaption b { color:var(--text-color); font-weight:600; }
+  .st { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .st span { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); }
+
+  /* Botones */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:var(--bw-control-height); padding:0 16px; border-radius:var(--bw-radius-md); font-family:var(--font); font-size:.875rem; font-weight:500; border:1px solid transparent; cursor:pointer; transition:background var(--bw-transition-fast, .15s) ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease; white-space:nowrap; }
+  .btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .btn-primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bw-text-on-brand) 10%, transparent), transparent 60%), var(--bw-300);
+    color: var(--bw-text-on-brand);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--bw-900) 22%, transparent), inset 0 1px 0 color-mix(in srgb, var(--bw-text-on-brand) 22%, transparent);
+  }
+  .btn-primary:hover, .btn-primary.is-hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bw-text-on-brand) 10%, transparent), transparent 60%), color-mix(in srgb, var(--bw-300) 55%, var(--bw-900));
+    box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--bw-300) 80%, transparent), 0 2px 5px -2px color-mix(in srgb, var(--bw-900) 30%, transparent), inset 0 1px 0 color-mix(in srgb, var(--bw-text-on-brand) 24%, transparent);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active, .btn-primary.is-active {
+    background: color-mix(in srgb, var(--bw-300) 35%, var(--bw-900));
+    box-shadow: inset 0 2px 6px color-mix(in srgb, var(--bw-900) 45%, transparent);
+    transform: translateY(0);
+  }
+  .btn-primary.is-focus { outline:2px solid var(--bw-300); outline-offset:2px; box-shadow: 0 0 0 5px color-mix(in srgb, var(--bw-300) 18%, transparent); }
+  .btn-outline { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn-outline:hover { background:var(--bw-50); border-color:color-mix(in srgb, var(--bw-300) 35%, var(--surface-border)); box-shadow: 0 4px 10px -8px color-mix(in srgb, var(--bw-900) 35%, transparent); }
+  .btn-ghost { background:transparent; color:var(--bw-500); }
+  .btn-ghost:hover { background:var(--bw-100); }
+  .btn-danger { background:transparent; border-color:transparent; color:var(--bw-chip-text-danger); }
+  .btn-danger:hover { background:color-mix(in srgb, var(--bw-status-pendiente) 18%, white); }
+  .btn[disabled] { background:var(--bw-surface-muted); color:var(--text-color-secondary); border-color:var(--surface-border); cursor:not-allowed; opacity:.7; }
+  .btn-sm { height:2rem; padding:0 12px; font-size:.8125rem; }
+  .btn-icon { width:var(--bw-control-height); padding:0; }
+  .btn-icon.btn-sm { width:2rem; }
+  .spin { width:14px; height:14px; border-radius:50%; border:2px solid color-mix(in srgb, var(--bw-text-on-brand) 45%, transparent); border-top-color:var(--bw-text-on-brand); animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation:none; } .btn { transition:none; } }
+
+  /* Links */
+  .link { color:var(--bw-500); font-size:.875rem; font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); padding-bottom:1px; }
+  .link:hover { border-bottom-color:var(--bw-500); }
+  .link:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; border-radius:2px; }
+  .link-arrow::after { content:'→'; margin-left:6px; }
+  .link-muted { color:var(--text-color-secondary); border-bottom-color:transparent; }
+
+  /* Chips, tags, badges */
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--bw-radius-pill); font-size:.75rem; font-weight:500; white-space:nowrap; }
+  .chip .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  .tag { display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:var(--bw-radius-sm); border:1px solid var(--surface-border); color:var(--text-color-secondary); font-size:.75rem; font-weight:500; background:var(--surface-card); }
+  .tag-solid { border-color:transparent; background:var(--bw-100); color:var(--bw-500); }
+  .badge { position:relative; display:inline-flex; }
+  .badge .count { position:absolute; top:-5px; right:-6px; min-width:18px; height:18px; padding:0 5px; border-radius:var(--bw-radius-pill); background:var(--bw-300); color:var(--bw-text-on-brand); font-size:.6875rem; font-weight:600; display:flex; align-items:center; justify-content:center; border:2px solid var(--surface-card); }
+  .badge .count.neutral { background:var(--bw-500); }
+  .dot-status { width:8px; height:8px; border-radius:50%; border:2px solid var(--surface-card); }
+
+  /* Avatares */
+  .av { border-radius:50%; background:var(--bw-100); color:var(--bw-500); display:inline-flex; align-items:center; justify-content:center; font-weight:600; flex:none; }
+  .av-24 { width:24px; height:24px; font-size:.625rem; }
+  .av-32 { width:32px; height:32px; font-size:.6875rem; }
+  .av-36 { width:36px; height:36px; font-size:.8125rem; }
+  .av-48 { width:48px; height:48px; font-size:1rem; }
+  .av-alt { background:var(--bw-surface-muted); color:var(--text-label); }
+  .av-stack { display:flex; }
+  .av-stack .av { margin-left:-8px; border:2px solid var(--surface-card); }
+  .av-stack .av:first-child { margin-left:0; }
+  .av-wrap { position:relative; display:inline-flex; }
+  .av-wrap .dot-status { position:absolute; bottom:0; right:0; }
+
+  /* Skin Kinesilk: mismos componentes, tokens re-declarados */
+  .kinesilk {
+    --bw-300:#fea4a4; --bw-200:#ffbdbe; --bw-100:#badede; --bw-50:#eaf5f4;
+    --bw-fc-btn-hover-bg:#f79090; --bw-fc-btn-active-bg:#e97b7b;
+    --bw-text-on-brand:#2f2f26;
+    --surface-ground:#fcf9ea; --surface-card:#fffdf7; --surface-border:#ece4cb; --bw-surface-muted:#f5f1de;
+    --text-color:#3f3f33; --text-color-secondary:#6f6f5c; --text-heading:#2f2f26; --text-label:#4a4a3c;
+    background:var(--surface-ground); color:var(--text-color);
+  }
+
+  /* Reglas */
+  .rules { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-lg); }
+  .rule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-success); border-radius:var(--bw-radius-md); padding:12px 16px; font-size:.8125rem; }
+  .rule.no { border-left-color:var(--bw-status-pendiente); }
+  .rule h3 { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; margin-bottom:6px; }
+  .rule ul { padding-left:16px; display:grid; gap:4px; }
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer code { font-size:.6875rem; }
+
+  .ds-band { margin-top:var(--bw-space-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); font-size:.75rem; color:var(--text-color-secondary); }
+  .ds-band__tag { background:var(--bw-100); color:var(--bw-500); border-radius:var(--bw-radius-pill); padding:2px 9px; font-size:.6875rem; font-weight:600; }
+  .ds-band__link { margin-left:auto; color:var(--bw-500); font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 01</div>
+    <h1>Base: botones, links, chips y avatares</h1>
+    <p class="lead">Nivel atómico del kit. Todo se arma con <code>--bw-*</code>; ningún hex fuera de <code>_tokens.scss</code>. Los specimens muestran estados reales: hover y focus funcionan, el focus ring es visible con teclado.</p>
+  </div>
+  <div class="meta">1440 × 1180<br>light · tokens del 2026-11-27</div>
+</header>
+<div class="ds-band">
+  <span class="ds-band__tag">Contrato, no rediseño</span>
+  <span>Componentes propios con transición paulatina: un consumidor por vez. El formato existente manda.</span>
+  <a class="ds-band__link" href="00-estado-y-transicion.html">Estado y transición →</a>
+</div>
+
+
+<div class="contracts">
+  <div class="contract"><b>bw-button</b><em>variant</em> primary · outline · ghost · danger<br><em>size</em> md | sm · <em>loading</em> · <em>iconOnly</em></div>
+  <div class="contract"><b>bw-chip</b><em>tone</em> reserva / pago · <em>dot</em> obligatorio<br>Tinte 18% + <code>--bw-chip-text-*</code></div>
+  <div class="contract"><b>bw-avatar</b><em>initials</em> · <em>size</em> 24 | 32 | 36 | 48<br><em>status</em> online | asiste | ausente</div>
+  <div class="contract"><b>bw-badge</b><em>count</em> · <em>max</em> 9+ · variante dot<br>Cuenta, no etiqueta</div>
+</div>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Botones</h2>
+      <p class="fam-sub">La jerarquía es la del trabajo: una acción primaria por vista, secundaria cuando hay dos caminos, ghost para acciones de fila. Danger solo para destruir.</p>
+    </div>
+    <div class="fam-contract"><b>bw-button</b><br>hoy: <b>p-button</b> envuelto · etapa 3 lo pasa a nativo</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live">
+        <button class="btn btn-primary">Guardar reserva</button>
+        <button class="btn btn-outline">Abonar</button>
+        <button class="btn btn-ghost">Ver ficha</button>
+        <button class="btn btn-danger">Eliminar reserva</button>
+      </div>
+      <figcaption><span><b>Jerarquía</b> — primario, secundario, terciario, destructivo</span><span class="mono">altura 40 · radius 6 · 14/500</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live tint grid5">
+        <div class="st"><button class="btn btn-primary">Guardar</button><span>default</span></div>
+        <div class="st"><button class="btn btn-primary is-hover">Guardar</button><span>hover</span></div>
+        <div class="st"><button class="btn btn-primary is-active">Guardar</button><span>active</span></div>
+        <div class="st"><button class="btn btn-primary is-focus">Guardar</button><span>focus-visible</span></div>
+        <div class="st"><button class="btn btn-primary" disabled>Guardar</button><span>disabled</span></div>
+      </div>
+      <figcaption><span><b>Estados del primario</b> — hover: azul profundo (55% <code>--bw-300</code> + 45% <code>--bw-900</code>), elevación y 1 px de lift; active: pressed; focus: ring + glow</span><span>ring + glow <code>--bw-300</code> · disabled superficie</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live">
+        <button class="btn btn-primary"><span class="spin" aria-hidden="true"></span>Guardando…</button>
+        <button class="btn btn-primary btn-icon" aria-label="Nueva reserva">＋</button>
+        <button class="btn btn-outline btn-icon" aria-label="Filtros">≡</button>
+        <button class="btn btn-outline btn-sm">Abonar</button>
+        <button class="btn btn-primary">Nueva reserva <span aria-hidden="true">＋</span></button>
+      </div>
+      <figcaption><span><b>Loading, icon-only y tamaños</b> — icon-only siempre con <code>aria-label</code></span><span>sm 32 · md 40</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Un solo <em>primary</em> por vista; el resto outline o ghost.</li>
+        <li>Icon-only con <code>aria-label</code> y un tooltip visible.</li>
+        <li>El label del primario dice el resultado: “Guardar reserva”, no “Aceptar”.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Dos primarios enfrentados en el mismo footer.</li>
+        <li>Danger para acciones reversibles (cancelar una edición).</li>
+        <li>Botones con alto distinto en la misma fila.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Links</h2>
+      <p class="fam-sub">Navegan; no ejecutan. Si abre un diálogo o guarda algo, es botón. Nunca compiten con el CTA: van en texto secundario.</p>
+    </div>
+    <div class="fam-contract"><b>bw-link</b> · <em>inline</em> | <em>arrow</em><br>subrayado 1px al 35%</div>
+  </div>
+  <div class="specs">
+    <figure class="spec">
+      <div class="live">
+        <a class="link" href="#">Ver historia clínica</a>
+        <a class="link link-arrow" href="#">Ir a pagos</a>
+        <a class="link link-muted" href="#">Cancelar</a>
+      </div>
+      <figcaption><span><b>Inline, con flecha y muted</b> — el muted es para la salida, no para la acción principal</span><span><code>--bw-500</code></span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Chips de estado</h2>
+      <p class="fam-sub">El estado de una reserva o de un pago se lee como chip con dot: el color solo no alcanza. El tinte es 18% del color de estado y el texto usa el token AA, nunca blanco sobre pastel.</p>
+    </div>
+    <div class="fam-contract"><b>bw-chip</b> · <em>tone</em> + <em>label</em><br><code>--bw-status-*</code> · <code>--bw-payment-*</code></div>
+  </div>
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live">
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-reservado) 18%, white); color:var(--bw-chip-text-online)"><span class="dot" style="background:var(--bw-status-reservado)"></span>Reservado</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-confirmado) 18%, white); color:var(--bw-chip-text-warning)"><span class="dot" style="background:var(--bw-status-confirmado)"></span>Confirmado</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-asiste) 18%, white); color:var(--bw-chip-text-success)"><span class="dot" style="background:var(--bw-status-asiste)"></span>Asiste</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-no-asistio) 18%, white); color:var(--bw-chip-text-danger)"><span class="dot" style="background:var(--bw-status-no-asistio)"></span>No asistió</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-pendiente) 18%, white); color:var(--bw-chip-text-danger)"><span class="dot" style="background:var(--bw-status-pendiente)"></span>Pendiente</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-cancelado) 18%, white); color:var(--bw-chip-text-secondary)"><span class="dot" style="background:var(--bw-status-cancelado)"></span>Cancelado</span>
+      </div>
+      <figcaption><span><b>Estados de reserva</b> — el dot repite el color, el texto asegura AA</span><span>6 estados</span></figcaption>
+    </figure>
+    <figure class="spec">
+      <div class="live">
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-payment-paid) 18%, white); color:var(--bw-chip-text-success)"><span class="dot" style="background:var(--bw-payment-paid)"></span>Pagado</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-payment-partial) 18%, white); color:var(--bw-chip-text-remaining)"><span class="dot" style="background:var(--bw-payment-partial)"></span>Abono parcial</span>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-payment-unpaid) 18%, white); color:var(--bw-chip-text-danger)"><span class="dot" style="background:var(--bw-payment-unpaid)"></span>Sin pago</span>
+        <span class="chip" style="background:var(--bw-100); color:var(--bw-chip-text-primary)"><span class="dot" style="background:var(--bw-300)"></span>En espera</span>
+      </div>
+      <figcaption><span><b>Estados de pago</b> — el mismo lenguaje que la agenda</span><span><code>--bw-payment-*</code></span></figcaption>
+    </figure>
+  </div>
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Dot siempre que el chip comunique estado.</li>
+        <li>Texto: “Abono parcial”, no “Partial”.</li>
+        <li>Un chip por estado, no dos que se contradigan.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Chips interactivos para filtrar (usá segmented control).</li>
+        <li>Color de estado como fondo de fila entera.</li>
+        <li>Más de 2 chips en una card de calendario.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Tags y badges</h2>
+      <p class="fam-sub">El tag describe (categoría, modalidad, pack). El badge cuenta (pendientes, mensajes). Ninguno reemplaza al chip de estado.</p>
+    </div>
+    <div class="fam-contract"><b>bw-tag</b> · <em>outline</em> | <em>solid</em><br><b>bw-badge</b> · <em>count</em> · <em>dot</em></div>
+  </div>
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live">
+        <span class="tag">Primera visita</span>
+        <span class="tag">Pack 5 sesiones</span>
+        <span class="tag">Láser</span>
+        <span class="tag">Online</span>
+        <span class="tag tag-solid">Nuevo</span>
+      </div>
+      <figcaption><span><b>Tags</b> — outline para atributos, solid para novedad</span><span>24 alto · radius 4</span></figcaption>
+    </figure>
+    <figure class="spec">
+      <div class="live">
+        <span class="badge"><button class="btn btn-outline btn-icon" aria-label="Notificaciones">🔔</button><span class="count">3</span></span>
+        <span class="badge"><button class="btn btn-outline btn-icon" aria-label="Mensajes">✉</button><span class="count">9+</span></span>
+        <span class="badge"><button class="btn btn-ghost btn-icon" aria-label="Tareas pendientes">✓</button><span class="count neutral"></span></span>
+        <span style="font-size:.75rem;color:var(--text-color-secondary)">3 pendientes · 9+ mensajes · dot sin número</span>
+      </div>
+      <figcaption><span><b>Badges</b> — borde de 2px del color de la superficie para separarse del icono</span><span>18 px · pill</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Avatares</h2>
+      <p class="fam-sub">Iniciales por defecto; la foto es opcional. El punto de estado va abajo a la derecha con borde de la superficie, y en grupos se muestran 3 + contador.</p>
+    </div>
+    <div class="fam-contract"><b>bw-avatar</b> · <em>initials</em> · <em>size</em> · <em>status</em><br>hoy: <b>user-avatar</b></div>
+  </div>
+  <div class="specs two">
+    <figure class="spec">
+      <div class="live">
+        <span class="st"><span class="av av-24">CR</span><span>24</span></span>
+        <span class="st"><span class="av av-32">MJ</span><span>32</span></span>
+        <span class="st"><span class="av av-36">FS</span><span>36</span></span>
+        <span class="st"><span class="av av-48">JV</span><span>48</span></span>
+        <span class="st"><span class="av av-36 av-alt">?</span><span>sin iniciales</span></span>
+      </div>
+      <figcaption><span><b>Tamaños</b> — 36 es el default de listas y agenda</span><span>--bw-100 + --bw-500</span></figcaption>
+    </figure>
+    <figure class="spec">
+      <div class="live">
+        <span class="av-stack">
+          <span class="av av-32">CR</span>
+          <span class="av av-32 av-alt">MJ</span>
+          <span class="av av-32" style="background:var(--bw-100);color:var(--bw-500)">FS</span>
+          <span class="av av-32 av-alt">+4</span>
+        </span>
+        <span class="av-wrap"><span class="av av-36">CR</span><span class="dot-status" style="background:var(--bw-status-asiste)"></span></span>
+        <span class="av-wrap"><span class="av av-36 av-alt">MJ</span><span class="dot-status" style="background:var(--bw-status-pendiente)"></span></span>
+      </div>
+      <figcaption><span><b>Grupo y estado</b> — 3 caras + contador; el dot no reemplaza al chip de la fila</span><span>stack −8 · borde 2</span></figcaption>
+    </figure>
+  </div>
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Iniciales en mayúsculas, máximo 2 letras.</li>
+        <li>Contraste del avatar: fondo <code>--bw-100</code>, texto <code>--bw-500</code>.</li>
+        <li>Estado con el mismo color que el chip de la reserva.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Fotos reales en el tablero: usá iniciales (no hay assets).</li>
+        <li>Avatares de más de 48 px en tablas.</li>
+        <li>Punto de estado sin borde: se pierde sobre la card.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Kinesilk</h2>
+      <p class="fam-sub">Misma pieza, skin distinto: el CTA pasa a salmón <code>#fea4a4</code> y su texto a oscuro <code>#2f2f26</code>. Los estados de reserva y pago no cambian: el skin mueve la marca, no el lenguaje de estados.</p>
+    </div>
+    <div class="fam-contract"><b>bw-button · bw-chip · bw-avatar</b><br>tokens re-declarados en <b>body.theme-kinesilk</b></div>
+  </div>
+  <div class="specs">
+    <figure class="spec">
+      <div class="live kinesilk">
+        <button class="btn btn-primary">Guardar reserva</button>
+        <button class="btn btn-outline">Abonar</button>
+        <button class="btn btn-ghost">Ver ficha</button>
+        <span class="chip" style="background:color-mix(in srgb, var(--bw-status-confirmado) 18%, white); color:var(--bw-chip-text-warning)"><span class="dot" style="background:var(--bw-status-confirmado)"></span>Confirmado</span>
+        <span class="av av-36">CR</span>
+      </div>
+      <figcaption><span><b>Skin Kinesilk</b> — salmón, powder blue y menta; el chip de estado queda intacto</span><span>#fea4a4 · #badede · #87e9ce</span></figcaption>
+    </figure>
+  </div>
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Texto del CTA en <code>--bw-text-on-brand</code> (<code>#2f2f26</code>), nunca blanco.</li>
+        <li>Sidebar powder blue con texto oscuro y activo <code>#2f5d5a</code>.</li>
+        <li>Reusar los mismos componentes: el skin solo cambia tokens.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Inventar un fucsia que no está en <code>_tokens.scss</code>: el rosa del skin es <code>#ffbdbe</code> / <code>#e08f8f</code>.</li>
+        <li>Recolorear los chips de estado dentro del skin.</li>
+        <li>Hex sueltos por componente: el skin vive en <code>styles.scss</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Tokens usados: <code>--bw-300</code> <code>--bw-500</code> <code>--bw-100</code> <code>--bw-radius-md/lg/pill</code> <code>--bw-control-height</code> <code>--bw-status-*</code> <code>--bw-payment-*</code> <code>--bw-chip-text-*</code></span>
+  <span>01 / 08 · fuentes: <code>_tokens.scss</code> · <code>_primeng-bridge.scss</code></span>
+</footer>
+
+</body>
+</html>

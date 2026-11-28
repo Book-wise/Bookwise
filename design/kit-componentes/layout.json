@@ -1,0 +1,41 @@
+{
+  "arrangement": "free",
+  "positions": {
+    "system": {
+      "x": 0,
+      "y": 0
+    },
+    "00-estado-y-transicion.html": {
+      "x": 1520,
+      "y": 0
+    },
+    "01-base-botones-chips.html": {
+      "x": 3000,
+      "y": 32
+    },
+    "02-formularios.html": {
+      "x": 0,
+      "y": 1790
+    },
+    "03-overlays.html": {
+      "x": 1520,
+      "y": 1790
+    },
+    "04-feedback.html": {
+      "x": 3040,
+      "y": 1790
+    },
+    "05-navegacion-datos.html": {
+      "x": 0,
+      "y": 3420
+    },
+    "06-seleccion-avanzada.html": {
+      "x": 1520,
+      "y": 3420
+    },
+    "07-estados-sistema.html": {
+      "x": 3040,
+      "y": 3420
+    }
+  }
+}

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookwise kit · 06 Selección avanzada</title>
+<style>
+  :root {
+    --bw-900:#012663; --bw-700:#0a2862; --bw-600:#083d96; --bw-500:#0b3d95;
+    --bw-400:#0e3b8b; --bw-300:#046af4; --bw-200:#60a7f0; --bw-100:#dbeafe; --bw-50:#f0f6ff;
+    --surface-ground:#f0f5ff; --surface-card:#ffffff; --surface-border:#e5e7eb; --bw-surface-muted:#f3f4f6;
+    --text-color:#1a2744; --text-color-secondary:#6b7280; --text-heading:#111827; --text-label:#374151;
+    --bw-text-on-brand:#ffffff;
+    --bw-fc-btn-hover-bg:#2563eb; --bw-fc-btn-active-bg:#1d4ed8;
+    --bw-success:#22c55e;
+    --bw-status-reservado:#77D0FA; --bw-status-confirmado:#ECBE51; --bw-status-asiste:#1FB27C;
+    --bw-status-no-asistio:#FCCAC2; --bw-status-pendiente:#FD8991; --bw-status-en-espera:#1FB27C;
+    --bw-status-cancelado:#E3E7ED;
+    --bw-payment-paid:#1FB27C; --bw-payment-partial:#ECBE51; --bw-payment-unpaid:#FD8991;
+    --bw-chip-text-online:#1d4ed8; --bw-chip-text-remaining:#9a3412; --bw-chip-text-success:#166534;
+    --bw-chip-text-warning:#92400e; --bw-chip-text-danger:#991b1b; --bw-chip-text-secondary:#374151;
+    --bw-chip-text-primary:#0b3d95;
+    --bw-radius-sm:4px; --bw-radius-md:6px; --bw-radius-lg:8px; --bw-radius-pill:999px;
+    --bw-space-xs:.25rem; --bw-space-sm:.5rem; --bw-space-md:1rem; --bw-space-lg:1.5rem; --bw-space-xl:2rem;
+    --bw-control-height:2.5rem;
+    --bw-shadow-card:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --bw-shadow-popover:0 4px 12px rgba(0,0,0,.15);
+    --bw-transition-fast:.15s;
+    --font:'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--font); background:var(--surface-ground); color:var(--text-color); font-size:16px; line-height:1.5; padding:var(--bw-space-xl); max-width:1440px; }
+
+  header.top { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-md); border-bottom:1px solid var(--surface-border); }
+  .overline { font-size:.6875rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600; color:var(--bw-500); }
+  h1 { font-size:1.875rem; font-weight:500; color:var(--text-heading); letter-spacing:-.01em; }
+  .lead { color:var(--text-color-secondary); font-size:.875rem; max-width:66ch; margin-top:var(--bw-space-xs); }
+  .meta { font-size:.75rem; color:var(--text-color-secondary); text-align:right; flex:none; }
+  code { font-family:var(--mono); font-size:.75rem; background:var(--bw-surface-muted); padding:1px 5px; border-radius:var(--bw-radius-sm); }
+
+  .contracts { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--bw-space-sm); margin-top:var(--bw-space-md); }
+  .contract { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); padding:10px 12px; font-size:.75rem; color:var(--text-color-secondary); }
+  .contract b { display:block; font-family:var(--mono); font-size:.75rem; color:var(--text-color); margin-bottom:3px; }
+  .contract em { font-style:normal; color:var(--bw-500); }
+
+  section.fam { margin-top:var(--bw-space-xl); }
+  .fam-head { display:grid; grid-template-columns:1fr auto; align-items:end; gap:var(--bw-space-lg); padding-bottom:var(--bw-space-sm); border-bottom:1px solid var(--surface-border); }
+  h2 { font-size:1.5rem; font-weight:500; color:var(--text-heading); }
+  .fam-sub { font-size:.875rem; color:var(--text-color-secondary); max-width:62ch; }
+  .fam-contract { font-size:.6875rem; font-family:var(--mono); color:var(--text-color-secondary); text-align:right; }
+  .fam-contract b { color:var(--bw-500); }
+
+  .specs { display:grid; gap:var(--bw-space-md); margin-top:var(--bw-space-md); }
+  .two { grid-template-columns:1fr 1fr; }
+  .three { grid-template-columns:repeat(3,1fr); }
+  figure.spec { background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-card); overflow:hidden; }
+  .live { padding:var(--bw-space-lg); display:flex; flex-wrap:wrap; align-items:center; gap:12px; min-height:96px; }
+  .live.tint { background:var(--surface-ground); }
+  figcaption { border-top:1px solid var(--surface-border); padding:9px 14px; font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  figcaption b { color:var(--text-color); font-weight:600; }
+  .mono { font-family:var(--mono); }
+
+  /* Reglas */
+  .rules { display:grid; grid-template-columns:1fr 1fr; gap:var(--bw-space-md); margin-top:var(--bw-space-lg); }
+  .rule { background:var(--surface-card); border:1px solid var(--surface-border); border-left:3px solid var(--bw-success); border-radius:var(--bw-radius-md); padding:12px 16px; font-size:.8125rem; }
+  .rule.no { border-left-color:var(--bw-status-pendiente); }
+  .rule h3 { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; margin-bottom:6px; }
+  .rule ul { padding-left:16px; display:grid; gap:4px; }
+  footer { margin-top:var(--bw-space-xl); padding-top:var(--bw-space-md); border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer code { font-size:.6875rem; }
+
+  /* --- Extensiones del tablero 06: selección avanzada --- */
+  .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
+  .ico { width:16px; height:16px; display:block; }
+  .ico-sm { width:12px; height:12px; }
+
+  /* Campos (mismo contrato del tablero 02) */
+  .field { display:flex; flex-direction:column; gap:6px; width:100%; min-width:0; border:0; padding:0; margin:0; }
+  .field > label, .field > legend { font-size:.75rem; font-weight:500; color:var(--text-label); line-height:1.4; padding:0; }
+  .control { height:var(--bw-control-height); width:100%; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); color:var(--text-color); font-family:var(--font); font-size:.875rem; padding:0 12px; }
+  .control::placeholder { color:var(--text-color-secondary); }
+  .control:hover { border-color:var(--bw-200); }
+  .control:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; border-color:var(--bw-300); }
+  .hint { font-size:.75rem; color:var(--text-color-secondary); margin:0; }
+  .hint code { font-size:.6875rem; }
+
+  /* Trigger de popup (datepicker) */
+  .trigger { display:flex; align-items:center; gap:8px; width:100%; height:var(--bw-control-height); padding:0 12px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); color:var(--text-color); font-family:var(--font); font-size:.875rem; text-align:left; cursor:pointer; transition:border-color var(--bw-transition-fast) ease; }
+  .trigger:hover { border-color:var(--bw-200); }
+  .trigger:focus-visible, .trigger.is-focus { outline:2px solid var(--bw-300); outline-offset:2px; border-color:var(--bw-300); }
+  .trigger .lead, .trigger .chev { display:flex; flex:none; color:var(--text-color-secondary); }
+  .trigger .val { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-variant-numeric:tabular-nums; }
+
+  /* Popover / panel */
+  .pop { width:100%; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:var(--bw-radius-lg); box-shadow:var(--bw-shadow-popover); overflow:hidden; }
+  .pop-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-bottom:1px solid var(--surface-border); }
+  .pop-title { font-size:.875rem; font-weight:500; color:var(--text-heading); }
+  .nav-btn { width:28px; height:28px; flex:none; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); color:var(--text-color-secondary); cursor:pointer; }
+  .nav-btn:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .nav-btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .pop-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; border-top:1px solid var(--surface-border); font-size:.75rem; color:var(--text-color-secondary); }
+  .pop-foot .sep { color:var(--surface-border); }
+  .btn-link { border:0; background:transparent; padding:2px 6px; border-radius:var(--bw-radius-sm); color:var(--bw-500); font-family:var(--font); font-size:.75rem; font-weight:500; cursor:pointer; }
+  .btn-link:hover { background:var(--bw-50); }
+  .btn-link:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+
+  /* Calendario */
+  .cal-wrap { padding:8px 10px 10px; }
+  .cal { width:100%; border-collapse:collapse; table-layout:fixed; }
+  .cal caption { caption-side:top; text-align:left; }
+  .cal th { padding:0 0 4px; font-size:.6875rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--text-color-secondary); }
+  .cal th abbr { text-decoration:none; cursor:help; }
+  .cal td { padding:1px; text-align:center; }
+  .day { width:100%; height:32px; border:0; border-radius:var(--bw-radius-md); background:transparent; color:var(--text-color); font-family:var(--font); font-size:.8125rem; font-variant-numeric:tabular-nums; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .day:hover { background:var(--bw-surface-muted); }
+  .day:focus-visible { outline:2px solid var(--bw-300); outline-offset:1px; }
+  .day.is-today { box-shadow:inset 0 0 0 2px var(--bw-200); color:var(--bw-500); font-weight:600; }
+  .day.is-selected { background:var(--bw-300); color:var(--bw-text-on-brand); font-weight:600; }
+  .day.is-out { color:var(--text-color-secondary); opacity:.5; }
+  .day[disabled] { color:var(--text-color-secondary); opacity:.45; cursor:not-allowed; }
+  .day[disabled]:hover { background:transparent; }
+  .day.in-range { background:color-mix(in srgb, var(--bw-300) 14%, var(--surface-card)); color:var(--bw-500); border-radius:0; font-weight:500; }
+  .day.is-range-start { border-radius:var(--bw-radius-md) 0 0 var(--bw-radius-md); }
+  .day.is-range-end { border-radius:0 var(--bw-radius-md) var(--bw-radius-md) 0; }
+
+  /* Panel de rango con atajos */
+  .pop.range { display:grid; grid-template-columns:184px 1fr; }
+  .presets { padding:8px; border-right:1px solid var(--surface-border); display:grid; gap:2px; align-content:start; }
+  .presets .presets-cap { font-size:.6875rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-color-secondary); font-weight:600; padding:4px 8px 6px; }
+  .preset { text-align:left; border:0; background:transparent; padding:7px 8px; border-radius:var(--bw-radius-md); font-family:var(--font); font-size:.8125rem; color:var(--text-color); cursor:pointer; }
+  .preset:hover { background:var(--bw-surface-muted); }
+  .preset.is-selected { background:var(--bw-50); color:var(--bw-500); font-weight:500; }
+  .preset:focus-visible { outline:2px solid var(--bw-300); outline-offset:-2px; }
+  .range-main { min-width:0; }
+
+  /* Multiselect */
+  .ms-field { position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:6px; width:100%; min-height:var(--bw-control-height); padding:4px 38px 4px 6px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); }
+  .ms-field:hover { border-color:var(--bw-200); }
+  .ms-field.is-focus { outline:2px solid var(--bw-300); outline-offset:2px; border-color:var(--bw-300); }
+  .ms-chip { display:inline-flex; align-items:center; gap:2px; height:26px; padding:0 3px 0 8px; border-radius:var(--bw-radius-sm); background:var(--bw-100); color:var(--bw-chip-text-primary); font-size:.75rem; font-weight:500; white-space:nowrap; }
+  .ms-chip .x { width:18px; height:18px; flex:none; border:0; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--bw-radius-pill); background:transparent; color:var(--bw-chip-text-primary); cursor:pointer; }
+  .ms-chip .x:hover { background:color-mix(in srgb, var(--bw-500) 16%, transparent); }
+  .ms-chip .x:focus-visible { outline:2px solid var(--bw-300); outline-offset:1px; }
+  .ms-overflow { font-size:.75rem; font-weight:600; color:var(--text-color-secondary); padding:0 2px; }
+  .ms-placeholder { font-size:.875rem; color:var(--text-color-secondary); padding-left:6px; }
+  .ms-toggle { position:absolute; top:50%; right:4px; transform:translateY(-50%); width:30px; height:30px; border:0; border-radius:var(--bw-radius-sm); background:transparent; color:var(--text-color-secondary); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+  .ms-toggle:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .ms-toggle:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .ms-search { display:flex; flex-direction:column; gap:4px; padding:8px; border-bottom:1px solid var(--surface-border); }
+  .ms-search .control { height:2rem; font-size:.8125rem; }
+  .ms-all { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--surface-border); font-size:.8125rem; color:var(--text-label); }
+  .ms-all label { cursor:pointer; font-weight:500; }
+  .ms-all .hint { margin-left:auto; }
+  .listbox { padding:4px; }
+  .opt { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:var(--bw-radius-md); font-size:.8125rem; color:var(--text-color); }
+  .opt .meta { margin-left:auto; font-size:.6875rem; color:var(--text-color-secondary); font-variant-numeric:tabular-nums; }
+  .opt.is-checked { color:var(--bw-500); font-weight:500; }
+  .opt.is-hover { background:var(--bw-surface-muted); }
+  .box { width:16px; height:16px; flex:none; border:1px solid var(--text-color-secondary); border-radius:var(--bw-radius-sm); background:var(--surface-card); display:inline-grid; place-items:center; color:transparent; }
+  .box.is-on { background:var(--bw-300); border-color:var(--bw-300); color:var(--bw-text-on-brand); }
+  .box.is-on::after { content:''; width:8px; height:4px; border-left:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(-45deg) translate(1px,-1px); }
+  .cbx { appearance:none; margin:0; width:16px; height:16px; flex:none; border:1px solid var(--text-color-secondary); border-radius:var(--bw-radius-sm); background:var(--surface-card); display:inline-grid; place-items:center; cursor:pointer; }
+  .cbx.is-indet { background:var(--bw-300); border-color:var(--bw-300); }
+  .cbx.is-indet::after { content:''; width:8px; height:2px; background:var(--bw-text-on-brand); }
+  .cbx:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .ms-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; border-top:1px solid var(--surface-border); font-size:.6875rem; color:var(--text-color-secondary); }
+
+  /* Vacíos y estados de carga */
+  .empty { padding:18px 12px 20px; text-align:center; }
+  .empty .em { font-size:.8125rem; font-weight:500; color:var(--text-color); }
+  .empty .em-hint { font-size:.75rem; color:var(--text-color-secondary); margin-top:2px; }
+  .empty .btn { margin-top:10px; }
+  .loading-row { display:flex; align-items:center; gap:8px; padding:12px 12px; font-size:.8125rem; color:var(--text-color-secondary); border-bottom:1px solid var(--surface-border); }
+  .spin-sm { width:14px; height:14px; flex:none; border-radius:50%; border:2px solid var(--surface-border); border-top-color:var(--bw-300); animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* Botones (subset del tablero 01) */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:var(--bw-control-height); padding:0 16px; border-radius:var(--bw-radius-md); font-family:var(--font); font-size:.875rem; font-weight:500; border:1px solid transparent; cursor:pointer; white-space:nowrap; transition:background var(--bw-transition-fast) ease, border-color var(--bw-transition-fast) ease; }
+  .btn:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .btn-primary { background:var(--bw-300); color:var(--bw-text-on-brand); }
+  .btn-primary:hover { background:var(--bw-fc-btn-hover-bg); }
+  .btn-primary:active { background:var(--bw-fc-btn-active-bg); }
+  .btn-outline { background:var(--surface-card); border-color:var(--surface-border); color:var(--text-color); }
+  .btn-outline:hover { background:var(--bw-surface-muted); }
+  .btn-sm { height:2rem; padding:0 12px; font-size:.8125rem; }
+
+  /* Autocomplete */
+  .ac-field { display:flex; align-items:center; gap:8px; width:100%; height:var(--bw-control-height); padding:0 10px 0 6px; border:1px solid var(--surface-border); border-radius:var(--bw-radius-md); background:var(--surface-card); }
+  .ac-field:hover { border-color:var(--bw-200); }
+  .ac-field.is-focus { outline:2px solid var(--bw-300); outline-offset:2px; border-color:var(--bw-300); }
+  .ac-field:focus-within { outline:2px solid var(--bw-300); outline-offset:2px; border-color:var(--bw-300); }
+  .ac-field .ac-input { flex:1; min-width:0; border:0; outline:0; background:transparent; font-family:var(--font); font-size:.875rem; color:var(--text-color); height:100%; }
+  .ac-field .ac-input::placeholder { color:var(--text-color-secondary); }
+  .ac-field .trail { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; flex:none; border:0; padding:0; border-radius:var(--bw-radius-sm); background:transparent; color:var(--text-color-secondary); cursor:pointer; }
+  .ac-field .trail:hover { background:var(--bw-surface-muted); color:var(--text-color); }
+  .ac-field .trail:focus-visible { outline:2px solid var(--bw-300); outline-offset:2px; }
+  .ac-opt { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:var(--bw-radius-md); }
+  .ac-opt.is-active { background:var(--bw-50); box-shadow:inset 0 0 0 1px var(--bw-200); }
+  .ac-opt .who { display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+  .ac-opt .who b { font-size:.8125rem; font-weight:500; color:var(--text-color); }
+  .ac-opt .who .rut { font-family:var(--mono); font-size:.6875rem; color:var(--text-color-secondary); }
+  .ac-opt .who .contact { font-size:.625rem; color:var(--text-color-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ac-opt.is-active .who .contact { color:var(--text-color); }
+  .ac-opt.is-active .who .rut { color:var(--bw-500); }
+  .ac-opt .kbd { margin-left:auto; font-family:var(--mono); font-size:.625rem; color:var(--text-color-secondary); border:1px solid var(--surface-border); border-radius:var(--bw-radius-sm); padding:0 4px; }
+
+  /* Avatares (subset del tablero 01) */
+  .av { border-radius:50%; background:var(--bw-100); color:var(--bw-500); display:inline-flex; align-items:center; justify-content:center; font-weight:600; flex:none; }
+  .av-24 { width:24px; height:24px; font-size:.625rem; }
+  .av-28 { width:28px; height:28px; font-size:.6875rem; }
+  .av-alt { background:var(--bw-surface-muted); color:var(--text-label); }
+
+  /* Layout de los specimens */
+  .live.split { display:grid; grid-template-columns:340px 320px minmax(0,1fr); gap:28px; align-items:start; }
+  .live.split-range { display:grid; grid-template-columns:620px 620px; gap:24px; align-items:start; }
+  .live.stack { display:grid; grid-template-columns:1fr; gap:12px; align-items:start; justify-items:stretch; }
+  .live.stack > .field, .live.stack > .pop { max-width:340px; }
+  .live.row { align-items:flex-start; }
+  .ann { list-style:none; display:grid; gap:7px; padding:0; margin:0; }
+  .ann li { font-size:.75rem; color:var(--text-color-secondary); display:grid; grid-template-columns:86px 1fr; gap:10px; align-items:baseline; }
+  .ann b { font-family:var(--mono); font-size:.6875rem; font-weight:600; color:var(--text-color); }
+
+  /* Skin Kinesilk: mismos componentes, tokens re-declarados */
+  .kinesilk {
+    --bw-300:#fea4a4; --bw-200:#ffbdbe; --bw-100:#badede; --bw-50:#eaf5f4;
+    --bw-fc-btn-hover-bg:#f79090; --bw-fc-btn-active-bg:#e97b7b;
+    --bw-text-on-brand:#2f2f26;
+    --surface-ground:#fcf9ea; --surface-card:#fffdf7; --surface-border:#ece4cb; --bw-surface-muted:#f5f1de;
+    --text-color:#3f3f33; --text-color-secondary:#6f6f5c; --text-heading:#2f2f26; --text-label:#4a4a3c;
+    background:var(--surface-ground); color:var(--text-color);
+  }
+  .live.kinesilk { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:start; }
+  .kinesilk .k-cta { grid-column:1 / -1; display:flex; align-items:center; gap:12px; padding-top:4px; border-top:1px dashed var(--surface-border); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .trigger, .day, .preset, .ms-field, .ac-opt { transition:none; }
+    .spin-sm { animation:none; border-top-color:var(--surface-border); border-left-color:var(--bw-300); }
+  }
+
+  .ds-band { margin-top:var(--bw-space-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; background:var(--bw-50); border:1px solid color-mix(in srgb, var(--bw-300) 30%, var(--surface-border)); border-radius:var(--bw-radius-lg); font-size:.75rem; color:var(--text-color-secondary); }
+  .ds-band__tag { background:var(--bw-100); color:var(--bw-500); border-radius:var(--bw-radius-pill); padding:2px 9px; font-size:.6875rem; font-weight:600; }
+  .ds-band__link { margin-left:auto; color:var(--bw-500); font-weight:500; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--bw-500) 35%, transparent); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="overline">Bookwise design system · kit · artboard 06</div>
+    <h1>Selección avanzada: calendario, multi-selección y búsqueda</h1>
+    <p class="lead">Tres controles que PrimeNG todavía alquila por su comportamiento: el calendario, los chips de selección y las sugerencias. El posicionamiento del overlay, el teclado y el scroll son suyos; la fachada <code>bw-*</code> es dueña del estado (signals) y de los tokens. El popup sigue siendo PrimeNG hasta que reemplazarlo se justifique en costo.</p>
+  </div>
+  <div class="meta">1440 × ~2400<br>light · Kinesilk al pie · tokens del 2026-11-27</div>
+</header>
+<div class="ds-band">
+  <span class="ds-band__tag">Contrato, no rediseño</span>
+  <span>Componentes propios con transición paulatina: un consumidor por vez. El formato existente manda.</span>
+  <a class="ds-band__link" href="00-estado-y-transicion.html">Estado y transición →</a>
+</div>
+
+
+<div class="contracts">
+  <div class="contract"><b>bw-datepicker</b><em>value</em> = model&lt;Date|null&gt;() · <em>min/max</em> · <em>disabledDays</em><br>hoy: <code>p-datepicker</code> · alquilado</div>
+  <div class="contract"><b>bw-multiselect</b><em>value</em> = model&lt;string[]&gt;() · <em>options</em> · <em>filter</em> · <em>maxSelectedLabels</em><br>hoy: <code>p-multiselect</code></div>
+  <div class="contract"><b>bw-autocomplete</b><em>value</em> = model() · <em>suggestions</em> · <em>minLength</em> 2 · <em>debounce</em> 250<br>hoy: <code>p-select</code> con filter · el autocomplete es el objetivo</div>
+  <div class="contract"><b>regla común</b>un solo popup abierto por vista<br>cierra con <em>Esc</em>, click afuera o máscara</div>
+</div>
+
+<main>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Datepicker</h2>
+      <p class="fam-sub">Un campo, una fecha, una hora. El calendario no se escribe a mano: se elige, y el día de hoy se distingue del día elegido sin depender del color solo. Los días pasados quedan deshabilitados por <code>min</code> y <code>disabledDays</code>.</p>
+    </div>
+    <div class="fam-contract"><b>bw-datepicker</b> · <em>value</em> · <em>min/max</em> · <em>disabledDays</em><br>hoy: <b>p-datepicker</b> (overlay, teclado y scroll)</div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live split">
+        <div class="field">
+          <label for="dp-trigger">Fecha de la reserva</label>
+          <button class="trigger is-focus" id="dp-trigger" type="button" aria-haspopup="dialog" aria-expanded="true" aria-controls="dp-panel">
+            <span class="lead" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg></span>
+            <span class="val">viernes 4 de diciembre, 10:30</span>
+            <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          </button>
+          <p class="hint">El turno es en Providencia; la hora viaja dentro del mismo valor.</p>
+        </div>
+
+        <div class="pop" id="dp-panel" role="dialog" aria-label="Elegir fecha y hora de la reserva">
+          <div class="pop-head">
+            <button class="nav-btn" type="button" aria-label="Mes anterior"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span class="pop-title" id="dp1-month">Diciembre 2026</span>
+            <button class="nav-btn" type="button" aria-label="Mes siguiente"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+          </div>
+          <div class="cal-wrap">
+            <table class="cal" aria-labelledby="dp1-month">
+              <caption class="sr-only">Diciembre 2026</caption>
+              <thead>
+                <tr>
+                  <th scope="col"><abbr title="lunes">L</abbr></th>
+                  <th scope="col"><abbr title="martes">M</abbr></th>
+                  <th scope="col"><abbr title="miércoles">M</abbr></th>
+                  <th scope="col"><abbr title="jueves">J</abbr></th>
+                  <th scope="col"><abbr title="viernes">V</abbr></th>
+                  <th scope="col"><abbr title="sábado">S</abbr></th>
+                  <th scope="col"><abbr title="domingo">D</abbr></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><button class="day is-out" type="button" disabled aria-label="lunes 30 de noviembre de 2026">30</button></td>
+                  <td><button class="day" type="button" disabled aria-label="martes 1 de diciembre de 2026">1</button></td>
+                  <td><button class="day is-today" type="button" aria-current="date" aria-label="hoy, miércoles 2 de diciembre de 2026">2</button></td>
+                  <td><button class="day" type="button" aria-label="jueves 3 de diciembre de 2026">3</button></td>
+                  <td><button class="day is-selected" type="button" aria-pressed="true" aria-label="viernes 4 de diciembre de 2026, seleccionado">4</button></td>
+                  <td><button class="day" type="button" aria-label="sábado 5 de diciembre de 2026">5</button></td>
+                  <td><button class="day" type="button" aria-label="domingo 6 de diciembre de 2026">6</button></td>
+                </tr>
+                <tr>
+                  <td><button class="day" type="button" aria-label="lunes 7 de diciembre de 2026">7</button></td>
+                  <td><button class="day" type="button" aria-label="martes 8 de diciembre de 2026">8</button></td>
+                  <td><button class="day" type="button" aria-label="miércoles 9 de diciembre de 2026">9</button></td>
+                  <td><button class="day" type="button" aria-label="jueves 10 de diciembre de 2026">10</button></td>
+                  <td><button class="day" type="button" aria-label="viernes 11 de diciembre de 2026">11</button></td>
+                  <td><button class="day" type="button" aria-label="sábado 12 de diciembre de 2026">12</button></td>
+                  <td><button class="day" type="button" aria-label="domingo 13 de diciembre de 2026">13</button></td>
+                </tr>
+                <tr>
+                  <td><button class="day" type="button" aria-label="lunes 14 de diciembre de 2026">14</button></td>
+                  <td><button class="day" type="button" aria-label="martes 15 de diciembre de 2026">15</button></td>
+                  <td><button class="day" type="button" aria-label="miércoles 16 de diciembre de 2026">16</button></td>
+                  <td><button class="day" type="button" aria-label="jueves 17 de diciembre de 2026">17</button></td>
+                  <td><button class="day" type="button" aria-label="viernes 18 de diciembre de 2026">18</button></td>
+                  <td><button class="day" type="button" aria-label="sábado 19 de diciembre de 2026">19</button></td>
+                  <td><button class="day" type="button" aria-label="domingo 20 de diciembre de 2026">20</button></td>
+                </tr>
+                <tr>
+                  <td><button class="day" type="button" aria-label="lunes 21 de diciembre de 2026">21</button></td>
+                  <td><button class="day" type="button" aria-label="martes 22 de diciembre de 2026">22</button></td>
+                  <td><button class="day" type="button" aria-label="miércoles 23 de diciembre de 2026">23</button></td>
+                  <td><button class="day" type="button" aria-label="jueves 24 de diciembre de 2026">24</button></td>
+                  <td><button class="day" type="button" aria-label="viernes 25 de diciembre de 2026">25</button></td>
+                  <td><button class="day" type="button" aria-label="sábado 26 de diciembre de 2026">26</button></td>
+                  <td><button class="day" type="button" aria-label="domingo 27 de diciembre de 2026">27</button></td>
+                </tr>
+                <tr>
+                  <td><button class="day" type="button" aria-label="lunes 28 de diciembre de 2026">28</button></td>
+                  <td><button class="day" type="button" aria-label="martes 29 de diciembre de 2026">29</button></td>
+                  <td><button class="day" type="button" aria-label="miércoles 30 de diciembre de 2026">30</button></td>
+                  <td><button class="day" type="button" aria-label="jueves 31 de diciembre de 2026">31</button></td>
+                  <td><button class="day is-out" type="button" disabled aria-label="viernes 1 de enero de 2027">1</button></td>
+                  <td><button class="day is-out" type="button" disabled aria-label="sábado 2 de enero de 2027">2</button></td>
+                  <td><button class="day is-out" type="button" disabled aria-label="domingo 3 de enero de 2027">3</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pop-foot">
+            <button class="btn-link" type="button">Hoy</button>
+            <span class="sep" aria-hidden="true">·</span>
+            <button class="btn-link" type="button">Limpiar</button>
+          </div>
+        </div>
+
+        <ul class="ann">
+          <li><b>nav</b><span>‹ › cambian de mes; el nombre del mes es el único texto con peso</span></li>
+          <li><b>hoy</b><span>ring interior de 2 px en <code>--bw-200</code> + <code>aria-current="date"</code></span></li>
+          <li><b>elegido</b><span>relleno <code>--bw-300</code> con texto <code>--bw-text-on-brand</code></span></li>
+          <li><b>pasado</b><span>deshabilitado por <code>min</code>; no se oculta, se apaga</span></li>
+          <li><b>pie</b><span>“Hoy” y “Limpiar” son las dos únicas salidas del panel</span></li>
+        </ul>
+      </div>
+      <figcaption><span><b>Campo + panel abierto</b> — hoy (2) con ring, día elegido (4) relleno; el panel lo dibuja PrimeNG, los tokens y el estado son nuestros</span><span class="mono">panel 320 · celda 32 · radius 8 · <code>--bw-shadow-popover</code></span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live split-range">
+        <div class="field">
+          <label for="dp-range">Período del reporte</label>
+          <button class="trigger" id="dp-range" type="button" aria-haspopup="dialog" aria-expanded="true" aria-controls="dp-range-panel">
+            <span class="lead" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg></span>
+            <span class="val">04 dic → 12 dic</span>
+            <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          </button>
+          <p class="hint">El campo muestra el rango en formato corto; el panel guarda los dos extremos como <code>Date</code>.</p>
+        </div>
+
+        <div class="pop range" id="dp-range-panel" role="dialog" aria-label="Elegir período del reporte">
+          <div class="presets">
+            <span class="presets-cap">Atajos</span>
+            <button class="preset" type="button">Hoy</button>
+            <button class="preset" type="button">Esta semana</button>
+            <button class="preset is-selected" type="button" aria-pressed="true">Este mes</button>
+            <button class="preset" type="button">Últimos 30 días</button>
+          </div>
+          <div class="range-main">
+            <div class="pop-head">
+              <button class="nav-btn" type="button" aria-label="Mes anterior"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+              <span class="pop-title" id="dp2-month">Diciembre 2026</span>
+              <button class="nav-btn" type="button" aria-label="Mes siguiente"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+            </div>
+            <div class="cal-wrap">
+              <table class="cal" aria-labelledby="dp2-month">
+                <caption class="sr-only">Diciembre 2026, rango del 4 al 12</caption>
+                <thead>
+                  <tr>
+                    <th scope="col"><abbr title="lunes">L</abbr></th>
+                    <th scope="col"><abbr title="martes">M</abbr></th>
+                    <th scope="col"><abbr title="miércoles">M</abbr></th>
+                    <th scope="col"><abbr title="jueves">J</abbr></th>
+                    <th scope="col"><abbr title="viernes">V</abbr></th>
+                    <th scope="col"><abbr title="sábado">S</abbr></th>
+                    <th scope="col"><abbr title="domingo">D</abbr></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><button class="day is-out" type="button" disabled aria-label="lunes 30 de noviembre de 2026">30</button></td>
+                    <td><button class="day" type="button" disabled aria-label="martes 1 de diciembre de 2026">1</button></td>
+                    <td><button class="day is-today" type="button" aria-current="date" aria-label="hoy, miércoles 2 de diciembre de 2026">2</button></td>
+                    <td><button class="day" type="button" aria-label="jueves 3 de diciembre de 2026">3</button></td>
+                    <td><button class="day is-selected is-range-start" type="button" aria-pressed="true" aria-label="viernes 4 de diciembre de 2026, inicio del rango">4</button></td>
+                    <td><button class="day in-range" type="button" aria-label="sábado 5 de diciembre de 2026, dentro del rango">5</button></td>
+                    <td><button class="day in-range" type="button" aria-label="domingo 6 de diciembre de 2026, dentro del rango">6</button></td>
+                  </tr>
+                  <tr>
+                    <td><button class="day in-range" type="button" aria-label="lunes 7 de diciembre de 2026, dentro del rango">7</button></td>
+                    <td><button class="day in-range" type="button" aria-label="martes 8 de diciembre de 2026, dentro del rango">8</button></td>
+                    <td><button class="day in-range" type="button" aria-label="miércoles 9 de diciembre de 2026, dentro del rango">9</button></td>
+                    <td><button class="day in-range" type="button" aria-label="jueves 10 de diciembre de 2026, dentro del rango">10</button></td>
+                    <td><button class="day in-range" type="button" aria-label="viernes 11 de diciembre de 2026, dentro del rango">11</button></td>
+                    <td><button class="day is-selected is-range-end" type="button" aria-pressed="true" aria-label="sábado 12 de diciembre de 2026, fin del rango">12</button></td>
+                    <td><button class="day" type="button" aria-label="domingo 13 de diciembre de 2026">13</button></td>
+                  </tr>
+                  <tr>
+                    <td><button class="day" type="button" aria-label="lunes 14 de diciembre de 2026">14</button></td>
+                    <td><button class="day" type="button" aria-label="martes 15 de diciembre de 2026">15</button></td>
+                    <td><button class="day" type="button" aria-label="miércoles 16 de diciembre de 2026">16</button></td>
+                    <td><button class="day" type="button" aria-label="jueves 17 de diciembre de 2026">17</button></td>
+                    <td><button class="day" type="button" aria-label="viernes 18 de diciembre de 2026">18</button></td>
+                    <td><button class="day" type="button" aria-label="sábado 19 de diciembre de 2026">19</button></td>
+                    <td><button class="day" type="button" aria-label="domingo 20 de diciembre de 2026">20</button></td>
+                  </tr>
+                  <tr>
+                    <td><button class="day" type="button" aria-label="lunes 21 de diciembre de 2026">21</button></td>
+                    <td><button class="day" type="button" aria-label="martes 22 de diciembre de 2026">22</button></td>
+                    <td><button class="day" type="button" aria-label="miércoles 23 de diciembre de 2026">23</button></td>
+                    <td><button class="day" type="button" aria-label="jueves 24 de diciembre de 2026">24</button></td>
+                    <td><button class="day" type="button" aria-label="viernes 25 de diciembre de 2026">25</button></td>
+                    <td><button class="day" type="button" aria-label="sábado 26 de diciembre de 2026">26</button></td>
+                    <td><button class="day" type="button" aria-label="domingo 27 de diciembre de 2026">27</button></td>
+                  </tr>
+                  <tr>
+                    <td><button class="day" type="button" aria-label="lunes 28 de diciembre de 2026">28</button></td>
+                    <td><button class="day" type="button" aria-label="martes 29 de diciembre de 2026">29</button></td>
+                    <td><button class="day" type="button" aria-label="miércoles 30 de diciembre de 2026">30</button></td>
+                    <td><button class="day" type="button" aria-label="jueves 31 de diciembre de 2026">31</button></td>
+                    <td><button class="day is-out" type="button" disabled aria-label="viernes 1 de enero de 2027">1</button></td>
+                    <td><button class="day is-out" type="button" disabled aria-label="sábado 2 de enero de 2027">2</button></td>
+                    <td><button class="day is-out" type="button" disabled aria-label="domingo 3 de enero de 2027">3</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pop-foot">
+              <span><code>selectionMode="range"</code></span>
+              <span>04 dic → 12 dic</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Variante de rango</b> — los atajos no reemplazan al calendario: lo llenan. El rango se lee con extremos rellenos y el tramo tintado.</span><span class="mono">panel 620 · atajos 184 · tramo <code>color-mix</code> 14%</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Multiselect</h2>
+      <p class="fam-sub">Para elegir varios servicios de una promo corta. Los chips cerrados dicen qué está elegido y cada uno se puede sacar con su botón; el listbox suma búsqueda, “Seleccionar todo” y un pie con la cuenta. Arriba de ~7 opciones, esto no escala: usá autocomplete o una tabla de selección.</p>
+    </div>
+    <div class="fam-contract"><b>bw-multiselect</b> · <em>value</em> · <em>options</em> · <em>filter</em> · <em>maxSelectedLabels</em><br>hoy: <b>p-multiselect</b> (overlay + teclado)</div>
+  </div>
+
+  <div class="specs three">
+    <figure class="spec">
+      <div class="live stack">
+        <fieldset class="field">
+          <legend id="ms1-legend">Servicios de la promo</legend>
+          <div class="ms-field">
+            <span class="ms-chip">Láser<button class="x" type="button" aria-label="Quitar Láser"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>
+            <span class="ms-chip">Facial<button class="x" type="button" aria-label="Quitar Facial"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>
+            <span class="ms-overflow"><span class="sr-only">y 2 servicios más seleccionados</span><span aria-hidden="true">+2</span></span>
+            <button class="ms-toggle" type="button" aria-label="Ver opciones de Servicios de la promo" aria-haspopup="listbox" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+        </fieldset>
+        <p class="hint">4 servicios elegidos; con <code>maxSelectedLabels=2</code> el resto se agrupa en <b>+2</b>.</p>
+      </div>
+      <figcaption><span><b>Cerrado con chips</b> — cada chip tiene su “quitar”; el contador agrupa lo que no entra</span><span class="mono">chip 26 · radius 4 · control 40</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live stack">
+        <fieldset class="field">
+          <legend id="ms2-legend">Servicios de la promo</legend>
+          <div class="ms-field is-focus">
+            <span class="ms-chip">Láser<button class="x" type="button" aria-label="Quitar Láser"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>
+            <span class="ms-chip">Facial<button class="x" type="button" aria-label="Quitar Facial"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>
+            <button class="ms-toggle" type="button" aria-label="Ocultar opciones de Servicios de la promo" aria-haspopup="listbox" aria-expanded="true" aria-controls="ms2-list"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+          </div>
+        </fieldset>
+
+        <div class="pop">
+          <div class="ms-search">
+            <label for="ms2-filter">Buscar servicio</label>
+            <input class="control" id="ms2-filter" type="search" value="" placeholder="Nombre del servicio" aria-describedby="ms2-count">
+            <span class="hint" id="ms2-count">6 de 6 servicios</span>
+          </div>
+          <div class="ms-all">
+            <input class="cbx is-indet" id="ms2-all" type="checkbox" aria-checked="mixed">
+            <label for="ms2-all">Seleccionar todo</label>
+            <span class="hint">2 de 6</span>
+          </div>
+          <div class="listbox" id="ms2-list" role="listbox" aria-multiselectable="true" aria-labelledby="ms2-legend">
+            <div class="opt is-checked" role="option" aria-selected="true"><span class="box is-on" aria-hidden="true"></span><span>Depilación láser · piernas</span><span class="meta">45 min</span></div>
+            <div class="opt is-checked" role="option" aria-selected="true"><span class="box is-on" aria-hidden="true"></span><span>Limpieza facial profunda</span><span class="meta">60 min</span></div>
+            <div class="opt is-hover" role="option" aria-selected="false"><span class="box" aria-hidden="true"></span><span>Masaje descontracturante</span><span class="meta">50 min</span></div>
+            <div class="opt" role="option" aria-selected="false"><span class="box" aria-hidden="true"></span><span>Manicure ruso</span><span class="meta">40 min</span></div>
+            <div class="opt" role="option" aria-selected="false"><span class="box" aria-hidden="true"></span><span>Retiro de tatuaje con láser</span><span class="meta">30 min</span></div>
+            <div class="opt" role="option" aria-selected="false"><span class="box" aria-hidden="true"></span><span>Radiofrecuencia corporal</span><span class="meta">45 min</span></div>
+          </div>
+          <div class="ms-foot">
+            <span>2 seleccionados</span>
+            <button class="btn-link" type="button">Limpiar</button>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Abierto con búsqueda</b> — 2 de 6 marcados, el padre queda indeterminado y el pie lleva la cuenta</span><span class="mono">listbox 340 · opción 32 · fila 7/8</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live stack">
+        <fieldset class="field">
+          <legend id="ms3-legend">Servicios de la promo</legend>
+          <div class="ms-field is-focus">
+            <span class="ms-placeholder">Elegí los servicios de la promo</span>
+            <button class="ms-toggle" type="button" aria-label="Ocultar opciones de Servicios de la promo" aria-haspopup="listbox" aria-expanded="true" aria-controls="ms3-list"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+          </div>
+        </fieldset>
+
+        <div class="pop">
+          <div class="ms-search">
+            <label for="ms3-filter">Buscar servicio</label>
+            <input class="control" id="ms3-filter" type="search" value="hydrafacial" aria-describedby="ms3-count">
+            <span class="hint" id="ms3-count">0 de 6 servicios</span>
+          </div>
+          <div class="listbox" id="ms3-list" role="listbox" aria-multiselectable="true" aria-labelledby="ms3-legend">
+            <div class="empty">
+              <p class="em">Sin coincidencias</p>
+              <p class="em-hint">Probá con otro término: “láser”, “facial” o “masaje”.</p>
+            </div>
+          </div>
+          <div class="ms-foot">
+            <span>0 seleccionados</span>
+            <button class="btn-link" type="button">Limpiar</button>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Filtro sin resultados</b> — el vacío dice qué hacer, no solo que no hay nada</span><span class="mono">vacío 18/20 · <code>--text-color-secondary</code></span></figcaption>
+    </figure>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Mostrá los chips elegidos con su botón de quitar, también en mobile.</li>
+        <li>Cortá en ~7 opciones; de ahí en más, autocomplete o tabla.</li>
+        <li>Dejá “Seleccionar todo” solo cuando el filtro no cambia el alcance.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Un multiselect de 30 servicios del catálogo: nadie scrollea eso.</li>
+        <li>Chips sin “x” en pantallas táctiles: no hay hover que los salve.</li>
+        <li>Repetir el mismo servicio dos veces en la lista de opciones.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Autocomplete de pacientes</h2>
+      <p class="fam-sub">Busca desde 2 caracteres, espera 250 ms de debounce y muestra RUT, email y teléfono: hay dos Camila Rojas y el nombre solo no alcanza. Email y teléfono se corrigen en el flujo de la reserva (panel del paciente), así que el operador los necesita para reconocer al paciente correcto. La sugerencia resaltada se navega con ↑ ↓ y se elige con Enter. Hoy el flujo usa un <code>p-select</code> con filtro; esta lista es el objetivo para <code>bw-autocomplete</code>.</p>
+    </div>
+    <div class="fam-contract"><b>bw-autocomplete</b> · <em>value</em> = model() · <em>suggestions</em> · <em>minLength</em> 2 · <em>debounce</em> 250<br>hoy: <b>p-select con filter</b> · el autocomplete es el objetivo</div>
+  </div>
+
+  <div class="specs three">
+    <figure class="spec">
+      <div class="live stack">
+        <div class="field">
+          <label for="ac-closed">Paciente</label>
+          <div class="ac-field">
+            <span class="av av-28">CR</span>
+            <input class="ac-input" id="ac-closed" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" value="Camila Rojas · 18.442.190-7">
+            <button class="trail" type="button" aria-label="Limpiar paciente"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </div>
+          <p class="hint">Con valor elegido, el campo muestra nombre y RUT juntos.</p>
+        </div>
+      </div>
+      <figcaption><span><b>Cerrado con valor</b> — avatar, nombre y RUT en el mismo campo</span><span class="mono">control 40 · avatar 28 · RUT mono 11</span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live stack">
+        <div class="field">
+          <label for="ac-open">Paciente</label>
+          <div class="ac-field is-focus">
+            <span class="av av-28 av-alt" aria-hidden="true"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+            <input class="ac-input" id="ac-open" type="text" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="ac-open-list" aria-activedescendant="ac-opt-1" value="Rojas">
+            <button class="trail" type="button" aria-label="Limpiar búsqueda"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </div>
+        </div>
+
+        <div class="pop">
+          <div class="listbox" id="ac-open-list" role="listbox" aria-label="Pacientes que coinciden con Rojas">
+            <div class="ac-opt is-active" id="ac-opt-1" role="option" aria-selected="true">
+              <span class="av av-28">CR</span>
+              <span class="who"><b>Camila Rojas Fuentes</b><span class="rut">18.442.190-7<span class="contact">camila.rojas@mail.cl · +56 9 6123 4567</span></span></span>
+              <span class="kbd" aria-hidden="true">↵</span>
+            </div>
+            <div class="ac-opt" id="ac-opt-2" role="option" aria-selected="false">
+              <span class="av av-28 av-alt">MJ</span>
+              <span class="who"><b>María José Rojas Lillo</b><span class="rut">19.003.774-5<span class="contact">mj.rojas@mail.cl · +56 9 7788 1122</span></span></span>
+            </div>
+            <div class="ac-opt" id="ac-opt-3" role="option" aria-selected="false">
+              <span class="av av-28 av-alt">FS</span>
+              <span class="who"><b>Francisca Rojas Soto</b><span class="rut">12.884.903-2<span class="contact">fran.rojas@mail.cl · +56 9 5544 9900</span></span></span>
+            </div>
+            <div class="ac-opt" id="ac-opt-4" role="option" aria-selected="false">
+              <span class="av av-28 av-alt">JV</span>
+              <span class="who"><b>Javier Rojas Muñoz</b><span class="rut">20.551.318-4<span class="contact">javier.rojas@mail.cl · +56 9 3322 4455</span></span></span>
+            </div>
+          </div>
+          <div class="ms-foot">
+            <span>4 resultados</span>
+            <span aria-hidden="true">↑ ↓ para navegar · Enter para elegir</span>
+          </div>
+        </div>
+      </div>
+      <figcaption><span><b>Sugerencias abiertas</b> — 4 pacientes, una resaltada por teclado; el RUT desambigua</span><span class="mono">opción 40 · resaltado <code>--bw-50</code> + ring <code>--bw-200</code></span></figcaption>
+    </figure>
+
+    <figure class="spec">
+      <div class="live stack">
+        <div class="pop" role="status" aria-live="polite">
+          <div class="loading-row"><span class="spin-sm" aria-hidden="true"></span>Buscando…</div>
+        </div>
+        <div class="pop">
+          <div class="listbox">
+            <div class="empty">
+              <p class="em">Sin resultados para «Javie»</p>
+              <p class="em-hint">Revisá el apellido o creá la ficha con el RUT.</p>
+              <button class="btn btn-outline btn-sm" type="button">Crear paciente</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint">Mientras carga, el campo no se bloquea: se sigue escribiendo y el debounce reinicia el pedido.</p>
+      </div>
+      <figcaption><span><b>Cargando y sin resultados</b> — el vacío ofrece la salida; la carga se anuncia con <code>role="status"</code></span><span class="mono">minLength 2 · debounce 250 ms</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Mostrá nombre + RUT en cada sugerencia; iniciales cuando no hay foto.</li>
+        <li>Resaltá la sugerencia activa con teclado y anunciá la cantidad.</li>
+        <li>Ofrecé “Crear paciente” cuando no hay coincidencias.</li>
+        <li>Devolvé el foco al campo al cerrar con <code>Esc</code>.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Buscar con 1 caracter: el listbox se llena de ruido.</li>
+        <li>Mostrar solo el nombre: dos Camila Rojas terminan en la ficha equivocada.</li>
+        <li>Un spinner que tape el campo mientras se escribe.</li>
+        <li>Popups anidados: un datepicker dentro de un autocomplete abierto.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Kinesilk</h2>
+      <p class="fam-sub">Mismo contrato, tokens re-declarados: el calendario no cambia de forma, cambia de piel. El día elegido pasa a salmón con texto oscuro y el CTA pierde el blanco. Nada de hex sueltos por componente: el skin vive en <code>styles.scss</code>.</p>
+    </div>
+    <div class="fam-contract"><b>bw-datepicker · bw-multiselect · bw-autocomplete</b><br>tokens re-declarados en <b>body.theme-kinesilk</b></div>
+  </div>
+
+  <div class="specs">
+    <figure class="spec">
+      <div class="live kinesilk">
+        <div class="field">
+          <label for="k-dp">Fecha de la reserva</label>
+          <button class="trigger" id="k-dp" type="button" aria-haspopup="dialog" aria-expanded="false">
+            <span class="lead" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg></span>
+            <span class="val">viernes 4 de diciembre, 10:30</span>
+            <span class="chev" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></span>
+          </button>
+        </div>
+
+        <fieldset class="field">
+          <legend>Servicios de la promo</legend>
+          <div class="ms-field">
+            <span class="ms-chip">Láser<button class="x" type="button" aria-label="Quitar Láser"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>
+            <span class="ms-chip">Facial<button class="x" type="button" aria-label="Quitar Facial"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>
+            <span class="ms-overflow"><span class="sr-only">y 2 servicios más seleccionados</span><span aria-hidden="true">+2</span></span>
+            <button class="ms-toggle" type="button" aria-label="Ver opciones de Servicios de la promo" aria-haspopup="listbox" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="k-ac">Paciente</label>
+          <div class="ac-field">
+            <span class="av av-28">CR</span>
+            <input class="ac-input" id="k-ac" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" value="Camila Rojas · 18.442.190-7">
+            <button class="trail" type="button" aria-label="Limpiar paciente"><svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </div>
+        </div>
+
+        <div class="k-cta">
+          <button class="btn btn-primary" type="button">Guardar reserva</button>
+          <button class="btn btn-outline" type="button">Cancelar</button>
+          <span class="hint">CTA salmón con texto oscuro <code>#2f2f26</code>; nunca blanco sobre <code>#fea4a4</code>.</span>
+        </div>
+      </div>
+      <figcaption><span><b>Misma pieza, otra piel</b> — los tres controles se leen igual sobre crema; el skin solo mueve marca y superficies</span><span class="mono">--bw-300 #fea4a4 · --bw-100 #badede · --surface-ground #fcf9ea</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="fam">
+  <div class="fam-head">
+    <div>
+      <h2>Reglas de selección</h2>
+      <p class="fam-sub">Cuatro acuerdos que valen para los tres controles, incluso mientras el popup todavía lo dibuje PrimeNG.</p>
+    </div>
+    <div class="fam-contract"><b>bw-datepicker · bw-multiselect · bw-autocomplete</b><br>estado en signals · popup alquilado</div>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>Hacé</h3>
+      <ul>
+        <li>Un calendario por formulario: la fecha se elige en un solo lugar.</li>
+        <li>Fecha y hora en el mismo control; nada de dos campos separados.</li>
+        <li>Mostrá el RUT en las sugerencias: es el desambiguador real.</li>
+        <li><code>Esc</code> cierra el popup y devuelve el foco al campo.</li>
+      </ul>
+    </div>
+    <div class="rule no">
+      <h3>No hagas</h3>
+      <ul>
+        <li>Mezclar <code>&lt;input type="date"&gt;</code> nativo con el datepicker del kit.</li>
+        <li>Multiselect con más de ~7 opciones: usá autocomplete o tabla.</li>
+        <li>Dejar los chips de selección sin botón de quitar en mobile.</li>
+        <li>Dos popups abiertos a la vez: uno solo por vista, siempre.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>Tokens usados: <code>--bw-300</code> <code>--bw-200</code> <code>--bw-100</code> <code>--bw-50</code> <code>--bw-500</code> <code>--bw-text-on-brand</code> <code>--bw-chip-text-primary</code> <code>--bw-surface-muted</code> <code>--surface-card</code> <code>--surface-border</code> <code>--text-color</code> <code>--text-color-secondary</code> <code>--text-heading</code> <code>--text-label</code> <code>--bw-radius-sm/md/lg/pill</code> <code>--bw-control-height</code> <code>--bw-shadow-card</code> <code>--bw-shadow-popover</code> <code>--bw-transition-fast</code> <code>--bw-success</code> <code>--bw-status-pendiente</code> <code>--bw-fc-btn-hover-bg</code> <code>--bw-fc-btn-active-bg</code></span>
+  <span>06 / 08 · fuentes: <code>_tokens.scss</code> · <code>_primeng-bridge.scss</code></span>
+</footer>
+
+</body>
+</html>
