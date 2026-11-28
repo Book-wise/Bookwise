@@ -21,6 +21,11 @@ jobs:
       - run: npm ci
       - run: npm test -- --no-watch
 
+      # Etapa 5 del design system: cuenta la deuda de `primeng/*` fuera del
+      # kit. Modo reporte (exit 0); pasa a --strict cuando el conteo sea 0.
+      - name: Design-system boundary (report only)
+        run: npm run check:boundary
+
   package-release:
     name: Build frontend release
     runs-on: ubuntu-latest

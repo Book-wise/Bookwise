@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "check:boundary": "node scripts/check-design-boundary.mjs",
+    "check:boundary:strict": "node scripts/check-design-boundary.mjs --strict"
   },
   "prettier": {
     "printWidth": 100,

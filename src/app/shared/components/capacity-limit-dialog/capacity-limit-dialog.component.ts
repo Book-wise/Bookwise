@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
+import { BwDialogComponent } from '@shared/components/bw-dialog';
 import { LanguageService } from '@services/language.service';
 import { Quota } from '@models';
 
@@ -16,7 +16,7 @@ import { Quota } from '@models';
   selector: 'bw-capacity-limit-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DialogModule, ButtonModule],
+  imports: [CommonModule, BwDialogComponent, ButtonModule],
   templateUrl: './capacity-limit-dialog.component.html',
   styleUrl: './capacity-limit-dialog.component.scss',
 })
