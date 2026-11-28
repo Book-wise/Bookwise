@@ -3,6 +3,7 @@
    ============================================ */
 
 @use 'styles/tokens';
+@use 'styles/primeng-bridge';
 @use 'styles/cards';
 @use 'styles/calendar';
 @use 'styles/tables';
@@ -76,12 +77,6 @@ a {
   color: white;
 }
 
-// ── Dialog footer — global padding (aplica a todos los p-dialog, incluido ConfirmDialog) ──
-// PrimeNG theme loads after our :root, so !important is required to override.
-:root {
-  --p-dialog-footer-padding: 1.25rem !important;
-}
-
 // ============================================
 // DARK MODE
 // ============================================
@@ -97,24 +92,6 @@ body.dark-theme {
   // (#1e293b) para que el hover se note. Sin esto el token queda claro (#f3f4f6)
   // y produce fondos blancos dentro del tema oscuro.
   --bw-surface-muted: #263449;
-  // Esqueletos de carga: los tokens de PrimeNG no cambian solos porque el preset
-  // está fijado en claro (`darkModeSelector: false`). Sin esto el loader del
-  // calendario queda gris claro sobre el fondo oscuro.
-  --p-skeleton-background: #334155;
-  --p-skeleton-animation-background: #3f4d63;
-  // Tabs de PrimeNG: el preset está fijo en claro, así que `tablist` y
-  // `tabpanel` resuelven a `{content.background}` = blanco y la tarjeta entera
-  // aparece blanca sobre el fondo oscuro (Configuraciones, Roles). Se atan a
-  // nuestros tokens; en claro el comportamiento no cambia.
-  --p-tabs-tablist-background: transparent;
-  --p-tabs-tablist-border-color: var(--surface-border);
-  --p-tabs-tabpanel-background: transparent;
-  --p-tabs-tabpanel-color: var(--text-color);
-  --p-tabs-tab-color: var(--text-color-secondary);
-  --p-tabs-tab-hover-color: var(--text-color);
-  --p-tabs-tab-active-color: var(--bw-tab-color);
-  --p-tabs-tab-active-border-color: var(--bw-tab-color);
-  --p-tabs-active-bar-background: var(--bw-tab-color);
   --text-color:           #e4e4e7;
   --text-color-secondary: #94a3b8;
   --text-heading:         var(--text-color);
@@ -236,10 +213,6 @@ body.theme-kinesilk {
   --bw-200: #ffbdbe;              // pink (accent)
   --bw-300: #fea4a4;              // salmon (CTA)
   --bw-text-on-brand: #2f2f26;    // texto oscuro sobre el salmon pastel
-  // Esqueletos de carga en la paleta crema (el preset de PrimeNG es claro).
-  --p-skeleton-background: #ece4cb;
-  --p-skeleton-animation-background: #f5f1de;
-
   --color-primary:     #e08f8f;
   --color-primary-cta: #fea4a4;
   --color-accent:      #87e9ce;
