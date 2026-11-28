@@ -3,31 +3,39 @@
   "positions": {
     "system": {
       "x": 0,
-      "y": 382
+      "y": 0
     },
     "01-detalle-con-galeria.html": {
-      "x": 1565,
-      "y": 445
+      "x": 1520,
+      "y": 0
     },
     "02-panel-visual-lateral.html": {
-      "x": 3225,
-      "y": 420
+      "x": 3040,
+      "y": 0
     },
     "03-impresion-a4.html": {
-      "x": 4965,
-      "y": 291
+      "x": 4560,
+      "y": 0
     },
     "04-selector-vista-agenda.html": {
-      "x": 6485,
-      "y": 291
+      "x": 6080,
+      "y": 0
     },
     "05-vista-lista-agenda.html": {
-      "x": 8005,
-      "y": 291
+      "x": 7600,
+      "y": 0
     },
     "06-side-menu-abierto.html": {
-      "x": 9681,
-      "y": 307
+      "x": 9120,
+      "y": 0
+    },
+    "07-mobile-agenda.html": {
+      "x": 10640,
+      "y": 0
+    },
+    "08-tablet-agenda.html": {
+      "x": 11145,
+      "y": 7
     }
   }
 }

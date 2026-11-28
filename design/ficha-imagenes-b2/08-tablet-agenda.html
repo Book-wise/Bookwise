@@ -27,6 +27,23 @@
   .account .av { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-size:.6875rem; font-weight:600; }
   .account .who b { font-size:.75rem; display:block; }
   .account .who small { font-size:.625rem; color:rgba(255,255,255,.55); display:block; }
+  /* side-menu abierto: el panel empuja el contenido en tablet */
+  .body { flex:1; min-height:0; display:flex; }
+  .sidenav { flex:0 0 200px; min-width:0; background:linear-gradient(180deg,var(--bw-900),var(--bw-600)); padding:12px 8px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; }
+  .sidenav .group { font-size:.625rem; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.45); padding:10px 10px 6px; font-weight:600; }
+  .sidenav a { display:flex; align-items:center; gap:9px; color:rgba(255,255,255,.7); text-decoration:none; font-size:.8125rem; padding:8px 10px; border-radius:var(--r-md); white-space:nowrap; }
+  .sidenav a i { font-style:normal; width:16px; text-align:center; }
+  .sidenav a[aria-current] { background:rgba(255,255,255,.14); color:#fff; font-weight:600; box-shadow:inset 3px 0 0 var(--bw-300); }
+  .sidenav a:hover { background:rgba(255,255,255,.08); color:#fff; }
+  .mini-cal { margin-top:auto; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:var(--r-md); padding:10px 12px; color:rgba(255,255,255,.85); }
+  .mini-cal b { display:block; font-size:.75rem; font-weight:600; margin-bottom:6px; }
+  .mini-cal__grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; font-size:.625rem; text-align:center; color:rgba(255,255,255,.55); align-items:center; }
+  .mini-cal__grid span { display:inline-flex; align-items:center; justify-content:center; height:22px; }
+  .mini-cal__grid .today-d { background:var(--bw-300); color:#fff; border-radius:50%; width:18px; height:18px; font-weight:700; }
+  .mini-cal small { display:block; margin-top:6px; font-size:.625rem; color:rgba(255,255,255,.45); }
+  .side-foot { padding:10px 0 4px; border-top:1px solid rgba(255,255,255,.1); margin-top:10px; }
+  .side-foot a { display:flex; align-items:center; gap:9px; color:rgba(255,255,255,.68); font-size:.8125rem; text-decoration:none; padding:6px 10px; border-radius:var(--r-md); }
+  .content { flex:1; min-width:0; display:flex; flex-direction:column; }
   /* barra: selector + rango de fecha + acciones, en DOS líneas equilibradas */
   .bar { background:var(--surface-card); border-bottom:1px solid var(--surface-border); padding:10px 14px; display:grid; gap:8px; flex:none; }
   .row1 { display:flex; align-items:center; gap:10px; }
@@ -41,6 +58,12 @@
   .btn--primary { background:var(--bw-300); color:#fff; border-color:transparent; font-weight:600; }
   .filters { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
   .filters span { font-size:.75rem; padding:5px 10px; border:1px solid var(--surface-border); border-radius:var(--r-pill); background:#fff; color:var(--text-label); white-space:nowrap; }
+  .period { display:inline-flex; background:var(--bw-surface-muted); border:1px solid var(--surface-border); border-radius:10px; padding:3px; justify-self:start; }
+  .period button { border:none; background:transparent; border-radius:8px; font-size:.75rem; padding:5px 12px; color:var(--text-secondary); cursor:pointer; font-family:var(--font); }
+  .period button[aria-pressed="true"] { background:#fff; color:var(--text-color); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .row2 { display:flex; align-items:center; gap:8px; }
+  .tools { display:inline-flex; gap:6px; }
+  .tools button { width:30px; height:30px; border:1px solid var(--surface-border); background:#fff; border-radius:var(--r-pill); color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; }
   /* GRID del calendario en tablet: columna del día comprimida, hoy resaltado */
   .grid { flex:1; margin:12px 14px; background:var(--surface-card); border:1px solid var(--surface-border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
   .ghead { display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid var(--surface-border); flex:none; }
@@ -70,11 +93,38 @@
 
 <section class="tablet" aria-label="Agenda en tablet">
   <header class="topbar">
-    <button class="burger" aria-label="Abrir menú">☰</button>
+    <button class="burger" aria-label="Cerrar menú" aria-expanded="true">‹</button>
     <span class="biz"><span class="mono">K</span><span><b>Kinesilk</b><small>RUT: 77.483.192-6</small></span></span>
+    <a href="#" class="agenda-link" aria-current="page" style="display:inline-flex; align-items:center; gap:7px; color:#fff; font-size:.875rem; font-weight:600; text-decoration:none; background:rgba(255,255,255,.14); padding:0 14px; height:40px; border-radius:var(--r-md); box-shadow:inset 0 -2px 0 var(--bw-300)"><i style="font-style:normal">▦</i> Agenda</a>
     <span class="account"><span class="av">CQ</span><span class="who"><b>Camila Quiroga</b><small>Administradora</small></span></span>
   </header>
 
+  <div class="body">
+    <aside class="sidenav" aria-label="Navegación principal">
+      <span class="group">Operación</span>
+      <a href="#"><i>⌂</i> Dashboard</a>
+      <a href="#"><i>🏛</i> Ubicaciones</a>
+      <a href="#"><i>👥</i> Profesionales</a>
+      <a href="#" aria-current="page"><i>📅</i> Agenda</a>
+      <a href="#"><i>👤</i> Clientes</a>
+      <a href="#"><i>📦</i> Servicios y packs</a>
+      <div class="mini-cal" aria-label="Mi calendario">
+        <b>Noviembre 2026</b>
+        <div class="mini-cal__grid">
+          <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+          <span></span><span></span><span></span><span></span><span></span><span></span><span>1</span>
+          <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+          <span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+          <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span class="today-d">22</span>
+          <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+          <span>30</span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <small>3 reservas esta semana</small>
+      </div>
+      <div class="side-foot"><a href="#"><i>↩</i> Cerrar sesión</a></div>
+    </aside>
+
+    <div class="content">
   <div class="bar">
     <div class="row1">
       <div class="seg" role="group" aria-label="Tipo de vista">
@@ -89,6 +139,18 @@
       </div>
       <span class="spacer"></span>
       <div class="actions"><button class="btn btn--primary">＋ Nueva reserva</button><button class="btn">🔒 Bloquear</button></div>
+    </div>
+    <div class="row2">
+      <div class="period" role="group" aria-label="Periodo de la agenda">
+        <button aria-pressed="false">Mes</button>
+        <button aria-pressed="true">Semana</button>
+        <button aria-pressed="false">Día</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="tools" role="group" aria-label="Herramientas de la agenda">
+        <button type="button" title="Duración del slot" aria-label="Duración del slot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></button>
+        <button type="button" title="Guía de colores" aria-label="Guía de colores"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.4 2.4 0 1 1 3.4 2.3c-.9.45-1.2.9-1.2 1.9"/><circle cx="12" cy="16.6" r="0.9" fill="currentColor"/></svg></button>
+      </div>
     </div>
     <div class="filters"><span>Todas las sedes</span><span>Todos los profesionales</span><span>Todos los estados</span></div>
   </div>
@@ -114,6 +176,8 @@
     <span><i style="background:#FCCAC2"></i>No asistió</span>
     <span><i style="background:#E3E7ED"></i>Cancelado/Bloqueo</span>
   </div>
-</main>
+    </div>
+  </div>
+</section>
 </body>
 </html>

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "chosen": "02-panel-visual-lateral.html",
+  "chosen": "06-side-menu-abierto.html",
   "handoffs": {
     "03-impresion-a4.html": {
       "status": "implemented",
@@ -17,6 +17,15 @@
       "startedAt": "2026-11-22T05:20:09.313Z",
       "implementedAt": "2026-11-22T05:26:13.157Z",
       "note": "Implemented: record-detail read mode is now the two-column layout of artboard 02 — textual fields left, images as a right-side timeline (muted panel, Imágenes label, day header with the record date, stacked cards, Última badge on the newest, same Ver/Descargar actions). Narrow screens stack. Edit mode unchanged. Verified 22/22 + 26/26 + tsc + build. PR #65 open (chained on #64: merge #64 first)."
+    },
+    "06-side-menu-abierto.html": {
+      "status": "implemented",
+      "queued": true,
+      "sentAt": "2026-11-27T21:31:41.916Z",
+      "startedAt": "2026-11-27T21:32:37.532Z",
+      "implementedAt": "2026-11-27T22:16:36.501Z",
+      "note": "Porté al app real dos refinamientos del artboard: esquinas redondeadas del contenido contra el sidebar (admin-layout) y mini-calendario glass oscuro (bw-agenda-navigator). Suite verde; dev server en localhost:4200.",
+      "previewUrl": "http://localhost:4200/admin/calendar"
     }
   }
 }
