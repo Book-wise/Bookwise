@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injectable, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -6,11 +6,11 @@ import { ButtonModule } from 'primeng/button';
 import { AuthService } from '@services/auth.service';
 import { PaymentsApiService } from '@services/api/payments-api.service';
 import { LanguageService } from '@services/language.service';
+import { EnrollmentResultResponse } from '@models';
 
 /**
- * Estado final de la página. `decode` es lo que la query `?status=`
- * reclama; la reconciliación (verify) decide el estado mostrado contra
- * la verdad del backend — la URL por sí sola no puede mentir.
+ * Estado final de la página. La única verdad es `GET /payment-methods/enrollment-result?n=`
+ * (P2): el `?status=ok|failure` de la query es solo hint de UX y nunca se usa para afirmar nada.
  */
 type EnrollmentKind = 'success' | 'error' | 'processing' | 'unconfirmed' | 'neutral';
 
@@ -28,17 +28,22 @@ const KEY_BY_REASON: Record<string, string> = {
   payment_enrollment_expired: 'payment.enrollment.reason.expired',
 };
 
+/** Polling corto ante `processing` (S14): reintenta hasta asentarse o agotar los reintentos. */
+const POLL_INTERVAL_MS = 2000;
+const MAX_POLLS = 10;
+
 /**
- * Resultado de la inscripción del medio de pago (P1 Transbank Oneclick Mall).
+ * Resultado de la inscripción del medio de pago (P1/P2 Transbank Oneclick Mall).
  *
  * Visual spec: design/pago-resultado-inscripcion/04-split-con-contexto.html
  * (desktop: panel lateral de marca; ≤900px: franja, según 05-mobile.html).
  *
- * Protecciones (evaluación de seguridad del usuario, L9):
+ * Protecciones (evaluación de seguridad del usuario, L9 + S14):
  * - Página pública y terminal: nunca consulta ni procesa tokens; no muta estado.
- * - NO confía en la query: con sesión activa verifica la verdad contra
- *   `GET /v1/payment-methods`; `status=ok` solo se muestra con tarjeta activa.
- *   Sin sesión, `ok` queda "por confirmar" (nunca éxito afirmado).
+ * - La URL NO miente: el `?status=ok|failure` de la query es solo hint. La verdad
+ *   única es `GET /v1/payment-methods/enrollment-result?n=<nonce>` (Sanctum).
+ * - Nonce de un solo uso: 410 Gone (gastado/expirado/inexistente/otra cuenta) se
+ *   muestra como estado NEUTRAL con CTA, nunca como error de la app.
  * - `reason` se mapea a claves i18n cerradas (nunca se interpola cruda).
  * - `noindex`: página de pago pública sin indexación en buscadores.
  */
@@ -50,14 +55,17 @@ const KEY_BY_REASON: Record<string, string> = {
   templateUrl: './enrollment-result.component.html',
   styleUrls: ['./enrollment-result.component.scss'],
 })
-export class EnrollmentResultComponent {
+export class EnrollmentResultComponent implements OnDestroy {
   readonly lang = inject(LanguageService);
   private readonly route = inject(ActivatedRoute);
   private readonly auth = inject(AuthService);
   private readonly api = inject(PaymentsApiService);
   private readonly meta = inject(Meta);
 
-  private readonly state = signal<EnrollmentResultVm>(this.claimedState());
+  private readonly state = signal<EnrollmentResultVm>({ kind: 'processing', reason: null });
+  private nonce: string | null = null;
+  private pollTimer: ReturnType<typeof setTimeout> | null = null;
+  private polls = 0;
 
   /** Estado final para el template. */
   readonly vm = (): EnrollmentResultVm => this.state();
@@ -65,50 +73,58 @@ export class EnrollmentResultComponent {
   constructor() {
     // Página de pago pública: no indexar.
     this.meta.addTag({ name: 'robots', content: 'noindex, nofollow' });
-    this.reconcile();
-  }
 
-  /** Lo que la query reclama, ANTES de verificar (solo lectura de la URL). */
-  private claimedState(): EnrollmentResultVm {
-    const params = this.route.snapshot.queryParamMap;
-    const status = params.get('status');
-    const reason = params.get('reason');
-
-    if (status === 'ok') return { kind: 'processing', reason: null }; // hasta verificar
-    if (status === 'processing') return { kind: 'processing', reason: null };
-    if (status === 'error') return { kind: 'error', reason };
-    return { kind: 'neutral', reason: null }; // URL directa sin flujo
-  }
-
-  /**
-   * Decide el estado mostrado contra la verdad:
-   * - ok + tarjeta activa → éxito real.
-   * - ok sin poder verificar → "por confirmar" (nunca éxito afirmado).
-   * - error → informativo tal cual (nunca miente: describe un fallo).
-   * - sin status (poking de URL) → neutral con CTA.
-   */
-  private reconcile(): void {
-    const claimed = this.state();
-
-    // Solo `ok` necesita verificación: error/neutral son informativos y
-    // `processing` lo declara el backend (confirmación realmente en curso).
-    if (claimed.kind !== 'processing' || this.route.snapshot.queryParamMap.get('status') !== 'ok') return;
-
-    if (!this.auth.isAuthenticated()) {
+    this.nonce = this.route.snapshot.queryParamMap.get('n');
+    if (!this.nonce) {
+      // URL directa sin nonce (poking de URL): neutral, nunca error inventado.
+      this.state.set({ kind: 'neutral', reason: null });
+    } else if (!this.auth.isAuthenticated()) {
+      // Sin sesión no podemos consultar el endpoint (Sanctum): por confirmar.
       this.state.set({ kind: 'unconfirmed', reason: null });
+    } else {
+      this.reconcile();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollTimer !== null) clearTimeout(this.pollTimer);
+  }
+
+  /** Consulta la verdad única del resultado de inscripción. */
+  private reconcile(): void {
+    if (!this.nonce) return;
+    this.api.getEnrollmentResult(this.nonce).subscribe({
+      next: (res) => this.settle(res),
+      error: (err: unknown) => this.onError(err),
+    });
+  }
+
+  private settle(res: EnrollmentResultResponse): void {
+    if (res.status === 'processing') {
+      // Inscripción aún en vuelo: polling corto y acotado.
+      this.state.set({ kind: 'processing', reason: null });
+      if (this.polls < MAX_POLLS) {
+        this.polls += 1;
+        this.pollTimer = setTimeout(() => this.reconcile(), POLL_INTERVAL_MS);
+      }
       return;
     }
+    if (res.status === 'ok') {
+      this.state.set({ kind: 'success', reason: null });
+      return;
+    }
+    // `failure`: informativo tal cual (describe un fallo, nunca miente).
+    this.state.set({ kind: 'error', reason: res.reason ?? null });
+  }
 
-    this.api.getMethods().subscribe({
-      next: ({ data }) => {
-        this.state.set(
-          data.some((m) => m.status === 'active')
-            ? { kind: 'success', reason: null }
-            : { kind: 'unconfirmed', reason: null },
-        );
-      },
-      error: () => this.state.set({ kind: 'unconfirmed', reason: null }),
-    });
+  private onError(err: unknown): void {
+    // 410 Gone = nonce gastado/expirado/inexistente/otra cuenta → neutral, nunca error app.
+    if ((err as { status?: number })?.status === 410) {
+      this.state.set({ kind: 'neutral', reason: null });
+      return;
+    }
+    // Sin sesión / red / servidor → no podemos confirmar; nunca afirmamos éxito.
+    this.state.set({ kind: 'unconfirmed', reason: null });
   }
 
   /** i18n key del mensaje del motivo (o fallback genérico) cuando kind=error. */

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { EnrollmentStartResponse, PaymentMethodInfo, PaymentMethodsResponse } from '@models';
+import { EnrollmentResultResponse, EnrollmentStartResponse, PaymentMethodInfo, PaymentMethodsResponse } from '@models';
 
 /**
  * Medios de pago de la cuenta activa (P1 Transbank Oneclick Mall, BE feat/transbank-p1).
@@ -40,5 +40,18 @@ export class PaymentsApiService {
    */
   removeMethod(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/payment-methods/${id}`);
+  }
+
+  /**
+   * GET /payment-methods/enrollment-result?n=<nonce> (Bearer, Sanctum).
+   * Verdad única del resultado de inscripción (P2). 410 Gone = nonce gastado/
+   * expirado/inexistente/otra cuenta; 200 { status: processing } = en vuelo;
+   * 200 { status: ok|failure, reason, payment_method } = asentado (consume el nonce).
+   */
+  getEnrollmentResult(nonce: string): Observable<EnrollmentResultResponse> {
+    return this.http.get<EnrollmentResultResponse>(
+      `${this.baseUrl}/payment-methods/enrollment-result`,
+      { params: { n: nonce } },
+    );
   }
 }

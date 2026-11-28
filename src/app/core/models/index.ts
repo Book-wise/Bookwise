@@ -758,3 +758,17 @@ export interface EnrollmentStartResponse {
   message?: string;
   data: { redirect_url: string };
 }
+
+/**
+ * Resultado de la inscripción (GET /v1/payment-methods/enrollment-result?n=, P2).
+ * Verdad única desde el redirect: el `?status=` de la query es solo hint de UX.
+ * Nonce de un solo uso: gastado/expirado/inexistente/otra cuenta → 410 Gone.
+ */
+export interface EnrollmentResultResponse {
+  /** `ok` (inscripción asentada) | `failure` (inscripción fallida) | `processing` (en vuelo). */
+  status: 'ok' | 'failure' | 'processing';
+  /** Motivo normalizado del BE en `failure`; null en el resto. */
+  reason: string | null;
+  /** Presente solo en `ok`. Sin datos de tarjeta (sin PAN/CVV/últimos 4). */
+  payment_method: { id: number; status: string; is_default: boolean } | null;
+}
