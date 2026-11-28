@@ -10,7 +10,7 @@ import { inject, computed } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, catchError, of, pipe, switchMap, tap } from 'rxjs';
 import { SubscriptionApiService } from '@services/api/subscription-api.service';
-import { PlanCatalogGroup, Subscription, UsageData } from '@models';
+import { LastPayment, PlanCatalogGroup, Subscription, UsageData } from '@models';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,6 +23,8 @@ interface SubscriptionState {
   plans: PlanCatalogGroup[];
   /** Suscripción de la cuenta activa (GET /v1/subscription). */
   subscription: Subscription | null;
+  /** Último intento de cobro (`last_payment` de GET /subscription), hermano de `data`. */
+  lastPayment: LastPayment | null;
   /** Uso vs límite de la cuenta activa (GET /v1/subscription/usage). */
   usage: UsageData | null;
   // Meta-state por entidad
@@ -51,6 +53,7 @@ const initialError: Record<EntityName, HttpErrorResponse | null> = {
 const initialState: SubscriptionState = {
   plans: [],
   subscription: null,
+  lastPayment: null,
   usage: null,
   loading: initialLoading,
   loaded: initialLoaded,
@@ -124,12 +127,14 @@ export const SubscriptionStore = signalStore(
               next: (res) =>
                 patchState(store, {
                   subscription: res.data ?? null,
+                  lastPayment: res.last_payment ?? null,
                   loading: { ...store.loading(), subscription: false },
                   loaded: { ...store.loaded(), subscription: true },
                 }),
               error: (err: HttpErrorResponse) =>
                 patchState(store, {
                   subscription: null,
+                  lastPayment: null,
                   loading: { ...store.loading(), subscription: false },
                   loaded: { ...store.loaded(), subscription: true },
                   error: { ...store.error(), subscription: err },
@@ -193,6 +198,23 @@ export const SubscriptionStore = signalStore(
             }),
           ),
         );
+      },
+
+      /**
+       * POST /subscription/checkout — cobro de la primera mensualidad (S15).
+       *
+       * No parchea el cuerpo de la respuesta: relee `GET /subscription`, que es
+       * la verdad canónica (`status` + `last_payment`). Así el banner de reintento
+       * desaparece por sí solo al pasar a `active` y, si el cobro se rechaza,
+       * `last_payment.status === 'failed'` trae el motivo real.
+       * Re-throw del error (402/404/403/503) para que el componente elija el copy.
+       */
+      checkout() {
+        const reload = () => {
+          patchState(store, { loaded: { ...store.loaded(), subscription: false } });
+          loadSubscription();
+        };
+        return subscriptionApi.checkout().pipe(tap({ next: reload, error: reload }));
       },
 
       /** Fuerza la re-consulta de la suscripción (p. ej. tras cambiar de plan). */

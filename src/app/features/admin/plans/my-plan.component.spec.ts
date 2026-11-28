@@ -1,9 +1,22 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { MyPlanComponent } from './my-plan.component';
 import { SubscriptionStore } from '@core/stores/subscription.store';
-import type { Subscription } from '@models';
+import type { LastPayment, Subscription } from '@models';
+
+function makeFailedPayment(overrides: Partial<LastPayment> = {}): LastPayment {
+  return {
+    id: 12,
+    kind: 'recurring',
+    status: 'failed',
+    failure_code: 'rejection',
+    paid_at: null,
+    amount_clp: 19990,
+    ...overrides,
+  };
+}
 
 function makeSubscription(): Subscription {
   return {
@@ -41,14 +54,36 @@ function makeSubscription(): Subscription {
 
 describe('MyPlanComponent — Mi plan (read-only)', () => {
   let subscription: ReturnType<typeof signal<Subscription | null>>;
+  let lastPayment: ReturnType<typeof signal<LastPayment | null>>;
   let loadSubscription: ReturnType<typeof vi.fn>;
+  let checkout: ReturnType<typeof vi.fn>;
   let router: { navigate: ReturnType<typeof vi.fn> };
   let component: MyPlanComponent;
+  let fixture: ComponentFixture<MyPlanComponent>;
 
-  function setup(sub: Subscription | null): void {
+  /**
+   * El mock de checkout imita al store real: en éxito parchea la señal de la
+   * suscripción con la respuesta canónica (pending→active).
+   */
+  function setup(
+    sub: Subscription | null,
+    opts: {
+      checkoutResult?: Subscription;
+      checkoutError?: unknown;
+      payment?: LastPayment | null;
+    } = {},
+  ): void {
     subscription = signal<Subscription | null>(sub);
+    lastPayment = signal<LastPayment | null>(opts.payment ?? null);
     loadSubscription = vi.fn();
     router = { navigate: vi.fn() };
+    // El mock imita al store: tras el intento relee /subscription (status + last_payment).
+    checkout = vi.fn(() => {
+      if (opts.checkoutError) return throwError(() => opts.checkoutError);
+      subscription.set(opts.checkoutResult ?? makeSubscription());
+      lastPayment.set({ ...makeFailedPayment({ status: 'succeeded', failure_code: null, paid_at: '2026-11-28T00:00:00Z' }) });
+      return of(undefined);
+    });
 
     TestBed.configureTestingModule({
       imports: [MyPlanComponent],
@@ -58,16 +93,20 @@ describe('MyPlanComponent — Mi plan (read-only)', () => {
           provide: SubscriptionStore,
           useValue: {
             subscription,
+            lastPayment,
             loading: signal({ subscription: false, plans: false, usage: false }),
             loadSubscription,
+            checkout,
           },
         },
         { provide: Router, useValue: router },
       ],
     });
 
-    component = TestBed.createComponent(MyPlanComponent).componentInstance;
-    component.ngOnInit();
+    fixture = TestBed.createComponent(MyPlanComponent);
+    component = fixture.componentInstance;
+    // detectChanges dispara ngOnInit una sola vez (el componente lo implementa).
+    fixture.detectChanges();
   }
 
   it('loads the subscription once and exposes plan price and total', () => {
@@ -118,5 +157,111 @@ describe('MyPlanComponent — Mi plan (read-only)', () => {
     expect(component.currentPlan()).toBeNull();
     expect(component.planName()).toBe('');
     expect(component.planPrice()).toBe(0);
+  });
+
+  // ── Primer cobro pendiente (S15) ────────────────────────────────────────────
+
+  it('offers no retry while the charge was not attempted yet (last_payment null)', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: null });
+
+    expect(component.isPending()).toBe(true);
+    expect(component.chargeFailed()).toBe(false);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.pending-charge')).toBeTruthy();
+    expect(el.textContent).toContain(component.lang.t('plans.pending_awaiting'));
+    // Nada que reintentar todavía: sin CTA de cobro.
+    expect(el.textContent).not.toContain(component.lang.t('plans.pending_cta'));
+  });
+
+  it('shows the retry CTA and the provider reason when the charge was declined', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: makeFailedPayment() });
+
+    expect(component.chargeFailed()).toBe(true);
+    expect(component.failureCode()).toBe('rejection');
+    expect(component.failureMessageKey()).toBe('plans.pending_reason.rejection');
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain(component.lang.t('plans.pending_cta'));
+    expect(el.textContent).toContain(component.lang.t('plans.pending_reason.rejection'));
+    expect(el.textContent).toContain('rejection');
+    expect(el.textContent).toContain(component.lang.t('plans.pending_history'));
+  });
+
+  it('falls back to generic copy for an unknown provider code (never invents a reason)', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: makeFailedPayment({ failure_code: 'weird_code' }) });
+
+    expect(component.failureMessageKey()).toBe('plans.pending_reason.generic');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('weird_code');
+  });
+
+  it('hides the banner for an active subscription: pending is the only trigger', () => {
+    setup(makeSubscription());
+
+    expect(component.isPending()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeNull();
+  });
+
+  it('retries the first-month charge through the store when the CTA is used', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: makeFailedPayment() });
+
+    component.retryCheckout();
+
+    expect(checkout).toHaveBeenCalledTimes(1);
+    expect(component.checkingOut()).toBe(false);
+  });
+
+  it('drops the banner once the retried charge activates the subscription', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: makeFailedPayment(), checkoutResult: makeSubscription() });
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeTruthy();
+
+    component.retryCheckout();
+    fixture.detectChanges();
+
+    expect(component.isPending()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeNull();
+  });
+
+  const errorCases = [
+    [402, 'plans.checkout.rejected'],
+    [404, 'plans.checkout.no_subscription'],
+    [403, 'plans.checkout.no_role'],
+    [503, 'plans.checkout.provider_down'],
+    [500, 'plans.checkout.failed'],
+  ] as const;
+
+  it.each(errorCases)('maps a %s checkout error to its own copy', (status, key) => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: makeFailedPayment(), checkoutError: { status } });
+
+    component.retryCheckout();
+    fixture.detectChanges();
+
+    expect(component.checkoutError()).toBe(true);
+    expect(component.checkoutErrorKey()).toBe(key);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(component.lang.t(key));
+  });
+
+  it('keeps the subscription pending after a declined retry', () => {
+    const pending = makeSubscription();
+    pending.status = 'pending';
+    setup(pending, { payment: makeFailedPayment(), checkoutError: { status: 402 } });
+
+    component.retryCheckout();
+    fixture.detectChanges();
+
+    expect(component.isPending()).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pending-charge')).toBeTruthy();
   });
 });

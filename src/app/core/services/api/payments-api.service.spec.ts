@@ -95,4 +95,19 @@ describe('PaymentsApiService', () => {
     expect(req.request.body).toBeNull();
     req.flush({ message: 'Tu medio de pago fue eliminado.' });
   });
+
+  it('getEnrollmentResult calls GET /payment-methods/enrollment-result?n=<nonce> and returns the settled payload', () => {
+    service.getEnrollmentResult('deadbeef').subscribe((res) => {
+      expect(res.status).toBe('ok');
+      expect(res.payment_method?.is_default).toBe(true);
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/payment-methods/enrollment-result?n=deadbeef`);
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      status: 'ok',
+      reason: null,
+      payment_method: { id: 7, status: 'active', is_default: true },
+    });
+  });
 });

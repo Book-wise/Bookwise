@@ -43,4 +43,21 @@ export class SubscriptionApiService {
       { type, quantity },
     );
   }
+
+  /**
+   * POST /subscription/checkout (Bearer, owner|billing) — cobro de la primera
+   * mensualidad (S15). Sin id: opera sobre la suscripción viva de la cuenta
+   * activa, igual que `/subscription` y `/subscription/addons`. Idempotente por
+   * inscripción.
+   *
+   * Respuestas: 200 sub `active`; 402 `first_month_charge_rejected` (sub sigue
+   * `pending`, reintentable); 404 `subscription_not_found` (no hay sub viva);
+   * 403 `insufficient_account_role`; 503 `payment_provider_unavailable`.
+   *
+   * El cuerpo no se consume: tras el intento el FE relee `GET /subscription`
+   * (`status` + `last_payment`), que es la verdad canónica de la suscripción.
+   */
+  checkout(): Observable<unknown> {
+    return this.http.post<unknown>(`${this.baseUrl}/subscription/checkout`, {});
+  }
 }

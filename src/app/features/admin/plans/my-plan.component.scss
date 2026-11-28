@@ -150,6 +150,60 @@
 
 // ── Caja azul informativa (#19) ──────────────────────────────────────────────
 
+// ── Primer cobro pendiente (S15) ─────────────────────────────────────────────
+
+.pending-charge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--bw-radius-lg, 8px);
+  background: color-mix(in srgb, #f59e0b 10%, var(--surface-card, #fff));
+  border: 1px solid color-mix(in srgb, #f59e0b 38%, transparent);
+  color: var(--text-color, #333);
+
+  &__chip {
+    align-self: flex-start;
+    --chip-color: #f59e0b;
+    --chip-text-color: #7c2d12;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: var(--bw-weight-bold, 700);
+    color: var(--text-heading, #333);
+  }
+
+  &__body {
+    margin: 0;
+    color: var(--text-color-secondary, #888);
+    font-size: 0.875rem;
+  }
+
+  &__error {
+    margin: 0;
+    color: #b91c1c;
+    font-size: 0.875rem;
+    font-weight: var(--bw-weight-semibold, 600);
+  }
+}
+
 .next-billing {
   display: flex;
   flex-direction: column;
@@ -337,4 +391,10 @@
   .plan-card__amount {
     font-size: 1.5rem;
   }
+}
+
+.pending-charge__code {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary, #888);
+  font-variant-numeric: tabular-nums;
 }

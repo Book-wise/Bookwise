@@ -728,9 +728,34 @@ export interface Subscription {
   addon_catalog?: AddonCatalogItem[];
 }
 
+/**
+ * Último cargo de la suscripción (`last_payment` en `GET /v1/subscription`).
+ * Es el registro de plataforma del cobro del período: trae el `failure_code`
+ * del proveedor cuando falló, sin exponer token/PAN.
+ */
+export interface LastPayment {
+  id: number;
+  /** `recurring` | `manual` | `refund` | `adjustment`. */
+  kind: string;
+  /** `pending` | `succeeded` | `failed` | `refunded` | `requires_action`. */
+  status: string;
+  /** Código del proveedor cuando el cobro falló; null si no falló. */
+  failure_code: string | null;
+  /** Null cuando el cargo no se pagó (failed/pending). */
+  paid_at: string | null;
+  amount_clp: number;
+}
+
 /** Respuesta de `GET /v1/subscription` (dentro del envoltorio `data`). */
 export interface SubscriptionResponse {
   data: Subscription | null;
+  /**
+   * Último intento de cobro, hermano de `data`.
+   * - `null` con la suscripción `pending` → todavía no se intentó cobrar.
+   * - `status: 'failed'` → el cobro fue rechazado (`failure_code` trae el motivo).
+   * - `status: 'succeeded'` → el cobro se acreditó.
+   */
+  last_payment?: LastPayment | null;
 }
 
 // ── Payment methods (P1 Transbank Oneclick Mall) ─────────────────────────────
@@ -757,4 +782,18 @@ export interface PaymentMethodsResponse {
 export interface EnrollmentStartResponse {
   message?: string;
   data: { redirect_url: string };
+}
+
+/**
+ * Resultado de la inscripción (GET /v1/payment-methods/enrollment-result?n=, P2).
+ * Verdad única desde el redirect: el `?status=` de la query es solo hint de UX.
+ * Nonce de un solo uso: gastado/expirado/inexistente/otra cuenta → 410 Gone.
+ */
+export interface EnrollmentResultResponse {
+  /** `ok` (inscripción asentada) | `failure` (inscripción fallida) | `processing` (en vuelo). */
+  status: 'ok' | 'failure' | 'processing';
+  /** Motivo normalizado del BE en `failure`; null en el resto. */
+  reason: string | null;
+  /** Presente solo en `ok`. Sin datos de tarjeta (sin PAN/CVV/últimos 4). */
+  payment_method: { id: number; status: string; is_default: boolean } | null;
 }

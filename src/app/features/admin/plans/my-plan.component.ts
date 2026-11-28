@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -9,6 +9,14 @@ import { LanguageService } from '@services/language.service';
 import { SubscriptionStore } from '@core/stores/subscription.store';
 import { SubscriptionAddon } from '@models';
 import { formatCLP } from '@shared/config/currency.config';
+
+/**
+ * i18n key por `failure_code` conocido del proveedor. Solo se mapea lo que el API
+ * documentó: el resto cae al copy genérico, nunca a un motivo inventado.
+ */
+const KEY_BY_FAILURE_CODE: Record<string, string> = {
+  rejection: 'plans.pending_reason.rejection',
+};
 
 /**
  * "Mi plan" (/admin/planes) — vista de SOLO LECTURA de la suscripción.
@@ -42,6 +50,49 @@ export class MyPlanComponent implements OnInit {
   readonly totalPrice = computed(() => this.store.subscription()?.total_price_clp ?? 0);
   readonly planPrice = computed(() => this.currentPlan()?.price_clp ?? 0);
   readonly nextBillingAt = computed(() => this.store.subscription()?.next_billing_at ?? null);
+
+  /**
+   * Primer cobro pendiente (S15): el BE deja la suscripción en `pending` mientras
+   * el cobro de la primera mensualidad no se acredita, con la tarjeta ya inscripta.
+   */
+  readonly isPending = computed(() => this.store.subscription()?.status === 'pending');
+
+  /** Último intento de cobro (`last_payment` del mismo GET /subscription). */
+  private readonly lastPayment = computed(() => this.store.lastPayment());
+
+  /**
+   * El cobro se intentó y el proveedor lo rechazó: acá sí hay algo que reintentar.
+   * Con `last_payment === null` la sub está pending pero el cobro aún no se intentó.
+   */
+  readonly chargeFailed = computed(() => this.lastPayment()?.status === 'failed');
+
+  /** Código del proveedor cuando el cobro falló (nunca se inventa un motivo). */
+  readonly failureCode = computed(() => (this.chargeFailed() ? this.lastPayment()?.failure_code ?? null : null));
+
+  private readonly charging = signal(false);
+  /** true mientras el POST de checkout está en vuelo (evita doble cobro por click). */
+  readonly checkingOut = this.charging.asReadonly();
+
+  private readonly checkoutFailure = signal<number | null>(null);
+  /** true cuando el último intento de cobro lanzado desde acá terminó en error. */
+  readonly checkoutError = computed(() => this.checkoutFailure() !== null);
+
+  /** Copy del error según la respuesta del BE (404/403/503/otro), no un texto único. */
+  readonly checkoutErrorKey = computed(() => {
+    switch (this.checkoutFailure()) {
+      case 404: return 'plans.checkout.no_subscription';
+      case 403: return 'plans.checkout.no_role';
+      case 503: return 'plans.checkout.provider_down';
+      case 402: return 'plans.checkout.rejected';
+      default: return 'plans.checkout.failed';
+    }
+  });
+
+  /** Motivo de rechazo del proveedor cuando lo conocemos; copy genérico si no. */
+  readonly failureMessageKey = computed(() => {
+    const code = this.failureCode();
+    return code && KEY_BY_FAILURE_CODE[code] ? KEY_BY_FAILURE_CODE[code] : 'plans.pending_reason.generic';
+  });
 
   ngOnInit(): void {
     this.store.loadSubscription();
@@ -83,5 +134,29 @@ export class MyPlanComponent implements OnInit {
 
   goToBilling(): void {
     this.router.navigate(['/admin/facturacion']);
+  }
+
+  /** Lleva al historial de cargos, donde el código del proveedor explica el rechazo. */
+  goToHistory(): void {
+    this.router.navigate(['/admin/facturacion/historial']);
+  }
+
+  /**
+   * Reintenta el cobro de la primera mensualidad. El endpoint es idempotente por
+   * inscripción (S15): reintentar no puede cobrar dos veces. El store relee la
+   * suscripción, así que en éxito el banner desaparece solo y en rechazo trae el
+   * `failure_code` real del último intento.
+   */
+  retryCheckout(): void {
+    if (this.charging()) return;
+    this.charging.set(true);
+    this.checkoutFailure.set(null);
+    this.store.checkout().subscribe({
+      next: () => this.charging.set(false),
+      error: (err: { status?: number }) => {
+        this.charging.set(false);
+        this.checkoutFailure.set(err?.status ?? 0);
+      },
+    });
   }
 }
